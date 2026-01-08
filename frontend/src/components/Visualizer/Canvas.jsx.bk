@@ -1,0 +1,1482 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showRaw, setShowRaw] = useState(false);
+  const [previousVariables, setPreviousVariables] = useState({});
+  const [collapsedSections, setCollapsedSections] = useState({});
+
+  // 🛡️ CRASH GUARD
+  if (!traceData || !Array.isArray(traceData) || traceData.length === 0) {
+    return (
+      <div style={styles.emptyState}>
+        <h3 style={{ color: '#888' }}>Waiting for Execution...</h3>
+        <p style={{ color: '#666' }}>Run your code to see the visualization here.</p>
+      </div>
+    );
+  }
+
+  // 🧠 MEMORY ENGINE
+  const currentVariables = useMemo(() => {
+    let memory = {};
+
+    for (let i = 0; i <= stepIndex; i++) {
+      const step = traceData[i];
+      if (!step) continue;
+
+      let stepVars = step.variables;
+      if (!stepVars) stepVars = step.locals || step.globals;
+      if (typeof stepVars === 'string') {
+        try { stepVars = JSON.parse(stepVars); } catch (e) { }
+      }
+
+      if (stepVars && typeof stepVars === 'object' && Object.keys(stepVars).length > 0) {
+        memory = { ...memory, ...stepVars };
+      }
+    }
+    return memory;
+  }, [traceData, stepIndex]);
+
+  // 🎨 CATEGORIZE VARIABLES
+  const categorizedVars = useMemo(() => {
+    const categories = {
+      arrays: {},
+      primitives: {},
+      objects: {},
+      trees: {},
+      graphs: {}
+    };
+
+    Object.keys(currentVariables).forEach(key => {
+      const value = currentVariables[key];
+
+      if (Array.isArray(value)) {
+        categories.arrays[key] = value;
+      } else if (typeof value === 'object' && value !== null) {
+        const keys = Object.keys(value);
+
+        // Tree detection
+        if ((keys.includes('val') || keys.includes('value')) &&
+          (keys.includes('left') || keys.includes('right'))) {
+          categories.trees[key] = value;
+        }
+        // Linked List detection
+        else if ((keys.includes('val') || keys.includes('data') || keys.includes('value')) &&
+          keys.includes('next')) {
+          if (!categories.linkedLists) categories.linkedLists = {};
+          categories.linkedLists[key] = value;
+        }
+        // Graph detection
+        else if (keys.length > 0 && keys.every(k => Array.isArray(value[k]))) {
+          categories.graphs[key] = value;
+        }
+        // Generic object
+        else {
+          categories.objects[key] = value;
+        }
+      } else {
+        // Primitives (number, string, boolean)
+        categories.primitives[key] = value;
+      }
+    });
+
+    // 🔥 SMART DETECTION: Separate stacks and queues from regular arrays
+    const smartArrays = {};
+    const stacks = {};
+    const queues = {};
+
+    Object.keys(categories.arrays).forEach(key => {
+      const lowerKey = key.toLowerCase();
+      if (lowerKey.includes('stack')) {
+        stacks[key] = categories.arrays[key];
+      } else if (lowerKey.includes('queue')) {
+        queues[key] = categories.arrays[key];
+      } else {
+        smartArrays[key] = categories.arrays[key];
+      }
+    });
+
+    categories.arrays = smartArrays;
+    categories.stacks = stacks;
+    categories.queues = queues;
+
+    return categories;
+  }, [currentVariables]);
+
+  // 🎨 TRACK CHANGES
+  const variableStates = useMemo(() => {
+    const states = {};
+    Object.keys(currentVariables).forEach(key => {
+      if (!(key in previousVariables)) {
+        states[key] = 'new';
+      } else if (JSON.stringify(previousVariables[key]) !== JSON.stringify(currentVariables[key])) {
+        states[key] = 'changed';
+      } else {
+        states[key] = 'unchanged';
+      }
+    });
+    return states;
+  }, [currentVariables, previousVariables]);
+
+  useEffect(() => {
+    setPreviousVariables(currentVariables);
+  }, [stepIndex]);
+
+  const currentStep = traceData[stepIndex];
+  if (!currentStep) return <div style={{ color: 'red', padding: '20px' }}>⚠️ Step Error</div>;
+
+  // ⏯️ Auto-Play
+  useEffect(() => {
+    let interval;
+    if (isPlaying && stepIndex < traceData.length - 1) {
+      interval = setInterval(() => { setStepIndex(prev => prev + 1); }, 800);
+    } else { setIsPlaying(false); }
+    return () => clearInterval(interval);
+  }, [isPlaying, stepIndex, traceData.length]);
+
+  const toggleSection = (section) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const getVariableColor = (state) => {
+    switch (state) {
+      case 'new': return '#48bb78';
+      case 'changed': return '#f6ad55';
+      default: return '#4299e1';
+    }
+  };
+
+  // —————————————————————————————————————————————
+  // 🎨 RENDERERS
+  // —————————————————————————————————————————————
+
+  // 🌲 HELPER: Calculate Tree Metadata
+  const getTreeMetadata = (node) => {
+    if (!node || typeof node !== 'object') return { height: 0, nodeCount: 0 };
+
+  const val = node.val !== undefined ? node.val : (node.value !== undefined ? node.value : null);
+  if (val === null) return { height: 0, nodeCount: 0 };
+
+  const leftMeta = getTreeMetadata(node.left);
+  const rightMeta = getTreeMetadata(node.right);
+
+  return {
+    height: 1 + Math.max(leftMeta.height, rightMeta.height),
+    nodeCount: 1 + leftMeta.nodeCount + rightMeta.nodeCount
+  };
+};
+
+// 🌲 ENHANCED TREE RENDERER with SVG
+const renderTreeSVG = (node, x = 0, y = 0, level = 0, index = 0) => {
+  if (!node || typeof node !== 'object') return null;
+
+const val = node.val !== undefined ? node.val : (node.value !== undefined ? node.value : null);
+if (val === null) return null;
+
+const nodeRadius = 25;
+const verticalGap = 80;
+const horizontalGap = 60;
+
+// Calculate horizontal offset based on level (better spacing)
+const levelOffset = Math.pow(2, 4 - level) * horizontalGap;
+
+const elements = [];
+
+// Render left subtree
+if (node.left) {
+  const leftX = x - levelOffset;
+  const leftY = y + verticalGap;
+
+  // Draw line to left child
+  elements.push(
+    \u003cmotion.line
+          key = {`line-left-${level}-${index}`}
+initial = {{ pathLength: 0, opacity: 0 }}
+animate = {{ pathLength: 1, opacity: 1 }}
+transition = {{ delay: level * 0.15, duration: 0.5 }}
+x1 = { x }
+y1 = { y + nodeRadius}
+x2 = { leftX }
+y2 = { leftY - nodeRadius}
+stroke = "#4fc3f7"
+strokeWidth = "3"
+opacity = "0.6"
+  />
+      );
+
+elements.push(...(renderTreeSVG(node.left, leftX, leftY, level + 1, index * 2) || []));
+    }
+
+// Render right subtree
+if (node.right) {
+  const rightX = x + levelOffset;
+  const rightY = y + verticalGap;
+
+  // Draw line to right child
+  elements.push(
+    \u003cmotion.line
+          key = {`line-right-${level}-${index}`}
+initial = {{ pathLength: 0, opacity: 0 }}
+animate = {{ pathLength: 1, opacity: 1 }}
+transition = {{ delay: level * 0.15, duration: 0.5 }}
+x1 = { x }
+y1 = { y + nodeRadius}
+x2 = { rightX }
+y2 = { rightY - nodeRadius}
+stroke = "#4fc3f7"
+strokeWidth = "3"
+opacity = "0.6"
+  />
+      );
+
+elements.push(...(renderTreeSVG(node.right, rightX, rightY, level + 1, index * 2 + 1) || []));
+    }
+
+// Render current node (on top of lines)
+elements.push(
+  \u003cg key = {`node-${level}-${index}`}>
+        {/* Glow effect */ }
+  \u003cmotion.circle
+          initial = {{ scale: 0, opacity: 0 }}
+  animate = {{ scale: 1, opacity: 0.3 }}
+  transition = {{ delay: level * 0.15, duration: 0.5, type: 'spring' }}
+  cx = { x }
+          cy = { y }
+          r = { nodeRadius + 8}
+  fill = "url(#treeNodeGlow)"
+  />
+        
+        {/* Main node circle */ }
+  \u003cmotion.circle
+          initial = {{ scale: 0, opacity: 0 }}
+  animate = {{ scale: 1, opacity: 1 }}
+  transition = {{ delay: level * 0.15, duration: 0.5, type: 'spring' }}
+  cx = { x }
+          cy = { y }
+          r = { nodeRadius }
+          fill = "url(#treeNodeGradient)"
+          stroke = "#4fc3f7"
+          strokeWidth = "3"
+          style = {{ filter: 'drop-shadow(0 4px 15px rgba(79, 195, 247, 0.6))' }}
+        />
+        
+        {/* Node value text */ }
+  \u003cmotion.text
+          initial = {{ opacity: 0 }}
+  animate = {{ opacity: 1 }}
+  transition = {{ delay: level * 0.15 + 0.3, duration: 0.3 }}
+  x = { x }
+          y = { y }
+          textAnchor = "middle"
+          dominantBaseline = "middle"
+          fill = "white"
+          fontSize = "16"
+          fontWeight = "bold"
+          style = {{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)' }}>
+          { String(val) }
+  \u003c / motion.text>
+  \u003c / g>
+);
+
+return elements;
+  };
+
+// 🌲 TREE WRAPPER with Metadata
+const renderTree = (node) => {
+  if (!node || typeof node !== 'object') return \u003cspan style = { styles.nullNode }>null\u003c / span>;
+
+const val = node.val !== undefined ? node.val : (node.value !== undefined ? node.value : null);
+if (val === null) return \u003cspan style = { styles.nullNode }>x\u003c / span>;
+
+const metadata = getTreeMetadata(node);
+const svgWidth = Math.max(600, metadata.height * 200);
+const svgHeight = metadata.height * 80 + 60;
+const centerX = svgWidth / 2;
+
+return (
+\u003cdiv style = {{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+{/* Tree Metadata */ }
+\u003cdiv style = { styles.treeMetadata }>
+\u003cspan style = { styles.treeMetadataItem }>
+\u003cspan style = {{ opacity: 0.7 }}>Height: \u003c / span> \u003cstrong>{ metadata.height } \u003c / strong>
+\u003c / span>
+\u003cspan style = { styles.treeMetadataItem }>
+\u003cspan style = {{ opacity: 0.7 }}>Nodes: \u003c / span> \u003cstrong>{ metadata.nodeCount } \u003c / strong>
+\u003c / span>
+\u003c / div>
+
+{/* SVG Tree Visualization */ }
+\u003csvg
+width = { svgWidth }
+height = { svgHeight }
+style = {{ overflow: 'visible', padding: '20px' }}>
+{/* Gradient Definitions */ }
+\u003cdefs>
+\u003clinearGradient id = "treeNodeGradient" x1 = "0%" y1 = "0%" x2 = "100%" y2 = "100%">
+\u003cstop offset = "0%" stopColor = "#4fc3f7" />
+\u003cstop offset = "100%" stopColor = "#29b6f6" />
+\u003c / linearGradient>
+\u003cradialGradient id = "treeNodeGlow">
+\u003cstop offset = "0%" stopColor = "#4fc3f7" stopOpacity = "0.6" />
+\u003cstop offset = "100%" stopColor = "#4fc3f7" stopOpacity = "0" />
+\u003c / radialGradient>
+\u003c / defs>
+
+{/* Render Tree */ }
+{ renderTreeSVG(node, centerX, 30, 0, 0) }
+\u003c / svg>
+\u003c / div>
+    );
+  };
+
+
+  // 🕸️ ENHANCED GRAPH RENDERER with Visual Layout
+  const renderGraph = (name, graph, state) => {
+    const nodes = Object.keys(graph);
+    if (nodes.length === 0) {
+      return (
+        \u003cmotion.div
+          key={name}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          style={{ ...styles.varBox, ...styles.glassEffect, borderColor: getVariableColor(state) }}>
+          \u003cdiv style={styles.varHeader}>
+            \u003cspan style={styles.varName}>{name}\u003c/span>
+            \u003cspan style={styles.varType}>Graph\u003c/span>
+          \u003c/div>
+          \u003cdiv style={{ color: '#666', fontStyle: 'italic', padding: '20px' }}>Empty Graph\u003c/div>
+        \u003c/motion.div>
+      );
+    }
+
+    // Calculate circular layout for nodes
+    const nodeCount = nodes.length;
+    const radius = Math.max(120, nodeCount * 20);
+    const centerX = radius + 60;
+    const centerY = radius + 60;
+    const svgSize = (radius + 60) * 2;
+
+    // Position nodes in a circle
+    const nodePositions = {};
+    nodes.forEach((node, idx) => {
+      const angle = (2 * Math.PI * idx) / nodeCount - Math.PI / 2; // Start from top
+      nodePositions[node] = {
+        x: centerX + radius * Math.cos(angle),
+        y: centerY + radius * Math.sin(angle)
+      };
+    });
+
+    return (
+      \u003cmotion.div
+        key={name}
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -20, opacity: 0 }}
+        transition={{ duration: 0.4 }}
+        style={{
+          ...styles.enhancedArrayWrapper,
+          borderColor: getVariableColor(state),
+          minWidth: '100%'
+        }}>
+        {/* Header */}
+        \u003cdiv style={styles.arrayHeader}>
+          \u003cdiv style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            \u003cspan style={{ fontSize: '28px' }}>🕸️\u003c/span>
+            \u003cdiv>
+              \u003cdiv style={styles.varName}>{name}\u003c/div>
+              \u003cdiv style={{ fontSize: '10px', color: '#888' }}>Graph ({nodes.length} nodes)\u003c/div>
+            \u003c/div>
+          \u003c/div>
+          {state === 'changed' \u0026\u0026 \u003cdiv style={{ ...styles.badge, background: '#f6ad55' }}>CHANGED\u003c/div>}
+        \u003c/div>
+
+        {/* SVG Graph Visualization */}
+        \u003csvg width={svgSize} height={svgSize} style={{ margin: '0 auto', display: 'block' }}>
+          \u003cdefs>
+            {/* Arrow marker for directed edges */}
+            \u003cmarker
+              id="graphArrowhead"
+              markerWidth="10"
+              markerHeight="10"
+              refX="28"
+              refY="3"
+              orient="auto"
+              fill="#667eea">
+              \u003cpolygon points="0 0, 10 3, 0 6" />
+            \u003c/marker>
+            \u003clinearGradient id="graphNodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              \u003cstop offset="0%" stopColor="#667eea" />
+              \u003cstop offset="100%" stopColor="#764ba2" />
+            \u003c/linearGradient>
+            \u003cradialGradient id="graphNodeGlow">
+              \u003cstop offset="0%" stopColor="#667eea" stopOpacity="0.6" />
+              \u003cstop offset="100%" stopColor="#667eea" stopOpacity="0" />
+            \u003c/radialGradient>
+          \u003c/defs>
+
+          {/* Render edges first (so they appear behind nodes) */}
+          {nodes.map((fromNode, idx) => {
+            const neighbors = graph[fromNode] || [];
+            if (!Array.isArray(neighbors)) return null;
+
+            return neighbors.map((toNode, edgeIdx) => {
+              if (!nodePositions[toNode]) return null;
+
+              const from = nodePositions[fromNode];
+              const to = nodePositions[toNode];
+
+              return (
+                \u003cmotion.line
+                  key={`edge-${fromNode}-${toNode}-${edgeIdx}`}
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 0.6 }}
+                  transition={{ delay: idx * 0.1, duration: 0.5 }}
+                  x1={from.x}
+                  y1={from.y}
+                  x2={to.x}
+                  y2={to.y}
+                  stroke="#667eea"
+                  strokeWidth="2"
+                  markerEnd="url(#graphArrowhead)"
+                />
+              );
+            });
+          })}
+
+          {/* Render nodes */}
+          {nodes.map((node, idx) => {
+            const pos = nodePositions[node];
+            const nodeRadius = 20;
+
+            return (
+              \u003cg key={`node-${node}`}>
+                {/* Glow effect */}
+                \u003cmotion.circle
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 0.3 }}
+                  transition={{ delay: idx * 0.1, duration: 0.5, type: 'spring' }}
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={nodeRadius + 6}
+                  fill="url(#graphNodeGlow)"
+                />
+
+                {/* Main node circle */}
+                \u003cmotion.circle
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: idx * 0.1, duration: 0.5, type: 'spring' }}
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={nodeRadius}
+                  fill="url(#graphNodeGradient)"
+                  stroke="#667eea"
+                  strokeWidth="2"
+                  style={{ filter: 'drop-shadow(0 4px 10px rgba(102, 126, 234, 0.5))' }}
+                />
+
+                {/* Node label */}
+                \u003cmotion.text
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: idx * 0.1 + 0.3, duration: 0.3 }}
+                  x={pos.x}
+                  y={pos.y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="white"
+                  fontSize="14"
+                  fontWeight="bold">
+                  {String(node)}
+                \u003c/motion.text>
+              \u003c/g>
+            );
+          })}
+        \u003c/svg>
+
+        {/* Adjacency List View (Collapsible) */}
+        \u003cdiv style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '15px' }}>
+          \u003cdiv style={{ fontSize: '11px', color: '#888', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            📋 Adjacency List
+          \u003c/div>
+          \u003cdiv style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            {nodes.map(node => (
+              \u003cdiv key={node} style={styles.graphRow}>
+                \u003cdiv style={styles.graphNode}>{node}\u003c/div>
+                \u003cdiv style={{ color: '#666' }}>➔\u003c/div>
+                \u003cdiv style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                  {graph[node] \u0026\u0026 Array.isArray(graph[node]) ? (
+                    graph[node].map((neighbor, i) => \u003cdiv key={i} style={styles.graphNeighbor}>{String(neighbor)}\u003c/div>)
+                  ) : \u003cspan style={{ color: '#444', fontSize: '11px' }}>No links\u003c/span>}
+                \u003c/div>
+              \u003c/div>
+            ))}
+          \u003c/div>
+        \u003c/div>
+      \u003c/motion.div>
+    );
+  };
+
+
+// 🔥 ENHANCED ARRAY VISUALIZER
+const renderArray = (name, arr, state) => (
+  <motion.div
+    key={name}
+    initial={{ scale: 0.9, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
+    exit={{ scale: 0.9, opacity: 0 }}
+    whileHover={{ scale: 1.02 }}
+    transition={{ duration: 0.3 }}
+    style={{
+      ...styles.enhancedArrayWrapper,
+      borderColor: getVariableColor(state),
+      boxShadow: state === 'changed' ? `0 0 25px ${getVariableColor(state)}40` : styles.glassEffect.boxShadow
+    }}
+  >
+    {/* Header */}
+    <div style={styles.arrayHeader}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={styles.arrayIcon}>📊</span>
+        <div>
+          <div style={styles.varName}>{name}</div>
+          <div style={{ fontSize: '10px', color: '#888' }}>Length: {arr.length}</div>
+        </div>
+      </div>
+      {state === 'new' && <div style={styles.badge}>NEW</div>}
+      {state === 'changed' && <div style={{ ...styles.badge, background: '#f6ad55' }}>CHANGED</div>}
+    </div>
+
+    {/* Array Elements */}
+    <div style={styles.enhancedArrayContainer}>
+      {arr.map((val, idx) => (
+        <motion.div
+          key={idx}
+          initial={{ scale: 0, y: -20 }}
+          animate={{ scale: 1, y: 0 }}
+          transition={{ delay: idx * 0.05, duration: 0.3, type: 'spring' }}
+          style={styles.enhancedArrayItem}
+        >
+          {/* Index label on top */}
+          <div style={styles.arrayIndexTop}>[{idx}]</div>
+
+          {/* Value box */}
+          <motion.div
+            whileHover={{ scale: 1.1, rotate: 2 }}
+            style={{
+              ...styles.enhancedArrayBox,
+              background: `linear-gradient(135deg, ${getVariableColor(state)}, ${getVariableColor(state)}dd)`
+            }}
+          >
+            {String(val)}
+          </motion.div>
+        </motion.div>
+      ))}
+    </div>
+  </motion.div>
+);
+
+// 🔥 STACK VISUALIZATION (Vertical, bottom-to-top)
+const renderStack = (name, stack, state) => (
+  <motion.div
+    key={name}
+    initial={{ scale: 0.9, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
+    style={{
+      ...styles.enhancedArrayWrapper,
+      borderColor: '#f6ad55',
+      minWidth: '200px',
+      maxWidth: '250px'
+    }}
+  >
+    {/* Header */}
+    <div style={styles.arrayHeader}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '28px' }}>📚</span>
+        <div>
+          <div style={styles.varName}>{name}</div>
+          <div style={{ fontSize: '10px', color: '#888' }}>Stack (Size: {stack.length})</div>
+        </div>
+      </div>
+      {state === 'changed' && <div style={{ ...styles.badge, background: '#f6ad55' }}>CHANGED</div>}
+    </div>
+
+    {/* Stack items - vertical, bottom to top */}
+    <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '8px', minHeight: '100px' }}>
+      <AnimatePresence mode="popLayout">
+        {stack.slice(0, 10).map((val, idx) => (
+          <motion.div
+            key={`${val}-${idx}`}
+            initial={{ y: -30, opacity: 0, scale: 0.8 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ x: 50, opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.4, type: 'spring' }}
+            style={{
+              ...styles.stackItem,
+              background: idx === stack.length - 1
+                ? 'linear-gradient(135deg, #f6ad55, #f59042)'
+                : 'linear-gradient(135deg, #667eea, #764ba2)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <span>{String(val)}</span>
+            {idx === stack.length - 1 && (
+              <motion.span
+                initial={{ x: -10, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold' }}
+              >
+                ← TOP
+              </motion.span>
+            )}
+          </motion.div>
+        ))}
+      </AnimatePresence>
+      {stack.length === 0 && (
+        <div style={{ textAlign: 'center', color: '#666', padding: '20px', fontStyle: 'italic' }}>
+          Empty Stack
+        </div>
+      )}
+    </div>
+  </motion.div>
+);
+
+// 🔥 QUEUE VISUALIZATION (Horizontal, left-to-right)
+const renderQueue = (name, queue, state) => (
+  <motion.div
+    key={name}
+    initial={{ scale: 0.9, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
+    style={{
+      ...styles.enhancedArrayWrapper,
+      borderColor: '#4299e1',
+      minWidth: '300px'
+    }}
+  >
+    {/* Header */}
+    <div style={styles.arrayHeader}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '28px' }}>🎫</span>
+        <div>
+          <div style={styles.varName}>{name}</div>
+          <div style={{ fontSize: '10px', color: '#888' }}>Queue (Size: {queue.length})</div>
+        </div>
+      </div>
+      {state === 'changed' && <div style={{ ...styles.badge, background: '#4299e1' }}>CHANGED</div>}
+    </div>
+
+    {/* Queue items - horizontal */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflowX: 'auto', padding: '10px 0' }}>
+      <span style={{ fontSize: '11px', color: '#888', fontWeight: 'bold', minWidth: '50px' }}>FRONT →</span>
+
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <AnimatePresence mode="popLayout">
+          {queue.slice(0, 10).map((val, idx) => (
+            <motion.div
+              key={`${val}-${idx}`}
+              initial={{ x: -30, opacity: 0, scale: 0.8 }}
+              animate={{ x: 0, opacity: 1, scale: 1 }}
+              exit={{ x: 30, opacity: 0, scale: 0.8 }}
+              layout
+              transition={{ duration: 0.4, type: 'spring' }}
+              style={{
+                ...styles.queueItem,
+                background: idx === 0
+                  ? 'linear-gradient(135deg, #4fc3f7, #29b6f6)'
+                  : 'linear-gradient(135deg, #4299e1, #3182ce)'
+              }}
+            >
+              {String(val)}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <span style={{ fontSize: '11px', color: '#888', fontWeight: 'bold', minWidth: '50px' }}>← REAR</span>
+    </div>
+
+    {queue.length === 0 && (
+      <div style={{ textAlign: 'center', color: '#666', padding: '20px', fontStyle: 'italic' }}>
+        Empty Queue
+      </div>
+    )}
+  </motion.div>
+);
+
+// 🔗 LINKED LIST VISUALIZATION (Horizontal with arrows)
+const renderLinkedList = (name, head, state) => {
+  // Traverse linked list and collect nodes (max 10 to prevent infinite loops)
+  const nodes = [];
+  let current = head;
+  const visited = new Set();
+
+  while (current && nodes.length < 10) {
+    // Cycle detection
+    const nodeId = JSON.stringify(current);
+    if (visited.has(nodeId)) {
+      nodes.push({ value: '...', isNull: false, isCycle: true });
+      break;
+    }
+    visited.add(nodeId);
+
+    const value = current.val !== undefined ? current.val :
+      (current.data !== undefined ? current.data :
+        (current.value !== undefined ? current.value : '?'));
+
+    nodes.push({ value, isNull: false, isCycle: false });
+    current = current.next;
+  }
+
+  const nodeWidth = 100;
+  const nodeHeight = 70;
+  const arrowGap = 40;
+  const totalWidth = nodes.length * (nodeWidth + arrowGap) + 80;
+
+  return (
+    <motion.div
+      key={name}
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      style={{
+        ...styles.enhancedArrayWrapper,
+        borderColor: '#4fc3f7',
+        minWidth: '400px'
+      }}
+    >
+      {/* Header */}
+      <div style={styles.arrayHeader}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '28px' }}>🔗</span>
+          <div>
+            <div style={styles.varName}>{name}</div>
+            <div style={{ fontSize: '10px', color: '#888' }}>Linked List ({nodes.length} nodes)</div>
+          </div>
+        </div>
+        {state === 'changed' && <div style={{ ...styles.badge, background: '#4fc3f7' }}>CHANGED</div>}
+      </div>
+
+      {/* SVG Canvas */}
+      <svg width={totalWidth} height={nodeHeight + 40} style={{ overflow: 'visible', padding: '20px 10px' }}>
+        {/* Define arrow marker */}
+        <defs>
+          <marker
+            id="arrowhead"
+            markerWidth="10"
+            markerHeight="10"
+            refX="9"
+            refY="3"
+            orient="auto"
+            fill="#4fc3f7"
+          >
+            <polygon points="0 0, 10 3, 0 6" />
+          </marker>
+        </defs>
+
+        {/* Render nodes and arrows */}
+        {nodes.map((node, idx) => {
+          const x = idx * (nodeWidth + arrowGap);
+          const y = 10;
+
+          return (
+            <g key={idx}>
+              {/* Node rectangle */}
+              <motion.rect
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: idx * 0.1, duration: 0.3 }}
+                x={x}
+                y={y}
+                width={nodeWidth}
+                height={nodeHeight}
+                rx="8"
+                fill="url(#linkedListGradient)"
+                stroke="#4fc3f7"
+                strokeWidth="2"
+              />
+
+              {/* Value text */}
+              <text
+                x={x + nodeWidth / 2}
+                y={y + nodeHeight / 2 - 5}
+                textAnchor="middle"
+                fill="white"
+                fontSize="16"
+                fontWeight="bold"
+              >
+                {String(node.value)}
+              </text>
+
+              {/* "next" label */}
+              <text
+                x={x + nodeWidth / 2}
+                y={y + nodeHeight - 15}
+                textAnchor="middle"
+                fill="#888"
+                fontSize="10"
+              >
+                next →
+              </text>
+
+              {/* Arrow to next node */}
+              {idx < nodes.length - 1 && !node.isCycle && (
+                <motion.line
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ delay: idx * 0.1 + 0.2, duration: 0.4 }}
+                  x1={x + nodeWidth}
+                  y1={y + nodeHeight / 2}
+                  x2={x + nodeWidth + arrowGap}
+                  y2={y + nodeHeight / 2}
+                  stroke="#4fc3f7"
+                  strokeWidth="3"
+                  markerEnd="url(#arrowhead)"
+                />
+              )}
+            </g>
+          );
+        })}
+
+        {/* Null indicator at the end */}
+        {nodes.length > 0 && !nodes[nodes.length - 1].isCycle && (
+          <text
+            x={nodes.length * (nodeWidth + arrowGap)}
+            y={nodeHeight / 2 + 15}
+            fill="#666"
+            fontSize="14"
+            fontStyle="italic"
+          >
+            null
+          </text>
+        )}
+
+        {/* Gradient definition */}
+        <defs>
+          <linearGradient id="linkedListGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4fc3f7" />
+            <stop offset="100%" stopColor="#29b6f6" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      {nodes.length === 0 && (
+        <div style={{ textAlign: 'center', color: '#666', padding: '20px', fontStyle: 'italic' }}>
+          Empty List
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+const renderObject = (name, value, state) => (
+  <motion.div
+    key={name}
+    initial={{ scale: 0.9, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
+    exit={{ scale: 0.9, opacity: 0 }}
+    whileHover={{ scale: 1.02 }}
+    transition={{ duration: 0.3 }}
+    style={{
+      ...styles.varBox,
+      ...styles.glassEffect,
+      borderColor: getVariableColor(state),
+      boxShadow: state === 'changed' ? `0 0 20px ${getVariableColor(state)}40` : styles.glassEffect.boxShadow
+    }}
+  >
+    <div style={styles.varHeader}>
+      <span style={styles.varName}>📦 {name}</span>
+      <span style={styles.varType}>Object</span>
+    </div>
+    {Object.keys(value).length === 0 ? (
+      <div style={{ color: '#666', fontStyle: 'italic' }}>Empty</div>
+    ) : (
+      Object.keys(value).map(key => (
+        <div key={key} style={styles.objectRow}>
+          <span style={styles.objKey}>{key}:</span>
+          <span style={styles.objValue}>
+            {typeof value[key] === 'object' && value[key] !== null
+              ? (Array.isArray(value[key]) ? `[${value[key]}]` : '{...}')
+              : String(value[key])}
+          </span>
+        </div>
+      ))
+    )}
+  </motion.div>
+);
+
+const renderPrimitive = (name, value, state) => (
+  <motion.div
+    key={name}
+    initial={{ scale: 0.8, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
+    exit={{ scale: 0.8, opacity: 0 }}
+    whileHover={{ scale: 1.05 }}
+    transition={{ duration: 0.3 }}
+    style={{
+      ...styles.primitiveBox,
+      ...styles.glassEffect,
+      borderColor: getVariableColor(state),
+      borderWidth: '2px',
+      boxShadow: state === 'changed'
+        ? `0 0 25px ${getVariableColor(state)}50, 0 4px 15px rgba(0,0,0,0.3)`
+        : styles.glassEffect.boxShadow
+    }}
+  >
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ ...styles.varName, color: getVariableColor(state) }}>{name}</div>
+      {state === 'new' && <div style={styles.badge}>NEW</div>}
+      {state === 'changed' && <div style={{ ...styles.badge, background: '#f6ad55' }}>CHANGED</div>}
+    </div>
+    <motion.div
+      animate={{ scale: state === 'changed' ? [1, 1.1, 1] : 1 }}
+      transition={{ duration: 0.5 }}
+      style={{
+        ...styles.primitiveValue,
+        color: typeof value === 'number' ? '#4fc3f7' :
+          typeof value === 'string' ? '#4ec9b0' :
+            typeof value === 'boolean' ? '#dcdcaa' : '#ce9178'
+      }}
+    >
+      {typeof value === 'string' ? `"${value}"` : String(value)}
+    </motion.div>
+    <div style={{ fontSize: '8px', color: '#666', marginTop: '2px', textTransform: 'uppercase' }}>
+      {typeof value}
+    </div>
+  </motion.div>
+);
+
+// 🎯 SECTION RENDERER
+const renderSection = (title, icon, variables, renderFn, categoryKey) => {
+  if (Object.keys(variables).length === 0) return null;
+
+  const isCollapsed = collapsedSections[categoryKey];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={styles.section}
+    >
+      <div
+        style={styles.sectionHeader}
+        onClick={() => toggleSection(categoryKey)}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '20px' }}>{icon}</span>
+          <span style={styles.sectionTitle}>{title}</span>
+          <span style={styles.sectionCount}>{Object.keys(variables).length}</span>
+        </div>
+        <motion.div
+          animate={{ rotate: isCollapsed ? 0 : 90 }}
+          transition={{ duration: 0.3 }}
+          style={{ fontSize: '16px', color: '#666', cursor: 'pointer' }}
+        >
+          ▶
+        </motion.div>
+      </div>
+
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={styles.sectionContent}>
+              {Object.keys(variables).map(key => renderFn(key, variables[key], variableStates[key] || 'unchanged'))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+return (
+  <div style={styles.container}>
+    {/* CONTROLS */}
+    <div style={styles.controlBar}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <button onClick={() => setIsPlaying(!isPlaying)} style={styles.playButton}>
+          {isPlaying ? '⏸ Pause' : '▶ Play'}
+        </button>
+        <div style={{ color: '#aaa', fontSize: '13px' }}>
+          Step {stepIndex + 1} / {traceData.length}
+        </div>
+      </div>
+      <input
+        type="range"
+        min="0"
+        max={traceData.length - 1}
+        value={stepIndex}
+        onChange={(e) => { setIsPlaying(false); setStepIndex(Number(e.target.value)); }}
+        style={styles.slider}
+      />
+      <div style={{ display: 'flex', gap: '5px' }}>
+        <button onClick={() => { setIsPlaying(false); setStepIndex(Math.max(0, stepIndex - 1)) }} style={styles.navBtn}>◀</button>
+        <button onClick={() => { setIsPlaying(false); setStepIndex(Math.min(traceData.length - 1, stepIndex + 1)) }} style={styles.navBtn}>▶</button>
+      </div>
+    </div>
+
+    {/* NARRATIVE */}
+    <motion.div
+      key={`narrative-${stepIndex}`}
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+      style={styles.narrative}
+    >
+      {currentStep.stdout ?
+        <span style={{ color: '#4ec9b0' }}>🖨 {currentStep.stdout}</span> :
+        <span style={{ color: '#ce9178' }}>⚡ Line {currentStep.line}: Executing...</span>
+      }
+    </motion.div>
+
+    {/* CANVAS - CATEGORIZED */}
+    <div style={styles.canvasArea}>
+      <div style={styles.scopeContainer}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={styles.scopeTitle}>VARIABLES & MEMORY</div>
+          <button onClick={() => setShowRaw(!showRaw)} style={styles.debugBtn}>
+            {showRaw ? '🔴 Hide Debug' : '🔍 Debug'}
+          </button>
+        </div>
+
+        {/* CATEGORIZED SECTIONS */}
+        {Object.keys(currentVariables).length > 0 ? (
+          <>
+            {renderSection('Arrays & Lists', '📊', categorizedVars.arrays, renderArray, 'arrays')}
+            {renderSection('Stacks', '📚', categorizedVars.stacks, renderStack, 'stacks')}
+            {renderSection('Queues', '🎫', categorizedVars.queues, renderQueue, 'queues')}
+            {renderSection('Linked Lists', '🔗', categorizedVars.linkedLists || {}, renderLinkedList, 'linkedLists')}
+            {renderSection('Primitives', '🔢', categorizedVars.primitives, renderPrimitive, 'primitives')}
+            {renderSection('Objects & Dicts', '📦', categorizedVars.objects, renderObject, 'objects')}
+            {renderSection('Binary Trees', '🌲', categorizedVars.trees,
+              (name, value, state) => (
+                <motion.div
+                  key={name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    ...styles.varBox,
+                    ...styles.glassEffect,
+                    minWidth: 'fit-content',
+                    borderColor: getVariableColor(state)
+                  }}
+                >
+                  <div style={styles.varHeader}>
+                    <span style={styles.varName}>🌲 {name}</span>
+                    <span style={styles.varType}>Tree</span>
+                  </div>
+                  <div style={{ padding: '10px', display: 'flex', justifyContent: 'center' }}>
+                    {renderTree(value)}
+                  </div>
+                </motion.div>
+              ), 'trees'
+            )}
+            {renderSection('Graphs', '🕸️', categorizedVars.graphs, renderGraph, 'graphs')}
+          </>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ color: '#666', fontStyle: 'italic', padding: '20px', lineHeight: '1.8', textAlign: 'center' }}
+          >
+            No variables captured yet.<br />
+            <span style={{ color: '#d4d4d4', fontSize: '12px' }}>
+              🐍 <b>Python Tip:</b> Tracers sometimes ignore top-level code.<br />
+              Try wrapping your code in a <code>def main():</code> function.
+            </span>
+          </motion.div>
+        )}
+
+        {/* DEBUG VIEW */}
+        {showRaw && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ marginTop: '20px', ...styles.debugSection }}
+          >
+            <div style={styles.scopeTitle}>RAW BACKEND DATA</div>
+            <pre style={{ color: '#aaa', fontSize: '10px', whiteSpace: 'pre-wrap', marginTop: '10px' }}>
+              {JSON.stringify(currentStep, null, 2)}
+            </pre>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  </div>
+);
+};
+
+// 💅 ENHANCED STYLES
+const styles = {
+  container: {
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+    color: '#fff',
+    fontFamily: 'Inter, sans-serif'
+  },
+  emptyState: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
+  },
+  controlBar: {
+    padding: '12px 20px',
+    background: 'rgba(37, 37, 38, 0.8)',
+    backdropFilter: 'blur(10px)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  playButton: {
+    background: 'linear-gradient(135deg, #2ea043, #26843b)',
+    color: 'white',
+    border: 'none',
+    padding: '8px 18px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '12px',
+    boxShadow: '0 4px 15px rgba(46, 160, 67, 0.3)',
+    transition: 'all 0.3s ease'
+  },
+  navBtn: {
+    background: 'rgba(51, 51, 51, 0.6)',
+    backdropFilter: 'blur(5px)',
+    color: 'white',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    padding: '6px 12px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  },
+  debugBtn: {
+    background: 'transparent',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    color: '#888',
+    padding: '5px 12px',
+    borderRadius: '6px',
+    fontSize: '11px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  },
+  slider: {
+    width: '200px',
+    height: '6px',
+    borderRadius: '3px',
+    outline: 'none',
+    background: 'rgba(255, 255, 255, 0.1)',
+    cursor: 'pointer'
+  },
+  narrative: {
+    padding: '10px 20px',
+    background: 'rgba(30, 30, 30, 0.6)',
+    backdropFilter: 'blur(5px)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    fontSize: '13px',
+    fontFamily: 'monospace'
+  },
+  canvasArea: {
+    flex: 1,
+    padding: '20px',
+    overflowY: 'auto',
+    background: 'transparent'
+  },
+  scopeContainer: { marginBottom: '20px' },
+  scopeTitle: {
+    fontSize: '11px',
+    color: '#888',
+    fontWeight: 'bold',
+    letterSpacing: '1.5px',
+    textTransform: 'uppercase'
+  },
+
+  // 🎯 SECTION STYLES
+  section: {
+    marginBottom: '25px',
+    background: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    border: '1px solid rgba(255, 255, 255, 0.05)'
+  },
+  sectionHeader: {
+    padding: '15px 20px',
+    background: 'rgba(255, 255, 255, 0.03)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    userSelect: 'none'
+  },
+  sectionTitle: {
+    fontSize: '13px',
+    fontWeight: 'bold',
+    color: '#9cdcfe',
+    textTransform: 'uppercase',
+    letterSpacing: '1px'
+  },
+  sectionCount: {
+    fontSize: '11px',
+    background: 'rgba(0, 122, 204, 0.3)',
+    color: '#4fc3f7',
+    padding: '2px 8px',
+    borderRadius: '10px',
+    fontWeight: 'bold'
+  },
+  sectionContent: {
+    padding: '20px',
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '15px',
+    alignItems: 'flex-start'
+  },
+
+  // 🌟 GLASSMORPHISM
+  glassEffect: {
+    background: 'rgba(255, 255, 255, 0.05)',
+    backdropFilter: 'blur(10px)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 1px rgba(255, 255, 255, 0.1)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+  },
+
+  varBox: {
+    borderRadius: '12px',
+    padding: '15px',
+    minWidth: '200px',
+    transition: 'all 0.3s ease'
+  },
+  varHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: '10px',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    paddingBottom: '8px'
+  },
+  varName: {
+    color: '#9cdcfe',
+    fontWeight: 'bold',
+    fontSize: '11px',
+    textShadow: '0 0 10px rgba(156, 220, 254, 0.3)'
+  },
+  varType: {
+    color: '#6a9955',
+    fontSize: '11px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+  badge: {
+    padding: '2px 8px',
+    background: '#48bb78',
+    color: 'white',
+    fontSize: '9px',
+    borderRadius: '10px',
+    fontWeight: 'bold',
+    letterSpacing: '0.5px'
+  },
+
+  // 🔥 ENHANCED ARRAY STYLES
+  enhancedArrayWrapper: {
+    ...{
+      background: 'rgba(255, 255, 255, 0.05)',
+      backdropFilter: 'blur(10px)',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+      border: '2px solid rgba(255, 255, 255, 0.1)',
+    },
+    borderRadius: '16px',
+    padding: '15px',
+    minWidth: '100%',
+  },
+  arrayHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '20px',
+    paddingBottom: '15px',
+    borderBottom: '2px solid rgba(255, 255, 255, 0.1)'
+  },
+  arrayIcon: {
+    fontSize: '28px',
+    filter: 'drop-shadow(0 2px 10px rgba(0, 122, 204, 0.4))'
+  },
+  enhancedArrayContainer: {
+    display: 'flex',
+    gap: '15px',
+    flexWrap: 'wrap',
+    justifyContent: 'center'
+  },
+  enhancedArrayItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  arrayIndexTop: {
+    fontSize: '11px',
+    color: '#888',
+    fontWeight: 'bold',
+    fontFamily: 'monospace'
+  },
+  enhancedArrayBox: {
+    minWidth: '50px',
+    height: '50px',
+    padding: '0 10px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    borderRadius: '12px',
+    fontWeight: 'bold',
+    fontSize: '16px',
+    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+    border: '2px solid rgba(255, 255, 255, 0.3)',
+    cursor: 'pointer'
+  },
+
+  // OTHER STYLES
+  graphRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '5px',
+    background: 'rgba(42, 42, 42, 0.6)',
+    padding: '8px',
+    borderRadius: '6px'
+  },
+  graphNode: {
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 'bold',
+    fontSize: '12px',
+    boxShadow: '0 4px 10px rgba(102, 126, 234, 0.4)'
+  },
+  graphNeighbor: {
+    padding: '4px 10px',
+    background: 'linear-gradient(135deg, #0e639c, #1e7bb3)',
+    color: 'white',
+    borderRadius: '4px',
+    fontSize: '12px',
+    boxShadow: '0 2px 8px rgba(14, 99, 156, 0.3)'
+  },
+  treeNode: {
+    width: '35px',
+    height: '35px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #007acc, #0098ff)',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 'bold',
+    fontSize: '13px',
+    zIndex: 10,
+    border: '2px solid rgba(0, 122, 204, 0.3)',
+    boxShadow: '0 4px 15px rgba(0, 122, 204, 0.5)'
+  },
+  nullNode: { fontSize: '10px', color: '#555', marginTop: '5px' },
+  objectRow: {
+    display: 'flex',
+    alignItems: 'center',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+    paddingBottom: '6px',
+    marginBottom: '6px'
+  },
+  objKey: {
+    color: '#dcdcaa',
+    marginRight: '10px',
+    minWidth: '30px',
+    fontWeight: '600'
+  },
+  objValue: {
+    color: '#ce9178',
+    fontFamily: 'monospace'
+  },
+  primitiveBox: {
+    borderRadius: '8px',
+    padding: '8px 12px',
+    minWidth: '80px',
+    maxWidth: '120px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    transition: 'all 0.3s ease'
+  },
+  primitiveValue: {
+    fontSize: '14px',
+    fontWeight: 'bold',
+    marginTop: '4px',
+    textShadow: '0 2px 10px rgba(255, 255, 255, 0.2)',
+    fontFamily: 'monospace'
+  },
+
+  // 🔥 STACK & QUEUE STYLES
+  stackItem: {
+    padding: '12px 16px',
+    borderRadius: '8px',
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: '14px',
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+    border: '2px solid rgba(255, 255, 255, 0.2)',
+    minWidth: '100%'
+  },
+  queueItem: {
+    padding: '12px 16px',
+    borderRadius: '8px',
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: '14px',
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+    border: '2px solid rgba(255, 255, 255, 0.2)',
+    minWidth: '60px',
+    textAlign: 'center'
+  },
+
+  // 🌲 TREE METADATA STYLES
+  treeMetadata: {
+    display: 'flex',
+    gap: '20px',
+    marginBottom: '15px',
+    padding: '10px 20px',
+    background: 'rgba(79, 195, 247, 0.1)',
+    borderRadius: '8px',
+    border: '1px solid rgba(79, 195, 247, 0.3)'
+  },
+  treeMetadataItem: {
+    fontSize: '12px',
+    color: '#4fc3f7',
+    fontFamily: 'monospace'
+  },
+
+  debugSection: {
+    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+    paddingTop: '15px',
+    background: 'rgba(0, 0, 0, 0.2)',
+    padding: '15px',
+    borderRadius: '8px'
+  }
+};
+
+export default Canvas;

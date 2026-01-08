@@ -1,0 +1,181 @@
+#python
+
+print("Starting Visualizer...")
+
+# 1. Initialize three 'processes' (Memory Blocks appear)
+cpu_status = "IDLE"
+proc_A = "Waiting"
+proc_B = "Waiting"
+proc_C = "Waiting"
+
+# 2. Loop to shuffle priority
+for cycle in range(1, 4):
+    print(f"--- CPU Cycle {cycle} ---")
+    
+    # Step 1: Process A takes control
+    # Watch 'proc_A' fly to the top-left corner!
+    cpu_status = "Running A"
+    proc_A = "ACTIVE"
+    proc_B = "Paused"
+    proc_C = "Paused"
+    
+    # Step 2: Process B takes control
+    # Watch 'proc_B' push 'proc_A' aside!
+    cpu_status = "Running B"
+    proc_A = "Waiting"
+    proc_B = "ACTIVE"
+    
+    # Step 3: Process C takes control
+    # Watch 'proc_C' jump to the front!
+    cpu_status = "Running C"
+    proc_B = "Waiting"
+    proc_C = "ACTIVE"
+
+# 3. Finish
+cpu_status = "SHUTDOWN"
+proc_A = "Killed"
+proc_B = "Killed"
+proc_C = "Killed"
+print("Simulation Complete.")
+
+
+
+
+
+
+print("Testing Data Structures...")
+
+# 1. List Visualization
+# You should see boxes with indices 0, 1, 2
+numbers = [10, 20, 30]
+numbers.append(99)
+
+# 2. Dictionary Visualization
+# You should see Key-Value pairs
+student = {
+    "name": "Navin",
+    "role": "Developer",
+    "level": 99
+}
+
+print("Done!")
+
+
+
+
+print("Testing Narrator Mode...")
+
+def calculate_square(num):
+    # Narrator should say: "⤵️ Entered function 'calculate_square'"
+    result = num * num
+    # Narrator should say: "Initialized 'result' = ..."
+    return result
+    # Narrator should say: "⤴️ Returned from function..."
+
+# 1. Initialize variables
+# Narrator: "Initialized 'total_score' = 0"
+total_score = 0
+numbers = [2, 4, 6]
+
+print("Starting Loop...")
+
+# 2. Loop through numbers
+for n in numbers:
+    print(f"Processing number: {n}")
+    
+    # 3. Call Function
+    squared_val = calculate_square(n)
+    
+    # 4. Update Variable
+    # Narrator: "Updated 'total_score': X ➝ Y"
+    total_score = total_score + squared_val
+
+print(f"Final Score: {total_score}")
+
+
+
+
+#java example
+
+// Bubble Sort Visualization
+int[] arr = { 5, 1, 4, 2, 8 };
+String status = "Start";
+
+// Outer Loop (Passes)
+for (int i = 0; i < 5; i++) {
+    status = "Pass " + i;
+    
+    // Inner Loop (Comparisons)
+    for (int j = 0; j < 4 - i; j++) {
+        
+        int a = arr[j];
+        int b = arr[j+1];
+        
+        // Swap Check
+        if (a > b) {
+            status = "Swapping " + a + " and " + b;
+            
+            // Swap Logic
+            int temp = arr[j];
+            arr[j] = arr[j+1];
+            arr[j+1] = temp;
+        }
+    }
+}
+
+status = "Sorted!";
+
+// Java Array Visualizer
+int[] arr = { 5, 2, 8, 1 };
+String action = "Start";
+
+for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 3 - i; j++) {
+        if (arr[j] > arr[j+1]) {
+            action = "Swap " + arr[j] + " & " + arr[j+1];
+            
+            int temp = arr[j];
+            arr[j] = arr[j+1];
+            arr[j+1] = temp;
+        }
+    }
+}
+action = "Sorted!";
+
+// Java Array Visualizer WITH PRINTS
+int[] arr = { 5, 2, 8, 1 };
+System.out.println("Starting Sort..."); // <--- Output 1
+
+String action = "Start";
+
+for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 3 - i; j++) {
+        if (arr[j] > arr[j+1]) {
+            action = "Swap " + arr[j] + " & " + arr[j+1];
+            
+            // This will print every swap to the console!
+            System.out.println("Swapping elements: " + arr[j] + " and " + arr[j+1]); 
+
+            int temp = arr[j];
+            arr[j] = arr[j+1];
+            arr[j+1] = temp;
+        }
+    }
+}
+action = "Sorted!";
+System.out.println("Final Array: " + java.util.Arrays.toString(arr)); // <--- Final Output
+
+
+#C++
+// C++ Test
+int x = 10;
+double price = 19.99;
+std::string status = "Start";
+
+for (int i = 0; i < 3; i++) {
+    x = x + 5;
+    price = price + 2.5;
+    status = "Looping";
+}
+
+status = "Finished";

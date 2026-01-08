@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.Python
+env/
+venv/
+
+# Build outputs
+frontend/dist/
+frontend/build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment variables (CRITICAL - never commit these!)
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Testing
+coverage/
+.pytest_cache/
+
+# Miscellaneous
+*.bak
+*.tmp
+.cache/
+.gemini/

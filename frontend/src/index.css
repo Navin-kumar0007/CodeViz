@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #111827;
+  color: white;
+}
+
+/* 🎯 ACTIVE LINE HIGHLIGHTING FOR CODE EDITOR */
+.active-line-decoration {
+  background: rgba(79, 195, 247, 0.15) !important;
+  border-left: 3px solid #4fc3f7 !important;
+  animation: activeLinePulse 2s ease-in-out infinite;
+}
+
+@keyframes activeLinePulse {
+  0%, 100% {
+    background: rgba(79, 195, 247, 0.15);
+  }
+  50% {
+    background: rgba(79, 195, 247, 0.25);
+  }
+}
+
+.active-line-glyph {
+  background: #4fc3f7 !important;
+  width: 6px !important;
+  margin-left: 3px;
+  border-radius: 2px;
+}
