@@ -2,12 +2,20 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
 import VirtualizedArray from './VirtualizedArray';
+import SortingVisualizer from './SortingVisualizer';
+import SearchVisualizer from './SearchVisualizer';
+import ErrorBoundary from '../ErrorBoundary';
+import ConceptCard from '../ConceptCard';
+import VariableTracker from '../VariableTracker';
 
 const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
   const [previousVariables, setPreviousVariables] = useState({});
   const [collapsedSections, setCollapsedSections] = useState({});
+  const [playSpeed, setPlaySpeed] = useState(800); // Speed in ms: 1500=slow, 800=normal, 300=fast, 100=instant
+  const [dismissedConcepts, setDismissedConcepts] = useState({}); // Track dismissed concept cards
+  const [showVariableTracker, setShowVariableTracker] = useState(true);
 
   // 🎨 Theme integration
   const { colors } = useTheme();
@@ -132,14 +140,14 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
   const currentStep = traceData[stepIndex];
   if (!currentStep) return <div style={{ color: 'red', padding: '20px' }}>⚠️ Step Error</div>;
 
-  // ⏯️ Auto-Play
+  // ⏯️ Auto-Play with dynamic speed
   useEffect(() => {
     let interval;
     if (isPlaying && stepIndex < traceData.length - 1) {
-      interval = setInterval(() => { setStepIndex(prev => prev + 1); }, 800);
+      interval = setInterval(() => { setStepIndex(prev => prev + 1); }, playSpeed);
     } else { setIsPlaying(false); }
     return () => clearInterval(interval);
-  }, [isPlaying, stepIndex, traceData.length]);
+  }, [isPlaying, stepIndex, traceData.length, playSpeed]);
 
   const toggleSection = (section) => {
     setCollapsedSections(prev => ({
@@ -220,7 +228,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
     </motion.div>
   );
 
-  // 🔥 ENHANCED ARRAY VISUALIZER (with virtual scrolling for large arrays)
+  // 🔥 ENHANCED ARRAY VISUALIZER (with algorithm detection)
   const renderArray = (name, arr, state) => {
     // Use virtual scrolling for arrays > 50 elements
     if (arr.length > 50) {
@@ -235,7 +243,78 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       );
     }
 
-    // Regular rendering for smaller arrays
+    // 🔍 Detect if this is a sorting/search context based on variable names
+    const allVarNames = Object.keys(currentVariables).map(k => k.toLowerCase());
+    const hasSortingIndicators = allVarNames.some(v =>
+      ['i', 'j', 'temp', 'min_idx', 'minidx', 'key'].includes(v)
+    );
+    const hasSearchIndicators = allVarNames.some(v =>
+      ['low', 'high', 'mid', 'target', 'left', 'right'].includes(v)
+    );
+
+    // Get index pointers from primitive variables
+    const getIndexValue = (names) => {
+      for (const n of names) {
+        const val = currentVariables[n] ?? currentVariables[n.toLowerCase()];
+        if (typeof val === 'number' && val >= 0 && val < arr.length) return val;
+      }
+      return null;
+    };
+
+    // 🔍 Use SearchVisualizer for binary search context
+    if (hasSearchIndicators && (name === 'arr' || name.toLowerCase().includes('arr'))) {
+      const low = getIndexValue(['low', 'left']);
+      const high = getIndexValue(['high', 'right']);
+      const mid = getIndexValue(['mid']);
+      const target = currentVariables.target ?? currentVariables.Target ?? null;
+
+      return (
+        <SearchVisualizer
+          key={name}
+          name={name}
+          arr={arr}
+          target={target}
+          low={low}
+          high={high}
+          mid={mid}
+        />
+      );
+    }
+
+    // 🔢 Use SortingVisualizer for sorting context
+    if (hasSortingIndicators && (name === 'arr' || name.toLowerCase().includes('arr'))) {
+      const i = getIndexValue(['i']);
+      const j = getIndexValue(['j']);
+      const minIdx = getIndexValue(['min_idx', 'minIdx', 'minidx']);
+
+      // Build current indices object
+      const currentIndices = {};
+      if (i !== null) currentIndices.i = i;
+      if (j !== null) currentIndices.j = j;
+      if (minIdx !== null) currentIndices.min = minIdx;
+
+      // Detect comparing indices (i and j if both present)
+      const comparingIndices = (i !== null && j !== null) ? [j, j + 1] : [];
+
+      // Detect sorted section (elements after n-i-1 in bubble sort)
+      const n = arr.length;
+      const sortedIndices = i !== null ? Array.from({ length: i }, (_, k) => n - 1 - k).filter(x => x >= 0) : [];
+
+      return (
+        <SortingVisualizer
+          key={name}
+          name={name}
+          arr={arr}
+          state={state}
+          currentIndices={currentIndices}
+          comparingIndices={comparingIndices}
+          sortedIndices={sortedIndices}
+          getVariableColor={getVariableColor}
+        />
+      );
+    }
+
+    // Regular rendering for non-algorithm arrays
     return (
       <motion.div
         key={name}
@@ -724,6 +803,36 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
             Step {stepIndex + 1} / {traceData.length}
           </div>
         </div>
+
+        {/* Speed Control */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px' }}>
+          <span style={{ fontSize: '12px', color: '#888' }}>Speed:</span>
+          <button
+            onClick={() => setPlaySpeed(1500)}
+            style={{ ...styles.speedBtn, background: playSpeed === 1500 ? '#667eea' : 'transparent' }}
+          >
+            🐢
+          </button>
+          <button
+            onClick={() => setPlaySpeed(800)}
+            style={{ ...styles.speedBtn, background: playSpeed === 800 ? '#667eea' : 'transparent' }}
+          >
+            🚶
+          </button>
+          <button
+            onClick={() => setPlaySpeed(300)}
+            style={{ ...styles.speedBtn, background: playSpeed === 300 ? '#667eea' : 'transparent' }}
+          >
+            🏃
+          </button>
+          <button
+            onClick={() => setPlaySpeed(100)}
+            style={{ ...styles.speedBtn, background: playSpeed === 100 ? '#667eea' : 'transparent' }}
+          >
+            ⚡
+          </button>
+        </div>
+
         <input
           type="range"
           min="0"
@@ -757,45 +866,108 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         <div style={styles.scopeContainer}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div style={styles.scopeTitle}>VARIABLES & MEMORY</div>
-            <button onClick={() => setShowRaw(!showRaw)} style={styles.debugBtn}>
-              {showRaw ? '🔴 Hide Debug' : '🔍 Debug'}
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setShowVariableTracker(!showVariableTracker)}
+                style={{ ...styles.debugBtn, background: showVariableTracker ? 'rgba(102, 126, 234, 0.3)' : 'transparent' }}
+              >
+                {showVariableTracker ? '📈 Tracker' : '📈'}
+              </button>
+              <button onClick={() => setShowRaw(!showRaw)} style={styles.debugBtn}>
+                {showRaw ? '🔴 Hide Debug' : '🔍 Debug'}
+              </button>
+            </div>
           </div>
+
+          {/* Variable Change Tracker */}
+          {showVariableTracker && traceData && (
+            <VariableTracker
+              traceData={traceData}
+              stepIndex={stepIndex}
+              maxHistory={10}
+            />
+          )}
+
+          {/* Concept Cards for detected data structures */}
+          {Object.keys(categorizedVars.arrays).length > 0 && !dismissedConcepts.array && stepIndex < 3 && (
+            <ConceptCard
+              type="array"
+              isVisible={true}
+              onDismiss={() => setDismissedConcepts(prev => ({ ...prev, array: true }))}
+            />
+          )}
+          {Object.keys(categorizedVars.stacks).length > 0 && !dismissedConcepts.stack && stepIndex < 3 && (
+            <ConceptCard
+              type="stack"
+              isVisible={true}
+              onDismiss={() => setDismissedConcepts(prev => ({ ...prev, stack: true }))}
+            />
+          )}
+          {Object.keys(categorizedVars.queues).length > 0 && !dismissedConcepts.queue && stepIndex < 3 && (
+            <ConceptCard
+              type="queue"
+              isVisible={true}
+              onDismiss={() => setDismissedConcepts(prev => ({ ...prev, queue: true }))}
+            />
+          )}
+          {Object.keys(categorizedVars.linkedLists || {}).length > 0 && !dismissedConcepts.linkedList && stepIndex < 3 && (
+            <ConceptCard
+              type="linkedList"
+              isVisible={true}
+              onDismiss={() => setDismissedConcepts(prev => ({ ...prev, linkedList: true }))}
+            />
+          )}
+          {Object.keys(categorizedVars.trees).length > 0 && !dismissedConcepts.tree && stepIndex < 3 && (
+            <ConceptCard
+              type="tree"
+              isVisible={true}
+              onDismiss={() => setDismissedConcepts(prev => ({ ...prev, tree: true }))}
+            />
+          )}
+          {Object.keys(categorizedVars.graphs).length > 0 && !dismissedConcepts.graph && stepIndex < 3 && (
+            <ConceptCard
+              type="graph"
+              isVisible={true}
+              onDismiss={() => setDismissedConcepts(prev => ({ ...prev, graph: true }))}
+            />
+          )}
 
           {/* CATEGORIZED SECTIONS */}
           {Object.keys(currentVariables).length > 0 ? (
-            <>
-              {renderSection('Arrays & Lists', '📊', categorizedVars.arrays, renderArray, 'arrays')}
-              {renderSection('Stacks', '📚', categorizedVars.stacks, renderStack, 'stacks')}
-              {renderSection('Queues', '🎫', categorizedVars.queues, renderQueue, 'queues')}
-              {renderSection('Linked Lists', '🔗', categorizedVars.linkedLists || {}, renderLinkedList, 'linkedLists')}
-              {renderSection('Primitives', '🔢', categorizedVars.primitives, renderPrimitive, 'primitives')}
-              {renderSection('Objects & Dicts', '📦', categorizedVars.objects, renderObject, 'objects')}
-              {renderSection('Binary Trees', '🌲', categorizedVars.trees,
-                (name, value, state) => (
-                  <motion.div
-                    key={name}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    style={{
-                      ...styles.varBox,
-                      ...styles.glassEffect,
-                      minWidth: 'fit-content',
-                      borderColor: getVariableColor(state)
-                    }}
-                  >
-                    <div style={styles.varHeader}>
-                      <span style={styles.varName}>🌲 {name}</span>
-                      <span style={styles.varType}>Tree</span>
-                    </div>
-                    <div style={{ padding: '10px', display: 'flex', justifyContent: 'center' }}>
-                      {renderTree(value)}
-                    </div>
-                  </motion.div>
-                ), 'trees'
-              )}
-              {renderSection('Graphs', '🕸️', categorizedVars.graphs, renderGraph, 'graphs')}
-            </>
+            <ErrorBoundary fallbackMessage="Error rendering visualizations. Try refreshing or check your code.">
+              <>
+                {renderSection('Arrays & Lists', '📊', categorizedVars.arrays, renderArray, 'arrays')}
+                {renderSection('Stacks', '📚', categorizedVars.stacks, renderStack, 'stacks')}
+                {renderSection('Queues', '🎫', categorizedVars.queues, renderQueue, 'queues')}
+                {renderSection('Linked Lists', '🔗', categorizedVars.linkedLists || {}, renderLinkedList, 'linkedLists')}
+                {renderSection('Primitives', '🔢', categorizedVars.primitives, renderPrimitive, 'primitives')}
+                {renderSection('Objects & Dicts', '📦', categorizedVars.objects, renderObject, 'objects')}
+                {renderSection('Binary Trees', '🌲', categorizedVars.trees,
+                  (name, value, state) => (
+                    <motion.div
+                      key={name}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      style={{
+                        ...styles.varBox,
+                        ...styles.glassEffect,
+                        minWidth: 'fit-content',
+                        borderColor: getVariableColor(state)
+                      }}
+                    >
+                      <div style={styles.varHeader}>
+                        <span style={styles.varName}>🌲 {name}</span>
+                        <span style={styles.varType}>Tree</span>
+                      </div>
+                      <div style={{ padding: '10px', display: 'flex', justifyContent: 'center' }}>
+                        {renderTree(value)}
+                      </div>
+                    </motion.div>
+                  ), 'trees'
+                )}
+                {renderSection('Graphs', '🕸️', categorizedVars.graphs, renderGraph, 'graphs')}
+              </>
+            </ErrorBoundary>
           ) : (
             <motion.div
               initial={{ opacity: 0 }}
@@ -878,6 +1050,14 @@ const styles = {
     borderRadius: '6px',
     cursor: 'pointer',
     transition: 'all 0.3s ease'
+  },
+  speedBtn: {
+    border: 'none',
+    padding: '6px 10px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    transition: 'all 0.2s ease'
   },
   debugBtn: {
     background: 'transparent',

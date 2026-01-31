@@ -1,72 +1,74 @@
 import React from 'react';
-import { FixedSizeList } from 'react-window';
+import { List } from 'react-window';
 import { motion } from 'framer-motion';
 
 /**
- * VirtualizedArray - Efficiently renders large arrays using react-window
+ * VirtualizedArray - Efficiently renders large arrays using react-window v2
  * Only renders visible items, dramatically improving performance for 1000+ elements
  */
+
+// Row component extracted for react-window v2 API
+const Row = ({ index, style, rowProps }) => {
+    const { items, getVariableColor, state } = rowProps;
+    const value = items[index];
+    const gradient = getVariableColor(state);
+
+    return (
+        <div style={style}>
+            <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: Math.min(index * 0.02, 0.5) }} // Cap delay for large arrays
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px'
+                }}
+            >
+                {/* Index label */}
+                <div style={{
+                    fontSize: '11px',
+                    color: '#888',
+                    fontWeight: 'bold',
+                    fontFamily: 'monospace'
+                }}>
+                    [{index}]
+                </div>
+
+                {/* Value box */}
+                <motion.div
+                    whileHover={{ scale: 1.05, rotate: 2 }}
+                    style={{
+                        minWidth: '50px',
+                        height: '50px',
+                        padding: '0 10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        borderRadius: '12px',
+                        fontWeight: 'bold',
+                        fontSize: '16px',
+                        background: `linear-gradient(135deg, ${gradient}, ${gradient}dd)`,
+                        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                        border: '2px solid rgba(255, 255, 255, 0.3)',
+                        cursor: 'pointer'
+                    }}
+                >
+                    {String(value)}
+                </motion.div>
+            </motion.div>
+        </div>
+    );
+};
+
 const VirtualizedArray = ({ name, items, state, getVariableColor }) => {
     // Calculate dimensions
     const itemHeight = 70; // Height of each array item
     const maxVisibleItems = 10;
     const listHeight = Math.min(items.length, maxVisibleItems) * itemHeight;
-
-    // Render function for each row
-    const Row = ({ index, style }) => {
-        const value = items[index];
-        const gradient = getVariableColor(state);
-
-        return (
-            <div style={style}>
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.02 }}
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '10px'
-                    }}
-                >
-                    {/* Index label */}
-                    <div style={{
-                        fontSize: '11px',
-                        color: '#888',
-                        fontWeight: 'bold',
-                        fontFamily: 'monospace'
-                    }}>
-                        [{index}]
-                    </div>
-
-                    {/* Value box */}
-                    <motion.div
-                        whileHover={{ scale: 1.05, rotate: 2 }}
-                        style={{
-                            minWidth: '50px',
-                            height: '50px',
-                            padding: '0 10px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            borderRadius: '12px',
-                            fontWeight: 'bold',
-                            fontSize: '16px',
-                            background: `linear-gradient(135deg, ${gradient}, ${gradient}dd)`,
-                            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                            border: '2px solid rgba(255, 255, 255, 0.3)',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        {String(value)}
-                    </motion.div>
-                </motion.div>
-            </div>
-        );
-    };
 
     return (
         <motion.div
@@ -129,19 +131,19 @@ const VirtualizedArray = ({ name, items, state, getVariableColor }) => {
                 </div>
             </div>
 
-            {/* Virtual List */}
-            <FixedSizeList
+            {/* Virtual List - react-window v2 API */}
+            <List
                 height={listHeight}
-                itemCount={items.length}
-                itemSize={itemHeight}
-                width="100%"
+                rowCount={items.length}
+                rowHeight={itemHeight}
+                rowComponent={Row}
+                rowProps={{ items, getVariableColor, state }}
                 style={{
                     borderRadius: '8px',
-                    background: 'rgba(0, 0, 0, 0.2)'
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    width: '100%'
                 }}
-            >
-                {Row}
-            </FixedSizeList>
+            />
 
             {/* Footer info */}
             <div style={{

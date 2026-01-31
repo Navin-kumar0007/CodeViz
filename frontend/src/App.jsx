@@ -4,6 +4,11 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Practice from './pages/Practice'; // Your Visualizer
+import Learn from './pages/Learn'; // Structured Learning
+import QuizCreator from './pages/QuizCreator'; // Custom Quiz Creator
+import Classroom from './pages/Classroom'; // Classroom Mode
+import InstructorDashboard from './pages/InstructorDashboard'; // Instructor Analytics
+import AdminPanel from './pages/AdminPanel'; // Admin Management
 
 // Protected Route Component (Blocks access if not logged in)
 const ProtectedRoute = ({ children }) => {
@@ -20,21 +25,61 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
 
         {/* Protected Routes (Must be Logged In) */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/practice" 
+        <Route
+          path="/practice"
           element={
             <ProtectedRoute>
               <Practice />
             </ProtectedRoute>
-          } 
+          }
+        />
+        <Route
+          path="/learn"
+          element={
+            <ProtectedRoute>
+              <Learn />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quiz-creator"
+          element={
+            <ProtectedRoute>
+              <QuizCreator />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/classroom"
+          element={
+            <ProtectedRoute>
+              <Classroom />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor"
+          element={
+            <ProtectedRoute>
+              <InstructorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminPanel />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </Router>
