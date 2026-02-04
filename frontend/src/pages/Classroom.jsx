@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { io } from 'socket.io-client';
 
 /**
@@ -9,8 +9,6 @@ import { io } from 'socket.io-client';
 
 const Classroom = () => {
     const navigate = useNavigate();
-    const { id } = useParams();  // Classroom ID from URL if viewing specific classroom
-
     const [activeTab, setActiveTab] = useState('join'); // 'join', 'create', 'live'
     const [classroomCode, setClassroomCode] = useState('');
     const [classrooms, setClassrooms] = useState([]);
@@ -51,6 +49,7 @@ const Classroom = () => {
         if (user?.token) {
             fetchMyClassrooms();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchPublicClassrooms = async () => {
@@ -196,7 +195,7 @@ const Classroom = () => {
             } else {
                 setError(data.message || 'Failed to join classroom');
             }
-        } catch (error) {
+        } catch {
             setError('Failed to join classroom');
         } finally {
             setLoading(false);
@@ -244,7 +243,7 @@ const Classroom = () => {
             } else {
                 setError(data.message || 'Failed to create classroom');
             }
-        } catch (error) {
+        } catch {
             setError('Failed to create classroom');
         } finally {
             setLoading(false);

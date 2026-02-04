@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 /**
  * QuizBrowser - Browse and take community-created quizzes
  */
 
-const QuizBrowser = ({ onClose, onTakeQuiz }) => {
+const QuizBrowser = ({ onClose }) => {
     const [quizzes, setQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState({ category: '', difficulty: '' });
@@ -13,25 +13,24 @@ const QuizBrowser = ({ onClose, onTakeQuiz }) => {
     const [quizState, setQuizState] = useState(null); // { currentQ, answers, showResults }
 
     useEffect(() => {
+        const fetchQuizzes = async () => {
+            try {
+                setLoading(true);
+                const params = new URLSearchParams();
+                if (filter.category) params.append('category', filter.category);
+                if (filter.difficulty) params.append('difficulty', filter.difficulty);
+
+                const res = await fetch(`http://localhost:5001/api/quizzes?${params}`);
+                const data = await res.json();
+                setQuizzes(data);
+            } catch (error) {
+                console.error('Error fetching quizzes:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchQuizzes();
     }, [filter]);
-
-    const fetchQuizzes = async () => {
-        try {
-            setLoading(true);
-            const params = new URLSearchParams();
-            if (filter.category) params.append('category', filter.category);
-            if (filter.difficulty) params.append('difficulty', filter.difficulty);
-
-            const res = await fetch(`http://localhost:5001/api/quizzes?${params}`);
-            const data = await res.json();
-            setQuizzes(data);
-        } catch (error) {
-            console.error('Error fetching quizzes:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const startQuiz = (quiz) => {
         setSelectedQuiz(quiz);
@@ -104,14 +103,14 @@ const QuizBrowser = ({ onClose, onTakeQuiz }) => {
 
         if (quizState.showResults) {
             return (
-                <motion.div
+                <Motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     style={styles.overlay}
                     onClick={closeQuiz}
                 >
-                    <motion.div
+                    <Motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         style={styles.panel}
@@ -131,19 +130,19 @@ const QuizBrowser = ({ onClose, onTakeQuiz }) => {
                                 Back to Quizzes
                             </button>
                         </div>
-                    </motion.div>
-                </motion.div>
+                    </Motion.div>
+                </Motion.div>
             );
         }
 
         return (
-            <motion.div
+            <Motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 style={styles.overlay}
             >
-                <motion.div
+                <Motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     style={styles.quizPanel}
@@ -166,7 +165,7 @@ const QuizBrowser = ({ onClose, onTakeQuiz }) => {
                     <h3 style={styles.questionText}>{question.question}</h3>
                     <div style={styles.optionsList}>
                         {question.options.map((option, i) => (
-                            <motion.button
+                            <Motion.button
                                 key={i}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
@@ -174,24 +173,24 @@ const QuizBrowser = ({ onClose, onTakeQuiz }) => {
                                 style={styles.optionBtn}
                             >
                                 {option}
-                            </motion.button>
+                            </Motion.button>
                         ))}
                     </div>
-                </motion.div>
-            </motion.div>
+                </Motion.div>
+            </Motion.div>
         );
     }
 
     // Quiz Browser View
     return (
-        <motion.div
+        <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={styles.overlay}
             onClick={onClose}
         >
-            <motion.div
+            <Motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -244,7 +243,7 @@ const QuizBrowser = ({ onClose, onTakeQuiz }) => {
                         </div>
                     ) : (
                         quizzes.map((quiz, index) => (
-                            <motion.div
+                            <Motion.div
                                 key={quiz._id}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -275,12 +274,12 @@ const QuizBrowser = ({ onClose, onTakeQuiz }) => {
                                     )}
                                     <button style={styles.startBtn}>Start →</button>
                                 </div>
-                            </motion.div>
+                            </Motion.div>
                         ))
                     )}
                 </div>
-            </motion.div>
-        </motion.div>
+            </Motion.div>
+        </Motion.div>
     );
 };
 

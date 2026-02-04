@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useTheme } from '../contexts/ThemeContext';
 import CodeEditor from '../components/Editor/CodeEditor';
 
 const SnippetViewer = () => {
@@ -10,8 +9,7 @@ const SnippetViewer = () => {
     const [snippet, setSnippet] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [mode, setMode] = useState('view'); // view or fork
-    const user = JSON.parse(localStorage.getItem('userInfo'));
+    // Removed unused vars: mode, setMode, user
 
     useEffect(() => {
         const fetchSnippet = async () => {
@@ -27,8 +25,8 @@ const SnippetViewer = () => {
                     // Fallback: try direct fetch if owner or if route allows
                     setError('Snippet not found or private.');
                 }
-            } catch (err) {
-                setError('Failed to load snippet.');
+            } catch {
+                setError('Failed to parse snippet data');
             } finally {
                 setLoading(false);
             }

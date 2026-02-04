@@ -15,9 +15,9 @@ const Login = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      
+
       const data = await res.json();
-      
+
       if (res.ok) {
         // SAVE THE GOLDEN TICKET 🎟️
         localStorage.setItem('userInfo', JSON.stringify(data));
@@ -25,7 +25,7 @@ const Login = () => {
       } else {
         setError(data.message);
       }
-    } catch (err) {
+    } catch {
       setError('Server error. Is the backend running?');
     }
   };
@@ -33,32 +33,32 @@ const Login = () => {
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
-        <h2 style={{color: '#fff', marginBottom: '20px'}}>Welcome Back</h2>
-        
+        <h2 style={{ color: '#fff', marginBottom: '20px' }}>Welcome Back</h2>
+
         {error && <div style={errorStyle}>{error}</div>}
-        
-        <form onSubmit={handleLogin} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
-          <input 
-            type="email" 
-            placeholder="Email Address" 
+
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <input
+            type="email"
+            placeholder="Email Address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={inputStyle} 
+            style={inputStyle}
             required
           />
-          <input 
-            type="password" 
-            placeholder="Password" 
+          <input
+            type="password"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={inputStyle} 
+            style={inputStyle}
             required
           />
           <button type="submit" style={buttonStyle}>Login</button>
         </form>
-        
-        <p style={{color: '#aaa', marginTop: '15px', fontSize: '14px'}}>
-          New here? <Link to="/signup" style={{color: '#007acc'}}>Create an account</Link>
+
+        <p style={{ color: '#aaa', marginTop: '15px', fontSize: '14px' }}>
+          New here? <Link to="/signup" style={{ color: '#007acc' }}>Create an account</Link>
         </p>
       </div>
     </div>

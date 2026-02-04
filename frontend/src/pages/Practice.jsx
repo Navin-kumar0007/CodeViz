@@ -122,7 +122,7 @@ const Practice = () => {
 
       try {
         // Run code safely
-        // eslint-disable-next-line no-new-func
+        // Run code safely
         new Function(code)();
         setOutput(logs.join('\n'));
         setActiveTab("console");
@@ -168,7 +168,7 @@ const Practice = () => {
           } else {
             throw new Error("Output is not a valid trace array");
           }
-        } catch (e) {
+        } catch {
           setOutput(res.data.output || "No output");
           setActiveTab("console");
         }
@@ -192,11 +192,8 @@ const Practice = () => {
         }
       }
 
-    } catch (err) {
-      console.error(err);
-      if (language !== 'python') { // If python, we already have local output, so don't show server error
-        setError("Server connection failed. Is the backend running?");
-      }
+    } catch {
+      setError('Server error. Is the backend running?');
     } finally {
       setIsLoading(false);
       setIsExecuting(false); // Clear loading indicator
@@ -253,7 +250,10 @@ const Practice = () => {
     } catch (err) { console.error(err); }
   };
 
-  useEffect(() => { if (user) fetchSnippets(); }, []);
+  useEffect(() => {
+    if (user) fetchSnippets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 📏 RESIZABLE DIVIDER HANDLERS
   const handleMouseDown = (e) => {
@@ -296,6 +296,7 @@ const Practice = () => {
         document.removeEventListener('mousemove', handleMouseMove);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDragging]);
 
   // Cleanup RAF on unmount

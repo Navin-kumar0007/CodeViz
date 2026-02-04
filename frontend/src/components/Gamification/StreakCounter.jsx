@@ -1,18 +1,18 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 
 const StreakCounter = ({ streak }) => {
     const { current, longest } = streak || { current: 0, longest: 0 };
 
     return (
         <div style={styles.container}>
-            <motion.div
+            <Motion.div
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
                 style={styles.icon}
             >
                 🔥
-            </motion.div>
+            </Motion.div>
             <div style={styles.textContainer}>
                 <div style={styles.count}>{current} Day Streak</div>
                 <div style={styles.longest}>Best: {longest}</div>

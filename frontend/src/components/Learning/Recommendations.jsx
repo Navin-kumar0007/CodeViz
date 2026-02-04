@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = 'http://localhost:5001/api/recommendations';
 
@@ -13,7 +13,7 @@ const Recommendations = ({ onNavigate }) => {
         if (userInfo) {
             try {
                 return JSON.parse(userInfo).token;
-            } catch (e) {
+            } catch {
                 return null;
             }
         }
@@ -50,6 +50,7 @@ const Recommendations = ({ onNavigate }) => {
 
     useEffect(() => {
         fetchRecommendations();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const getPriorityColor = (priority) => {
@@ -93,7 +94,7 @@ const Recommendations = ({ onNavigate }) => {
     if (!data) return null;
 
     return (
-        <motion.div
+        <Motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             style={styles.container}
@@ -120,7 +121,7 @@ const Recommendations = ({ onNavigate }) => {
 
             {/* Weak Areas Alert */}
             {data.weakAreas && data.weakAreas.length > 0 && (
-                <motion.div
+                <Motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     style={styles.weakAlert}
@@ -133,14 +134,14 @@ const Recommendations = ({ onNavigate }) => {
                             </span>
                         ))}
                     </div>
-                </motion.div>
+                </Motion.div>
             )}
 
             {/* Recommendations List */}
             <div style={styles.recsList}>
                 <AnimatePresence>
                     {data.recommendations && data.recommendations.map((rec, idx) => (
-                        <motion.div
+                        <Motion.div
                             key={rec.topic}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -157,7 +158,7 @@ const Recommendations = ({ onNavigate }) => {
                                 <p style={styles.recReason}>{rec.reason}</p>
                             </div>
                             <div style={styles.recArrow}>→</div>
-                        </motion.div>
+                        </Motion.div>
                     ))}
                 </AnimatePresence>
             </div>
@@ -189,7 +190,7 @@ const Recommendations = ({ onNavigate }) => {
             )}
 
             <style>{spinnerCSS}</style>
-        </motion.div>
+        </Motion.div>
     );
 };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 
 /**
  * LearningPath - Card component displaying a learning path
@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 
 const LearningPath = ({ path, progress, isLocked, onClick }) => {
     return (
-        <motion.div
+        <Motion.div
             whileHover={!isLocked ? { scale: 1.03, y: -5 } : {}}
             whileTap={!isLocked ? { scale: 0.98 } : {}}
             onClick={onClick}
@@ -49,7 +49,7 @@ const LearningPath = ({ path, progress, isLocked, onClick }) => {
             {/* Progress bar */}
             <div style={styles.progressContainer}>
                 <div style={styles.progressBar}>
-                    <motion.div
+                    <Motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 0.5 }}
@@ -63,7 +63,7 @@ const LearningPath = ({ path, progress, isLocked, onClick }) => {
                 </div>
                 <span style={styles.progressText}>{progress}%</span>
             </div>
-        </motion.div>
+        </Motion.div>
     );
 };
 

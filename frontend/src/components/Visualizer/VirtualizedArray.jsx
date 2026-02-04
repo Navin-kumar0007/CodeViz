@@ -1,6 +1,6 @@
 import React from 'react';
 import { List } from 'react-window';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 
 /**
  * VirtualizedArray - Efficiently renders large arrays using react-window v2
@@ -15,7 +15,7 @@ const Row = ({ index, style, rowProps }) => {
 
     return (
         <div style={style}>
-            <motion.div
+            <Motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: Math.min(index * 0.02, 0.5) }} // Cap delay for large arrays
@@ -38,7 +38,7 @@ const Row = ({ index, style, rowProps }) => {
                 </div>
 
                 {/* Value box */}
-                <motion.div
+                <Motion.div
                     whileHover={{ scale: 1.05, rotate: 2 }}
                     style={{
                         minWidth: '50px',
@@ -58,8 +58,8 @@ const Row = ({ index, style, rowProps }) => {
                     }}
                 >
                     {String(value)}
-                </motion.div>
-            </motion.div>
+                </Motion.div>
+            </Motion.div>
         </div>
     );
 };
@@ -71,7 +71,7 @@ const VirtualizedArray = ({ name, items, state, getVariableColor }) => {
     const listHeight = Math.min(items.length, maxVisibleItems) * itemHeight;
 
     return (
-        <motion.div
+        <Motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4 }}
@@ -154,7 +154,7 @@ const VirtualizedArray = ({ name, items, state, getVariableColor }) => {
             }}>
                 ⚡ Virtual scrolling enabled - rendering {Math.min(maxVisibleItems, items.length)} of {items.length} items
             </div>
-        </motion.div>
+        </Motion.div>
     );
 };
 

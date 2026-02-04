@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = 'http://localhost:5001/api/ai';
 
@@ -15,7 +15,7 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
             try {
                 const parsed = JSON.parse(userInfo);
                 return parsed.token;
-            } catch (e) {
+            } catch {
                 return null;
             }
         }
@@ -99,32 +99,32 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
         const text = response.hint || response.explanation || response.suggestions || response.review;
 
         return (
-            <motion.div
+            <Motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 style={styles.responseText}
             >
                 {text}
-            </motion.div>
+            </Motion.div>
         );
     };
 
     return (
         <>
             {/* Floating Toggle Button */}
-            <motion.button
+            <Motion.button
                 onClick={() => setIsOpen(!isOpen)}
                 style={styles.toggleButton}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
             >
                 🤖
-            </motion.button>
+            </Motion.button>
 
             {/* AI Panel */}
             <AnimatePresence>
                 {isOpen && (
-                    <motion.div
+                    <Motion.div
                         initial={{ opacity: 0, x: 300 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 300 }}
@@ -182,7 +182,7 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
                             <span>Powered by Gemini AI</span>
                             <span style={styles.rateLimit}>10 req/min</span>
                         </div>
-                    </motion.div>
+                    </Motion.div>
                 )}
             </AnimatePresence>
 

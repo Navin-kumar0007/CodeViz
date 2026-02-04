@@ -1,3 +1,4 @@
+/* global loadPyodide */
 /**
  * 🐍 CodeViz Client-Side Python Executor (WASM)
  * Runs Python code in the browser using Pyodide to save server costs.

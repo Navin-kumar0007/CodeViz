@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 /**
  * VariableTracker - Shows how variables change over time
@@ -18,7 +18,7 @@ const VariableTracker = ({ traceData, stepIndex, maxHistory = 10 }) => {
 
             let vars = step.variables || step.locals || step.globals;
             if (typeof vars === 'string') {
-                try { vars = JSON.parse(vars); } catch (e) { continue; }
+                try { vars = JSON.parse(vars); } catch { continue; }
             }
             if (!vars) continue;
 
@@ -55,7 +55,7 @@ const VariableTracker = ({ traceData, stepIndex, maxHistory = 10 }) => {
     }
 
     return (
-        <motion.div
+        <Motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -73,8 +73,8 @@ const VariableTracker = ({ traceData, stepIndex, maxHistory = 10 }) => {
                         <div style={styles.varName}>{name}</div>
                         <div style={styles.timeline}>
                             <AnimatePresence mode="popLayout">
-                                {history[name].slice(-6).map((entry, idx) => (
-                                    <motion.div
+                                {history[name].slice(-6).map((entry) => (
+                                    <Motion.div
                                         key={`${entry.step}-${entry.value}`}
                                         initial={{ scale: 0, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 1 }}
@@ -94,7 +94,7 @@ const VariableTracker = ({ traceData, stepIndex, maxHistory = 10 }) => {
                                         }}
                                     >
                                         {entry.value.length > 6 ? entry.value.slice(0, 5) + '…' : entry.value}
-                                    </motion.div>
+                                    </Motion.div>
                                 ))}
                             </AnimatePresence>
                         </div>
@@ -107,7 +107,7 @@ const VariableTracker = ({ traceData, stepIndex, maxHistory = 10 }) => {
                     +{variableNames.length - 5} more variables
                 </div>
             )}
-        </motion.div>
+        </Motion.div>
     );
 };
 

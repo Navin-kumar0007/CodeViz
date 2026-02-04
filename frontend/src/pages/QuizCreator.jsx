@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 /**
  * QuizCreator - Page for instructors to create custom quizzes
@@ -21,7 +21,6 @@ const QuizCreator = () => {
         correct: 0,
         explanation: ''
     });
-    const [showPreview, setShowPreview] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
@@ -110,7 +109,7 @@ const QuizCreator = () => {
                 throw new Error(data.message || 'Failed to save quiz');
             }
 
-            const savedQuiz = await res.json();
+            await res.json();
             alert(publish ? 'Quiz published!' : 'Quiz saved as draft!');
             navigate('/learn');
         } catch (err) {
@@ -262,7 +261,7 @@ const QuizCreator = () => {
                         </h3>
                         <div style={styles.questionsList}>
                             {quiz.questions.map((q, index) => (
-                                <motion.div
+                                <Motion.div
                                     key={index}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -276,7 +275,7 @@ const QuizCreator = () => {
                                     >
                                         ✕
                                     </button>
-                                </motion.div>
+                                </Motion.div>
                             ))}
                         </div>
                     </section>

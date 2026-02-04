@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -9,7 +9,8 @@ const CodeEditor = ({ code, setCode, language, activeLine }) => {
   const { colors } = useTheme();
 
   // 1. Capture Editor Instance on Mount
-  const handleEditorDidMount = (editor, monaco) => {
+  // 1. Capture Editor Instance on Mount
+  const handleEditorDidMount = (editor) => {
     editorRef.current = editor;
   };
 

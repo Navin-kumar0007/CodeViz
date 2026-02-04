@@ -10,11 +10,7 @@ const DiscussionPanel = ({ lessonId }) => {
 
     const user = JSON.parse(localStorage.getItem('userInfo'));
 
-    useEffect(() => {
-        fetchDiscussions();
-    }, [lessonId]);
-
-    const fetchDiscussions = async () => {
+    const fetchDiscussions = React.useCallback(async () => {
         try {
             const config = {
                 headers: { Authorization: `Bearer ${user.token}` }
@@ -26,7 +22,12 @@ const DiscussionPanel = ({ lessonId }) => {
             console.error('Error fetching discussions:', error);
             setLoading(false);
         }
-    };
+    }, [lessonId, user.token]);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchDiscussions();
+    }, [fetchDiscussions]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

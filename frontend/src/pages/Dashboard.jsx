@@ -9,6 +9,12 @@ const Dashboard = () => {
   const [gamification, setGamification] = useState(null);
 
   useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
     if (user && user.token) {
       // 1. Perform Daily Check-in
       fetch('http://localhost:5001/api/gamification/checkin', {
@@ -29,6 +35,7 @@ const Dashboard = () => {
         .then(stats => setGamification(stats))
         .catch(err => console.error('Gamification sync failed:', err));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogout = () => {

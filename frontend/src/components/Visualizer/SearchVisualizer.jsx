@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 /**
  * 🔍 SEARCH VISUALIZER
@@ -14,8 +14,7 @@ const SearchVisualizer = ({
     high = null,
     mid = null,
     foundIndex = null,
-    visitedIndices = [],
-    currentIndex = null
+    visitedIndices = []
 }) => {
     const colors = {
         default: 'rgba(102, 126, 234, 0.4)',
@@ -78,7 +77,7 @@ const SearchVisualizer = ({
     };
 
     return (
-        <motion.div
+        <Motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             style={styles.wrapper}
@@ -114,7 +113,7 @@ const SearchVisualizer = ({
                     const isPointer = idx === low || idx === mid || idx === high;
 
                     return (
-                        <motion.div
+                        <Motion.div
                             key={idx}
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
@@ -131,7 +130,7 @@ const SearchVisualizer = ({
                             )}
 
                             {/* Value Box */}
-                            <motion.div
+                            <Motion.div
                                 animate={{
                                     scale: elementStyle.transform ? 1.1 : 1,
                                     ...elementStyle
@@ -143,29 +142,29 @@ const SearchVisualizer = ({
                                 }}
                             >
                                 {String(val)}
-                            </motion.div>
+                            </Motion.div>
 
                             {/* Index Label */}
                             <div style={styles.indexLabel}>[{idx}]</div>
 
                             {/* Found indicator */}
                             {foundIndex === idx && (
-                                <motion.div
+                                <Motion.div
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     style={styles.foundBadge}
                                 >
                                     ✓ Found!
-                                </motion.div>
+                                </Motion.div>
                             )}
-                        </motion.div>
+                        </Motion.div>
                     );
                 })}
             </div>
 
             {/* Status */}
             {mid !== null && foundIndex === null && (
-                <motion.div
+                <Motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     style={styles.statusBar}
@@ -178,9 +177,9 @@ const SearchVisualizer = ({
                                 ? ' → Search right half'
                                 : ' ← Search left half'
                     )}
-                </motion.div>
+                </Motion.div>
             )}
-        </motion.div>
+        </Motion.div>
     );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 const ShareModal = ({ isOpen, onClose, onShare, snippetTitle }) => {
     if (!isOpen) return null;

@@ -1,0 +1,197 @@
+
+> frontend@0.0.0 lint
+> eslint .
+
+
+/Users/navin/CodeViz/frontend/src/components/AI/AIAssistant.jsx
+  39:1  error  Parsing error: 'return' outside of function
+
+/Users/navin/CodeViz/frontend/src/components/ConceptCard.jsx
+  129:17  error  Parsing error: Expected corresponding JSX closing tag for <Motion.div>
+
+/Users/navin/CodeViz/frontend/src/components/Editor/CodeEditor.jsx
+  12:41  error  '_monaco' is defined but never used  no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/components/ErrorBoundary.jsx
+  17:37  error  '_error' is defined but never used  no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/components/Learning/Quiz.jsx
+   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u          no-unused-vars
+  34:11  error  'score' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/components/Learning/QuizBrowser.jsx
+   2:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                    no-unused-vars
+   8:33  error    'onTakeQuiz' is defined but never used                                                                           no-unused-vars
+  17:8   warning  React Hook useEffect has a missing dependency: 'fetchQuizzes'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/components/Learning/Recommendations.jsx
+   2:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                            no-unused-vars
+  16:22  error    'e' is defined but never used                                                                                            no-unused-vars
+  53:8   warning  React Hook useEffect has a missing dependency: 'fetchRecommendations'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/components/Social/DiscussionPanel.jsx
+  14:9  error    Error: Cannot access variable before it is declared
+
+`fetchDiscussions` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  12 |
+  13 |     useEffect(() => {
+> 14 |         fetchDiscussions();
+     |         ^^^^^^^^^^^^^^^^ `fetchDiscussions` accessed before it is declared
+  15 |     }, [lessonId]);
+  16 |
+  17 |     const fetchDiscussions = async () => {
+
+  15 |     }, [lessonId]);
+  16 |
+> 17 |     const fetchDiscussions = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 18 |         try {
+     | ^^^^^^^^^^^^^
+> 19 |             const config = {
+     …
+     | ^^^^^^^^^^^^^
+> 28 |         }
+     | ^^^^^^^^^^^^^
+> 29 |     };
+     | ^^^^^^^ `fetchDiscussions` is declared here
+  30 |
+  31 |     const handleSubmit = async (e) => {
+  32 |         e.preventDefault();  react-hooks/immutability
+  15:8  warning  React Hook useEffect has a missing dependency: 'fetchDiscussions'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/components/Social/ShareModal.jsx
+  1:17  error  'useState' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/components/VariableTracker.jsx
+   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  21:57  error  'e' is defined but never used                                                  no-unused-vars
+  76:70  error  'idx' is defined but never used                                                no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/components/Visualizer/Canvas.jsx
+    2:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                            no-unused-vars
+   21:11  error    'colors' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                   no-unused-vars
+   34:28  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                react-hooks/rules-of-hooks
+   44:57  error    'e' is defined but never used                                                                                                                                                                                                            no-unused-vars
+   44:60  error    Empty block statement                                                                                                                                                                                                                    no-empty
+   55:27  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                react-hooks/rules-of-hooks
+  122:26  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                react-hooks/rules-of-hooks
+  136:3   error    React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                              react-hooks/rules-of-hooks
+  138:6   warning  React Hook useEffect has a missing dependency: 'currentVariables'. Either include it or remove the dependency array                                                                                                                      react-hooks/exhaustive-deps
+  144:3   error    React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                              react-hooks/rules-of-hooks
+  150:6   warning  React Hook useEffect has a missing dependency: 'setStepIndex'. Either include it or remove the dependency array. If 'setStepIndex' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/components/Visualizer/SearchVisualizer.jsx
+   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  18:5   error  'currentIndex' is assigned a value but never used                              no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/components/Visualizer/SortingVisualizer.jsx
+   1:17  error  'useMemo' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u   no-unused-vars
+  12:5   error  'state' is defined but never used                                               no-unused-vars
+  19:5   error  'getVariableColor' is assigned a value but never used                           no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/components/Visualizer/VirtualizedArray.jsx
+  3:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/contexts/ThemeContext.jsx
+  148:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/Users/navin/CodeViz/frontend/src/pages/AdminPanel.jsx
+    3:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-unused-vars
+   49:9   error    Error: Cannot access variable before it is declared
+
+`fetchData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  47 |             return;
+  48 |         }
+> 49 |         fetchData();
+     |         ^^^^^^^^^ `fetchData` accessed before it is declared
+  50 |     }, []);
+  51 |
+  52 |     // Fetch on filter/page change
+
+  57 |     }, [searchQuery, roleFilter, pagination.page, pagination.limit]);
+  58 |
+> 59 |     const fetchData = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 60 |         setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 61 |         await Promise.all([fetchStats(), fetchUsers()]);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 62 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 63 |     };
+     | ^^^^^^^ `fetchData` is declared here
+  64 |
+  65 |     const fetchStats = async () => {
+  66 |         try {                                      react-hooks/immutability
+   50:8   warning  React Hook useEffect has missing dependencies: 'fetchData', 'navigate', and 'user'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+   55:13  error    Error: Cannot access variable before it is declared
+
+`fetchUsers` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  53 |     useEffect(() => {
+  54 |         if (user?.role === 'admin') {
+> 55 |             fetchUsers();
+     |             ^^^^^^^^^^ `fetchUsers` accessed before it is declared
+  56 |         }
+  57 |     }, [searchQuery, roleFilter, pagination.page, pagination.limit]);
+  58 |
+
+   77 |     };
+   78 |
+>  79 |     const fetchUsers = async () => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  80 |         try {
+      | ^^^^^^^^^^^^^
+>  81 |             const params = new URLSearchParams();
+      …
+      | ^^^^^^^^^^^^^
+>  97 |         }
+      | ^^^^^^^^^^^^^
+>  98 |     };
+      | ^^^^^^^ `fetchUsers` is declared here
+   99 |
+  100 |     const confirmRoleChange = (userId, userName, currentRole, newRole) => {
+  101 |         if (currentRole === newRole) return;  react-hooks/immutability
+   57:8   warning  React Hook useEffect has missing dependencies: 'fetchUsers' and 'user?.role'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+  130:18  error    'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  157:18  error    'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  181:18  error    'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  186:11  error    'formatDate' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/pages/Classroom.jsx
+    3:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                             no-unused-vars
+   12:13  error    'id' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                        no-unused-vars
+   54:8   warning  React Hook useEffect has missing dependencies: 'fetchMyClassrooms' and 'user?.token'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  199:18  error    'error' is defined but never used                                                                                                         no-unused-vars
+  247:18  error    'error' is defined but never used                                                                                                         no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/pages/Dashboard.jsx
+  32:6  warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/pages/InstructorDashboard.jsx
+   3:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                no-unused-vars
+  46:8   warning  React Hook useEffect has missing dependencies: 'fetchDashboard', 'navigate', and 'user'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/pages/Learn.jsx
+   3:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                      no-unused-vars
+  29:12  error    'syncInProgress' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                     no-unused-vars
+  97:8   warning  React Hook useEffect has a missing dependency: 'syncWithServer'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/pages/Login.jsx
+  28:14  error  'err' is defined but never used  no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/pages/Practice.jsx
+  125:9   warning  Unused eslint-disable directive (no problems were reported from 'no-new-func')
+  171:18  error    'e' is defined but never used                                                                                                  no-unused-vars
+  256:51  warning  React Hook useEffect has missing dependencies: 'fetchSnippets' and 'user'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  299:6   warning  React Hook useEffect has a missing dependency: 'handleMouseMove'. Either include it or remove the dependency array             react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/pages/SnippetViewer.jsx
+  28:22  error  '_' is defined but never used  no-unused-vars
+
+✖ 63 problems (49 errors, 14 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

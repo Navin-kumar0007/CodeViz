@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import Quiz from './Quiz';
 import Canvas from '../Visualizer/Canvas';
 import DiscussionPanel from '../Social/DiscussionPanel';
@@ -23,11 +23,11 @@ const LANGUAGE_MAP = {
     cpp: 'cpp'
 };
 
-const LessonView = ({ path, lesson, onBack, onComplete, progress }) => {
+const LessonView = ({ lesson, onBack, onComplete }) => {
     const [selectedLang, setSelectedLang] = useState('python');
     const [compareLang, setCompareLang] = useState('javascript');
     const [compareMode, setCompareMode] = useState(false);
-    const [currentStep, setCurrentStep] = useState(0);
+    const [currentStep] = useState(0); // Removed unused setCurrentStep
     const [showQuiz, setShowQuiz] = useState(false);
 
     // Visual execution state
@@ -163,7 +163,7 @@ const LessonView = ({ path, lesson, onBack, onComplete, progress }) => {
 
                     <div style={styles.explanationContent}>
                         {explanationSteps.map((step, idx) => (
-                            <motion.div
+                            <Motion.div
                                 key={idx}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -185,7 +185,7 @@ const LessonView = ({ path, lesson, onBack, onComplete, progress }) => {
                                         ⚠️ <strong>Important:</strong> {step.content}
                                     </div>
                                 )}
-                            </motion.div>
+                            </Motion.div>
                         ))}
                     </div>
 
@@ -230,7 +230,7 @@ const LessonView = ({ path, lesson, onBack, onComplete, progress }) => {
 
                     <AnimatePresence mode="wait">
                         {showVisualizer && traceData ? (
-                            <motion.div
+                            <Motion.div
                                 key="visualizer"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -242,9 +242,9 @@ const LessonView = ({ path, lesson, onBack, onComplete, progress }) => {
                                     stepIndex={stepIndex}
                                     setStepIndex={setStepIndex}
                                 />
-                            </motion.div>
+                            </Motion.div>
                         ) : (
-                            <motion.div
+                            <Motion.div
                                 key="code"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -297,7 +297,7 @@ const LessonView = ({ path, lesson, onBack, onComplete, progress }) => {
                                         <strong>💡 Syntax Difference:</strong> {lesson.syntaxDiff}
                                     </div>
                                 )}
-                            </motion.div>
+                            </Motion.div>
                         )}
                     </AnimatePresence>
                 </div>
