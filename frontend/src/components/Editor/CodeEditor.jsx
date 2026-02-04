@@ -15,6 +15,9 @@ const CodeEditor = ({ code, setCode, language, activeLine }) => {
 
   // 2. Load/Save Logic (Same as before)
   useEffect(() => {
+    // 🛡️ SKIP LOADING if setCode is not provided (ReadOnly Mode)
+    if (!setCode) return;
+
     const savedCode = localStorage.getItem(`code_${language}`);
     if (savedCode) {
       setCode(savedCode);
@@ -27,8 +30,11 @@ const CodeEditor = ({ code, setCode, language, activeLine }) => {
   }, [language, setCode]);
 
   const handleEditorChange = (value) => {
-    setCode(value);
-    localStorage.setItem(`code_${language}`, value);
+    // 🛡️ SKIP SAVING if setCode is not provided
+    if (setCode) {
+      setCode(value);
+      localStorage.setItem(`code_${language}`, value);
+    }
   };
 
   // 3. ⚡️ ACTIVE LINE HIGHLIGHTING LOGIC
@@ -78,13 +84,14 @@ const CodeEditor = ({ code, setCode, language, activeLine }) => {
         onChange={handleEditorChange}
         onMount={handleEditorDidMount} // 👈 Hook to capture editor
         options={{
-          fontSize: 14,
-          minimap: { enabled: false },
+          fontSize: window.innerWidth < 768 ? 12 : 14, // 📱 Mobile optimization
+          minimap: { enabled: false }, // Save space on mobile
           scrollBeyondLastLine: false,
           automaticLayout: true,
           padding: { top: 15 },
-          lineNumbers: 'on',
-          glyphMargin: false
+          lineNumbers: window.innerWidth < 768 ? 'off' : 'on', // Hide line numbers on very small screens to save space
+          glyphMargin: false,
+          wordWrap: 'on' // Enable word wrap for mobile
         }}
       />
     </div>

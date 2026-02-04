@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codeviz-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: codeviz-backend
+  template:
+    metadata:
+      labels:
+        app: codeviz-backend
+    spec:
+      containers:
+      - name: backend
+        image: codeviz-backend:latest
+        ports:
+        - containerPort: 5001
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: codeviz-secrets
+              key: mongo-uri
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: codeviz-secrets
+              key: jwt-secret
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"

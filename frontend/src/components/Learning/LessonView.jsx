@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Quiz from './Quiz';
 import Canvas from '../Visualizer/Canvas';
+import DiscussionPanel from '../Social/DiscussionPanel';
 
 /**
  * LessonView - Full lesson display with explanation, code, and quiz
@@ -301,6 +302,9 @@ const LessonView = ({ path, lesson, onBack, onComplete, progress }) => {
                     </AnimatePresence>
                 </div>
             </div>
+
+            {/* Discussion Section */}
+            <DiscussionPanel lessonId={lesson.id} />
 
             {/* Footer - Continue button */}
             <div style={styles.footer}>

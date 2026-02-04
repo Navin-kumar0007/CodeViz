@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codeviz-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: codeviz-frontend
+  template:
+    metadata:
+      labels:
+        app: codeviz-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: codeviz-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codeviz-frontend-service
+spec:
+  selector:
+    app: codeviz-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer

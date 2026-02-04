@@ -7,6 +7,7 @@ import LessonView from '../components/Learning/LessonView';
 import AchievementsPanel from '../components/Learning/AchievementsPanel';
 import Leaderboard from '../components/Learning/Leaderboard';
 import QuizBrowser from '../components/Learning/QuizBrowser';
+import Recommendations from '../components/Learning/Recommendations';
 import { COURSES, getPathProgress, getTotalProgress } from '../data/courses';
 import { ACHIEVEMENTS, checkAchievements, getAchievement } from '../data/achievements';
 
@@ -284,6 +285,16 @@ const Learn = () => {
                         </motion.div>
                     ))}
                 </AnimatePresence>
+            </div>
+
+            {/* Personalized Recommendations */}
+            <div style={{ maxWidth: '600px', margin: '30px auto' }}>
+                <Recommendations
+                    onNavigate={(topic) => {
+                        const path = COURSES.find(c => c.id === topic);
+                        if (path && isPathUnlocked(path)) setSelectedPath(path);
+                    }}
+                />
             </div>
 
             {/* Onboarding tip for new users */}

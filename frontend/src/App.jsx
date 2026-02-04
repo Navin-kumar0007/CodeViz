@@ -9,6 +9,7 @@ import QuizCreator from './pages/QuizCreator'; // Custom Quiz Creator
 import Classroom from './pages/Classroom'; // Classroom Mode
 import InstructorDashboard from './pages/InstructorDashboard'; // Instructor Analytics
 import AdminPanel from './pages/AdminPanel'; // Admin Management
+import SnippetViewer from './pages/SnippetViewer'; // Public Code Viewer
 
 // Protected Route Component (Blocks access if not logged in)
 const ProtectedRoute = ({ children }) => {
@@ -72,6 +73,10 @@ const App = () => {
               <InstructorDashboard />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/snippet/:id"
+          element={<SnippetViewer />}
         />
         <Route
           path="/admin"

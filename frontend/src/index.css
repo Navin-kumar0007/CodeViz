@@ -5,9 +5,10 @@
 body {
   background-color: #111827;
   color: white;
+  overflow-x: hidden; /* Prevent horizontal scroll on mobile */
 }
 
-/* 🎯 ACTIVE LINE HIGHLIGHTING FOR CODE EDITOR */
+/* 🎯 ACTIVE LINE HIGHLIGHTING */
 .active-line-decoration {
   background: rgba(79, 195, 247, 0.15) !important;
   border-left: 3px solid #4fc3f7 !important;
@@ -28,4 +29,23 @@ body {
   width: 6px !important;
   margin-left: 3px;
   border-radius: 2px;
+}
+
+/* 📱 MOBILE OPTIMIZATIONS */
+@media (max-width: 768px) {
+  /* Global font size adjustment */
+  html {
+    font-size: 14px;
+  }
+  
+  /* Make all scrollbars thinner on mobile */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  /* Touch-friendly buttons */
+  button {
+    min-height: 44px; /* Minimum touch target size */
+  }
 }
