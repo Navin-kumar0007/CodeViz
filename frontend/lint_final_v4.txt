@@ -1,0 +1,34 @@
+
+> frontend@0.0.0 lint
+> eslint .
+
+
+/Users/navin/CodeViz/frontend/src/components/Learning/Recommendations.jsx
+  53:8  warning  React Hook useEffect has a missing dependency: 'fetchRecommendations'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/components/Visualizer/Canvas.jsx
+  132:6  warning  React Hook useEffect has a missing dependency: 'currentVariables'. Either include it or remove the dependency array                                                                                                                      react-hooks/exhaustive-deps
+  144:6  warning  React Hook useEffect has a missing dependency: 'setStepIndex'. Either include it or remove the dependency array. If 'setStepIndex' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/contexts/ThemeContext.jsx
+  148:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/Users/navin/CodeViz/frontend/src/pages/AdminPanel.jsx
+  132:18  error  'error' is defined but never used  no-unused-vars
+  159:18  error  'error' is defined but never used  no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/pages/Classroom.jsx
+    2:23  error    'useParams' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                          no-unused-vars
+   54:8   warning  React Hook useEffect has missing dependencies: 'fetchMyClassrooms' and 'user?.token'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  199:18  error    'error' is defined but never used                                                                                                         no-unused-vars
+
+/Users/navin/CodeViz/frontend/src/pages/Dashboard.jsx
+  32:6  warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/pages/Learn.jsx
+  82:17  error    'setSyncInProgress' is not defined                                                                                 no-undef
+  91:17  error    'setSyncInProgress' is not defined                                                                                 no-undef
+  96:8   warning  React Hook useEffect has a missing dependency: 'syncWithServer'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+✖ 13 problems (7 errors, 6 warnings)
+

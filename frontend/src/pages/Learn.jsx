@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import LearningPath from '../components/Learning/LearningPath';
 import LessonList from '../components/Learning/LessonList';
 import LessonView from '../components/Learning/LessonView';
 import AchievementsPanel from '../components/Learning/AchievementsPanel';
 import Leaderboard from '../components/Learning/Leaderboard';
 import QuizBrowser from '../components/Learning/QuizBrowser';
+import Recommendations from '../components/Learning/Recommendations';
 import { COURSES, getPathProgress, getTotalProgress } from '../data/courses';
 import { ACHIEVEMENTS, checkAchievements, getAchievement } from '../data/achievements';
 
@@ -22,10 +23,10 @@ const Learn = () => {
     const [progress, setProgress] = useState({});
     const [achievements, setAchievements] = useState([]);
     const [showAchievements, setShowAchievements] = useState(false);
+    const [syncInProgress, setSyncInProgress] = useState(false);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
     const [showQuizBrowser, setShowQuizBrowser] = useState(false);
     const [newAchievement, setNewAchievement] = useState(null);
-    const [syncInProgress, setSyncInProgress] = useState(false);
 
     // Get user info for backend sync
     const getUserInfo = () => {
@@ -79,6 +80,7 @@ const Learn = () => {
             // If user is logged in, sync with server
             const user = getUserInfo();
             if (user && user.token) {
+                if (syncInProgress) return;
                 setSyncInProgress(true);
                 const serverData = await syncWithServer(localProgress, localAchievements);
                 if (serverData && serverData.synced) {
@@ -93,6 +95,7 @@ const Learn = () => {
         };
 
         loadAndSync();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Save progress to localStorage
@@ -182,6 +185,14 @@ const Learn = () => {
             navigate('/');
         }
     };
+
+    useEffect(() => {
+        const userInfo = getUserInfo();
+        if (!userInfo) {
+            navigate('/login');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Render lesson view
     if (selectedLesson && selectedPath) {
@@ -284,6 +295,16 @@ const Learn = () => {
                         </motion.div>
                     ))}
                 </AnimatePresence>
+            </div>
+
+            {/* Personalized Recommendations */}
+            <div style={{ maxWidth: '600px', margin: '30px auto' }}>
+                <Recommendations
+                    onNavigate={(topic) => {
+                        const path = COURSES.find(c => c.id === topic);
+                        if (path && isPathUnlocked(path)) setSelectedPath(path);
+                    }}
+                />
             </div>
 
             {/* Onboarding tip for new users */}

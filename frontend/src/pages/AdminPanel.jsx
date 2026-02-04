@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 /**
  * AdminPanel - User and role management dashboard
@@ -35,32 +35,6 @@ const AdminPanel = () => {
     };
 
     const user = getUserInfo();
-
-    // Check admin access
-    useEffect(() => {
-        if (!user) {
-            navigate('/login');
-            return;
-        }
-        if (user.role !== 'admin') {
-            navigate('/');
-            return;
-        }
-        fetchData();
-    }, []);
-
-    // Fetch on filter/page change
-    useEffect(() => {
-        if (user?.role === 'admin') {
-            fetchUsers();
-        }
-    }, [searchQuery, roleFilter, pagination.page, pagination.limit]);
-
-    const fetchData = async () => {
-        setLoading(true);
-        await Promise.all([fetchStats(), fetchUsers()]);
-        setLoading(false);
-    };
 
     const fetchStats = async () => {
         try {
@@ -97,6 +71,34 @@ const AdminPanel = () => {
         }
     };
 
+    const fetchData = async () => {
+        setLoading(true);
+        await Promise.all([fetchStats(), fetchUsers()]);
+        setLoading(false);
+    };
+
+    // Check admin access
+    useEffect(() => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+        if (user.role !== 'admin') {
+            navigate('/');
+            return;
+        }
+        fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Fetch on filter/page change
+    useEffect(() => {
+        if (user?.role === 'admin') {
+            fetchUsers();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchQuery, roleFilter, pagination.page, pagination.limit]);
+
     const confirmRoleChange = (userId, userName, currentRole, newRole) => {
         if (currentRole === newRole) return;
         setRoleModal({ userId, userName, currentRole, newRole });
@@ -127,7 +129,7 @@ const AdminPanel = () => {
                 setError(data.message);
                 setTimeout(() => setError(''), 3000);
             }
-        } catch (error) {
+        } catch {
             setError('Failed to update role');
         }
     };
@@ -154,7 +156,7 @@ const AdminPanel = () => {
                 setError(data.message);
                 setTimeout(() => setError(''), 3000);
             }
-        } catch (error) {
+        } catch {
             setError('Failed to update status');
         }
     };
@@ -178,21 +180,12 @@ const AdminPanel = () => {
                 setError(data.message);
                 setTimeout(() => setError(''), 3000);
             }
-        } catch (error) {
-            setError('Failed to delete user');
+        } catch {
+            setError('Failed to fetch data');
         }
     };
 
-    const formatDate = (dateStr) => {
-        if (!dateStr) return 'Never';
-        return new Date(dateStr).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
+
 
     const formatDateShort = (dateStr) => {
         if (!dateStr) return 'Never';

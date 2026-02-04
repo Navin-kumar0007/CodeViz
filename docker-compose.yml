@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # 🔌 Backend Service
+  backend:
+    build: ./backend
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - MONGO_URI=${MONGO_URI} # Takes from host .env
+      - JWT_SECRET=${JWT_SECRET}
+    restart: always
+
+  # 🎨 Frontend Service
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80" # Map host 5173 to container 80 (Nginx)
+    depends_on:
+      - backend
+    restart: always
+
+  # 🧊 Redis Cache
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: always

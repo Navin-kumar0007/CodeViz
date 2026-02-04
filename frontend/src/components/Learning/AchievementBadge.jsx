@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 
 /**
  * AchievementBadge - Shows a single achievement badge
@@ -16,7 +16,7 @@ const AchievementBadge = ({ achievement, isUnlocked = false, size = 'medium', sh
     const sizeConfig = sizes[size] || sizes.medium;
 
     return (
-        <motion.div
+        <Motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             whileHover={isUnlocked ? { scale: 1.1 } : {}}
@@ -41,7 +41,7 @@ const AchievementBadge = ({ achievement, isUnlocked = false, size = 'medium', sh
                     🔒
                 </div>
             )}
-        </motion.div>
+        </Motion.div>
     );
 };
 

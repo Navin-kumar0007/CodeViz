@@ -9,18 +9,34 @@ const userSchema = mongoose.Schema(
     role: { type: String, enum: ['student', 'instructor', 'admin'], default: 'student' },
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date, default: null },
+
+    // 🎮 Gamification
+    streak: {
+      current: { type: Number, default: 0 },
+      longest: { type: Number, default: 0 },
+      lastActiveDate: { type: Date, default: null }
+    },
+    xp: { type: Number, default: 0 },
+    badges: [{
+      id: String,
+      earnedAt: { type: Date, default: Date.now }
+    }],
+    completedChallenges: [{
+      challengeId: String,
+      completedAt: { type: Date, default: Date.now },
+      score: Number
+    }]
   },
   { timestamps: true }
 );
 
 // 🔒 Encrypt password before saving
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    return next(); // Must return to stop execution
+    return;
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 // 🔓 Method to check password on login

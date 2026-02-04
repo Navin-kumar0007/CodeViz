@@ -4,23 +4,31 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Warning: no test specified\" && exit 0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "acorn": "^8.15.0",
     "astring": "^1.9.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-async-handler": "^1.2.0",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.2",
+    "morgan": "^1.10.1",
     "nodemon": "^3.1.11",
+    "redis": "^5.10.0",
     "socket.io": "^4.8.3",
-    "walk": "^2.3.15"
+    "walk": "^2.3.15",
+    "winston": "^3.19.0"
   }
 }

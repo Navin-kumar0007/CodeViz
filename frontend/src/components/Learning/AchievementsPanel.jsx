@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import AchievementBadge from './AchievementBadge';
 import { ACHIEVEMENTS } from '../../data/achievements';
 
@@ -19,14 +19,14 @@ const AchievementsPanel = ({ unlockedAchievements = [], onClose }) => {
     const totalCount = ACHIEVEMENTS.length;
 
     return (
-        <motion.div
+        <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={styles.overlay}
             onClick={onClose}
         >
-            <motion.div
+            <Motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -44,7 +44,7 @@ const AchievementsPanel = ({ unlockedAchievements = [], onClose }) => {
 
                 {/* Progress bar */}
                 <div style={styles.progressBar}>
-                    <motion.div
+                    <Motion.div
                         style={styles.progressFill}
                         initial={{ width: 0 }}
                         animate={{ width: `${(unlockedCount / totalCount) * 100}%` }}
@@ -83,8 +83,8 @@ const AchievementsPanel = ({ unlockedAchievements = [], onClose }) => {
                         );
                     })}
                 </div>
-            </motion.div>
-        </motion.div>
+            </Motion.div>
+        </Motion.div>
     );
 };
 

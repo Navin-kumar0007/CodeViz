@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: codeviz-backend-service
+spec:
+  selector:
+    app: codeviz-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5001
+  type: LoadBalancer

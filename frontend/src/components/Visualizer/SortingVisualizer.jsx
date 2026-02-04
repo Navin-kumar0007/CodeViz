@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 /**
  * 🔥 SORTING VISUALIZER
@@ -9,14 +9,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 const SortingVisualizer = ({
     name,
     arr,
-    state,
     currentIndices = {},    // { i: 0, j: 1, left: 0, right: 4, mid: 2 }
     comparingIndices = [],  // [2, 3] - indices being compared
     swappingIndices = [],   // [2, 3] - indices being swapped
     sortedIndices = [],     // [0, 1] - already sorted portion
     highlightIndex = null,  // single highlighted index (for search)
-    foundIndex = null,      // found element (for search success)
-    getVariableColor = () => '#4299e1'
+    foundIndex = null       // found element (for search success)
 }) => {
     // Color scheme
     const colors = {
@@ -53,7 +51,7 @@ const SortingVisualizer = ({
     };
 
     return (
-        <motion.div
+        <Motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             style={styles.wrapper}
@@ -84,7 +82,7 @@ const SortingVisualizer = ({
                         const active = isActive(idx);
 
                         return (
-                            <motion.div
+                            <Motion.div
                                 key={`${idx}-${val}`}
                                 layout
                                 initial={{ scale: 0, y: -20 }}
@@ -104,7 +102,7 @@ const SortingVisualizer = ({
                             >
                                 {/* Index Pointers (above) */}
                                 {pointers.length > 0 && (
-                                    <motion.div
+                                    <Motion.div
                                         initial={{ opacity: 0, y: 5 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         style={styles.pointerContainer}
@@ -113,11 +111,11 @@ const SortingVisualizer = ({
                                             <span key={p} style={styles.pointer}>{p}</span>
                                         ))}
                                         <div style={styles.pointerArrow}>▼</div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )}
 
                                 {/* Value Box */}
-                                <motion.div
+                                <Motion.div
                                     animate={{
                                         boxShadow: active
                                             ? '0 8px 30px rgba(246, 173, 85, 0.5)'
@@ -130,11 +128,11 @@ const SortingVisualizer = ({
                                     }}
                                 >
                                     {String(val)}
-                                </motion.div>
+                                </Motion.div>
 
                                 {/* Index Label (below) */}
                                 <div style={styles.indexLabel}>[{idx}]</div>
-                            </motion.div>
+                            </Motion.div>
                         );
                     })}
                 </AnimatePresence>
@@ -142,7 +140,7 @@ const SortingVisualizer = ({
 
             {/* Status Message */}
             {(comparingIndices.length > 0 || swappingIndices.length > 0) && (
-                <motion.div
+                <Motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     style={styles.statusBar}
@@ -157,9 +155,9 @@ const SortingVisualizer = ({
                             ⚖️ Comparing arr[{comparingIndices[0]}]={arr[comparingIndices[0]]} with arr[{comparingIndices[1]}]={arr[comparingIndices[1]]}
                         </span>
                     )}
-                </motion.div>
+                </Motion.div>
             )}
-        </motion.div>
+        </Motion.div>
     );
 };
 

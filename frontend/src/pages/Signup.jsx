@@ -16,9 +16,9 @@ const Signup = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
-      
+
       const data = await res.json();
-      
+
       if (res.ok) {
         localStorage.setItem('userInfo', JSON.stringify(data));
         navigate('/');
@@ -27,25 +27,26 @@ const Signup = () => {
       }
     } catch (err) {
       setError('Server error.');
+      console.error(err);
     }
   };
 
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
-        <h2 style={{color: '#fff', marginBottom: '20px'}}>Create Account</h2>
-        
+        <h2 style={{ color: '#fff', marginBottom: '20px' }}>Create Account</h2>
+
         {error && <div style={errorStyle}>{error}</div>}
-        
-        <form onSubmit={handleSignup} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+
+        <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} required />
           <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
           <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
           <button type="submit" style={buttonStyle}>Sign Up</button>
         </form>
-        
-        <p style={{color: '#aaa', marginTop: '15px', fontSize: '14px'}}>
-          Already have an account? <Link to="/login" style={{color: '#007acc'}}>Login</Link>
+
+        <p style={{ color: '#aaa', marginTop: '15px', fontSize: '14px' }}>
+          Already have an account? <Link to="/login" style={{ color: '#007acc' }}>Login</Link>
         </p>
       </div>
     </div>

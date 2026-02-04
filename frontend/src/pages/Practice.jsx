@@ -3,10 +3,13 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import CodeEditor from "../components/Editor/CodeEditor";
 import Canvas from "../components/Visualizer/Canvas";
+import AIAssistant from "../components/AI/AIAssistant";
 
 // 👇 IMPORT FROM YOUR EXAMPLES FILE
 import { EXAMPLES } from "../examples";
+
 import { useTheme } from "../contexts/ThemeContext";
+import ShareModal from "../components/Social/ShareModal";
 
 const Practice = () => {
   const navigate = useNavigate();
@@ -37,11 +40,21 @@ const Practice = () => {
   const [activeTab, setActiveTab] = useState("visualizer");
 
   const [snippets, setSnippets] = useState([]);
+
   const [showSnippetList, setShowSnippetList] = useState(false);
+  const [sharingSnippet, setSharingSnippet] = useState(null); // Snippet being shared
 
   // 📏 RESIZABLE SPLIT PANE STATE
   const [editorWidth, setEditorWidth] = useState(50); // percentage
   const [isDragging, setIsDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // 📱 DETECT MOBILE
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ⚡ PERFORMANCE: Loading state and RAF for smooth resize
   const [isExecuting, setIsExecuting] = useState(false);
@@ -77,10 +90,55 @@ const Practice = () => {
     setIsExecuting(true); // Show loading indicator
     setIsLoading(true);
     setError(null);
-    setTraceData([]); // Reset to empty array, NOT undefined
+    setTraceData([]); // Reset to empty array
     setOutput("");
     setStepIndex(0);
 
+    // 🐍 CLIENT-SIDE EXECUTION (Phase 8.1)
+    if (language === 'python') {
+      const { runPythonLocally } = await import('../utils/pyodideExecutor');
+      const localResult = await runPythonLocally(code);
+
+      if (localResult.success) {
+        setOutput(localResult.output);
+        setActiveTab("console");
+      } else {
+        setError(localResult.output);
+        setIsLoading(false);
+        setIsExecuting(false);
+        return;
+      }
+    }
+
+    // ⚡️ CLIENT-SIDE EXECUTION (JavaScript)
+    else if (language === 'javascript') {
+      // Capture console.log
+      const logs = [];
+      const originalLog = console.log;
+      console.log = (...args) => {
+        logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
+        originalLog.apply(console, args); // Keep browser console working
+      };
+
+      try {
+        // Run code safely
+        // Run code safely
+        new Function(code)();
+        setOutput(logs.join('\n'));
+        setActiveTab("console");
+      } catch (err) {
+        setError(err.toString());
+        setIsLoading(false);
+        setIsExecuting(false);
+        // Don't return, allow falling back to server if it was just a runtime error? 
+        // Actually for JS, if it fails locally, it likely fails remotely. But let's keep consistency.
+        console.log = originalLog; // Restore
+        return;
+      }
+      console.log = originalLog; // Restore
+    }
+
+    // 📡 SERVER-SIDE VISUALIZATION (Still needed for Graph/AST)
     try {
       const res = await axios.post("http://localhost:5001/run", { language, code });
 
@@ -110,7 +168,7 @@ const Practice = () => {
           } else {
             throw new Error("Output is not a valid trace array");
           }
-        } catch (e) {
+        } catch {
           setOutput(res.data.output || "No output");
           setActiveTab("console");
         }
@@ -129,23 +187,13 @@ const Practice = () => {
         const safeTrace = res.data.trace || [];
         setTraceData(safeTrace);
 
-        let logs = "";
         if (safeTrace.length > 0) {
-          safeTrace.forEach(step => {
-            if (step.stdout) logs += step.stdout + "\n";
-          });
-          setOutput(logs || "Visualization Started...");
           setActiveTab("visualizer");
-        } else {
-          // If backend returned success but no trace, usually print output only
-          setOutput("No visualization data generated. (Did the code run?)");
-          setActiveTab("console");
         }
       }
 
-    } catch (err) {
-      console.error(err);
-      setError("Server connection failed. Is the backend running?");
+    } catch {
+      setError('Server error. Is the backend running?');
     } finally {
       setIsLoading(false);
       setIsExecuting(false); // Clear loading indicator
@@ -161,6 +209,8 @@ const Practice = () => {
     try {
       await axios.post("http://localhost:5001/api/snippets", {
         userId: user._id, title, code, language
+      }, {
+        headers: { Authorization: `Bearer ${user.token}` }
       });
       alert("✅ Saved successfully!");
       fetchSnippets();
@@ -169,17 +219,41 @@ const Practice = () => {
     }
   };
 
+  // 🌍 SHARE CODE
+  const handleShareClick = (snippet) => {
+    setSharingSnippet(snippet);
+  };
+
+  const confirmShare = async () => {
+    if (!sharingSnippet) return;
+    try {
+      await axios.put(`http://localhost:5001/api/snippets/${sharingSnippet._id}/share`, {}, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      alert(`✅ Copied to clipboard: http://localhost:5173/snippet/${sharingSnippet._id} (Mock URL)`);
+      setSharingSnippet(null);
+      fetchSnippets();
+    } catch (err) {
+      alert("❌ Share failed: " + err.message);
+    }
+  };
+
   // 📂 LOAD SNIPPETS
   const fetchSnippets = async () => {
     if (!user) return;
     try {
-      const res = await axios.get(`http://localhost:5001/api/snippets/${user._id}`);
+      const res = await axios.get(`http://localhost:5001/api/snippets/${user._id}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
       // 🛡️ SAFETY CHECK: Ensure it's an array
       setSnippets(Array.isArray(res.data) ? res.data : []);
     } catch (err) { console.error(err); }
   };
 
-  useEffect(() => { if (user) fetchSnippets(); }, []);
+  useEffect(() => {
+    if (user) fetchSnippets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 📏 RESIZABLE DIVIDER HANDLERS
   const handleMouseDown = (e) => {
@@ -222,6 +296,7 @@ const Practice = () => {
         document.removeEventListener('mousemove', handleMouseMove);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDragging]);
 
   // Cleanup RAF on unmount
@@ -268,12 +343,20 @@ const Practice = () => {
 
           {/* Snippet Dropdown */}
           {showSnippetList && (
-            <div style={{ position: 'absolute', top: '50px', right: '120px', background: '#333', padding: '10px', zIndex: 100, border: '1px solid #555', borderRadius: '5px', width: '200px', maxHeight: '300px', overflowY: 'auto' }}>
+            <div style={{ position: 'absolute', top: '50px', right: '120px', background: '#333', padding: '10px', zIndex: 100, border: '1px solid #555', borderRadius: '5px', width: '250px', maxHeight: '300px', overflowY: 'auto' }}>
               {snippets.length === 0 && <div style={{ padding: '5px', color: '#aaa', fontSize: '12px' }}>No saved codes yet.</div>}
               {snippets.map(s => (
-                <div key={s._id} onClick={() => { setCode(s.code); setLanguage(s.language); setShowSnippetList(false) }} style={{ cursor: 'pointer', padding: '8px', borderBottom: '1px solid #444', fontSize: '13px' }}>
-                  <div style={{ fontWeight: 'bold' }}>{s.title}</div>
-                  <div style={{ fontSize: '10px', color: '#aaa' }}>{s.language}</div>
+                <div key={s._id} style={{ padding: '8px', borderBottom: '1px solid #444', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div onClick={() => { setCode(s.code); setLanguage(s.language); setShowSnippetList(false) }} style={{ cursor: 'pointer', flex: 1 }}>
+                    <div style={{ fontWeight: 'bold' }}>{s.title}</div>
+                    <div style={{ fontSize: '10px', color: '#aaa' }}>{s.language} • {s.isShared ? '🌍 Shared' : '🔒 Private'}</div>
+                  </div>
+                  {!s.isShared && (
+                    <button onClick={() => handleShareClick(s)} style={{ background: 'transparent', border: '1px solid #667eea', color: '#667eea', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer' }}>share</button>
+                  )}
+                  {s.isShared && (
+                    <span style={{ fontSize: '10px', color: '#48bb78' }}>active</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -282,6 +365,14 @@ const Practice = () => {
           <button onClick={handleSave} style={{ background: '#2ea043', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>💾 Save Code</button>
         </div>
       </header>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={!!sharingSnippet}
+        onClose={() => setSharingSnippet(null)}
+        onShare={confirmShare}
+        snippetTitle={sharingSnippet?.title}
+      />
 
       {/* TOOLBAR */}
       <div style={{ padding: '10px 20px', background: '#1e1e1e', borderBottom: '1px solid #333', display: 'flex', gap: '15px', alignItems: 'center' }}>
@@ -311,12 +402,26 @@ const Practice = () => {
 
       {/* MAIN CONTENT SPLIT */}
       <div
-        style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative', userSelect: isDragging ? 'none' : 'auto' }}
-        onMouseMove={handleMouseMove}
+        style={{
+          display: 'flex',
+          flex: 1,
+          overflow: 'hidden',
+          position: 'relative',
+          userSelect: isDragging ? 'none' : 'auto',
+          flexDirection: isMobile ? 'column' : 'row' // 📱 Stack on mobile
+        }}
+        onMouseMove={!isMobile ? handleMouseMove : undefined}
       >
 
         {/* LEFT: EDITOR */}
-        <div style={{ width: `${editorWidth}%`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{
+          width: isMobile ? '100%' : `${editorWidth}%`, // 📱 Full width on mobile
+          height: isMobile ? '50%' : '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          borderBottom: isMobile ? '1px solid #333' : 'none'
+        }}>
           <CodeEditor
             code={code}
             setCode={setCode}
@@ -327,36 +432,45 @@ const Practice = () => {
           />
         </div>
 
-        {/* RESIZABLE DIVIDER */}
-        <div
-          onMouseDown={handleMouseDown}
-          style={{
-            width: '6px',
-            background: isDragging ? '#007acc' : '#444',
-            cursor: 'col-resize',
-            position: 'relative',
-            flexShrink: 0,
-            transition: isDragging ? 'none' : 'background 0.2s ease',
-            ':hover': {
-              background: '#007acc'
-            }
-          }}
-        >
-          {/* Visual indicator */}
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '3px',
-            height: '40px',
-            background: 'rgba(255, 255, 255, 0.3)',
-            borderRadius: '2px'
-          }} />
-        </div>
+        {/* RESIZABLE DIVIDER (Hidden on mobile) */}
+        {!isMobile && (
+          <div
+            onMouseDown={handleMouseDown}
+            style={{
+              width: '6px',
+              background: isDragging ? '#007acc' : '#444',
+              cursor: 'col-resize',
+              position: 'relative',
+              flexShrink: 0,
+              transition: isDragging ? 'none' : 'background 0.2s ease',
+              ':hover': {
+                background: '#007acc'
+              }
+            }}
+          >
+            {/* Visual indicator */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '3px',
+              height: '40px',
+              background: 'rgba(255, 255, 255, 0.3)',
+              borderRadius: '2px'
+            }} />
+          </div>
+        )}
 
         {/* RIGHT: TABS PANE */}
-        <div style={{ width: `${100 - editorWidth}%`, background: '#1e1e1e', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{
+          width: isMobile ? '100%' : `${100 - editorWidth}%`, // 📱 Full width on mobile
+          height: isMobile ? '50%' : '100%',
+          background: '#1e1e1e',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}>
 
           <div style={{ display: 'flex', borderBottom: '1px solid #333', background: '#252526' }}>
             <button
@@ -413,6 +527,13 @@ const Practice = () => {
           </div>
         </div>
       </div>
+
+      {/* AI Assistant - Floating Button */}
+      <AIAssistant
+        code={code}
+        language={language}
+        error={error}
+      />
     </div>
   );
 };

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 /**
  * Leaderboard - Shows top learners ranked by score
@@ -10,14 +10,7 @@ const Leaderboard = ({ onClose, currentUserId }) => {
     const [loading, setLoading] = useState(true);
     const [userRank, setUserRank] = useState(null);
 
-    useEffect(() => {
-        fetchLeaderboard();
-        if (currentUserId) {
-            fetchUserRank();
-        }
-    }, [currentUserId]);
-
-    const fetchLeaderboard = async () => {
+    const fetchLeaderboard = useCallback(async () => {
         try {
             const res = await fetch('http://localhost:5001/api/leaderboard');
             const data = await res.json();
@@ -27,9 +20,10 @@ const Leaderboard = ({ onClose, currentUserId }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const fetchUserRank = async () => {
+    const fetchUserRank = useCallback(async () => {
+        if (!currentUserId) return;
         try {
             const res = await fetch(`http://localhost:5001/api/leaderboard/rank/${currentUserId}`);
             const data = await res.json();
@@ -37,7 +31,14 @@ const Leaderboard = ({ onClose, currentUserId }) => {
         } catch (error) {
             console.error('Error fetching user rank:', error);
         }
-    };
+    }, [currentUserId]);
+
+    useEffect(() => {
+        fetchLeaderboard();
+        if (currentUserId) {
+            fetchUserRank();
+        }
+    }, [currentUserId, fetchLeaderboard, fetchUserRank]);
 
     const getRankStyle = (rank) => {
         if (rank === 1) return { background: 'linear-gradient(135deg, #ffd700, #ffaa00)', color: '#000' };
@@ -54,14 +55,14 @@ const Leaderboard = ({ onClose, currentUserId }) => {
     };
 
     return (
-        <motion.div
+        <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={styles.overlay}
             onClick={onClose}
         >
-            <motion.div
+            <Motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -96,7 +97,7 @@ const Leaderboard = ({ onClose, currentUserId }) => {
                         </div>
                     ) : (
                         leaders.map((leader, index) => (
-                            <motion.div
+                            <Motion.div
                                 key={leader.userId || index}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -118,12 +119,12 @@ const Leaderboard = ({ onClose, currentUserId }) => {
                                 <div style={styles.score}>
                                     {leader.totalScore} pts
                                 </div>
-                            </motion.div>
+                            </Motion.div>
                         ))
                     )}
                 </div>
-            </motion.div>
-        </motion.div>
+            </Motion.div>
+        </Motion.div>
     );
 };
 

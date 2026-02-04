@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 /**
  * ConceptCard - Educational popup explaining data structure concepts
@@ -83,7 +83,7 @@ const ConceptCard = ({ type, onDismiss, isVisible }) => {
     return (
         <AnimatePresence>
             {isVisible && (
-                <motion.div
+                <Motion.div
                     initial={{ opacity: 0, y: 20, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 0.9 }}
@@ -107,7 +107,7 @@ const ConceptCard = ({ type, onDismiss, isVisible }) => {
                         <div style={styles.keyPointsTitle}>Key Points:</div>
                         <ul style={styles.keyPoints}>
                             {concept.keyPoints.map((point, i) => (
-                                <motion.li
+                                <Motion.li
                                     key={i}
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -115,7 +115,7 @@ const ConceptCard = ({ type, onDismiss, isVisible }) => {
                                     style={styles.keyPoint}
                                 >
                                     {point}
-                                </motion.li>
+                                </Motion.li>
                             ))}
                         </ul>
                     </div>
@@ -124,7 +124,7 @@ const ConceptCard = ({ type, onDismiss, isVisible }) => {
                         <span style={styles.exampleLabel}>Example:</span>
                         <code style={styles.exampleCode}>{concept.example}</code>
                     </div>
-                </motion.div>
+                </Motion.div>
             )}
         </AnimatePresence>
     );

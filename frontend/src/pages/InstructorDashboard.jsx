@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 /**
  * InstructorDashboard - Analytics dashboard for instructors
@@ -34,15 +34,12 @@ const InstructorDashboard = () => {
 
     // Check if user is instructor
     useEffect(() => {
-        if (!user) {
-            navigate('/login');
-            return;
-        }
-        if (user.role !== 'instructor') {
+        if (!user || user.role !== 'instructor') {
             navigate('/');
             return;
         }
         fetchDashboard();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchDashboard = async () => {

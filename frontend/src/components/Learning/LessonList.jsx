@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 
 /**
  * LessonList - Displays list of lessons in a learning path
@@ -15,11 +15,11 @@ const LessonList = ({ lessons, progress, onSelectLesson }) => {
             {lessons.map((lesson, index) => {
                 const completed = isCompleted(lesson.id);
                 const score = getQuizScore(lesson.id);
-                const isFirst = index === 0;
+                // Removed unused isFirst
                 const previousCompleted = index === 0 || isCompleted(lessons[index - 1].id);
 
                 return (
-                    <motion.div
+                    <Motion.div
                         key={lesson.id}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -66,7 +66,7 @@ const LessonList = ({ lessons, progress, onSelectLesson }) => {
 
                         {/* Arrow */}
                         <div style={styles.arrow}>→</div>
-                    </motion.div>
+                    </Motion.div>
                 );
             })}
         </div>

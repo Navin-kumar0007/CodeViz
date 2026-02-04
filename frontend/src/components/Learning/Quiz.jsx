@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 /**
  * Quiz - Interactive quiz component with encouraging feedback
@@ -30,8 +30,8 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle }) => {
     }
 
     const isCorrect = selectedAnswer === question.correct;
-    const correctAnswers = answers.filter((a, i) => questions[i] && a === questions[i].correct).length;
-    const score = Math.round((correctAnswers / totalQuestions) * 100);
+
+
 
     // Handle answer selection
     const handleSelect = (index) => {
@@ -85,7 +85,7 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle }) => {
 
             {/* Progress bar */}
             <div style={styles.progressBar}>
-                <motion.div
+                <Motion.div
                     style={styles.progressFill}
                     animate={{ width: `${((currentQuestion + 1) / totalQuestions) * 100}%` }}
                     transition={{ duration: 0.3 }}
@@ -94,7 +94,7 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle }) => {
 
             {/* Question card */}
             <AnimatePresence mode="wait">
-                <motion.div
+                <Motion.div
                     key={currentQuestion}
                     initial={{ opacity: 0, x: 50 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -119,7 +119,7 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle }) => {
                             }
 
                             return (
-                                <motion.div
+                                <Motion.div
                                     key={index}
                                     whileHover={!showResult ? { scale: 1.02 } : {}}
                                     whileTap={!showResult ? { scale: 0.98 } : {}}
@@ -133,14 +133,14 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle }) => {
                                     {showResult && index === question.correct && (
                                         <span style={styles.checkmark}>✓</span>
                                     )}
-                                </motion.div>
+                                </Motion.div>
                             );
                         })}
                     </div>
 
                     {/* Result feedback */}
                     {showResult && (
-                        <motion.div
+                        <Motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             style={isCorrect ? styles.correctFeedback : styles.wrongFeedback}
@@ -156,20 +156,20 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle }) => {
                                     <span>Almost! The correct answer is highlighted above.</span>
                                 </>
                             )}
-                        </motion.div>
+                        </Motion.div>
                     )}
 
                     {/* Explanation */}
                     {showExplanation && question.explanation && (
-                        <motion.div
+                        <Motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             style={styles.explanation}
                         >
                             <strong>💡 Explanation:</strong> {question.explanation}
-                        </motion.div>
+                        </Motion.div>
                     )}
-                </motion.div>
+                </Motion.div>
             </AnimatePresence>
 
             {/* Actions */}

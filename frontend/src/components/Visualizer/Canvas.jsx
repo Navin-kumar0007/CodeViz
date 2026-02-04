@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
 import VirtualizedArray from './VirtualizedArray';
 import SortingVisualizer from './SortingVisualizer';
@@ -18,30 +18,23 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
   const [showVariableTracker, setShowVariableTracker] = useState(true);
 
   // 🎨 Theme integration
-  const { colors } = useTheme();
-
-  // 🛡️ CRASH GUARD
-  if (!traceData || !Array.isArray(traceData) || traceData.length === 0) {
-    return (
-      <div style={styles.emptyState}>
-        <h3 style={{ color: '#888' }}>Waiting for Execution...</h3>
-        <p style={{ color: '#666' }}>Run your code to see the visualization here.</p>
-      </div>
-    );
-  }
+  useTheme();
 
   // 🧠 MEMORY ENGINE
   const currentVariables = useMemo(() => {
+    if (!traceData || !Array.isArray(traceData)) return {};
     let memory = {};
 
     for (let i = 0; i <= stepIndex; i++) {
+      // Safe access
+      if (i >= traceData.length) break;
       const step = traceData[i];
       if (!step) continue;
 
       let stepVars = step.variables;
       if (!stepVars) stepVars = step.locals || step.globals;
       if (typeof stepVars === 'string') {
-        try { stepVars = JSON.parse(stepVars); } catch (e) { }
+        try { stepVars = JSON.parse(stepVars); } catch { /* ignore */ }
       }
 
       if (stepVars && typeof stepVars === 'object' && Object.keys(stepVars).length > 0) {
@@ -135,19 +128,36 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
 
   useEffect(() => {
     setPreviousVariables(currentVariables);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepIndex]);
-
-  const currentStep = traceData[stepIndex];
-  if (!currentStep) return <div style={{ color: 'red', padding: '20px' }}>⚠️ Step Error</div>;
 
   // ⏯️ Auto-Play with dynamic speed
   useEffect(() => {
     let interval;
     if (isPlaying && stepIndex < traceData.length - 1) {
       interval = setInterval(() => { setStepIndex(prev => prev + 1); }, playSpeed);
-    } else { setIsPlaying(false); }
+    } else {
+      setIsPlaying(false);
+    }
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying, stepIndex, traceData.length, playSpeed]);
+
+  // 🛡️ CRASH GUARD
+  if (!traceData || !Array.isArray(traceData) || traceData.length === 0) {
+    return (
+      <div style={styles.emptyState}>
+        <h3 style={{ color: '#888' }}>Waiting for Execution...</h3>
+        <p style={{ color: '#666' }}>Run your code to see the visualization here.</p>
+      </div>
+    );
+  }
+
+  const currentStep = traceData[stepIndex];
+  if (!currentStep) return <div style={{ color: 'red', padding: '20px' }}>⚠️ Step Error</div>;
+
+  // ⏯️ Auto-Play with dynamic speed
+
 
   const toggleSection = (section) => {
     setCollapsedSections(prev => ({
@@ -174,7 +184,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
     if (val === null) return <span style={styles.nullNode}>x</span>;
 
     return (
-      <motion.div
+      <Motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -190,12 +200,12 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
             </div>
           </div>
         )}
-      </motion.div>
+      </Motion.div>
     );
   };
 
   const renderGraph = (name, graph, state) => (
-    <motion.div
+    <Motion.div
       key={name}
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -225,7 +235,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           </div>
         ))}
       </div>
-    </motion.div>
+    </Motion.div>
   );
 
   // 🔥 ENHANCED ARRAY VISUALIZER (with algorithm detection)
@@ -316,7 +326,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
 
     // Regular rendering for non-algorithm arrays
     return (
-      <motion.div
+      <Motion.div
         key={name}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -345,7 +355,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         {/* Array Elements */}
         <div style={styles.enhancedArrayContainer}>
           {arr.map((val, idx) => (
-            <motion.div
+            <Motion.div
               key={idx}
               initial={{ scale: 0, y: -20 }}
               animate={{ scale: 1, y: 0 }}
@@ -356,7 +366,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
               <div style={styles.arrayIndexTop}>[{idx}]</div>
 
               {/* Value box */}
-              <motion.div
+              <Motion.div
                 whileHover={{ scale: 1.1, rotate: 2 }}
                 style={{
                   ...styles.enhancedArrayBox,
@@ -364,17 +374,17 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
                 }}
               >
                 {String(val)}
-              </motion.div>
-            </motion.div>
+              </Motion.div>
+            </Motion.div>
           ))}
         </div>
-      </motion.div>
+      </Motion.div>
     );
   }; // Close renderArray function
 
   // 🔥 STACK VISUALIZATION (Vertical, bottom-to-top)
   const renderStack = (name, stack, state) => (
-    <motion.div
+    <Motion.div
       key={name}
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -401,7 +411,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '8px', minHeight: '100px' }}>
         <AnimatePresence mode="popLayout">
           {stack.slice(0, 10).map((val, idx) => (
-            <motion.div
+            <Motion.div
               key={`${val}-${idx}`}
               initial={{ y: -30, opacity: 0, scale: 0.8 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -419,15 +429,15 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
             >
               <span>{String(val)}</span>
               {idx === stack.length - 1 && (
-                <motion.span
+                <Motion.span
                   initial={{ x: -10, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold' }}
                 >
                   ← TOP
-                </motion.span>
+                </Motion.span>
               )}
-            </motion.div>
+            </Motion.div>
           ))}
         </AnimatePresence>
         {stack.length === 0 && (
@@ -436,12 +446,12 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           </div>
         )}
       </div>
-    </motion.div>
+    </Motion.div>
   );
 
   // 🔥 QUEUE VISUALIZATION (Horizontal, left-to-right)
   const renderQueue = (name, queue, state) => (
-    <motion.div
+    <Motion.div
       key={name}
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -470,7 +480,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         <div style={{ display: 'flex', gap: '8px' }}>
           <AnimatePresence mode="popLayout">
             {queue.slice(0, 10).map((val, idx) => (
-              <motion.div
+              <Motion.div
                 key={`${val}-${idx}`}
                 initial={{ x: -30, opacity: 0, scale: 0.8 }}
                 animate={{ x: 0, opacity: 1, scale: 1 }}
@@ -485,7 +495,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
                 }}
               >
                 {String(val)}
-              </motion.div>
+              </Motion.div>
             ))}
           </AnimatePresence>
         </div>
@@ -498,7 +508,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           Empty Queue
         </div>
       )}
-    </motion.div>
+    </Motion.div>
   );
 
   // 🔗 LINKED LIST VISUALIZATION (Horizontal with arrows)
@@ -531,7 +541,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
     const totalWidth = nodes.length * (nodeWidth + arrowGap) + 80;
 
     return (
-      <motion.div
+      <Motion.div
         key={name}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -578,7 +588,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
             return (
               <g key={idx}>
                 {/* Node rectangle */}
-                <motion.rect
+                <Motion.rect
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: idx * 0.1, duration: 0.3 }}
@@ -617,7 +627,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
 
                 {/* Arrow to next node */}
                 {idx < nodes.length - 1 && !node.isCycle && (
-                  <motion.line
+                  <Motion.line
                     initial={{ pathLength: 0, opacity: 0 }}
                     animate={{ pathLength: 1, opacity: 1 }}
                     transition={{ delay: idx * 0.1 + 0.2, duration: 0.4 }}
@@ -661,12 +671,12 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
             Empty List
           </div>
         )}
-      </motion.div>
+      </Motion.div>
     );
   };
 
   const renderObject = (name, value, state) => (
-    <motion.div
+    <Motion.div
       key={name}
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -698,11 +708,11 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           </div>
         ))
       )}
-    </motion.div>
+    </Motion.div>
   );
 
   const renderPrimitive = (name, value, state) => (
-    <motion.div
+    <Motion.div
       key={name}
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -724,7 +734,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         {state === 'new' && <div style={styles.badge}>NEW</div>}
         {state === 'changed' && <div style={{ ...styles.badge, background: '#f6ad55' }}>CHANGED</div>}
       </div>
-      <motion.div
+      <Motion.div
         animate={{ scale: state === 'changed' ? [1, 1.1, 1] : 1 }}
         transition={{ duration: 0.5 }}
         style={{
@@ -735,11 +745,11 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         }}
       >
         {typeof value === 'string' ? `"${value}"` : String(value)}
-      </motion.div>
+      </Motion.div>
       <div style={{ fontSize: '8px', color: '#666', marginTop: '2px', textTransform: 'uppercase' }}>
         {typeof value}
       </div>
-    </motion.div>
+    </Motion.div>
   );
 
   // 🎯 SECTION RENDERER
@@ -749,7 +759,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
     const isCollapsed = collapsedSections[categoryKey];
 
     return (
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         style={styles.section}
@@ -763,18 +773,18 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
             <span style={styles.sectionTitle}>{title}</span>
             <span style={styles.sectionCount}>{Object.keys(variables).length}</span>
           </div>
-          <motion.div
+          <Motion.div
             animate={{ rotate: isCollapsed ? 0 : 90 }}
             transition={{ duration: 0.3 }}
             style={{ fontSize: '16px', color: '#666', cursor: 'pointer' }}
           >
             ▶
-          </motion.div>
+          </Motion.div>
         </div>
 
         <AnimatePresence>
           {!isCollapsed && (
-            <motion.div
+            <Motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -784,10 +794,10 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
               <div style={styles.sectionContent}>
                 {Object.keys(variables).map(key => renderFn(key, variables[key], variableStates[key] || 'unchanged'))}
               </div>
-            </motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </Motion.div>
     );
   };
 
@@ -848,7 +858,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       </div>
 
       {/* NARRATIVE */}
-      <motion.div
+      <Motion.div
         key={`narrative-${stepIndex}`}
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
@@ -859,7 +869,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           <span style={{ color: '#4ec9b0' }}>🖨 {currentStep.stdout}</span> :
           <span style={{ color: '#ce9178' }}>⚡ Line {currentStep.line}: Executing...</span>
         }
-      </motion.div>
+      </Motion.div>
 
       {/* CANVAS - CATEGORIZED */}
       <div style={styles.canvasArea}>
@@ -944,7 +954,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
                 {renderSection('Objects & Dicts', '📦', categorizedVars.objects, renderObject, 'objects')}
                 {renderSection('Binary Trees', '🌲', categorizedVars.trees,
                   (name, value, state) => (
-                    <motion.div
+                    <Motion.div
                       key={name}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -962,14 +972,14 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
                       <div style={{ padding: '10px', display: 'flex', justifyContent: 'center' }}>
                         {renderTree(value)}
                       </div>
-                    </motion.div>
+                    </Motion.div>
                   ), 'trees'
                 )}
                 {renderSection('Graphs', '🕸️', categorizedVars.graphs, renderGraph, 'graphs')}
               </>
             </ErrorBoundary>
           ) : (
-            <motion.div
+            <Motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               style={{ color: '#666', fontStyle: 'italic', padding: '20px', lineHeight: '1.8', textAlign: 'center' }}
@@ -979,12 +989,12 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
                 🐍 <b>Python Tip:</b> Tracers sometimes ignore top-level code.<br />
                 Try wrapping your code in a <code>def main():</code> function.
               </span>
-            </motion.div>
+            </Motion.div>
           )}
 
           {/* DEBUG VIEW */}
           {showRaw && (
-            <motion.div
+            <Motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -994,7 +1004,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
               <pre style={{ color: '#aaa', fontSize: '10px', whiteSpace: 'pre-wrap', marginTop: '10px' }}>
                 {JSON.stringify(currentStep, null, 2)}
               </pre>
-            </motion.div>
+            </Motion.div>
           )}
         </div>
       </div>
