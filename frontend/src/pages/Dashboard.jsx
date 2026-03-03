@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StreakCounter from '../components/Gamification/StreakCounter';
 import XPBar from '../components/Gamification/XPBar';
+import DailyChallengeWidget from '../components/Gamification/DailyChallengeWidget';
+import AlgorithmDNA from '../components/Gamification/AlgorithmDNA';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -9,24 +11,18 @@ const Dashboard = () => {
   const [gamification, setGamification] = useState(null);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    }
+    if (!user) navigate('/login');
   }, [user, navigate]);
 
   useEffect(() => {
     if (user && user.token) {
-      // 1. Perform Daily Check-in
       fetch('http://localhost:5001/api/gamification/checkin', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
         .then(res => res.json())
         .then(checkInData => {
-          if (checkInData.xpAwarded > 0) {
-            console.log(`🎉 Earned ${checkInData.xpAwarded} XP!`);
-          }
-          // 2. Fetch Latest Stats
+          if (checkInData.xpAwarded > 0) console.log(`🎉 Earned ${checkInData.xpAwarded} XP!`);
           return fetch('http://localhost:5001/api/gamification/stats', {
             headers: { 'Authorization': `Bearer ${user.token}` }
           });
@@ -43,94 +39,237 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  const modules = [
+    { path: '/practice', icon: '⟩_', label: 'Practice', desc: 'Code editor with execution and AI assist', color: 'var(--accent-blue)' },
+    { path: '/learn', icon: '📖', label: 'Learn', desc: 'DSA courses with step-by-step visualization', color: 'var(--accent-green)' },
+    { path: '/roadmap', icon: '🗺️', label: 'Roadmap', desc: 'Interactive skill tree for your learning journey', color: '#a855f7' },
+    { path: '/quiz-creator', icon: '✏️', label: 'Quiz Creator', desc: 'Build and share custom coding quizzes', color: 'var(--accent-yellow)' },
+    { path: '/classroom', icon: '🏫', label: 'Classroom', desc: 'Join live instructor sessions', color: 'var(--accent-purple)' },
+    { path: '/room', icon: '👥', label: 'Collab Room', desc: 'Real-time peer-to-peer coding', color: 'var(--accent-cyan)' },
+  ];
+
   return (
-    <div style={containerStyle}>
-      <header style={headerStyle}>
+    <div style={styles.container}>
+      {/* Header */}
+      <header style={styles.header}>
         <div>
-          <h2 style={{ margin: 0, marginBottom: '5px' }}>CodeViz <span style={{ fontSize: '12px', color: '#aaa' }}>v1.0</span></h2>
+          <h1 style={styles.brand}>
+            <span style={styles.brandCode}>{'{'}</span> CodeViz
+            <span className="cursor-blink">_</span>
+            <span style={styles.brandCode}>{'}'}</span>
+          </h1>
+          <p style={styles.greeting}>
+            <span style={styles.prompt}>$</span> Welcome back, <span style={styles.userName}>{user?.name || 'Guest'}</span>
+          </p>
+        </div>
+        <div style={styles.headerRight}>
           {gamification && (
-            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <div style={styles.statsRow}>
               <XPBar xp={gamification.xp} level={gamification.level} />
               <StreakCounter streak={gamification.streak} />
             </div>
           )}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ color: '#fff', fontWeight: 'bold' }}>{user ? user.name : 'Guest'}</div>
-            <div style={roleBadgeStyle}>{user?.role || 'Guest'}</div>
-          </div>
-          <button onClick={handleLogout} style={logoutBtnStyle}>Logout</button>
+          <button onClick={handleLogout} style={styles.logoutBtn}>logout</button>
         </div>
       </header>
 
-      <div style={gridStyle}>
-        {/* OPTION 1: PRACTICE MODE */}
-        <div style={cardStyle} onClick={() => navigate('/practice')}>
-          <div style={{ fontSize: '40px', marginBottom: '10px' }}>🛠️</div>
-          <h3>Practice Playground</h3>
-          <p style={{ color: '#aaa' }}>Write code, visualize execution, and debug in real-time.</p>
+      {/* Daily Challenge & DNA Row */}
+      <div style={styles.widgetsRow}>
+        <div style={{ flex: 1, minWidth: '300px' }}>
+          <DailyChallengeWidget />
         </div>
-
-        {/* OPTION 2: LEARNING MODE */}
-        <div style={cardStyle} onClick={() => navigate('/learn')}>
-          <div style={{ fontSize: '40px', marginBottom: '10px' }}>🎓</div>
-          <h3>Structured Learning</h3>
-          <p style={{ color: '#aaa' }}>Step-by-step courses on Data Structures & Algorithms.</p>
+        <div style={{ flex: 1, minWidth: '300px' }}>
+          <AlgorithmDNA />
         </div>
-
-        {/* OPTION 3: QUIZ CREATOR */}
-        <div style={cardStyle} onClick={() => navigate('/quiz-creator')}>
-          <div style={{ fontSize: '40px', marginBottom: '10px' }}>✏️</div>
-          <h3>Create Quiz</h3>
-          <p style={{ color: '#aaa' }}>Build custom quizzes for learners to practice.</p>
-        </div>
-
-        {/* OPTION 4: CLASSROOM MODE */}
-        <div style={cardStyle} onClick={() => navigate('/classroom')}>
-          <div style={{ fontSize: '40px', marginBottom: '10px' }}>🏫</div>
-          <h3>Join Classroom</h3>
-          <p style={{ color: '#aaa' }}>Connect with your instructor for live sessions.</p>
-        </div>
-
-        {/* OPTION 5: INSTRUCTOR ANALYTICS (Only for instructors) */}
-        {user?.role === 'instructor' && (
-          <div style={{ ...cardStyle, background: 'linear-gradient(135deg, #1a1a2e, #16213e)', border: '1px solid #667eea' }} onClick={() => navigate('/instructor')}>
-            <div style={{ fontSize: '40px', marginBottom: '10px' }}>📊</div>
-            <h3>Analytics Dashboard</h3>
-            <p style={{ color: '#aaa' }}>View student progress and classroom performance.</p>
-          </div>
-        )}
-
-        {/* OPTION 6: ADMIN PANEL (Only for admins) */}
-        {user?.role === 'admin' && (
-          <div style={{ ...cardStyle, background: 'linear-gradient(135deg, #2d1b1b, #1e1e2e)', border: '1px solid #e53935' }} onClick={() => navigate('/admin')}>
-            <div style={{ fontSize: '40px', marginBottom: '10px' }}>🛡️</div>
-            <h3>Admin Panel</h3>
-            <p style={{ color: '#aaa' }}>Manage users, roles, and system settings.</p>
-          </div>
-        )}
       </div>
+
+      {/* Module Grid */}
+      <div style={styles.grid}>
+        {modules.map(mod => (
+          <div
+            key={mod.path}
+            style={styles.card}
+            onClick={() => navigate(mod.path)}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = mod.color;
+              e.currentTarget.style.boxShadow = `0 0 20px ${mod.color}22`;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = 'var(--border-color)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div style={{ ...styles.cardIcon, color: mod.color }}>{mod.icon}</div>
+            <h3 style={styles.cardTitle}>{mod.label}</h3>
+            <p style={styles.cardDesc}>{mod.desc}</p>
+            <span style={{ ...styles.cardArrow, color: mod.color }}>→</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Role-based panels */}
+      {(user?.role === 'instructor' || user?.role === 'admin') && (
+        <div style={styles.roleSection}>
+          <p style={styles.roleBadge}>// {user.role} tools</p>
+          <div style={styles.roleGrid}>
+            {user.role === 'instructor' && (
+              <div style={styles.roleCard} onClick={() => navigate('/instructor')}>
+                <span>📊</span> Analytics Dashboard
+              </div>
+            )}
+            {user.role === 'admin' && (
+              <div style={styles.roleCard} onClick={() => navigate('/admin')}>
+                <span>⚙</span> Admin Panel
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// Styles
-const containerStyle = { minHeight: '100vh', background: '#1e1e1e', color: '#fff', padding: '20px' };
-const headerStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: '40px',
-  paddingBottom: '20px',
-  borderBottom: '1px solid #333',
-  flexWrap: 'wrap', // 📱 Allow wrapping
-  gap: '20px'       // 📱 Space between wrapped items
+const styles = {
+  container: {
+    minHeight: '100vh',
+    padding: '28px 32px',
+    background: 'var(--bg-primary)',
+    color: 'var(--text-primary)',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '36px',
+    paddingBottom: '20px',
+    borderBottom: '1px solid var(--border-color)',
+    flexWrap: 'wrap',
+    gap: '16px',
+  },
+  brand: {
+    margin: 0,
+    fontFamily: 'var(--font-code)',
+    fontSize: '22px',
+    fontWeight: 700,
+    color: 'var(--text-bright)',
+  },
+  brandCode: {
+    color: 'var(--accent-blue)',
+    fontWeight: 400,
+  },
+  greeting: {
+    fontFamily: 'var(--font-code)',
+    fontSize: '13px',
+    color: 'var(--text-muted)',
+    marginTop: '6px',
+  },
+  prompt: {
+    color: 'var(--accent-green)',
+    fontWeight: 700,
+  },
+  userName: {
+    color: 'var(--accent-yellow)',
+  },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    flexWrap: 'wrap',
+  },
+  statsRow: {
+    display: 'flex',
+    gap: '16px',
+    alignItems: 'center',
+  },
+  logoutBtn: {
+    fontFamily: 'var(--font-code)',
+    fontSize: '12px',
+    padding: '6px 14px',
+    background: 'transparent',
+    border: '1px solid var(--accent-red)',
+    color: 'var(--accent-red)',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '16px',
+    maxWidth: '1000px',
+  },
+  widgetsRow: {
+    display: 'flex',
+    gap: '20px',
+    marginBottom: '32px',
+    flexWrap: 'wrap',
+    maxWidth: '1000px'
+  },
+  card: {
+    position: 'relative',
+    background: 'var(--bg-surface)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '10px',
+    padding: '24px 20px',
+    cursor: 'pointer',
+    transition: 'all 200ms ease',
+  },
+  cardIcon: {
+    fontSize: '28px',
+    fontFamily: 'var(--font-code)',
+    marginBottom: '10px',
+  },
+  cardTitle: {
+    margin: 0,
+    fontFamily: 'var(--font-code)',
+    fontSize: '15px',
+    fontWeight: 600,
+    color: 'var(--text-bright)',
+    marginBottom: '6px',
+  },
+  cardDesc: {
+    margin: 0,
+    fontSize: '13px',
+    color: 'var(--text-muted)',
+    lineHeight: 1.4,
+  },
+  cardArrow: {
+    position: 'absolute',
+    bottom: '14px',
+    right: '16px',
+    fontFamily: 'var(--font-code)',
+    fontSize: '18px',
+    opacity: 0.6,
+  },
+  roleSection: {
+    marginTop: '32px',
+    paddingTop: '20px',
+    borderTop: '1px solid var(--border-color)',
+  },
+  roleBadge: {
+    fontFamily: 'var(--font-code)',
+    fontSize: '12px',
+    color: 'var(--text-muted)',
+    marginBottom: '12px',
+  },
+  roleGrid: {
+    display: 'flex',
+    gap: '12px',
+  },
+  roleCard: {
+    fontFamily: 'var(--font-code)',
+    fontSize: '13px',
+    padding: '12px 20px',
+    background: 'var(--bg-hover)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    color: 'var(--text-secondary)',
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'center',
+    transition: 'var(--transition-fast)',
+  },
 };
-const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', maxWidth: '1000px', margin: '0 auto' };
-const cardStyle = { background: '#252526', padding: '30px', borderRadius: '10px', cursor: 'pointer', transition: '0.3s', border: '1px solid #333', textAlign: 'center' };
-const logoutBtnStyle = { padding: '8px 16px', background: '#e53935', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' };
-
-const roleBadgeStyle = { fontSize: '11px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '1px' };
 
 export default Dashboard;

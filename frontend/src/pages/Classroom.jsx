@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { io } from 'socket.io-client';
+import Whiteboard from '../components/Whiteboard';
 
 /**
  * Classroom - Join or create live classroom sessions with instructors
@@ -9,6 +10,7 @@ import { io } from 'socket.io-client';
 
 const Classroom = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [activeTab, setActiveTab] = useState('join'); // 'join', 'create', 'live'
     const [classroomCode, setClassroomCode] = useState('');
     const [classrooms, setClassrooms] = useState([]);
@@ -23,6 +25,19 @@ const Classroom = () => {
     const [liveLanguage, setLiveLanguage] = useState('python');
     const [isLive, setIsLive] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
+
+    // Multi-role Collaboration state
+    const [participants, setParticipants] = useState([]);
+    const [activeEditor, setActiveEditor] = useState(null);
+    const [allowStudentEditing, setAllowStudentEditing] = useState(false);
+
+    // Whiteboard state
+    const [activeView, setActiveView] = useState('code'); // 'code' | 'whiteboard'
+
+    // Chat state
+    const [chatMessages, setChatMessages] = useState([]);
+    const [newChatMessage, setNewChatMessage] = useState('');
+    const chatEndRef = useRef(null);
 
     // New classroom form
     const [newClassroomName, setNewClassroomName] = useState('');
@@ -51,6 +66,11 @@ const Classroom = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Scroll chat to bottom on new message
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [chatMessages]);
 
     const fetchPublicClassrooms = async () => {
         try {
@@ -101,6 +121,29 @@ const Classroom = () => {
             setIsLive(state.isLive);
             setLiveCode(state.code || '');
             setLiveLanguage(state.language || 'python');
+            setAllowStudentEditing(state.allowStudentEditing || false);
+            setActiveEditor(state.activeEditor || null);
+        });
+
+        socket.on('roster-update', (users) => {
+            setParticipants(users);
+        });
+
+        socket.on('edit-access-requested', (data) => {
+            setParticipants(prev => prev.map(p => p.userId === data.userId ? { ...p, handRaised: true } : p));
+        });
+
+        socket.on('edit-access-granted', (data) => {
+            setActiveEditor(data.activeEditor);
+            setParticipants(prev => prev.map(p => p.userId === data.activeEditor ? { ...p, handRaised: false } : p));
+        });
+
+        socket.on('edit-access-revoked', () => {
+            setActiveEditor(null);
+        });
+
+        socket.on('receive-chat-message', (msg) => {
+            setChatMessages(prev => [...prev, msg]);
         });
 
         socket.on('code-sync', (data) => {
@@ -138,13 +181,24 @@ const Classroom = () => {
         setCurrentClassroom(null);
         setIsConnected(false);
         setIsLive(false);
+        setActiveEditor(null);
+        setParticipants([]);
+        setChatMessages([]);
         setActiveTab('join');
     };
 
-    // Instructor: Update code (broadcasts to students)
+    const sendChatMessage = (e) => {
+        e.preventDefault();
+        if (!newChatMessage.trim() || !socketRef.current) return;
+        socketRef.current.emit('send-chat-message', newChatMessage);
+        setNewChatMessage('');
+    };
+
+    // Broadcast code updates (Instructor or Active Editor)
     const updateCode = (code) => {
         setLiveCode(code);
-        if (socketRef.current && currentClassroom?.instructor?._id === user?._id) {
+        const isEditor = currentClassroom?.instructor?._id === user?._id || activeEditor === user?._id;
+        if (socketRef.current && isEditor) {
             socketRef.current.emit('code-update', { code, language: liveLanguage });
         }
     };
@@ -163,8 +217,9 @@ const Classroom = () => {
         }
     };
 
-    const joinClassroom = async () => {
-        if (!classroomCode.trim()) {
+    const joinClassroom = async (autoCode = null) => {
+        const joinCode = typeof autoCode === 'string' ? autoCode : classroomCode;
+        if (!joinCode.trim()) {
             setError('Please enter a classroom code');
             return;
         }
@@ -183,7 +238,7 @@ const Classroom = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${user.token}`
                 },
-                body: JSON.stringify({ code: classroomCode })
+                body: JSON.stringify({ code: joinCode })
             });
 
             const data = await res.json();
@@ -202,6 +257,17 @@ const Classroom = () => {
         }
     };
 
+    // Auto-join effect for share links
+    useEffect(() => {
+        if (location.state?.autoJoinCode && user?.token) {
+            const code = location.state.autoJoinCode;
+            setClassroomCode(code);
+            joinClassroom(code);
+            // Clear location state to prevent endless looping
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state, user?.token]);
+
     const createClassroom = async () => {
         if (!newClassroomName.trim()) {
             setError('Please enter a classroom name');
@@ -211,8 +277,8 @@ const Classroom = () => {
             setError('Please log in to create a classroom');
             return;
         }
-        if (user?.role !== 'instructor') {
-            setError('Only instructors can create classrooms');
+        if (user?.role !== 'instructor' && user?.role !== 'admin') {
+            setError('Only instructors and admins can create classrooms');
             return;
         }
 
@@ -247,6 +313,30 @@ const Classroom = () => {
             setError('Failed to create classroom');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const deleteClassroom = async (classroomId) => {
+        if (!window.confirm('Are you sure you want to delete this classroom?')) return;
+
+        try {
+            const res = await fetch(`http://localhost:5001/api/classrooms/${classroomId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                }
+            });
+
+            if (res.ok) {
+                setSuccess('Classroom deleted successfully');
+                fetchMyClassrooms();
+                fetchPublicClassrooms();
+            } else {
+                const data = await res.json();
+                setError(data.message || 'Failed to delete classroom');
+            }
+        } catch {
+            setError('Failed to delete classroom');
         }
     };
 
@@ -299,6 +389,16 @@ const Classroom = () => {
                         <div style={styles.liveActions}>
                             {isInstructor && (
                                 <>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(`http://localhost:5173/classroom/join/${currentClassroom.code}`);
+                                            setSuccess('Share link copied to clipboard!');
+                                            setTimeout(() => setSuccess(''), 3000);
+                                        }}
+                                        style={styles.copyBtn}
+                                    >
+                                        🔗 Copy Link
+                                    </button>
                                     {!isLive ? (
                                         <button onClick={startSession} style={styles.startBtn}>
                                             ▶ Start Session
@@ -316,24 +416,153 @@ const Classroom = () => {
                         </div>
                     </div>
 
-                    <div style={styles.codeContainer}>
-                        <div style={styles.codeHeader}>
-                            <span>📝 {isInstructor ? 'Your Code (Broadcasting)' : 'Instructor\'s Code'}</span>
-                            <span style={styles.languageBadge}>{liveLanguage}</span>
+                    <div style={styles.workspaceContainer}>
+                        {/* Editor Space */}
+                        <div style={styles.codeContainer}>
+                            <div style={styles.codeHeader}>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <button
+                                        onClick={() => setActiveView('code')}
+                                        style={activeView === 'code' ? styles.activeViewBtn : styles.inactiveViewBtn}
+                                    >
+                                        💻 Code
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveView('whiteboard')}
+                                        style={activeView === 'whiteboard' ? styles.activeViewBtn : styles.inactiveViewBtn}
+                                    >
+                                        🎨 Whiteboard
+                                    </button>
+                                </div>
+                                <span style={styles.languageBadge}>
+                                    {activeView === 'code' ? liveLanguage : 'Canvas'}
+                                </span>
+                            </div>
+                            <div style={{ display: activeView === 'code' ? 'flex' : 'none', flex: 1, flexDirection: 'column' }}>
+                                {isInstructor || activeEditor === user?._id ? (
+                                    <textarea
+                                        value={liveCode}
+                                        onChange={(e) => updateCode(e.target.value)}
+                                        style={styles.codeEditor}
+                                        placeholder="Start typing code to broadcast..."
+                                        spellCheck={false}
+                                    />
+                                ) : (
+                                    <pre style={styles.codeViewer}>
+                                        {liveCode || '// Waiting for instructor to share code...'}
+                                    </pre>
+                                )}
+                            </div>
+
+                            <div style={{ display: activeView === 'whiteboard' ? 'flex' : 'none', flex: 1, flexDirection: 'column', padding: '15px' }}>
+                                <Whiteboard
+                                    socket={socketRef.current}
+                                    classroomId={currentClassroom?._id}
+                                    isEditor={isInstructor || activeEditor === user?._id}
+                                />
+                            </div>
                         </div>
-                        {isInstructor ? (
-                            <textarea
-                                value={liveCode}
-                                onChange={(e) => updateCode(e.target.value)}
-                                style={styles.codeEditor}
-                                placeholder="Start typing code to broadcast..."
-                                spellCheck={false}
-                            />
-                        ) : (
-                            <pre style={styles.codeViewer}>
-                                {liveCode || '// Waiting for instructor to share code...'}
-                            </pre>
-                        )}
+
+                        {/* Roster Panel */}
+                        <div style={styles.rosterContainer}>
+                            <h4 style={styles.rosterTitle}>👥 Participants ({participants.length})</h4>
+                            <div style={styles.rosterList}>
+                                {participants.map(p => (
+                                    <div key={p.userId} style={styles.participantCard}>
+                                        <div style={styles.participantInfo}>
+                                            <span style={styles.participantName}>
+                                                {p.name} {p.userId === user?._id ? '(You)' : ''}
+                                            </span>
+                                            {p.isInstructor && <span style={styles.roleBadge}>Host</span>}
+                                            {activeEditor === p.userId && <span style={styles.chalkBadge}>🖋️ Editor</span>}
+                                            {p.handRaised && activeEditor !== p.userId && <span style={styles.handBadge}>✋</span>}
+                                        </div>
+
+                                        <div style={styles.participantActions}>
+                                            {/* Instructor Actions */}
+                                            {isInstructor && !p.isInstructor && (
+                                                activeEditor !== p.userId ? (
+                                                    <button
+                                                        onClick={() => socketRef.current.emit('grant-edit-access', p.userId)}
+                                                        style={styles.grantBtn}
+                                                    >
+                                                        {p.handRaised ? 'Approve' : 'Pass Chalk'}
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => socketRef.current.emit('revoke-edit-access')}
+                                                        style={styles.revokeBtn}
+                                                    >
+                                                        Revoke
+                                                    </button>
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Student Request Hand */}
+                            {!isInstructor && activeEditor !== user?._id && (
+                                <button
+                                    onClick={() => socketRef.current.emit('request-edit-access')}
+                                    style={styles.raiseHandBtn}
+                                >
+                                    ✋ Raise Hand
+                                </button>
+                            )}
+                            {!isInstructor && activeEditor === user?._id && (
+                                <button
+                                    onClick={() => socketRef.current.emit('revoke-edit-access')}
+                                    style={styles.yieldBtn}
+                                >
+                                    Yield Control
+                                </button>
+                            )}
+
+                            {/* Chat Section */}
+                            <div style={styles.chatSection}>
+                                <h4 style={styles.rosterTitle}>💬 Classroom Chat</h4>
+                                <div style={styles.chatMessages}>
+                                    {chatMessages.length === 0 ? (
+                                        <div style={{ color: '#888', textAlign: 'center', marginTop: '20px' }}>
+                                            No messages yet. Start the conversation!
+                                        </div>
+                                    ) : (
+                                        chatMessages.map(msg => (
+                                            <div key={msg.id} style={{
+                                                ...styles.chatMessageBubble,
+                                                ...(msg.isSystem ? { background: 'rgba(255, 255, 255, 0.02)', borderLeft: '3px solid #888' } : {})
+                                            }}>
+                                                {msg.isSystem ? (
+                                                    <div style={{ fontSize: '12px', color: '#aaa', fontStyle: 'italic' }}>
+                                                        ℹ️ {msg.text}
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <span style={{ fontWeight: 'bold', color: msg.isInstructor ? '#2ecc71' : '#667eea', fontSize: '12px' }}>
+                                                            {msg.name} {msg.isInstructor && '(Host)'}:
+                                                        </span>
+                                                        <div style={{ fontSize: '13px', marginTop: '3px' }}>{msg.text}</div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                    <div ref={chatEndRef} />
+                                </div>
+                                <form onSubmit={sendChatMessage} style={styles.chatForm}>
+                                    <input
+                                        type="text"
+                                        placeholder="Type a message..."
+                                        value={newChatMessage}
+                                        onChange={(e) => setNewChatMessage(e.target.value)}
+                                        style={styles.chatInput}
+                                    />
+                                    <button type="submit" style={styles.chatSendBtn}>Send</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -440,7 +669,7 @@ const Classroom = () => {
                                         Set up a virtual classroom for your students
                                     </p>
 
-                                    {user?.role === 'instructor' ? (
+                                    {user?.role === 'instructor' || user?.role === 'admin' ? (
                                         <div style={styles.createForm}>
                                             <input
                                                 type="text"
@@ -515,6 +744,12 @@ const Classroom = () => {
                                                         >
                                                             Open
                                                         </button>
+                                                        <button
+                                                            onClick={() => deleteClassroom(classroom._id)}
+                                                            style={{ ...styles.revokeBtn, marginLeft: '10px' }}
+                                                        >
+                                                            Delete
+                                                        </button>
                                                     </div>
                                                 ))}
                                             </div>
@@ -572,9 +807,12 @@ const Classroom = () => {
 const styles = {
     container: {
         minHeight: '100vh',
+        boxSizing: 'border-box',
         background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
         color: '#fff',
-        padding: '20px'
+        padding: '20px',
+        display: 'flex',
+        flexDirection: 'column'
     },
     header: {
         display: 'flex',
@@ -582,7 +820,8 @@ const styles = {
         justifyContent: 'space-between',
         marginBottom: '20px',
         paddingBottom: '15px',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        flexShrink: 0
     },
     backBtn: {
         background: 'transparent',
@@ -741,6 +980,19 @@ const styles = {
         cursor: 'pointer',
         fontSize: '13px'
     },
+    copyBtn: {
+        background: 'rgba(255, 152, 0, 0.2)',
+        border: '1px solid rgba(255, 152, 0, 0.4)',
+        color: '#ff9800',
+        padding: '8px 16px',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: 'bold',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '5px'
+    },
     startSessionBtn: {
         background: 'rgba(76, 175, 80, 0.2)',
         border: '1px solid rgba(76, 175, 80, 0.4)',
@@ -811,7 +1063,8 @@ const styles = {
     empty: { textAlign: 'center', padding: '30px', color: '#888' },
     // Live session styles
     liveContainer: {
-        maxWidth: '900px',
+        maxWidth: '1600px',
+        width: '100%',
         margin: '0 auto'
     },
     liveHeader: {
@@ -854,10 +1107,24 @@ const styles = {
         borderRadius: '8px',
         cursor: 'pointer'
     },
-    codeContainer: {
-        background: 'rgba(0, 0, 0, 0.3)',
-        borderRadius: '12px',
-        overflow: 'hidden'
+    activeViewBtn: {
+        background: 'rgba(102, 126, 234, 0.4)',
+        border: '1px solid #667eea',
+        color: '#fff',
+        padding: '5px 12px',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: 'bold'
+    },
+    inactiveViewBtn: {
+        background: 'transparent',
+        border: '1px solid rgba(255,255,255,0.2)',
+        color: '#ccc',
+        padding: '5px 12px',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '13px'
     },
     codeHeader: {
         display: 'flex',
@@ -876,25 +1143,190 @@ const styles = {
     },
     codeEditor: {
         width: '100%',
-        minHeight: '400px',
+        flex: 1,
         background: 'transparent',
         border: 'none',
         color: '#e0e0e0',
         fontFamily: 'Monaco, Consolas, monospace',
         fontSize: '14px',
         padding: '15px',
-        resize: 'vertical',
-        outline: 'none'
+        resize: 'none',
+        outline: 'none',
+        overflow: 'auto'
     },
     codeViewer: {
         margin: 0,
         padding: '15px',
-        minHeight: '400px',
+        flex: 1,
         color: '#e0e0e0',
         fontFamily: 'Monaco, Consolas, monospace',
         fontSize: '14px',
         whiteSpace: 'pre-wrap',
         overflow: 'auto'
+    },
+    workspaceContainer: {
+        display: 'flex',
+        gap: '20px',
+        alignItems: 'stretch',
+        height: 'calc(100vh - 220px)',
+        minHeight: '500px'
+    },
+    codeContainer: {
+        flex: 3,
+        background: 'rgba(255, 255, 255, 0.03)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
+    },
+    rosterContainer: {
+        flex: 1,
+        background: 'rgba(255, 255, 255, 0.03)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
+        padding: '15px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px'
+    },
+    rosterTitle: {
+        margin: '0 0 10px 0',
+        fontSize: '16px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        paddingBottom: '10px'
+    },
+    rosterList: {
+        flex: 1,
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px'
+    },
+    participantCard: {
+        background: 'rgba(255, 255, 255, 0.05)',
+        padding: '10px',
+        borderRadius: '8px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px'
+    },
+    participantInfo: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        flexWrap: 'wrap'
+    },
+    participantName: {
+        fontSize: '14px',
+        fontWeight: '500'
+    },
+    chalkBadge: {
+        background: '#e67e22',
+        padding: '2px 6px',
+        borderRadius: '4px',
+        fontSize: '10px',
+        fontWeight: 'bold'
+    },
+    handBadge: {
+        background: '#f1c40f',
+        padding: '2px 6px',
+        borderRadius: '4px',
+        fontSize: '12px'
+    },
+    participantActions: {
+        display: 'flex',
+        justifyContent: 'flex-end'
+    },
+    grantBtn: {
+        background: '#2ecc71',
+        color: '#fff',
+        border: 'none',
+        padding: '6px 12px',
+        borderRadius: '6px',
+        fontSize: '12px',
+        cursor: 'pointer',
+        fontWeight: 'bold'
+    },
+    revokeBtn: {
+        background: '#e74c3c',
+        color: '#fff',
+        border: 'none',
+        padding: '6px 12px',
+        borderRadius: '6px',
+        fontSize: '12px',
+        cursor: 'pointer',
+        fontWeight: 'bold'
+    },
+    raiseHandBtn: {
+        background: 'transparent',
+        border: '1px solid #f1c40f',
+        color: '#f1c40f',
+        padding: '10px',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        fontSize: '14px',
+        fontWeight: 'bold',
+        marginTop: '10px'
+    },
+    yieldBtn: {
+        background: '#e74c3c',
+        border: 'none',
+        color: '#fff',
+        padding: '10px',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        fontSize: '14px',
+        fontWeight: 'bold',
+        marginTop: '10px'
+    },
+    chatSection: {
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        paddingTop: '15px',
+        marginTop: '10px',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: '0 0 35%',
+        minHeight: '180px'
+    },
+    chatMessages: {
+        flex: 1,
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        marginBottom: '10px',
+        paddingRight: '5px'
+    },
+    chatMessageBubble: {
+        background: 'rgba(255, 255, 255, 0.05)',
+        padding: '8px 10px',
+        borderRadius: '8px',
+        wordBreak: 'break-word'
+    },
+    chatForm: {
+        display: 'flex',
+        gap: '8px'
+    },
+    chatInput: {
+        flex: 1,
+        background: 'rgba(255, 255, 255, 0.1)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        color: '#fff',
+        padding: '8px 10px',
+        borderRadius: '6px',
+        fontSize: '13px',
+        outline: 'none'
+    },
+    chatSendBtn: {
+        background: '#667eea',
+        color: '#fff',
+        border: 'none',
+        padding: '8px 12px',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        fontSize: '13px'
     }
 };
 

@@ -7,6 +7,7 @@ import SearchVisualizer from './SearchVisualizer';
 import ErrorBoundary from '../ErrorBoundary';
 import ConceptCard from '../ConceptCard';
 import VariableTracker from '../VariableTracker';
+import VoiceNarrator from './VoiceNarrator';
 
 const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -188,15 +189,15 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 5px' }}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 2px' }}
       >
-        <div style={styles.treeNode}>{String(val)}</div>
+        <div style={styles.treeNode}>{String(val).length > 4 ? String(val).slice(0, 3) + '…' : String(val)}</div>
         {(node.left || node.right) && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ height: '10px', width: '2px', background: '#666' }}></div>
+            <div style={{ height: '6px', width: '2px', background: '#666' }}></div>
             <div style={{ display: 'flex', borderTop: '2px solid #666', paddingTop: '5px' }}>
-              <div style={{ marginRight: '10px' }}>{renderTree(node.left)}</div>
-              <div style={{ marginLeft: '10px' }}>{renderTree(node.right)}</div>
+              <div style={{ marginRight: '4px' }}>{renderTree(node.left)}</div>
+              <div style={{ marginLeft: '4px' }}>{renderTree(node.right)}</div>
             </div>
           </div>
         )}
@@ -359,7 +360,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
               key={idx}
               initial={{ scale: 0, y: -20 }}
               animate={{ scale: 1, y: 0 }}
-              transition={{ delay: idx * 0.05, duration: 0.3, type: 'spring' }}
+              transition={{ delay: Math.min(idx * 0.03, 0.3), duration: 0.2, type: 'spring' }}
               style={styles.enhancedArrayItem}
             >
               {/* Index label on top */}
@@ -398,7 +399,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       {/* Header */}
       <div style={styles.arrayHeader}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '28px' }}>📚</span>
+          <span style={{ fontSize: '20px' }}>📚</span>
           <div>
             <div style={styles.varName}>{name}</div>
             <div style={{ fontSize: '10px', color: '#888' }}>Stack (Size: {stack.length})</div>
@@ -408,7 +409,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       </div>
 
       {/* Stack items - vertical, bottom to top */}
-      <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '8px', minHeight: '100px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '4px', maxHeight: '250px', overflowY: 'auto' }}>
         <AnimatePresence mode="popLayout">
           {stack.slice(0, 10).map((val, idx) => (
             <Motion.div
@@ -464,7 +465,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       {/* Header */}
       <div style={styles.arrayHeader}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '28px' }}>🎫</span>
+          <span style={{ fontSize: '20px' }}>🎫</span>
           <div>
             <div style={styles.varName}>{name}</div>
             <div style={{ fontSize: '10px', color: '#888' }}>Queue (Size: {queue.length})</div>
@@ -474,7 +475,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       </div>
 
       {/* Queue items - horizontal */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflowX: 'auto', padding: '10px 0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', padding: '6px 0' }}>
         <span style={{ fontSize: '11px', color: '#888', fontWeight: 'bold', minWidth: '50px' }}>FRONT →</span>
 
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -535,10 +536,10 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       current = current.next;
     }
 
-    const nodeWidth = 100;
-    const nodeHeight = 70;
-    const arrowGap = 40;
-    const totalWidth = nodes.length * (nodeWidth + arrowGap) + 80;
+    const nodeWidth = 65;
+    const nodeHeight = 40;
+    const arrowGap = 25;
+    const totalWidth = nodes.length * (nodeWidth + arrowGap) + 50;
 
     return (
       <Motion.div
@@ -554,7 +555,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         {/* Header */}
         <div style={styles.arrayHeader}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '28px' }}>🔗</span>
+            <span style={{ fontSize: '20px' }}>🔗</span>
             <div>
               <div style={styles.varName}>{name}</div>
               <div style={{ fontSize: '10px', color: '#888' }}>Linked List ({nodes.length} nodes)</div>
@@ -564,7 +565,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         </div>
 
         {/* SVG Canvas */}
-        <svg width={totalWidth} height={nodeHeight + 40} style={{ overflow: 'visible', padding: '20px 10px' }}>
+        <svg width={totalWidth} height={nodeHeight + 30} style={{ overflow: 'visible', padding: '10px 5px', maxWidth: '100%' }}>
           {/* Define arrow marker */}
           <defs>
             <marker
@@ -608,7 +609,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
                   y={y + nodeHeight / 2 - 5}
                   textAnchor="middle"
                   fill="white"
-                  fontSize="16"
+                  fontSize="12"
                   fontWeight="bold"
                 >
                   {String(node.value)}
@@ -769,7 +770,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           onClick={() => toggleSection(categoryKey)}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '20px' }}>{icon}</span>
+            <span style={{ fontSize: '16px' }}>{icon}</span>
             <span style={styles.sectionTitle}>{title}</span>
             <span style={styles.sectionCount}>{Object.keys(variables).length}</span>
           </div>
@@ -805,54 +806,66 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
     <div style={styles.container}>
       {/* CONTROLS */}
       <div style={styles.controlBar}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Row 1: Play, Step, Speed, Voice */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
           <button onClick={() => setIsPlaying(!isPlaying)} style={styles.playButton}>
             {isPlaying ? '⏸ Pause' : '▶ Play'}
           </button>
-          <div style={{ color: '#aaa', fontSize: '13px' }}>
+          <div style={{ color: '#aaa', fontSize: '12px', whiteSpace: 'nowrap' }}>
             Step {stepIndex + 1} / {traceData.length}
           </div>
+
+          {/* Speed Control */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '6px' }}>
+            <span style={{ fontSize: '11px', color: '#888' }}>Speed:</span>
+            <button
+              onClick={() => setPlaySpeed(1500)}
+              style={{ ...styles.speedBtn, background: playSpeed === 1500 ? '#667eea' : 'transparent' }}
+            >
+              🐢
+            </button>
+            <button
+              onClick={() => setPlaySpeed(800)}
+              style={{ ...styles.speedBtn, background: playSpeed === 800 ? '#667eea' : 'transparent' }}
+            >
+              🚶
+            </button>
+            <button
+              onClick={() => setPlaySpeed(300)}
+              style={{ ...styles.speedBtn, background: playSpeed === 300 ? '#667eea' : 'transparent' }}
+            >
+              🏃
+            </button>
+            <button
+              onClick={() => setPlaySpeed(100)}
+              style={{ ...styles.speedBtn, background: playSpeed === 100 ? '#667eea' : 'transparent' }}
+            >
+              ⚡
+            </button>
+          </div>
+
+          {/* Voice Narration */}
+          <VoiceNarrator
+            currentStep={currentStep}
+            stepIndex={stepIndex}
+            playSpeed={playSpeed}
+            currentVariables={currentVariables}
+            previousVariables={previousVariables}
+            isPlaying={isPlaying}
+          />
         </div>
 
-        {/* Speed Control */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px' }}>
-          <span style={{ fontSize: '12px', color: '#888' }}>Speed:</span>
-          <button
-            onClick={() => setPlaySpeed(1500)}
-            style={{ ...styles.speedBtn, background: playSpeed === 1500 ? '#667eea' : 'transparent' }}
-          >
-            🐢
-          </button>
-          <button
-            onClick={() => setPlaySpeed(800)}
-            style={{ ...styles.speedBtn, background: playSpeed === 800 ? '#667eea' : 'transparent' }}
-          >
-            🚶
-          </button>
-          <button
-            onClick={() => setPlaySpeed(300)}
-            style={{ ...styles.speedBtn, background: playSpeed === 300 ? '#667eea' : 'transparent' }}
-          >
-            🏃
-          </button>
-          <button
-            onClick={() => setPlaySpeed(100)}
-            style={{ ...styles.speedBtn, background: playSpeed === 100 ? '#667eea' : 'transparent' }}
-          >
-            ⚡
-          </button>
-        </div>
-
-        <input
-          type="range"
-          min="0"
-          max={traceData.length - 1}
-          value={stepIndex}
-          onChange={(e) => { setIsPlaying(false); setStepIndex(Number(e.target.value)); }}
-          style={styles.slider}
-        />
-        <div style={{ display: 'flex', gap: '5px' }}>
+        {/* Row 2: Slider + Nav */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           <button onClick={() => { setIsPlaying(false); setStepIndex(Math.max(0, stepIndex - 1)) }} style={styles.navBtn}>◀</button>
+          <input
+            type="range"
+            min="0"
+            max={traceData.length - 1}
+            value={stepIndex}
+            onChange={(e) => { setIsPlaying(false); setStepIndex(Number(e.target.value)); }}
+            style={{ ...styles.slider, width: '80px', flex: 'none' }}
+          />
           <button onClick={() => { setIsPlaying(false); setStepIndex(Math.min(traceData.length - 1, stepIndex + 1)) }} style={styles.navBtn}>▶</button>
         </div>
       </div>
@@ -1031,13 +1044,15 @@ const styles = {
     background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
   },
   controlBar: {
-    padding: '12px 20px',
+    padding: '8px 12px',
     background: 'rgba(37, 37, 38, 0.8)',
     backdropFilter: 'blur(10px)',
     borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
+    flexWrap: 'wrap',
+    gap: '8px',
+    alignItems: 'center',
+    overflow: 'hidden'
   },
   playButton: {
     background: 'linear-gradient(135deg, #2ea043, #26843b)',
@@ -1063,10 +1078,10 @@ const styles = {
   },
   speedBtn: {
     border: 'none',
-    padding: '6px 10px',
-    borderRadius: '6px',
+    padding: '4px 6px',
+    borderRadius: '5px',
     cursor: 'pointer',
-    fontSize: '16px',
+    fontSize: '14px',
     transition: 'all 0.2s ease'
   },
   debugBtn: {
@@ -1097,8 +1112,9 @@ const styles = {
   },
   canvasArea: {
     flex: 1,
-    padding: '20px',
+    padding: '10px 12px',
     overflowY: 'auto',
+    overflowX: 'hidden',
     background: 'transparent'
   },
   scopeContainer: { marginBottom: '20px' },
@@ -1112,14 +1128,14 @@ const styles = {
 
   // 🎯 SECTION STYLES
   section: {
-    marginBottom: '25px',
+    marginBottom: '12px',
     background: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: '12px',
+    borderRadius: '10px',
     overflow: 'hidden',
     border: '1px solid rgba(255, 255, 255, 0.05)'
   },
   sectionHeader: {
-    padding: '15px 20px',
+    padding: '8px 14px',
     background: 'rgba(255, 255, 255, 0.03)',
     borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
     display: 'flex',
@@ -1145,11 +1161,13 @@ const styles = {
     fontWeight: 'bold'
   },
   sectionContent: {
-    padding: '20px',
+    padding: '10px',
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '15px',
-    alignItems: 'flex-start'
+    gap: '8px',
+    alignItems: 'flex-start',
+    overflow: 'auto',
+    maxHeight: '400px'
   },
 
   // 🌟 GLASSMORPHISM
@@ -1162,8 +1180,8 @@ const styles = {
 
   varBox: {
     borderRadius: '12px',
-    padding: '15px',
-    minWidth: '200px',
+    padding: '10px',
+    minWidth: '150px',
     transition: 'all 0.3s ease'
   },
   varHeader: {
@@ -1200,28 +1218,29 @@ const styles = {
     ...{
       background: 'rgba(255, 255, 255, 0.05)',
       backdropFilter: 'blur(10px)',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
       border: '2px solid rgba(255, 255, 255, 0.1)',
     },
-    borderRadius: '16px',
-    padding: '15px',
+    borderRadius: '12px',
+    padding: '10px',
     minWidth: '100%',
+    overflow: 'auto',
   },
   arrayHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '20px',
-    paddingBottom: '15px',
-    borderBottom: '2px solid rgba(255, 255, 255, 0.1)'
+    marginBottom: '8px',
+    paddingBottom: '6px',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
   },
   arrayIcon: {
-    fontSize: '28px',
-    filter: 'drop-shadow(0 2px 10px rgba(0, 122, 204, 0.4))'
+    fontSize: '18px',
+    filter: 'drop-shadow(0 1px 5px rgba(0, 122, 204, 0.3))'
   },
   enhancedArrayContainer: {
     display: 'flex',
-    gap: '15px',
+    gap: '6px',
     flexWrap: 'wrap',
     justifyContent: 'center'
   },
@@ -1229,27 +1248,27 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '8px'
+    gap: '3px'
   },
   arrayIndexTop: {
-    fontSize: '11px',
+    fontSize: '9px',
     color: '#888',
     fontWeight: 'bold',
     fontFamily: 'monospace'
   },
   enhancedArrayBox: {
-    minWidth: '50px',
-    height: '50px',
-    padding: '0 10px',
+    minWidth: '36px',
+    height: '36px',
+    padding: '0 6px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     color: 'white',
-    borderRadius: '12px',
+    borderRadius: '8px',
     fontWeight: 'bold',
-    fontSize: '16px',
-    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-    border: '2px solid rgba(255, 255, 255, 0.3)',
+    fontSize: '12px',
+    boxShadow: '0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
+    border: '1px solid rgba(255, 255, 255, 0.25)',
     cursor: 'pointer'
   },
 
@@ -1285,8 +1304,8 @@ const styles = {
     boxShadow: '0 2px 8px rgba(14, 99, 156, 0.3)'
   },
   treeNode: {
-    width: '35px',
-    height: '35px',
+    width: '28px',
+    height: '28px',
     borderRadius: '50%',
     background: 'linear-gradient(135deg, #007acc, #0098ff)',
     color: 'white',
@@ -1294,10 +1313,10 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 'bold',
-    fontSize: '13px',
+    fontSize: '10px',
     zIndex: 10,
-    border: '2px solid rgba(0, 122, 204, 0.3)',
-    boxShadow: '0 4px 15px rgba(0, 122, 204, 0.5)'
+    border: '1px solid rgba(0, 122, 204, 0.3)',
+    boxShadow: '0 2px 8px rgba(0, 122, 204, 0.4)'
   },
   nullNode: { fontSize: '10px', color: '#555', marginTop: '5px' },
   objectRow: {
@@ -1337,24 +1356,24 @@ const styles = {
 
   // 🔥 STACK & QUEUE STYLES
   stackItem: {
-    padding: '12px 16px',
-    borderRadius: '8px',
+    padding: '6px 10px',
+    borderRadius: '6px',
     color: 'white',
     fontWeight: 'bold',
-    fontSize: '14px',
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
-    border: '2px solid rgba(255, 255, 255, 0.2)',
+    fontSize: '12px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
     minWidth: '100%'
   },
   queueItem: {
-    padding: '12px 16px',
-    borderRadius: '8px',
+    padding: '6px 10px',
+    borderRadius: '6px',
     color: 'white',
     fontWeight: 'bold',
-    fontSize: '14px',
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
-    border: '2px solid rgba(255, 255, 255, 0.2)',
-    minWidth: '60px',
+    fontSize: '12px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    minWidth: '40px',
     textAlign: 'center'
   },
 

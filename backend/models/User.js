@@ -7,6 +7,7 @@ const userSchema = mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['student', 'instructor', 'admin'], default: 'student' },
+    skillLevel: { type: String, enum: ['beginner', 'intermediate', 'advanced'], default: 'beginner' },
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date, default: null },
 

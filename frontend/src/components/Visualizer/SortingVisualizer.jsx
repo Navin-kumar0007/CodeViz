@@ -59,10 +59,10 @@ const SortingVisualizer = ({
             {/* Header */}
             <div style={styles.header}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '28px' }}>🔢</span>
+                    <span style={{ fontSize: '20px' }}>🔢</span>
                     <div>
                         <div style={styles.name}>{name}</div>
-                        <div style={styles.subtitle}>Length: {arr.length}</div>
+                        <div style={styles.subtitle}>Len: {arr.length}</div>
                     </div>
                 </div>
 
@@ -166,16 +166,16 @@ const styles = {
         background: 'rgba(20, 20, 35, 0.9)',
         backdropFilter: 'blur(10px)',
         borderRadius: '16px',
-        padding: '20px',
+        padding: '12px',
         border: '1px solid rgba(102, 126, 234, 0.3)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)'
     },
     header: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '20px',
-        paddingBottom: '15px',
+        marginBottom: '10px',
+        paddingBottom: '8px',
         borderBottom: '1px solid rgba(255,255,255,0.1)'
     },
     name: {
@@ -201,10 +201,10 @@ const styles = {
     arrayContainer: {
         display: 'flex',
         flexWrap: 'wrap',
-        gap: '15px',
+        gap: '8px',
         justifyContent: 'center',
-        padding: '20px 10px',
-        minHeight: '120px'
+        padding: '8px 4px',
+        minHeight: '80px'
     },
     elementWrapper: {
         display: 'flex',
@@ -232,15 +232,15 @@ const styles = {
         fontSize: '10px'
     },
     valueBox: {
-        width: '50px',
-        height: '50px',
-        borderRadius: '10px',
+        width: '38px',
+        height: '38px',
+        borderRadius: '8px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         color: '#fff',
         fontWeight: 'bold',
-        fontSize: '16px',
+        fontSize: '12px',
         cursor: 'pointer',
         transition: 'all 0.2s ease'
     },
@@ -251,11 +251,11 @@ const styles = {
     },
     statusBar: {
         marginTop: '15px',
-        padding: '12px 16px',
+        padding: '8px 12px',
         background: 'rgba(0, 0, 0, 0.3)',
-        borderRadius: '8px',
+        borderRadius: '6px',
         textAlign: 'center',
-        fontSize: '13px',
+        fontSize: '11px',
         fontFamily: 'monospace'
     }
 };

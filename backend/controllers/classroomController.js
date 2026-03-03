@@ -10,9 +10,9 @@ const createClassroom = async (req, res) => {
     try {
         const { name, description, settings } = req.body;
 
-        // Check if user is instructor
-        if (req.user.role !== 'instructor') {
-            return res.status(403).json({ message: 'Only instructors can create classrooms' });
+        // Check if user is instructor or admin
+        if (req.user.role !== 'instructor' && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Only instructors and admins can create classrooms' });
         }
 
         // Generate unique join code
@@ -267,6 +267,33 @@ const updateLiveCode = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Delete a classroom
+ * @route   DELETE /api/classrooms/:id
+ * @access  Private (Instructor or Admin)
+ */
+const deleteClassroom = async (req, res) => {
+    try {
+        const classroom = await Classroom.findById(req.params.id);
+
+        if (!classroom) {
+            return res.status(404).json({ message: 'Classroom not found' });
+        }
+
+        // Check if user is the instructor or an admin
+        if (!classroom.isInstructor(req.user._id) && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized to delete this classroom' });
+        }
+
+        await Classroom.findByIdAndDelete(req.params.id);
+
+        res.json({ message: 'Classroom deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting classroom:', error);
+        res.status(500).json({ message: 'Failed to delete classroom' });
+    }
+};
+
 module.exports = {
     createClassroom,
     getPublicClassrooms,
@@ -276,5 +303,6 @@ module.exports = {
     leaveClassroom,
     startLiveSession,
     stopLiveSession,
-    updateLiveCode
+    updateLiveCode,
+    deleteClassroom
 };

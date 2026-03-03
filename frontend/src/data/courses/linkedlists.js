@@ -8,7 +8,7 @@ export const LINKEDLISTS_PATH = {
     title: 'Linked Lists',
     icon: '🔗',
     description: 'Discover how nodes and pointers create flexible data structures that grow dynamically!',
-    prerequisites: ['sorting'],  // Unlock after Sorting Algorithms
+    prerequisites: ['stacks'],  // Unlock after Sorting Algorithms
     lessons: [
         {
             id: 'what-is-linkedlist',

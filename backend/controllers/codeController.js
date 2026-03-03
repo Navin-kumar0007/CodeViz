@@ -24,9 +24,14 @@ const executeCode = (req, res) => {
             break;
 
         case 'cpp':
+            let cppCode = code;
+            // Inject C++ boilerplate if 'main' is missing
+            if (!/main\s*\(/.test(code)) {
+                cppCode = `#include <iostream>\nusing namespace std;\nint main() {\n${code}\nreturn 0;\n}`;
+            }
             tempFile = path.join(tempDir, `temp_${timestamp}.cpp`);
             const outFile = path.join(tempDir, `temp_${timestamp}.out`);
-            fs.writeFileSync(tempFile, code);
+            fs.writeFileSync(tempFile, cppCode);
             command = `g++ "${tempFile}" -o "${outFile}" && "${outFile}"`;
             break;
 
@@ -39,13 +44,31 @@ const executeCode = (req, res) => {
             break;
 
         case 'java': // 👈 NEW: Java support
-            // For Java, we force the file to be Main.java so "public class Main" works
+            let javaCode = code;
+
+            if (/public\s+class\s+Main/.test(code)) {
+                // User already provided the correct structure (like our presets)
+                javaCode = code;
+            } else if (/main\s*\(/.test(code)) {
+                // User provided main() but no public class Main
+                if (/class\s+\w+/.test(code)) {
+                    // User provided a class. Force name to Main so javac Main.java works
+                    javaCode = code.replace(/class\s+\w+/, 'class Main');
+                } else {
+                    // User provided main() but no class wrapper
+                    javaCode = `public class Main {\n${code}\n}`;
+                }
+            } else {
+                // User provided raw code, no main()
+                javaCode = `public class Main {\n    public static void main(String[] args) {\n${code}\n    }\n}`;
+            }
+
             // We use a unique subfolder to avoid conflicts
             const javaDir = path.join(tempDir, `java_${timestamp}`);
             if (!fs.existsSync(javaDir)) fs.mkdirSync(javaDir);
 
             tempFile = path.join(javaDir, 'Main.java');
-            fs.writeFileSync(tempFile, code);
+            fs.writeFileSync(tempFile, javaCode);
 
             // Compile then Run
             command = `javac "${tempFile}" && java -cp "${javaDir}" Main`;
