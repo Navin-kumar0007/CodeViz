@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { throttle } from 'lodash';
+import throttle from 'lodash/throttle';
 
 const Whiteboard = React.memo(({ socket, isEditor }) => {
     const [paths, setPaths] = useState([]);
