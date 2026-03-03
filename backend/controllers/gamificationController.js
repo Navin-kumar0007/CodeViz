@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
+const DailyChallenge = require('../models/DailyChallenge');
 const gamificationService = require('../services/gamificationService');
 
 // @desc    Get user gamification stats
@@ -49,8 +50,47 @@ const getLeaderboard = asyncHandler(async (req, res) => {
     res.json(leaderboard);
 });
 
+// @desc    Get Algorithm DNA (skill breakdown)
+// @route   GET /api/gamification/dna
+// @access  Private
+const getAlgorithmDNA = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    const completedIds = user.completedChallenges.map(c => c.challengeId);
+
+    // Fetch the actual challenge documents to get their categories
+    const challenges = await DailyChallenge.find({ _id: { $in: completedIds } });
+
+    // Aggregate by category
+    const categoryCounts = {
+        'arrays': 0, 'strings': 0, 'sorting': 0, 'searching': 0,
+        'stacks': 0, 'linked-lists': 0, 'math': 0, 'recursion': 0
+    };
+
+    challenges.forEach(c => {
+        if (categoryCounts[c.category] !== undefined) {
+            categoryCounts[c.category] += 1; // Or add XP: c.xpReward
+        }
+    });
+
+    // Format for Recharts Radar chart
+    // Recharts expects an array of objects: { subject: 'Math', A: 120, fullMark: 150 }
+    const dnaData = Object.keys(categoryCounts).map(key => ({
+        subject: key.charAt(0).toUpperCase() + key.slice(1).replace('-', ' '),
+        A: categoryCounts[key] * 10,  // Scale up for visual impact
+        fullMark: 100 // Arbitrary max to keep radar chart bounds solid
+    }));
+
+    res.json(dnaData);
+});
+
 module.exports = {
     getStats,
     dailyCheckIn,
-    getLeaderboard
+    getLeaderboard,
+    getAlgorithmDNA
 };

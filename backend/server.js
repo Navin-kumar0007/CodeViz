@@ -19,9 +19,14 @@ const aiRoutes = require('./routes/aiRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const gamificationRoutes = require('./routes/gamificationRoutes');
 const discussionRoutes = require('./routes/discussionRoutes');
+const roomRoutes = require('./routes/roomRoutes');
+const dailyChallengeRoutes = require('./routes/dailyChallengeRoutes');
+const sessionRoutes = require('./routes/sessionRoutes');
+const campusRoutes = require('./routes/campusRoutes');
 
 // Socket handlers
 const setupClassroomSocket = require('./socket/classroomSocket');
+const setupRoomSocket = require('./socket/roomSocket');
 
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -75,6 +80,7 @@ const io = new Server(server, {
 
 // Setup socket handlers
 setupClassroomSocket(io);
+setupRoomSocket(io);
 
 // Make io accessible to routes if needed
 app.set('io', io);
@@ -97,6 +103,10 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/discussions', discussionRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/challenges', dailyChallengeRoutes);
+app.use('/api/sessions', sessionRoutes);
+app.use('/api/campus', campusRoutes);
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)
 
@@ -110,4 +120,16 @@ const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
     logger.info(`🚀 Server running on port ${PORT}`);
     logger.info(`📡 Socket.io ready for connections`);
+});
+
+// Graceful error handling for server
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        logger.error(`❌ Port ${PORT} is already in use. Kill the other process: lsof -ti:${PORT} | xargs kill -9`);
+    } else if (err.code === 'EPERM') {
+        logger.error(`❌ Permission denied on port ${PORT}. Try a different port.`);
+    } else {
+        logger.error(`❌ Server error: ${err.message}`);
+    }
+    process.exit(1);
 });

@@ -27,7 +27,38 @@ let isStudent = true;
 console.log("Name:", name);
 console.log("Age:", age);
 console.log("Height:", height);
-console.log("Student:", isStudent);`
+console.log("Student:", isStudent);`,
+                java: `// Java Variables
+public class Main {
+    public static void main(String[] args) {
+        String name = "Alice";
+        int age = 25;
+        double height = 5.6;
+        boolean isStudent = true;
+
+        System.out.println("Name: " + name);
+        System.out.println("Age: " + age);
+        System.out.println("Height: " + height);
+        System.out.println("Student: " + isStudent);
+    }
+}`,
+                cpp: `// C++ Variables
+#include <iostream>
+#include <string>
+using namespace std;
+
+int main() {
+    string name = "Alice";
+    int age = 25;
+    double height = 5.6;
+    bool isStudent = true;
+
+    cout << "Name: " << name << endl;
+    cout << "Age: " << age << endl;
+    cout << "Height: " << height << endl;
+    cout << "Student: " << (isStudent ? "true" : "false") << endl;
+    return 0;
+}`
             },
             "If-Else Conditions": {
                 python: `# Python If-Else
@@ -57,7 +88,48 @@ if (score >= 90) {
     grade = "F";
 }
 
-console.log("Score:", score, "Grade:", grade);`
+console.log("Score:", score, "Grade:", grade);`,
+                java: `// Java If-Else
+public class Main {
+    public static void main(String[] args) {
+        int score = 85;
+        String grade;
+
+        if (score >= 90) {
+            grade = "A";
+        } else if (score >= 80) {
+            grade = "B";
+        } else if (score >= 70) {
+            grade = "C";
+        } else {
+            grade = "F";
+        }
+
+        System.out.println("Score: " + score + ", Grade: " + grade);
+    }
+}`,
+                cpp: `// C++ If-Else
+#include <iostream>
+#include <string>
+using namespace std;
+
+int main() {
+    int score = 85;
+    string grade;
+
+    if (score >= 90) {
+        grade = "A";
+    } else if (score >= 80) {
+        grade = "B";
+    } else if (score >= 70) {
+        grade = "C";
+    } else {
+        grade = "F";
+    }
+
+    cout << "Score: " << score << ", Grade: " << grade << endl;
+    return 0;
+}`
             },
             "For Loop": {
                 python: `# Python For Loop
@@ -78,7 +150,37 @@ for (let i = 0; i < numbers.length; i++) {
     console.log("Added", numbers[i], "Total:", total);
 }
 
-console.log("Final Sum:", total);`
+console.log("Final Sum:", total);`,
+                java: `// Java For Loop
+public class Main {
+    public static void main(String[] args) {
+        int[] numbers = {1, 2, 3, 4, 5};
+        int total = 0;
+
+        for (int i = 0; i < numbers.length; i++) {
+            total += numbers[i];
+            System.out.println("Added " + numbers[i] + " Total: " + total);
+        }
+
+        System.out.println("Final Sum: " + total);
+    }
+}`,
+                cpp: `// C++ For Loop
+#include <iostream>
+using namespace std;
+
+int main() {
+    int numbers[] = {1, 2, 3, 4, 5};
+    int total = 0;
+
+    for (int i = 0; i < 5; i++) {
+        total += numbers[i];
+        cout << "Added " << numbers[i] << " Total: " << total << endl;
+    }
+
+    cout << "Final Sum: " << total << endl;
+    return 0;
+}`
             },
             "While Loop": {
                 python: `# Python While Loop
@@ -149,7 +251,41 @@ for (let i = 0; i < arr.length; i++) {
     }
 }
 
-console.log("Maximum value is", maxVal);`
+console.log("Maximum value is", maxVal);`,
+                java: `// Java Find Maximum
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {10, 50, 30, 90, 20};
+        int maxVal = arr[0];
+
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] > maxVal) {
+                maxVal = arr[i];
+                System.out.println("New max found: " + maxVal);
+            }
+        }
+
+        System.out.println("Maximum value is " + maxVal);
+    }
+}`,
+                cpp: `// C++ Find Maximum
+#include <iostream>
+using namespace std;
+
+int main() {
+    int arr[] = {10, 50, 30, 90, 20};
+    int maxVal = arr[0];
+
+    for (int i = 0; i < 5; i++) {
+        if (arr[i] > maxVal) {
+            maxVal = arr[i];
+            cout << "New max found: " << maxVal << endl;
+        }
+    }
+
+    cout << "Maximum value is " << maxVal << endl;
+    return 0;
+}`
             },
             "Reverse Array": {
                 python: `# Python Reverse Array
@@ -219,6 +355,48 @@ for (let i = 0; i < arr.length; i++) {
 
 if (foundIndex === -1) {
     console.log(target, "not found");
+}`,
+                java: `// Java Linear Search
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {10, 50, 30, 70, 80, 20};
+        int target = 70;
+        int foundIndex = -1;
+
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] == target) {
+                foundIndex = i;
+                System.out.println("Found " + target + " at index " + i);
+                break;
+            }
+        }
+
+        if (foundIndex == -1) {
+            System.out.println(target + " not found");
+        }
+    }
+}`,
+                cpp: `// C++ Linear Search
+#include <iostream>
+using namespace std;
+
+int main() {
+    int arr[] = {10, 50, 30, 70, 80, 20};
+    int target = 70;
+    int foundIndex = -1;
+
+    for (int i = 0; i < 6; i++) {
+        if (arr[i] == target) {
+            foundIndex = i;
+            cout << "Found " << target << " at index " << i << endl;
+            break;
+        }
+    }
+
+    if (foundIndex == -1) {
+        cout << target << " not found" << endl;
+    }
+    return 0;
 }`
             },
             "Binary Search": {
@@ -257,6 +435,54 @@ while (low <= high) {
     } else {
         high = mid - 1;
     }
+}`,
+                java: `// Java Binary Search
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {2, 5, 8, 12, 16, 23, 38, 56};
+        int target = 23;
+        int low = 0;
+        int high = arr.length - 1;
+
+        while (low <= high) {
+            int mid = low + (high - low) / 2;
+            System.out.println("Checking index " + mid + ": " + arr[mid]);
+            
+            if (arr[mid] == target) {
+                System.out.println("Found " + target + " at index " + mid);
+                break;
+            } else if (arr[mid] < target) {
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        }
+    }
+}`,
+                cpp: `// C++ Binary Search
+#include <iostream>
+using namespace std;
+
+int main() {
+    int arr[] = {2, 5, 8, 12, 16, 23, 38, 56};
+    int target = 23;
+    int low = 0;
+    int high = 7;
+
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        cout << "Checking index " << mid << ": " << arr[mid] << endl;
+        
+        if (arr[mid] == target) {
+            cout << "Found " << target << " at index " << mid << endl;
+            break;
+        } else if (arr[mid] < target) {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+    return 0;
 }`
             }
         }
@@ -293,19 +519,44 @@ for (let i = 0; i < arr.length; i++) {
 
 console.log("Sorted:", arr);`,
                 java: `// Java Bubble Sort
-int[] arr = { 64, 34, 25, 12, 22 };
-System.out.println("Sorting...");
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = { 64, 34, 25, 12, 22 };
+        System.out.println("Sorting...");
 
-for (int i = 0; i < 5; i++) {
-    for (int j = 0; j < 4 - i; j++) {
-        if (arr[j] > arr[j+1]) {
-            int temp = arr[j];
-            arr[j] = arr[j+1];
-            arr[j+1] = temp;
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = 0; j < arr.length - 1 - i; j++) {
+                if (arr[j] > arr[j+1]) {
+                    int temp = arr[j];
+                    arr[j] = arr[j+1];
+                    arr[j+1] = temp;
+                }
+            }
+        }
+        System.out.println("Done!");
+    }
+}`,
+                cpp: `// C++ Bubble Sort
+#include <iostream>
+using namespace std;
+
+int main() {
+    int arr[] = { 64, 34, 25, 12, 22 };
+    int n = 5;
+    cout << "Sorting..." << endl;
+
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j+1]) {
+                int temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+            }
         }
     }
-}
-System.out.println("Done!");`
+    cout << "Done!" << endl;
+    return 0;
+}`
             },
             "Selection Sort": {
                 python: `# Python Selection Sort
@@ -589,7 +840,43 @@ function factorial(n) {
 
 let num = 5;
 let result = factorial(num);
-console.log("Result:", result);`
+console.log("Result:", result);`,
+                java: `// Java Recursive Factorial
+public class Main {
+    public static int factorial(int n) {
+        System.out.println("factorial(" + n + ") called");
+        if (n == 1) {
+            return 1;
+        } else {
+            return n * factorial(n - 1);
+        }
+    }
+
+    public static void main(String[] args) {
+        int num = 5;
+        int result = factorial(num);
+        System.out.println("Result: " + result);
+    }
+}`,
+                cpp: `// C++ Recursive Factorial
+#include <iostream>
+using namespace std;
+
+int factorial(int n) {
+    cout << "factorial(" << n << ") called" << endl;
+    if (n == 1) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+int main() {
+    int num = 5;
+    int result = factorial(num);
+    cout << "Result: " << result << endl;
+    return 0;
+}`
             },
             "Fibonacci": {
                 python: `# Python Fibonacci
@@ -618,6 +905,169 @@ for (let i = 2; i < n; i++) {
     console.log("Fib " + i + ":", c);
     a = b;
     b = c;
+}`,
+                java: `// Java Fibonacci
+public class Main {
+    public static void main(String[] args) {
+        int n = 8;
+        int a = 0;
+        int b = 1;
+
+        System.out.println("Fib 0: " + a);
+        System.out.println("Fib 1: " + b);
+
+        for (int i = 2; i < n; i++) {
+            int c = a + b;
+            System.out.println("Fib " + i + ": " + c);
+            a = b;
+            b = c;
+        }
+    }
+}`,
+                cpp: `// C++ Fibonacci
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n = 8;
+    int a = 0;
+    int b = 1;
+
+    cout << "Fib 0: " << a << endl;
+    cout << "Fib 1: " << b << endl;
+
+    for (int i = 2; i < n; i++) {
+        int c = a + b;
+        cout << "Fib " << i << ": " << c << endl;
+        a = b;
+        b = c;
+    }
+    return 0;
+}`
+            }
+        }
+    },
+
+    "🚀 Advanced Concepts": {
+        description: "Learn advanced structural patterns like OOP and threading.",
+        examples: {
+            "OOP (Classes & Objects)": {
+                python: `# Python Object-Oriented Programming
+class Car:
+    def __init__(self, brand, year):
+        self.brand = brand
+        self.year = year
+        
+    def display_info(self):
+        print(f"Car: {self.brand}, Year: {self.year}")
+
+my_car1 = Car("Toyota", 2020)
+my_car2 = Car("Honda", 2022)
+
+my_car1.display_info()
+my_car2.display_info()`,
+                javascript: `// JavaScript Object-Oriented Programming
+class Car {
+    constructor(brand, year) {
+        this.brand = brand;
+        this.year = year;
+    }
+
+    displayInfo() {
+        console.log("Car: " + this.brand + ", Year: " + this.year);
+    }
+}
+
+const myCar1 = new Car("Toyota", 2020);
+const myCar2 = new Car("Honda", 2022);
+
+myCar1.displayInfo();
+myCar2.displayInfo();`,
+                java: `// Java Object-Oriented Programming
+class Car {
+    String brand;
+    int year;
+
+    Car(String b, int y) {
+        brand = b;
+        year = y;
+    }
+
+    void displayInfo() {
+        System.out.println("Car: " + brand + ", Year: " + year);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        // Creating objects from the Car class
+        Car myCar1 = new Car("Toyota", 2020);
+        Car myCar2 = new Car("Honda", 2022);
+
+        // Calling methods
+        myCar1.displayInfo();
+        myCar2.displayInfo();
+    }
+}`,
+                cpp: `// C++ Object-Oriented Programming
+#include <iostream>
+#include <string>
+using namespace std;
+
+class Car {
+public:
+    string brand;
+    int year;
+
+    Car(string b, int y) {
+        brand = b;
+        year = y;
+    }
+
+    void displayInfo() {
+        cout << "Car: " << brand << ", Year: " << year << endl;
+    }
+};
+
+int main() {
+    Car myCar1("Toyota", 2020);
+    Car myCar2("Honda", 2022);
+
+    myCar1.displayInfo();
+    myCar2.displayInfo();
+    return 0;
+}`
+            },
+            "Multithreading": {
+                java: `// Java Multithreading
+class MyThread extends Thread {
+    public void run() {
+        for (int i = 1; i <= 3; i++) {
+            System.out.println(Thread.currentThread().getName() + " - Count: " + i);
+            try {
+                Thread.sleep(500); // Pause for 500ms
+            } catch (InterruptedException e) {
+                System.out.println("Thread error");
+            }
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Starting threads...");
+        
+        MyThread t1 = new MyThread();
+        MyThread t2 = new MyThread();
+        
+        t1.setName("Thread-A");
+        t2.setName("Thread-B");
+        
+        t1.start();
+        t2.start();
+        
+        System.out.println("Main method finished, but Threads continue running!");
+    }
 }`
             }
         }
@@ -641,50 +1091,6 @@ export const getFlatExamples = (language) => {
 export const EXAMPLES = {
     python: getFlatExamples('python'),
     javascript: getFlatExamples('javascript'),
-    java: {
-        "Bubble Sort": `// Java Bubble Sort
-int[] arr = { 5, 1, 4, 2, 8 };
-System.out.println("Start");
-
-for (int i = 0; i < 5; i++) {
-    for (int j = 0; j < 4 - i; j++) {
-        if (arr[j] > arr[j+1]) {
-            int temp = arr[j];
-            arr[j] = arr[j+1];
-            arr[j+1] = temp;
-        }
-    }
-}
-System.out.println("Sorted!");`,
-        "Fibonacci Series": `// Java Fibonacci
-int n = 8;
-int a = 0;
-int b = 1;
-
-System.out.println("Fib: " + a);
-System.out.println("Fib: " + b);
-
-for (int i = 2; i < n; i++) {
-    int c = a + b;
-    System.out.println("Fib: " + c);
-    a = b;
-    b = c;
-}`
-    },
-    cpp: {
-        "Bubble Sort": `// C++ Bubble Sort
-int arr[] = { 64, 25, 12, 22, 11 };
-int n = 5;
-
-for (int i = 0; i < n-1; i++) {
-    for (int j = 0; j < n-i-1; j++) {
-        if (arr[j] > arr[j+1]) {
-            int temp = arr[j];
-            arr[j] = arr[j+1];
-            arr[j+1] = temp;
-        }
-    }
-}
-int final = 0;`
-    }
+    java: getFlatExamples('java'),
+    cpp: getFlatExamples('cpp')
 };

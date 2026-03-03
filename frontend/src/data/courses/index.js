@@ -9,15 +9,23 @@ import { SEARCHING_PATH } from './searching';
 import { SORTING_PATH } from './sorting';
 import { LINKEDLISTS_PATH } from './linkedlists';
 import { STACKS_PATH } from './stacks';
+import { RECURSION_PATH } from './recursion';
+import { HASHMAPS_PATH } from './hashmaps';
+import { QUEUES_PATH } from './queues';
+import { STRINGS_PATH } from './strings';
 
-// All available courses
+// All available courses (ordered by difficulty / dependency)
 export const COURSES = [
     BASICS_PATH,
     ARRAYS_PATH,
+    STRINGS_PATH,
     SEARCHING_PATH,
     SORTING_PATH,
+    RECURSION_PATH,
+    HASHMAPS_PATH,
+    STACKS_PATH,
     LINKEDLISTS_PATH,
-    STACKS_PATH
+    QUEUES_PATH
 ];
 
 // Calculate progress for a specific path

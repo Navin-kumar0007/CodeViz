@@ -8,7 +8,7 @@ export const SEARCHING_PATH = {
     title: 'Searching Algorithms',
     icon: '🔍',
     description: 'Master the art of finding elements - from simple linear search to efficient binary search!',
-    prerequisites: ['arrays'],  // Unlock after Arrays
+    prerequisites: ['strings'],  // Unlock after Arrays
     lessons: [
         {
             id: 'linear-search',

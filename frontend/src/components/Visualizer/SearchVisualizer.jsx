@@ -85,7 +85,7 @@ const SearchVisualizer = ({
             {/* Header */}
             <div style={styles.header}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '28px' }}>🔍</span>
+                    <span style={{ fontSize: '20px' }}>🔍</span>
                     <div>
                         <div style={styles.name}>{name}</div>
                         <div style={styles.subtitle}>Binary Search</div>
@@ -188,20 +188,20 @@ const styles = {
         background: 'rgba(20, 20, 35, 0.9)',
         backdropFilter: 'blur(10px)',
         borderRadius: '16px',
-        padding: '20px',
+        padding: '12px',
         border: '1px solid rgba(66, 153, 225, 0.3)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)'
     },
     header: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '15px',
-        paddingBottom: '12px',
+        marginBottom: '8px',
+        paddingBottom: '8px',
         borderBottom: '1px solid rgba(255,255,255,0.1)'
     },
     name: {
-        fontSize: '16px',
+        fontSize: '13px',
         fontWeight: 'bold',
         color: '#fff'
     },
@@ -212,15 +212,15 @@ const styles = {
     targetBadge: {
         background: 'rgba(104, 211, 145, 0.2)',
         color: '#68d391',
-        padding: '8px 16px',
-        borderRadius: '20px',
-        fontSize: '13px'
+        padding: '5px 10px',
+        borderRadius: '14px',
+        fontSize: '11px'
     },
     infoBar: {
         display: 'flex',
         justifyContent: 'center',
         gap: '15px',
-        marginBottom: '15px'
+        marginBottom: '8px'
     },
     infoItem: {
         background: 'rgba(66, 153, 225, 0.3)',
@@ -233,10 +233,10 @@ const styles = {
     arrayContainer: {
         display: 'flex',
         flexWrap: 'wrap',
-        gap: '12px',
+        gap: '8px',
         justifyContent: 'center',
-        padding: '15px 10px',
-        minHeight: '100px'
+        padding: '8px 4px',
+        minHeight: '70px'
     },
     elementWrapper: {
         display: 'flex',
@@ -263,15 +263,15 @@ const styles = {
         fontSize: '10px'
     },
     valueBox: {
-        width: '45px',
-        height: '45px',
-        borderRadius: '8px',
+        width: '36px',
+        height: '36px',
+        borderRadius: '6px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         color: '#fff',
         fontWeight: 'bold',
-        fontSize: '14px',
+        fontSize: '11px',
         transition: 'all 0.3s ease'
     },
     indexLabel: {
@@ -291,11 +291,11 @@ const styles = {
     },
     statusBar: {
         marginTop: '15px',
-        padding: '12px 16px',
+        padding: '8px 12px',
         background: 'rgba(0, 0, 0, 0.3)',
-        borderRadius: '8px',
+        borderRadius: '6px',
         textAlign: 'center',
-        fontSize: '13px',
+        fontSize: '11px',
         fontFamily: 'monospace',
         color: '#4fc3f7'
     }

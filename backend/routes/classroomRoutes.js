@@ -9,7 +9,8 @@ const {
     leaveClassroom,
     startLiveSession,
     stopLiveSession,
-    updateLiveCode
+    updateLiveCode,
+    deleteClassroom
 } = require('../controllers/classroomController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -25,5 +26,6 @@ router.post('/:id/leave', protect, leaveClassroom);
 router.post('/:id/start', protect, startLiveSession);
 router.post('/:id/stop', protect, stopLiveSession);
 router.put('/:id/code', protect, updateLiveCode);
+router.delete('/:id', protect, deleteClassroom);
 
 module.exports = router;

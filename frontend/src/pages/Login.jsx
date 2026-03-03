@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
@@ -6,6 +6,12 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // If already logged in, redirect to Dashboard
+  useEffect(() => {
+    const user = localStorage.getItem('userInfo');
+    if (user) navigate('/', { replace: true });
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,7 +27,15 @@ const Login = () => {
       if (res.ok) {
         // SAVE THE GOLDEN TICKET 🎟️
         localStorage.setItem('userInfo', JSON.stringify(data));
-        navigate('/'); // Go to Dashboard
+
+        // Auto-join redirect logic
+        const pendingCode = sessionStorage.getItem('pendingClassroomCode');
+        if (pendingCode) {
+          sessionStorage.removeItem('pendingClassroomCode');
+          navigate('/classroom', { state: { autoJoinCode: pendingCode } });
+        } else {
+          navigate('/'); // Go to Dashboard
+        }
       } else {
         setError(data.message);
       }

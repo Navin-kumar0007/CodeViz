@@ -4,12 +4,16 @@ import { useNavigate } from "react-router-dom";
 import CodeEditor from "../components/Editor/CodeEditor";
 import Canvas from "../components/Visualizer/Canvas";
 import AIAssistant from "../components/AI/AIAssistant";
+import InlineErrorHint from "../components/AI/InlineErrorHint";
 
 // 👇 IMPORT FROM YOUR EXAMPLES FILE
 import { EXAMPLES } from "../examples";
 
 import { useTheme } from "../contexts/ThemeContext";
 import ShareModal from "../components/Social/ShareModal";
+import CodeSnapshot from "../components/Social/CodeSnapshot";
+import ComplexityAnalyzer from "../components/Visualizer/ComplexityAnalyzer";
+import SessionRecorder from "../components/Session/SessionRecorder";
 
 const Practice = () => {
   const navigate = useNavigate();
@@ -43,6 +47,8 @@ const Practice = () => {
 
   const [showSnippetList, setShowSnippetList] = useState(false);
   const [sharingSnippet, setSharingSnippet] = useState(null); // Snippet being shared
+  const [showSnapshot, setShowSnapshot] = useState(false); // Code snapshot modal
+  const [showComplexity, setShowComplexity] = useState(false); // Complexity analyzer
 
   // 📏 RESIZABLE SPLIT PANE STATE
   const [editorWidth, setEditorWidth] = useState(50); // percentage
@@ -219,6 +225,35 @@ const Practice = () => {
     }
   };
 
+  // 🎥 SAVE RECORDED SESSION
+  const handleSaveSession = async (sessionData) => {
+    if (!user) return alert("Please login to save sessions!");
+
+    const defaultTitle = language.toUpperCase() + " Practice Session";
+    const title = prompt("Name this recorded session:", defaultTitle);
+
+    if (!title) return; // User cancelled
+
+    try {
+      const payload = {
+        title,
+        description: "Recorded on " + new Date().toLocaleString(),
+        language,
+        events: sessionData.events,
+        duration: sessionData.duration,
+        metadata: sessionData.metadata,
+        isPublic: false
+      };
+
+      await axios.post("http://localhost:5001/api/sessions", payload, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      alert("✅ Session saved successfully! You can view it in the Sessions tab.");
+    } catch (err) {
+      alert("❌ Failed to save session: " + err.message);
+    }
+  };
+
   // 🌍 SHARE CODE
   const handleShareClick = (snippet) => {
     setSharingSnippet(snippet);
@@ -362,6 +397,8 @@ const Practice = () => {
             </div>
           )}
 
+          <button onClick={() => setShowSnapshot(true)} style={{ background: '#764ba2', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>📸 Snapshot</button>
+          <button onClick={() => setShowComplexity(!showComplexity)} style={{ background: showComplexity ? '#a855f7' : '#553c9a', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>📊 {showComplexity ? 'Hide Complexity' : 'Complexity'}</button>
           <button onClick={handleSave} style={{ background: '#2ea043', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>💾 Save Code</button>
         </div>
       </header>
@@ -372,6 +409,15 @@ const Practice = () => {
         onClose={() => setSharingSnippet(null)}
         onShare={confirmShare}
         snippetTitle={sharingSnippet?.title}
+      />
+
+      {/* Code Snapshot Modal */}
+      <CodeSnapshot
+        isOpen={showSnapshot}
+        onClose={() => setShowSnapshot(false)}
+        code={code}
+        language={language}
+        userName={user?.name}
       />
 
       {/* TOOLBAR */}
@@ -499,7 +545,15 @@ const Practice = () => {
             {activeTab === 'visualizer' && (
               // 🛡️ SAFETY CHECK: Only check .length if traceData exists and is an array
               (traceData && traceData.length > 0) ? (
-                <Canvas traceData={traceData} stepIndex={stepIndex} setStepIndex={setStepIndex} />
+                <>
+                  <Canvas traceData={traceData} stepIndex={stepIndex} setStepIndex={setStepIndex} />
+                  <ComplexityAnalyzer
+                    code={code}
+                    language={language}
+                    isVisible={showComplexity}
+                    onClose={() => setShowComplexity(false)}
+                  />
+                </>
               ) : (
                 <div style={{ color: '#666', textAlign: 'center', marginTop: '50px', lineHeight: '1.6' }}>
                   {language === 'python' || language === 'javascript' ?
@@ -520,7 +574,17 @@ const Practice = () => {
                 whiteSpace: 'pre-wrap',
                 borderRadius: '5px'
               }}>
-                {error ? <span style={{ color: 'red' }}>{error}</span> : (output || "No output generated.")}
+                {error ? (
+                  <>
+                    <span style={{ color: 'red' }}>{error}</span>
+                    {/* 💡 Inline AI Error Hint */}
+                    <InlineErrorHint
+                      error={error}
+                      code={code}
+                      language={language}
+                    />
+                  </>
+                ) : (output || "No output generated.")}
               </div>
             )}
 
@@ -534,6 +598,19 @@ const Practice = () => {
         language={language}
         error={error}
       />
+
+      {/* 🎥 Session Recorder Integration */}
+      {user && (
+        <div style={{ position: 'fixed', bottom: '20px', left: '20px', zIndex: 9999 }}>
+          <SessionRecorder
+            code={code}
+            language={language}
+            traceData={traceData}
+            output={output}
+            onCodeChange={handleSaveSession}
+          />
+        </div>
+      )}
     </div>
   );
 };

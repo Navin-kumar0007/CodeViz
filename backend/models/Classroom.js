@@ -61,6 +61,19 @@ const classroomSchema = mongoose.Schema(
             default: 'python'
         },
 
+        // Multi-role collaboration: who currently holds the chalk
+        activeEditor: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null
+        },
+
+        // Multi-role collaboration: is 'Pass the Chalk' enabled
+        allowStudentEditing: {
+            type: Boolean,
+            default: false
+        },
+
         // Classroom settings
         settings: {
             isPublic: {
@@ -110,12 +123,14 @@ classroomSchema.virtual('studentCount').get(function () {
 
 // Check if user is enrolled
 classroomSchema.methods.isEnrolled = function (userId) {
-    return this.students.some(s => s.toString() === userId.toString());
+    if (!this.students) return false;
+    return this.students.some(s => (s._id || s).toString() === userId.toString());
 };
 
 // Check if user is instructor
 classroomSchema.methods.isInstructor = function (userId) {
-    return this.instructor.toString() === userId.toString();
+    if (!this.instructor) return false;
+    return (this.instructor._id || this.instructor).toString() === userId.toString();
 };
 
 module.exports = mongoose.model('Classroom', classroomSchema);

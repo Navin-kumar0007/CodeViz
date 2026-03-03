@@ -32,17 +32,19 @@ const styles = {
         minWidth: '200px'
     },
     levelBadge: {
-        background: '#667eea',
+        background: 'linear-gradient(135deg, var(--accent-blue, #61DAFB), var(--accent-purple, #C678DD))',
         color: '#fff',
-        width: '30px',
-        height: '30px',
-        borderRadius: '50%',
+        padding: '4px 10px',
+        borderRadius: '12px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontWeight: 'bold',
-        fontSize: '12px',
-        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+        fontWeight: 700,
+        fontSize: '11px',
+        fontFamily: 'var(--font-code, monospace)',
+        whiteSpace: 'nowrap',
+        boxShadow: '0 2px 8px rgba(97,218,251,0.3)',
+        letterSpacing: '0.5px'
     },
     barContainer: {
         flex: 1,
@@ -58,7 +60,7 @@ const styles = {
     },
     barFill: {
         height: '100%',
-        background: 'linear-gradient(90deg, #667eea, #764ba2)',
+        background: 'linear-gradient(90deg, var(--accent-blue, #61DAFB), var(--accent-purple, #C678DD))',
         borderRadius: '4px',
         transition: 'width 0.5s ease-out'
     },

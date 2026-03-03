@@ -14,11 +14,14 @@
     "@monaco-editor/react": "^4.7.0",
     "axios": "^1.13.2",
     "framer-motion": "^12.24.0",
+    "html2canvas": "^1.4.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-icons": "^5.5.0",
+    "react-is": "^19.2.4",
     "react-router-dom": "^7.11.0",
     "react-window": "^2.2.4",
+    "recharts": "^3.7.0",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
@@ -33,6 +36,7 @@
     "globals": "^16.5.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vite-plugin-pwa": "^1.2.0"
   }
 }
