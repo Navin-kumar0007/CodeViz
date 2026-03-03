@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 
 const SessionPlayer = ({ session, onClose }) => {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -15,16 +15,17 @@ const SessionPlayer = ({ session, onClose }) => {
 
     // Reset on new session
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCurrentTime(0);
-        setIsPlaying(false);
-        setCurrentCode('');
-        setCurrentOutput('');
-        setEventIndex(0);
-        if (events.length > 0 && events[0].type === 'code-change') {
-            setCurrentCode(events[0].data?.code || '');
-        }
-    }, [session]);
+        Promise.resolve().then(() => {
+            setCurrentTime(0);
+            setIsPlaying(false);
+            setCurrentCode('');
+            setCurrentOutput('');
+            setEventIndex(0);
+            if (events.length > 0 && events[0].type === 'code-change') {
+                setCurrentCode(events[0].data?.code || '');
+            }
+        });
+    }, [session, events]);
 
     // Playback engine
     const tick = useCallback(() => {
@@ -55,19 +56,24 @@ const SessionPlayer = ({ session, onClose }) => {
     // Process events as currentTime advances
     useEffect(() => {
         let idx = eventIndex;
+        let newCode = null;
+        let newOutput = null;
+
         while (idx < events.length && events[idx].timestamp <= currentTime) {
             const evt = events[idx];
             if (evt.type === 'code-change' && evt.data?.code !== undefined) {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
-                setCurrentCode(evt.data.code);
+                newCode = evt.data.code;
             } else if (evt.type === 'execution') {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
-                setCurrentOutput(evt.data?.output || evt.data?.error || '');
+                newOutput = evt.data?.output || evt.data?.error || '';
             }
             idx++;
         }
-        if (idx !== eventIndex) setEventIndex(idx);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
+        Promise.resolve().then(() => {
+            if (newCode !== null) setCurrentCode(newCode);
+            if (newOutput !== null) setCurrentOutput(newOutput);
+            if (idx !== eventIndex) setEventIndex(idx);
+        });
     }, [currentTime, events, eventIndex]);
 
     const seek = (e) => {
