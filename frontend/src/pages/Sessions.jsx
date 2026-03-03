@@ -3,7 +3,7 @@ import axios from 'axios';
 import SessionPlayer from '../components/Session/SessionPlayer';
 import SessionRecorder from '../components/Session/SessionRecorder';
 
-const API = 'http://localhost:5001';
+import { API_URL as API } from '../config';
 
 const Sessions = () => {
     const [sessions, setSessions] = useState([]);

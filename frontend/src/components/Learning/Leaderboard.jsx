@@ -12,7 +12,7 @@ const Leaderboard = ({ onClose, currentUserId }) => {
 
     const fetchLeaderboard = useCallback(async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/leaderboard');
+            const res = await fetch('/api/leaderboard');
             const data = await res.json();
             setLeaders(data);
         } catch (error) {
@@ -25,7 +25,7 @@ const Leaderboard = ({ onClose, currentUserId }) => {
     const fetchUserRank = useCallback(async () => {
         if (!currentUserId) return;
         try {
-            const res = await fetch(`http://localhost:5001/api/leaderboard/rank/${currentUserId}`);
+            const res = await fetch(`/api/leaderboard/rank/${currentUserId}`);
             const data = await res.json();
             setUserRank(data);
         } catch (error) {

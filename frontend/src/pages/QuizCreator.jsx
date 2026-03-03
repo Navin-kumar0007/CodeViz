@@ -92,7 +92,7 @@ const QuizCreator = () => {
                 return;
             }
 
-            const res = await fetch('http://localhost:5001/api/quizzes', {
+            const res = await fetch('/api/quizzes', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

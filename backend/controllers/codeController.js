@@ -80,12 +80,27 @@ const executeCode = (req, res) => {
 
     console.log(`🚀 Executing: ${language}...`);
 
-    exec(command, (error, stdout, stderr) => {
-        // Cleanup (optional, keep commented for debugging)
-        // if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+    exec(command, { timeout: 10000, maxBuffer: 1024 * 1024 * 5 }, (error, stdout, stderr) => {
+        // Enforce STRICT Sandbox Cleanup
+        try {
+            if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+            if (language === 'cpp') {
+                const outFile = path.join(tempDir, `temp_${timestamp}.out`);
+                if (fs.existsSync(outFile)) fs.unlinkSync(outFile);
+            }
+            if (language === 'java') {
+                const javaDir = path.join(tempDir, `java_${timestamp}`);
+                if (fs.existsSync(javaDir)) fs.rmSync(javaDir, { recursive: true, force: true });
+            }
+        } catch (cleanupError) {
+            console.error("🧹 Cleanup Error:", cleanupError);
+        }
 
         if (error) {
-            console.error("❌ Exec Error:", stderr);
+            console.error("❌ Exec Error:", stderr || error.message);
+            if (error.killed) {
+                return res.json({ error: "Execution Timed Out: Infinite loop or process ran longer than 10 seconds." });
+            }
             return res.json({ error: stderr || "Execution failed" });
         }
 

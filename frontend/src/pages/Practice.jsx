@@ -146,7 +146,7 @@ const Practice = () => {
 
     // 📡 SERVER-SIDE VISUALIZATION (Still needed for Graph/AST)
     try {
-      const res = await axios.post("http://localhost:5001/run", { language, code });
+      const res = await axios.post("/run", { language, code });
 
       // 1. Handle Server-Side Errors
       if (res.data.error) {
@@ -213,7 +213,7 @@ const Practice = () => {
     if (!title) return;
 
     try {
-      await axios.post("http://localhost:5001/api/snippets", {
+      await axios.post("/api/snippets", {
         userId: user._id, title, code, language
       }, {
         headers: { Authorization: `Bearer ${user.token}` }
@@ -245,7 +245,7 @@ const Practice = () => {
         isPublic: false
       };
 
-      await axios.post("http://localhost:5001/api/sessions", payload, {
+      await axios.post("/api/sessions", payload, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       alert("✅ Session saved successfully! You can view it in the Sessions tab.");
@@ -262,7 +262,7 @@ const Practice = () => {
   const confirmShare = async () => {
     if (!sharingSnippet) return;
     try {
-      await axios.put(`http://localhost:5001/api/snippets/${sharingSnippet._id}/share`, {}, {
+      await axios.put(`/api/snippets/${sharingSnippet._id}/share`, {}, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       alert(`✅ Copied to clipboard: http://localhost:5173/snippet/${sharingSnippet._id} (Mock URL)`);
@@ -277,7 +277,7 @@ const Practice = () => {
   const fetchSnippets = async () => {
     if (!user) return;
     try {
-      const res = await axios.get(`http://localhost:5001/api/snippets/${user._id}`, {
+      const res = await axios.get(`/api/snippets/${user._id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       // 🛡️ SAFETY CHECK: Ensure it's an array

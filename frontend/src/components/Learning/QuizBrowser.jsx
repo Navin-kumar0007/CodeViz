@@ -20,7 +20,7 @@ const QuizBrowser = ({ onClose }) => {
                 if (filter.category) params.append('category', filter.category);
                 if (filter.difficulty) params.append('difficulty', filter.difficulty);
 
-                const res = await fetch(`http://localhost:5001/api/quizzes?${params}`);
+                const res = await fetch(`/api/quizzes?${params}`);
                 const data = await res.json();
                 setQuizzes(data);
             } catch (error) {
@@ -65,7 +65,7 @@ const QuizBrowser = ({ onClose }) => {
         const score = Math.round((correct / selectedQuiz.questions.length) * 100);
 
         try {
-            await fetch(`http://localhost:5001/api/quizzes/${selectedQuiz._id}/complete`, {
+            await fetch(`/api/quizzes/${selectedQuiz._id}/complete`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ score })

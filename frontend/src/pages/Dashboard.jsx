@@ -16,14 +16,14 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user && user.token) {
-      fetch('http://localhost:5001/api/gamification/checkin', {
+      fetch('/api/gamification/checkin', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
         .then(res => res.json())
         .then(checkInData => {
           if (checkInData.xpAwarded > 0) console.log(`🎉 Earned ${checkInData.xpAwarded} XP!`);
-          return fetch('http://localhost:5001/api/gamification/stats', {
+          return fetch('/api/gamification/stats', {
             headers: { 'Authorization': `Bearer ${user.token}` }
           });
         })

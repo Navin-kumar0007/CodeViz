@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
 
-const API = 'http://localhost:5001';
+import { API_URL as API } from '../config';
 
 const LANGUAGES = [
     { id: 'python', label: 'Python', icon: '🐍' },
