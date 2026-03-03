@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
+import { debounce } from 'lodash';
 import Whiteboard from '../components/Whiteboard';
 
 /**
@@ -184,35 +185,46 @@ const Classroom = () => {
         setActiveTab('join');
     };
 
-    const sendChatMessage = (e) => {
+    const sendChatMessage = useCallback((e) => {
         e.preventDefault();
         if (!newChatMessage.trim() || !socketRef.current) return;
         socketRef.current.emit('send-chat-message', newChatMessage);
         setNewChatMessage('');
-    };
+    }, [newChatMessage]);
+
+    // Debounce the code broadcast to prevent spamming the Node.js server 
+    // on every single keystroke during fast typing. (Delay: 300ms)
+    const debouncedCodeBroadcast = useMemo(
+        () => debounce((codeToSync, lang) => {
+            if (socketRef.current) {
+                socketRef.current.emit('code-update', { code: codeToSync, language: lang });
+            }
+        }, 300),
+        []
+    );
 
     // Broadcast code updates (Instructor or Active Editor)
-    const updateCode = (code) => {
+    const updateCode = useCallback((code) => {
         setLiveCode(code);
         const isEditor = currentClassroom?.instructor?._id === user?._id || activeEditor === user?._id;
-        if (socketRef.current && isEditor) {
-            socketRef.current.emit('code-update', { code, language: liveLanguage });
+        if (isEditor) {
+            debouncedCodeBroadcast(code, liveLanguage);
         }
-    };
+    }, [currentClassroom, user, activeEditor, liveLanguage, debouncedCodeBroadcast]);
 
     // Instructor: Start live session
-    const startSession = () => {
+    const startSession = useCallback(() => {
         if (socketRef.current) {
             socketRef.current.emit('start-session');
         }
-    };
+    }, []);
 
     // Instructor: End live session
-    const endSession = () => {
+    const endSession = useCallback(() => {
         if (socketRef.current) {
             socketRef.current.emit('end-session');
         }
-    };
+    }, []);
 
     const joinClassroom = async (autoCode = null) => {
         const joinCode = typeof autoCode === 'string' ? autoCode : classroomCode;

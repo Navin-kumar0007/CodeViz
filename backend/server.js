@@ -43,7 +43,10 @@ connectRedis();
 const app = express();
 
 // 🛡️ SECURITY MIDDLEWARE
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // Required for Vite/localhost fetching
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
+}));
 
 // 🪵 LOGGING MIDDLEWARE (Morgan -> Winston)
 app.use(morgan('combined', { stream: logger.stream }));
@@ -51,13 +54,20 @@ app.use(morgan('combined', { stream: logger.stream }));
 // Global Rate Limit
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 5000, // ⚡️ DEV MODE: 5000 requests per 15 mins (Prevent 429s)
+    max: 1000, // Reasonable protection limits
     handler: (req, res) => {
         logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
-        res.status(429).json({ error: "Too many requests" });
+        res.status(429).json({ error: "Too many requests. Please wait." });
     }
 });
 app.use(globalLimiter);
+
+// 🤖 AI Security Rate Limit
+const aiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 30, // Max 30 AI Assistance prompts per 15 minutes
+    message: { error: "AI Assistant is resting. Too many requests! Please wait a few minutes." }
+});
 
 // ⚡️ STRICTER Execution Limit
 const executionLimiter = rateLimit({
@@ -99,7 +109,7 @@ app.use('/api/quizzes', quizRoutes);
 app.use('/api/classrooms', classroomRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/ai', aiRoutes);
+app.use('/api/ai', aiLimiter, aiRoutes); // 🛡️ Apply deep limit to expensive LLM calls
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/discussions', discussionRoutes);

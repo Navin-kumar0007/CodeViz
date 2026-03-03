@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { throttle } from 'lodash';
 
-const Whiteboard = ({ socket, isEditor }) => {
+const Whiteboard = React.memo(({ socket, isEditor }) => {
     const [paths, setPaths] = useState([]);
     const [currentPath, setCurrentPath] = useState(null);
     const svgRef = useRef(null);
@@ -22,46 +23,58 @@ const Whiteboard = ({ socket, isEditor }) => {
         };
     }, [socket]);
 
-    const handlePointerDown = (e) => {
+    // Throttle the actual network broadcast to max 15 events per second (approx ~66ms)
+    // This slashes the Node.js server load during intense whiteboard collaboration.
+    const throttledBroadcast = useMemo(
+        () => throttle((newElements) => {
+            if (socket) socket.emit('whiteboard-update', { elements: newElements });
+        }, 66),
+        [socket]
+    );
+
+    const handlePointerDown = useCallback((e) => {
         if (!isEditor || !svgRef.current) return;
         const rect = svgRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        setCurrentPath({ points: [[x, y]], color: '#A78BFA', width: 4 }); // Purple-ish chalk theme
-    };
+        setCurrentPath({ points: [[x, y]], color: '#A78BFA', width: 4 });
+    }, [isEditor]);
 
-    const handlePointerMove = (e) => {
+    const handlePointerMove = useCallback((e) => {
         if (!isEditor || !currentPath || !svgRef.current) return;
         const rect = svgRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        setCurrentPath(prev => ({
-            ...prev,
-            points: [...prev.points, [x, y]]
-        }));
-    };
+        setCurrentPath(prev => {
+            const newPrev = prev ? { ...prev, points: [...prev.points, [x, y]] } : null;
+            // Optionally, we could continuously broadcast the *in-progress* path here using throttledBroadcast,
+            // but broadcasting on pointer-up is much more network-efficient.
+            return newPrev;
+        });
+    }, [isEditor, currentPath]);
 
-    const handlePointerUp = () => {
+    const handlePointerUp = useCallback(() => {
         if (!isEditor || !currentPath) return;
-        const newPaths = [...paths, currentPath];
-        setPaths(newPaths);
+        setPaths(prev => {
+            const newPaths = [...prev, currentPath];
+            throttledBroadcast(newPaths);
+            return newPaths;
+        });
         setCurrentPath(null);
-        // Broadcast the new vectors
-        socket.emit('whiteboard-update', { elements: newPaths });
-    };
+    }, [isEditor, currentPath, throttledBroadcast]);
 
-    const clearCanvas = () => {
+    const clearCanvas = useCallback(() => {
         if (!isEditor) return;
         setPaths([]);
-        socket.emit('whiteboard-update', { elements: [] });
-    };
+        if (socket) socket.emit('whiteboard-update', { elements: [] });
+    }, [isEditor, socket]);
 
     // Construct SVG path data string
-    const buildPathData = (points) => {
+    const buildPathData = useCallback((points) => {
         if (!points || points.length === 0) return '';
         const d = points.map((p, i) => (i === 0 ? `M ${p[0]} ${p[1]}` : `L ${p[0]} ${p[1]}`));
         return d.join(' ');
-    };
+    }, []);
 
     return (
         <div style={{ flex: 1, position: 'relative', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '12px', overflow: 'hidden' }}>
@@ -112,6 +125,6 @@ const Whiteboard = ({ socket, isEditor }) => {
             </svg>
         </div>
     );
-};
+});
 
 export default Whiteboard;

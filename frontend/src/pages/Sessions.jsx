@@ -32,7 +32,7 @@ const Sessions = () => {
             setLoading(false);
         };
         fetchSessions();
-    }, []);
+    }, [getHeaders]);
 
     const openSession = async (id) => {
         try {
