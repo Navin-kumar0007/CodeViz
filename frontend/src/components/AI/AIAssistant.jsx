@@ -60,7 +60,7 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
         };
     }, []);
 
-    const makeRequest = async (endpoint, body) => {
+    const makeRequest = useCallback(async (endpoint, body) => {
         setLoading(true);
         setResponse(null);
         setDisplayedText('');
@@ -95,19 +95,19 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [eli5Mode, skillLevel, startTypingAnimation]);
 
-    const handleHint = () => {
+    const handleHint = useCallback(() => {
         setActiveTab('hint');
         makeRequest('hint', { code, language });
-    };
+    }, [code, language, makeRequest]);
 
-    const handleExplainError = () => {
+    const handleExplainError = useCallback(() => {
         setActiveTab('error');
         makeRequest('explain-error', { code, error: error || 'No error detected', language });
-    };
+    }, [code, error, language, makeRequest]);
 
-    const handleOptimize = () => {
+    const handleOptimize = useCallback(() => {
         setActiveTab('optimize');
         // Use optimize-diff for structured diff output
         setLoading(true);
@@ -145,12 +145,12 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
             }
         };
         doOptimize();
-    };
+    }, [code, language, skillLevel, eli5Mode, startTypingAnimation]);
 
-    const handleReview = () => {
+    const handleReview = useCallback(() => {
         setActiveTab('review');
         makeRequest('review', { code, language });
-    };
+    }, [code, language, makeRequest]);
 
     // 📋 Copy to clipboard
     const handleCopy = async () => {
