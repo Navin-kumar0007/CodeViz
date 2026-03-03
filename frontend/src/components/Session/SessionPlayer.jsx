@@ -10,8 +10,8 @@ const SessionPlayer = ({ session, onClose }) => {
     const timerRef = useRef(null);
     const lastTickRef = useRef(null);
 
-    const events = session?.events || [];
-    const duration = session?.duration || 0;
+    const events = useMemo(() => session?.events || [], [session]);
+    const duration = useMemo(() => session?.duration || 0, [session]);
 
     // Reset on new session
     useEffect(() => {

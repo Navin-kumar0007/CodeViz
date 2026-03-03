@@ -125,7 +125,6 @@ const Whiteboard = React.memo(({ socket, isEditor }) => {
             </svg>
         </div>
     );
-    );
 });
 
 export default Whiteboard;
