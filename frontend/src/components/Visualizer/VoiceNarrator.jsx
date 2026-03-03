@@ -10,8 +10,7 @@ const VoiceNarrator = ({
     stepIndex,
     playSpeed,
     currentVariables,
-    previousVariables,
-    isPlaying
+    previousVariables
 }) => {
     const [isEnabled, setIsEnabled] = useState(false);
     const [selectedVoice, setSelectedVoice] = useState(null);

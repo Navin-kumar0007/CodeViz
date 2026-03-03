@@ -66,17 +66,6 @@ print(result)`);
 
     const getMonacoLang = (lang) => lang === 'cpp' ? 'cpp' : lang;
 
-    // Build line highlight decorations from mapping
-    const getSourceHighlightLines = () => {
-        if (!hoveredMapping) return [];
-        return [hoveredMapping.sourceLine];
-    };
-
-    const getTargetHighlightLines = () => {
-        if (!hoveredMapping) return [];
-        return hoveredMapping.targetLines || [];
-    };
-
     return (
         <div style={styles.page}>
             {/* Header */}

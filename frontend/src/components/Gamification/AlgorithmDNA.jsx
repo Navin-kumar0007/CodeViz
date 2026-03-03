@@ -10,23 +10,22 @@ const AlgorithmDNA = () => {
     const [dnaData, setDnaData] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchDNA = async () => {
-        try {
-            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            if (!userInfo) return;
-
-            const { data } = await axios.get(`${API}/api/gamification/dna`, {
-                headers: { Authorization: `Bearer ${userInfo.token}` }
-            });
-
-            setDnaData(data);
-        } catch (error) {
-            console.error('Failed to fetch DNA data:', error);
-        }
-        setLoading(false);
-    };
-
     useEffect(() => {
+        const fetchDNA = async () => {
+            try {
+                const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+                if (!userInfo) return;
+
+                const { data } = await axios.get(`${API}/api/gamification/dna`, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+
+                setDnaData(data);
+            } catch (error) {
+                console.error('Failed to fetch DNA data:', error);
+            }
+            setLoading(false);
+        };
         fetchDNA();
     }, []);
 

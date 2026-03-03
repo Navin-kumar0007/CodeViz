@@ -85,7 +85,7 @@ const DailyChallenge = () => {
 
                 setOutput(finalOutput || 'No output');
             }
-        } catch (err) {
+        } catch {
             setOutput('❌ Server error. Is the backend running?');
         } finally {
             setIsRunning(false);
@@ -107,7 +107,7 @@ const DailyChallenge = () => {
                 headers: { Authorization: `Bearer ${user.token}` }
             });
             setResult(res.data);
-        } catch (err) {
+        } catch {
             setResult({ success: false, message: 'Submission failed. Try again.' });
         } finally {
             setIsRunning(false);

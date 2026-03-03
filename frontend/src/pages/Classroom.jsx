@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { io } from 'socket.io-client';
 import Whiteboard from '../components/Whiteboard';
 
@@ -29,7 +28,6 @@ const Classroom = () => {
     // Multi-role Collaboration state
     const [participants, setParticipants] = useState([]);
     const [activeEditor, setActiveEditor] = useState(null);
-    const [allowStudentEditing, setAllowStudentEditing] = useState(false);
 
     // Whiteboard state
     const [activeView, setActiveView] = useState('code'); // 'code' | 'whiteboard'
@@ -121,7 +119,6 @@ const Classroom = () => {
             setIsLive(state.isLive);
             setLiveCode(state.code || '');
             setLiveLanguage(state.language || 'python');
-            setAllowStudentEditing(state.allowStudentEditing || false);
             setActiveEditor(state.activeEditor || null);
         });
 
@@ -266,6 +263,7 @@ const Classroom = () => {
             // Clear location state to prevent endless looping
             window.history.replaceState({}, document.title);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.state, user?.token]);
 
     const createClassroom = async () => {

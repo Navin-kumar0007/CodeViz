@@ -22,7 +22,7 @@ const DailyChallengeWidget = () => {
                 });
                 setChallenge(res.data);
             } catch (err) {
-                console.error('Failed to load daily challenge');
+                console.error('Failed to load daily challenge', err);
             } finally {
                 setLoading(false);
             }

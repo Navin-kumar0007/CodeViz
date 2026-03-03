@@ -357,7 +357,7 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
                                 onClick={() => {
                                     const next = !eli5Mode;
                                     setEli5Mode(next);
-                                    try { localStorage.setItem('codeviz_eli5', String(next)); } catch { }
+                                    try { localStorage.setItem('codeviz_eli5', String(next)); } catch (err) { console.warn('Failed to save to localStorage', err); }
                                 }}
                                 style={{
                                     ...styles.eli5Btn,

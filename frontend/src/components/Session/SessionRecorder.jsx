@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs */
 import React, { useState, useRef, useCallback } from 'react';
 
 const SessionRecorder = ({ code, language, onCodeChange, isVisible = true }) => {
@@ -91,7 +92,7 @@ const SessionRecorder = ({ code, language, onCodeChange, isVisible = true }) => 
     }, [addEvent]);
 
     // Expose methods to parent
-    React.useImperativeHandle && React.useEffect(() => {
+    React.useEffect(() => {
         if (onCodeChange) {
             // Parent can call recorder methods
             window.__sessionRecorder = {

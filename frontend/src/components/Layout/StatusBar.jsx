@@ -9,8 +9,9 @@ const StatusBar = () => {
     useEffect(() => {
         try {
             const info = localStorage.getItem('userInfo');
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             if (info) setUser(JSON.parse(info));
-        } catch { }
+        } catch { /* ignore parsing errors */ }
     }, []);
 
     useEffect(() => {
