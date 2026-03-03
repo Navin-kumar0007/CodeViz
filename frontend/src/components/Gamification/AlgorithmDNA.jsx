@@ -4,7 +4,7 @@ import {
     Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip
 } from 'recharts';
 
-import { API_URL as API } from '../../config';
+const API = 'http://localhost:5001';
 
 const AlgorithmDNA = () => {
     const [dnaData, setDnaData] = useState([]);

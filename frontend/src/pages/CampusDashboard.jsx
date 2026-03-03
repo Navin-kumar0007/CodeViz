@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-import { API_URL as API } from '../config';
+const API = 'http://localhost:5001';
 
 const CampusDashboard = () => {
     const navigate = useNavigate();

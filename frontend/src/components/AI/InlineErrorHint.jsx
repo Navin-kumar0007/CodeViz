@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = '/api/ai';
+const API_URL = 'http://localhost:5001/api/ai';
 
 /**
  * InlineErrorHint - Shows AI explanation directly below error messages

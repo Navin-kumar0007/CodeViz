@@ -28,7 +28,7 @@ const DailyChallenge = () => {
             try {
                 const stored = JSON.parse(localStorage.getItem('userInfo'));
                 if (!stored?.token) return;
-                const res = await axios.get('/api/challenges/today', {
+                const res = await axios.get('http://localhost:5001/api/challenges/today', {
                     headers: { Authorization: `Bearer ${stored.token}` }
                 });
                 setChallenge(res.data);
@@ -66,7 +66,7 @@ const DailyChallenge = () => {
         setIsRunning(true);
         setOutput('');
         try {
-            const res = await axios.post('/run', {
+            const res = await axios.post('http://localhost:5001/run', {
                 language: challenge.language || 'python',
                 code
             });
@@ -100,7 +100,7 @@ const DailyChallenge = () => {
         }
         setIsRunning(true);
         try {
-            const res = await axios.post('/api/challenges/submit', {
+            const res = await axios.post('http://localhost:5001/api/challenges/submit', {
                 challengeId: challenge._id,
                 output
             }, {

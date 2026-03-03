@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
 
-import { API_URL as API } from '../config';
+const API = 'http://localhost:5001';
 
 const CodeReview = () => {
     const [code, setCode] = useState(`def bubble_sort(arr):

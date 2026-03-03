@@ -43,7 +43,7 @@ const Learn = () => {
         if (!user || !user.token) return null;
 
         try {
-            const res = await fetch('/api/progress/sync', {
+            const res = await fetch('http://localhost:5001/api/progress/sync', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -15,7 +15,7 @@ const SnippetViewer = () => {
         const fetchSnippet = async () => {
             try {
                 // Fetch from shared endpoint
-                const res = await axios.get(`/api/snippets/public/all`);
+                const res = await axios.get(`http://localhost:5001/api/snippets/public/all`);
                 // Filter manually for now (in real app, use specific ID endpoint)
                 const found = res.data.find(s => s._id === id);
 

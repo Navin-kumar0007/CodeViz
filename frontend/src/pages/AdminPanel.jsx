@@ -37,7 +37,7 @@ const AdminPanel = () => {
 
     const fetchStats = async () => {
         try {
-            const res = await fetch('/api/admin/stats', {
+            const res = await fetch('http://localhost:5001/api/admin/stats', {
                 headers: { 'Authorization': `Bearer ${user.token}` }
             });
             if (res.ok) {
@@ -57,7 +57,7 @@ const AdminPanel = () => {
             params.append('page', pagination.page);
             params.append('limit', pagination.limit);
 
-            const res = await fetch(`/api/admin/users?${params}`, {
+            const res = await fetch(`http://localhost:5001/api/admin/users?${params}`, {
                 headers: { 'Authorization': `Bearer ${user.token}` }
             });
             if (res.ok) {
@@ -107,7 +107,7 @@ const AdminPanel = () => {
         if (!roleModal) return;
 
         try {
-            const res = await fetch(`/api/admin/users/${roleModal.userId}/role`, {
+            const res = await fetch(`http://localhost:5001/api/admin/users/${roleModal.userId}/role`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ const AdminPanel = () => {
 
     const toggleUserStatus = async (userId, currentStatus) => {
         try {
-            const res = await fetch(`/api/admin/users/${userId}/status`, {
+            const res = await fetch(`http://localhost:5001/api/admin/users/${userId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ const AdminPanel = () => {
 
     const deleteUser = async (userId) => {
         try {
-            const res = await fetch(`/api/admin/users/${userId}`, {
+            const res = await fetch(`http://localhost:5001/api/admin/users/${userId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${user.token}` }
             });

@@ -4,7 +4,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { CAREER_PATHS, getNodesForPath, getEdgesForPath, CATEGORY_COLORS } from '../data/roadmapData';
 
-const API_URL = '/api';
+const API_URL = 'http://localhost:5001/api';
 
 const Roadmap = () => {
     const navigate = useNavigate();

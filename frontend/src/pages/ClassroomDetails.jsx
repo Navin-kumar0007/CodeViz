@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 
-import { API_URL as API } from '../config';
+const API = 'http://localhost:5001';
 
 const ClassroomDetails = () => {
     const { id } = useParams();

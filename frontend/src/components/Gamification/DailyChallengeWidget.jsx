@@ -17,7 +17,7 @@ const DailyChallengeWidget = () => {
             try {
                 const user = JSON.parse(localStorage.getItem('userInfo'));
                 if (!user?.token) { setLoading(false); return; }
-                const res = await axios.get('/api/challenges/today', {
+                const res = await axios.get('http://localhost:5001/api/challenges/today', {
                     headers: { Authorization: `Bearer ${user.token}` }
                 });
                 setChallenge(res.data);

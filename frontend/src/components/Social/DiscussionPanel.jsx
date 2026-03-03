@@ -15,7 +15,7 @@ const DiscussionPanel = ({ lessonId }) => {
             const config = {
                 headers: { Authorization: `Bearer ${user.token}` }
             };
-            const res = await axios.get(`/api/discussions/${lessonId}`, config);
+            const res = await axios.get(`http://localhost:5001/api/discussions/${lessonId}`, config);
             setDiscussions(res.data);
             setLoading(false);
         } catch (error) {
@@ -38,7 +38,7 @@ const DiscussionPanel = ({ lessonId }) => {
                 headers: { Authorization: `Bearer ${user.token}` }
             };
 
-            await axios.post('/api/discussions', {
+            await axios.post('http://localhost:5001/api/discussions', {
                 lessonId,
                 content: newComment
             }, config);
@@ -58,7 +58,7 @@ const DiscussionPanel = ({ lessonId }) => {
                 headers: { Authorization: `Bearer ${user.token}` }
             };
 
-            await axios.post(`/api/discussions/${discussionId}/reply`, {
+            await axios.post(`http://localhost:5001/api/discussions/${discussionId}/reply`, {
                 content: replyContent
             }, config);
 

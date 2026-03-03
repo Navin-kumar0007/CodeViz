@@ -44,7 +44,7 @@ const InstructorDashboard = () => {
     const fetchDashboard = async () => {
         try {
             setLoading(true);
-            const res = await fetch('/api/analytics/dashboard', {
+            const res = await fetch('http://localhost:5001/api/analytics/dashboard', {
                 headers: { 'Authorization': `Bearer ${user.token}` }
             });
 
@@ -73,10 +73,10 @@ const InstructorDashboard = () => {
         try {
             // Fetch detailed analytics for this classroom
             const [analyticsRes, studentsRes] = await Promise.all([
-                fetch(`/api/analytics/classroom/${classroom._id}`, {
+                fetch(`http://localhost:5001/api/analytics/classroom/${classroom._id}`, {
                     headers: { 'Authorization': `Bearer ${user.token}` }
                 }),
-                fetch(`/api/analytics/classroom/${classroom._id}/students?sortBy=${sortBy}&order=${sortOrder}`, {
+                fetch(`http://localhost:5001/api/analytics/classroom/${classroom._id}/students?sortBy=${sortBy}&order=${sortOrder}`, {
                     headers: { 'Authorization': `Bearer ${user.token}` }
                 })
             ]);
