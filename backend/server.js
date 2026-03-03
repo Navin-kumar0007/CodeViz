@@ -108,7 +108,9 @@ app.use(cors({
 app.use(express.json());
 
 // 5. Routes
-app.use('/', executionLimiter, codeRoutes); // 🛡️ Apply strict limit to execution
+app.use('/run', executionLimiter);
+app.use('/trace', executionLimiter);
+app.use('/', codeRoutes); // 🛡️ Apply strict limit to execution endpoints only
 app.use('/api/users', userRoutes);
 app.use('/api/snippets', snippetRoutes);
 app.use('/api/progress', progressRoutes);
