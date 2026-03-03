@@ -45,7 +45,6 @@ const Roadmap = () => {
 
     const nodes = useMemo(() => getNodesForPath(selectedPath), [selectedPath]);
     const edges = useMemo(() => getEdgesForPath(selectedPath), [selectedPath]);
-    const currentPath = CAREER_PATHS.find(p => p.id === selectedPath);
 
     // Layout constants
     const NODE_SIZE = 70;

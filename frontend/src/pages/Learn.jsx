@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import LearningPath from '../components/Learning/LearningPath';
 import LessonList from '../components/Learning/LessonList';
 import LessonView from '../components/Learning/LessonView';

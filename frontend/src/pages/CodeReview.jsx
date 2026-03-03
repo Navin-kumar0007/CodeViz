@@ -19,26 +19,27 @@ print(result)`);
     const [review, setReview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState([]);
-    const [activeAnnotation, setActiveAnnotation] = useState(null);
 
     const getToken = () => {
         const info = localStorage.getItem('userInfo');
         return info ? JSON.parse(info).token : '';
     };
-    const headers = { Authorization: `Bearer ${getToken()}` };
+
+    const getHeaders = () => ({ Authorization: `Bearer ${getToken()}` });
 
     // Fetch review history
     useEffect(() => {
-        axios.get(`${API}/api/ai/review-history?limit=10`, { headers })
+        axios.get(`${API}/api/ai/review-history?limit=10`, { headers: getHeaders() })
             .then(res => setHistory(res.data.history || []))
             .catch(() => { });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [review]);
 
     const submitReview = async () => {
         setLoading(true);
         setReview(null);
         try {
-            const { data } = await axios.post(`${API}/api/ai/rubric-review`, { code, language }, { headers });
+            const { data } = await axios.post(`${API}/api/ai/rubric-review`, { code, language }, { headers: getHeaders() });
             setReview(data.review);
         } catch (err) {
             console.error('Review error:', err);

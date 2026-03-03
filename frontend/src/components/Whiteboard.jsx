@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const Whiteboard = ({ socket, classroomId, isEditor }) => {
+const Whiteboard = ({ socket, isEditor }) => {
     const [paths, setPaths] = useState([]);
     const [currentPath, setCurrentPath] = useState(null);
     const svgRef = useRef(null);

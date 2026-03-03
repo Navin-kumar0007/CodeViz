@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import SessionPlayer from '../components/Session/SessionPlayer';
 import SessionRecorder from '../components/Session/SessionRecorder';
@@ -10,7 +10,6 @@ const Sessions = () => {
     const [loading, setLoading] = useState(true);
     const [selectedSession, setSelectedSession] = useState(null);
     const [showPlayer, setShowPlayer] = useState(false);
-    const [shareDialog, setShareDialog] = useState(null);
     const [filter, setFilter] = useState('all');
     const [copySuccess, setCopySuccess] = useState('');
 
@@ -19,24 +18,25 @@ const Sessions = () => {
         return info ? JSON.parse(info).token : '';
     };
 
-    const headers = { Authorization: `Bearer ${getToken()}` };
+    const getHeaders = useCallback(() => ({ Authorization: `Bearer ${getToken()}` }), []);
 
-    const fetchSessions = async () => {
-        setLoading(true);
-        try {
-            const { data } = await axios.get(`${API}/api/sessions`, { headers });
-            setSessions(data.sessions || []);
-        } catch (err) {
-            console.error('Failed to fetch sessions:', err);
-        }
-        setLoading(false);
-    };
-
-    useEffect(() => { fetchSessions(); }, []);
+    useEffect(() => {
+        const fetchSessions = async () => {
+            setLoading(true);
+            try {
+                const { data } = await axios.get(`${API}/api/sessions`, { headers: getHeaders() });
+                setSessions(data.sessions || []);
+            } catch (err) {
+                console.error('Failed to fetch sessions:', err);
+            }
+            setLoading(false);
+        };
+        fetchSessions();
+    }, []);
 
     const openSession = async (id) => {
         try {
-            const { data } = await axios.get(`${API}/api/sessions/${id}`, { headers });
+            const { data } = await axios.get(`${API}/api/sessions/${id}`, { headers: getHeaders() });
             setSelectedSession(data);
             setShowPlayer(true);
         } catch (err) {
@@ -46,7 +46,7 @@ const Sessions = () => {
 
     const deleteSession = async (id) => {
         try {
-            await axios.delete(`${API}/api/sessions/${id}`, { headers });
+            await axios.delete(`${API}/api/sessions/${id}`, { headers: getHeaders() });
             setSessions(prev => prev.filter(s => s._id !== id));
         } catch (err) {
             console.error('Failed to delete:', err);
@@ -55,7 +55,7 @@ const Sessions = () => {
 
     const togglePublic = async (id) => {
         try {
-            const { data } = await axios.patch(`${API}/api/sessions/${id}/toggle-public`, {}, { headers });
+            const { data } = await axios.patch(`${API}/api/sessions/${id}/toggle-public`, {}, { headers: getHeaders() });
             setSessions(prev => prev.map(s => s._id === id ? { ...s, isPublic: data.isPublic, shareToken: data.shareToken } : s));
         } catch (err) {
             console.error('Failed to toggle:', err);

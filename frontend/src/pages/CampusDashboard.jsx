@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,7 +25,7 @@ const CampusDashboard = () => {
         return { Authorization: `Bearer ${user?.token}` };
     }, [user]);
 
-    const fetchClassrooms = async () => {
+    const fetchClassrooms = useCallback(async () => {
         setLoading(true);
         try {
             const { data } = await axios.get(`${API}/api/campus/classrooms`, { headers });
@@ -35,15 +35,16 @@ const CampusDashboard = () => {
             setError('Failed to load classrooms');
         }
         setLoading(false);
-    };
+    }, [headers]);
 
     useEffect(() => {
         if (!user) {
             navigate('/login');
             return;
         }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchClassrooms();
-    }, [user, navigate, headers]);
+    }, [user, navigate, fetchClassrooms]);
 
     const handleCreate = async (e) => {
         e.preventDefault();

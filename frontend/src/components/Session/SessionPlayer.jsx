@@ -15,6 +15,7 @@ const SessionPlayer = ({ session, onClose }) => {
 
     // Reset on new session
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentTime(0);
         setIsPlaying(false);
         setCurrentCode('');
@@ -57,13 +58,16 @@ const SessionPlayer = ({ session, onClose }) => {
         while (idx < events.length && events[idx].timestamp <= currentTime) {
             const evt = events[idx];
             if (evt.type === 'code-change' && evt.data?.code !== undefined) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setCurrentCode(evt.data.code);
             } else if (evt.type === 'execution') {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setCurrentOutput(evt.data?.output || evt.data?.error || '');
             }
             idx++;
         }
         if (idx !== eventIndex) setEventIndex(idx);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentTime, events, eventIndex]);
 
     const seek = (e) => {
