@@ -338,6 +338,73 @@ const setupClassroomSocket = (io) => {
             }
         });
 
+        // ─── POLLS / QUIZZES ───
+
+        // In-memory poll storage per classroom
+        if (!classroomIO._polls) classroomIO._polls = new Map();
+        if (!classroomIO._handRaiseQueues) classroomIO._handRaiseQueues = new Map();
+
+        /**
+         * Instructor pushes a poll/quiz to students
+         */
+        socket.on('push-poll', (data) => {
+            if (!socket.classroomId || !socket.isInstructor) return;
+            const poll = {
+                id: Date.now().toString(),
+                question: sanitizeText(data.question || ''),
+                options: (data.options || []).map(o => sanitizeText(o)),
+                votes: {},
+                createdAt: new Date().toISOString()
+            };
+            classroomIO._polls.set(socket.classroomId, poll);
+            classroomIO.to(socket.classroomId).emit('poll-pushed', {
+                id: poll.id, question: poll.question, options: poll.options
+            });
+        });
+
+        /** Student submits poll answer */
+        socket.on('submit-poll-answer', (data) => {
+            if (!socket.classroomId) return;
+            const poll = classroomIO._polls.get(socket.classroomId);
+            if (!poll || poll.id !== data.pollId) return;
+            if (typeof data.optionIndex === 'number' && data.optionIndex >= 0 && data.optionIndex < poll.options.length) {
+                poll.votes[socket.userId] = data.optionIndex;
+            }
+            const voteCounts = poll.options.map(() => 0);
+            Object.values(poll.votes).forEach(idx => { voteCounts[idx]++; });
+            classroomIO.to(socket.classroomId).emit('poll-results', {
+                pollId: poll.id, question: poll.question, options: poll.options,
+                voteCounts, totalVotes: Object.keys(poll.votes).length
+            });
+        });
+
+        /** Instructor closes poll */
+        socket.on('close-poll', () => {
+            if (!socket.classroomId || !socket.isInstructor) return;
+            classroomIO._polls.delete(socket.classroomId);
+            classroomIO.to(socket.classroomId).emit('poll-closed');
+        });
+
+        // ─── HAND RAISE QUEUE ───
+
+        socket.on('raise-hand', () => {
+            if (!socket.classroomId) return;
+            const queue = classroomIO._handRaiseQueues.get(socket.classroomId) || [];
+            if (queue.some(h => h.userId === socket.userId)) return;
+            queue.push({ userId: socket.userId, name: socket.userName || 'Student', raisedAt: new Date().toISOString() });
+            classroomIO._handRaiseQueues.set(socket.classroomId, queue);
+            classroomIO.to(socket.classroomId).emit('hand-raise-queue', queue);
+        });
+
+        socket.on('lower-hand', (data) => {
+            if (!socket.classroomId) return;
+            const targetUserId = (socket.isInstructor && data?.userId) ? data.userId : socket.userId;
+            let queue = classroomIO._handRaiseQueues.get(socket.classroomId) || [];
+            queue = queue.filter(h => h.userId !== targetUserId);
+            classroomIO._handRaiseQueues.set(socket.classroomId, queue);
+            classroomIO.to(socket.classroomId).emit('hand-raise-queue', queue);
+        });
+
         /**
          * Handle disconnect
          */

@@ -282,10 +282,29 @@ const setupRoomSocket = (io) => {
                     return;
                 }
 
-                // Validate output (trim whitespace for comparison)
-                const userOutput = (data.output || '').trim();
-                const expectedOutput = (room.battle.problem.expectedOutput || '').trim();
-                const isCorrect = userOutput === expectedOutput;
+                // Multi-test-case validation
+                const problem = room.battle.problem;
+                const testCases = problem.testCases || [];
+                let testCaseResults = [];
+                let isCorrect = false;
+
+                if (testCases.length > 0) {
+                    // New multi-test format — compare output per test case
+                    // data.testOutputs should be an array of outputs from the frontend
+                    const outputs = data.testOutputs || [];
+                    testCaseResults = testCases.map((tc, i) => {
+                        const actual = (outputs[i] || '').trim();
+                        const expected = (tc.expectedOutput || '').trim();
+                        return { passed: actual === expected, input: tc.input, expected, actual };
+                    });
+                    isCorrect = testCaseResults.every(r => r.passed);
+                } else {
+                    // Legacy single-output format (backward compatible)
+                    const userOutput = (data.output || '').trim();
+                    const expectedOutput = (problem.expectedOutput || '').trim();
+                    isCorrect = userOutput === expectedOutput;
+                    testCaseResults = [{ passed: isCorrect, input: '', expected: expectedOutput, actual: userOutput }];
+                }
 
                 room.battle.submissions.push({
                     userId: socket.userId,
@@ -319,6 +338,9 @@ const setupRoomSocket = (io) => {
                     userId: socket.userId,
                     userName: socket.userName,
                     correct: isCorrect,
+                    testCaseResults,
+                    passedCount: testCaseResults.filter(r => r.passed).length,
+                    totalCount: testCaseResults.length,
                     submittedAt: new Date()
                 });
 
