@@ -9,6 +9,13 @@ const Leaderboard = ({ onClose, currentUserId }) => {
     const [leaders, setLeaders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [userRank, setUserRank] = useState(null);
+    const [activeView, setActiveView] = useState('alltime'); // alltime | weekly | skill
+    const [weeklyData, setWeeklyData] = useState({ leaders: [], resetsInMs: 0 });
+    const [skillData, setSkillData] = useState([]);
+    const [selectedSkill, setSelectedSkill] = useState('arrays');
+    const [countdown, setCountdown] = useState('');
+
+    const SKILL_CATEGORIES = ['arrays', 'sorting', 'searching', 'trees', 'graphs', 'dynamic-programming', 'strings', 'stacks'];
 
     const fetchLeaderboard = useCallback(async () => {
         try {
@@ -35,10 +42,45 @@ const Leaderboard = ({ onClose, currentUserId }) => {
 
     useEffect(() => {
         fetchLeaderboard();
-        if (currentUserId) {
-            fetchUserRank();
-        }
+        if (currentUserId) fetchUserRank();
     }, [currentUserId, fetchLeaderboard, fetchUserRank]);
+
+    // Fetch weekly leaderboard
+    useEffect(() => {
+        if (activeView !== 'weekly') return;
+        setLoading(true);
+        fetch('http://localhost:5001/api/leaderboard/weekly')
+            .then(r => r.json())
+            .then(data => { setWeeklyData(data); setLoading(false); })
+            .catch(() => setLoading(false));
+    }, [activeView]);
+
+    // Fetch skill leaderboard
+    useEffect(() => {
+        if (activeView !== 'skill') return;
+        setLoading(true);
+        fetch(`http://localhost:5001/api/leaderboard/skill/${selectedSkill}`)
+            .then(r => r.json())
+            .then(data => { setSkillData(data); setLoading(false); })
+            .catch(() => setLoading(false));
+    }, [activeView, selectedSkill]);
+
+    // Countdown timer for weekly reset
+    useEffect(() => {
+        if (activeView !== 'weekly' || !weeklyData.resetsInMs) return;
+        const target = Date.now() + weeklyData.resetsInMs;
+        const tick = () => {
+            const diff = target - Date.now();
+            if (diff <= 0) { setCountdown('Resetting...'); return; }
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            setCountdown(`${d}d ${h}h ${m}m`);
+        };
+        tick();
+        const iv = setInterval(tick, 60000);
+        return () => clearInterval(iv);
+    }, [activeView, weeklyData.resetsInMs]);
 
     const getRankStyle = (rank) => {
         if (rank === 1) return { background: 'linear-gradient(135deg, #ffd700, #ffaa00)', color: '#000' };
@@ -75,6 +117,33 @@ const Leaderboard = ({ onClose, currentUserId }) => {
                     <button onClick={onClose} style={styles.closeBtn}>✕</button>
                 </div>
 
+                {/* Tab Switcher */}
+                <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    {[{ id: 'alltime', label: '🏅 All Time' }, { id: 'weekly', label: '⚡ This Week' }, { id: 'skill', label: '🎯 By Skill' }].map(tab => (
+                        <button key={tab.id} onClick={() => setActiveView(tab.id)} style={{
+                            flex: 1, padding: '12px', background: activeView === tab.id ? 'rgba(102,126,234,0.2)' : 'transparent',
+                            border: 'none', borderBottom: activeView === tab.id ? '2px solid #667eea' : '2px solid transparent',
+                            color: activeView === tab.id ? '#fff' : '#888', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer'
+                        }}>{tab.label}</button>
+                    ))}
+                </div>
+
+                {/* Weekly countdown */}
+                {activeView === 'weekly' && countdown && (
+                    <div style={{ padding: '10px 20px', background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontSize: '13px', textAlign: 'center' }}>
+                        ⏰ Resets in: <strong>{countdown}</strong>
+                    </div>
+                )}
+
+                {/* Skill category dropdown */}
+                {activeView === 'skill' && (
+                    <div style={{ padding: '10px 20px', background: 'rgba(102,126,234,0.1)' }}>
+                        <select value={selectedSkill} onChange={(e) => setSelectedSkill(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', background: '#1a1a2e', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', fontSize: '13px' }}>
+                            {SKILL_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}</option>)}
+                        </select>
+                    </div>
+                )}
+
                 {/* User's rank if logged in */}
                 {userRank && userRank.rank && (
                     <div style={styles.userRank}>
@@ -87,16 +156,13 @@ const Leaderboard = ({ onClose, currentUserId }) => {
                 <div style={styles.list}>
                     {loading ? (
                         <div style={styles.loading}>Loading...</div>
-                    ) : leaders.length === 0 ? (
+                    ) : leaders.length === 0 && activeView === 'alltime' ? (
                         <div style={styles.empty}>
                             <span style={{ fontSize: '40px' }}>📊</span>
                             <p>No learners yet!</p>
-                            <p style={{ fontSize: '12px', color: '#666' }}>
-                                Complete lessons to appear on the leaderboard
-                            </p>
                         </div>
                     ) : (
-                        leaders.map((leader, index) => (
+                        (activeView === 'alltime' ? leaders : activeView === 'weekly' ? (weeklyData.leaders || []) : skillData).map((leader, index) => (
                             <Motion.div
                                 key={leader.userId || index}
                                 initial={{ opacity: 0, x: -20 }}
@@ -113,11 +179,13 @@ const Leaderboard = ({ onClose, currentUserId }) => {
                                 <div style={styles.leaderInfo}>
                                     <div style={styles.leaderName}>{leader.name}</div>
                                     <div style={styles.leaderStats}>
-                                        {leader.lessonsCompleted} lessons • {leader.achievementCount} 🏅
+                                        {activeView === 'alltime' && `${leader.lessonsCompleted} lessons • ${leader.achievementCount} 🏅`}
+                                        {activeView === 'weekly' && `Level ${leader.level || 1}`}
+                                        {activeView === 'skill' && `${leader.completedCount} completed`}
                                     </div>
                                 </div>
                                 <div style={styles.score}>
-                                    {leader.totalScore} pts
+                                    {activeView === 'skill' ? `${leader.completedCount} ✅` : `${leader.totalScore || leader.xp || 0} pts`}
                                 </div>
                             </Motion.div>
                         ))

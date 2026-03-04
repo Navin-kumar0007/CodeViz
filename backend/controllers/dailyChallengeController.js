@@ -156,8 +156,74 @@ const getChallengeHistory = asyncHandler(async (req, res) => {
     });
 });
 
+// @desc    Get 3 tiered challenges for today (easy, medium, hard)
+// @route   GET /api/challenges/tiered
+// @access  Private
+const getTodaysTiered = asyncHandler(async (req, res) => {
+    const today = getTodayUTC();
+    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+    const user = await User.findById(req.user._id).select('completedChallenges');
+
+    const tiers = ['easy', 'medium', 'hard'];
+    const results = [];
+
+    for (const difficulty of tiers) {
+        const count = await DailyChallenge.countDocuments({ difficulty });
+        if (count === 0) { results.push(null); continue; }
+
+        const idx = dayOfYear % count;
+        const challenge = await DailyChallenge.findOne({ difficulty }).skip(idx).limit(1);
+        if (!challenge) { results.push(null); continue; }
+
+        const alreadyCompleted = user.completedChallenges?.some(
+            c => c.challengeId === challenge._id.toString() &&
+                new Date(c.completedAt).toDateString() === today.toDateString()
+        );
+
+        results.push({
+            _id: challenge._id,
+            title: challenge.title,
+            description: challenge.description,
+            difficulty: challenge.difficulty,
+            category: challenge.category,
+            starterCode: challenge.starterCode,
+            language: challenge.language,
+            hints: challenge.hints,
+            xpReward: challenge.xpReward,
+            alreadyCompleted: !!alreadyCompleted
+        });
+    }
+
+    res.json({ easy: results[0], medium: results[1], hard: results[2] });
+});
+
+// @desc    Replay a specific challenge by ID
+// @route   GET /api/challenges/replay/:id
+// @access  Private
+const replayChallenge = asyncHandler(async (req, res) => {
+    const challenge = await DailyChallenge.findById(req.params.id);
+    if (!challenge) {
+        res.status(404);
+        throw new Error('Challenge not found');
+    }
+
+    res.json({
+        _id: challenge._id,
+        title: challenge.title,
+        description: challenge.description,
+        difficulty: challenge.difficulty,
+        category: challenge.category,
+        starterCode: challenge.starterCode,
+        language: challenge.language,
+        hints: challenge.hints,
+        xpReward: challenge.xpReward,
+    });
+});
+
 module.exports = {
     getTodaysChallenge,
     submitChallenge,
-    getChallengeHistory
+    getChallengeHistory,
+    getTodaysTiered,
+    replayChallenge
 };

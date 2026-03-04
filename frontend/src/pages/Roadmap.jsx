@@ -338,6 +338,43 @@ const Roadmap = () => {
                                     {node.label}
                                 </text>
 
+                                {/* Time estimate */}
+                                {node.estimatedMinutes && (
+                                    <text
+                                        x={pos.x + NODE_SIZE / 2}
+                                        y={pos.y + NODE_SIZE + 30}
+                                        textAnchor="middle"
+                                        fill="#666"
+                                        fontSize="9"
+                                    >
+                                        ~{node.estimatedMinutes}m
+                                    </text>
+                                )}
+
+                                {/* Locked prerequisite tooltip */}
+                                {state === 'locked' && isHovered && (
+                                    <>
+                                        <rect
+                                            x={pos.x - 20}
+                                            y={pos.y - 30}
+                                            width={NODE_SIZE + 40}
+                                            height={22}
+                                            rx={6}
+                                            fill="rgba(0,0,0,0.85)"
+                                            stroke="#555"
+                                        />
+                                        <text
+                                            x={pos.x + NODE_SIZE / 2}
+                                            y={pos.y - 15}
+                                            textAnchor="middle"
+                                            fill="#f59e0b"
+                                            fontSize="10"
+                                        >
+                                            Complete {(node.prerequisites || []).join(', ')} first
+                                        </text>
+                                    </>
+                                )}
+
                                 {/* Category tag */}
                                 <rect
                                     x={pos.x + NODE_SIZE / 2 - 25}
