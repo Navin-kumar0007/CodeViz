@@ -18,6 +18,7 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
     const [isTyping, setIsTyping] = useState(false);
     const [copied, setCopied] = useState(false);
     const [diffData, setDiffData] = useState(null);
+    const [isSpeaking, setIsSpeaking] = useState(false);
     const typingRef = useRef(null);
     const responseAreaRef = useRef(null);
 
@@ -272,18 +273,48 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
                     {isTyping && <span style={styles.cursor}>▊</span>}
                 </div>
 
-                {/* Copy Button */}
+                {/* Copy & Voice Buttons */}
                 {!isTyping && displayedText && (
-                    <Motion.button
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        onClick={handleCopy}
-                        style={styles.copyBtn}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        {copied ? '✅ Copied!' : '📋 Copy'}
-                    </Motion.button>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                        <Motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            onClick={handleCopy}
+                            style={styles.copyBtn}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            {copied ? '✅ Copied!' : '📋 Copy'}
+                        </Motion.button>
+                        <Motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            onClick={() => {
+                                if (isSpeaking) {
+                                    window.speechSynthesis.cancel();
+                                    setIsSpeaking(false);
+                                } else {
+                                    // Strip markdown formatting for cleaner speech
+                                    const cleanText = displayedText
+                                        .replace(/```[\s\S]*?```/g, 'code block omitted')
+                                        .replace(/[*_#`~>]/g, '')
+                                        .replace(/\n+/g, '. ');
+                                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                                    utterance.rate = 0.95;
+                                    utterance.pitch = 1;
+                                    utterance.onend = () => setIsSpeaking(false);
+                                    utterance.onerror = () => setIsSpeaking(false);
+                                    window.speechSynthesis.speak(utterance);
+                                    setIsSpeaking(true);
+                                }
+                            }}
+                            style={{ ...styles.copyBtn, background: isSpeaking ? 'rgba(239, 68, 68, 0.2)' : 'rgba(99, 102, 241, 0.2)', color: isSpeaking ? '#ef4444' : '#818cf8' }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            {isSpeaking ? '⏹ Stop' : '🔊 Read Aloud'}
+                        </Motion.button>
+                    </div>
                 )}
             </Motion.div>
         );
