@@ -16,7 +16,7 @@ const Whiteboard = React.memo(({ socket, isEditor }) => {
     const [undoneStack, setUndoneStack] = useState([]);
     const [activeTool, setActiveTool] = useState('pen');
     const [activeColor, setActiveColor] = useState('#A78BFA');
-    const [strokeWidth, setStrokeWidth] = useState(4);
+    const [strokeWidth, _setStrokeWidth] = useState(4);
     const [textInput, setTextInput] = useState(null); // { x, y } for text placement
     const svgRef = useRef(null);
 
