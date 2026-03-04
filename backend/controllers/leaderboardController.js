@@ -1,6 +1,5 @@
 const LearningProgress = require('../models/LearningProgress');
 const User = require('../models/User');
-const Gamification = require('../models/Gamification');
 
 // @desc    Get leaderboard (top users by score)
 // @route   GET /api/leaderboard
@@ -14,57 +13,47 @@ const getLeaderboard = async (req, res) => {
             .limit(limit)
             .populate('userId', 'name email');
 
-        const formattedLeaderboard = leaderboard.map((entry, index) => ({
+        const formatted = leaderboard.map((entry, index) => ({
             rank: index + 1,
             userId: entry.userId?._id,
             name: entry.userId?.name || 'Anonymous',
             lessonsCompleted: entry.lessonsCompleted,
             totalScore: entry.totalScore,
-            achievementCount: entry.achievements.length
+            achievementCount: entry.achievements?.length || 0
         }));
 
-        res.json(formattedLeaderboard);
+        res.json(formatted);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Get user's rank
+// @desc    Get current user's rank
 // @route   GET /api/leaderboard/rank/:userId
 // @access  Public
 const getUserRank = async (req, res) => {
     try {
-        const { userId } = req.params;
-
-        const userProgress = await LearningProgress.findOne({ userId });
-
+        const userProgress = await LearningProgress.findOne({ userId: req.params.userId });
         if (!userProgress) {
-            return res.json({ rank: null, message: 'User has no progress' });
+            return res.json({ rank: null, lessonsCompleted: 0, totalScore: 0 });
         }
 
-        // Count users with higher score
         const higherRanked = await LearningProgress.countDocuments({
-            $or: [
-                { totalScore: { $gt: userProgress.totalScore } },
-                {
-                    totalScore: userProgress.totalScore,
-                    lessonsCompleted: { $gt: userProgress.lessonsCompleted }
-                }
-            ]
+            totalScore: { $gt: userProgress.totalScore }
         });
 
         res.json({
             rank: higherRanked + 1,
             lessonsCompleted: userProgress.lessonsCompleted,
             totalScore: userProgress.totalScore,
-            achievementCount: userProgress.achievements.length
+            achievementCount: userProgress.achievements?.length || 0
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Weekly Sprint leaderboard — XP earned this week
+// @desc    Weekly Sprint leaderboard — score earned this week
 // @route   GET /api/leaderboard/weekly
 // @access  Public
 const getWeeklyLeaderboard = async (req, res) => {
@@ -74,12 +63,11 @@ const getWeeklyLeaderboard = async (req, res) => {
         // Get start of current week (Monday)
         const now = new Date();
         const day = now.getDay();
-        const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Monday
-        const weekStart = new Date(now.setDate(diff));
-        weekStart.setHours(0, 0, 0, 0);
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        const weekStart = new Date(now.getFullYear(), now.getMonth(), diff, 0, 0, 0, 0);
 
-        const leaders = await Gamification.find({ updatedAt: { $gte: weekStart } })
-            .sort({ xp: -1 })
+        const leaders = await LearningProgress.find({ updatedAt: { $gte: weekStart } })
+            .sort({ totalScore: -1 })
             .limit(limit)
             .populate('userId', 'name');
 
@@ -87,8 +75,8 @@ const getWeeklyLeaderboard = async (req, res) => {
             rank: index + 1,
             userId: entry.userId?._id,
             name: entry.userId?.name || 'Anonymous',
-            xp: entry.xp,
-            level: entry.level
+            xp: entry.totalScore || 0,
+            level: Math.floor((entry.totalScore || 0) / 100) + 1
         }));
 
         // Calculate time until next Monday reset
@@ -114,14 +102,13 @@ const getSkillLeaderboard = async (req, res) => {
         const users = await User.find({ 'completedChallenges': { $exists: true } })
             .select('name completedChallenges');
 
-        // We need to cross reference with DailyChallenge to get categories
         const DailyChallenge = require('../models/DailyChallenge');
         const categoryChallenges = await DailyChallenge.find({ category }).select('_id');
         const catIds = new Set(categoryChallenges.map(c => c._id.toString()));
 
         const ranked = users.map(u => {
             const count = (u.completedChallenges || []).filter(
-                c => catIds.has(c.challengeId)
+                c => catIds.has(c.challengeId?.toString?.() || c.challengeId)
             ).length;
             return { userId: u._id, name: u.name, completedCount: count };
         }).filter(u => u.completedCount > 0)
