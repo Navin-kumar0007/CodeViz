@@ -69,6 +69,8 @@ const DailyChallenge = () => {
             const res = await axios.post('http://localhost:5001/run', {
                 language: challenge.language || 'python',
                 code
+            }, {
+                headers: { Authorization: `Bearer ${user?.token}` }
             });
             if (res.data.error) {
                 setOutput(`❌ Error: ${res.data.error}`);

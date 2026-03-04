@@ -211,7 +211,10 @@ const Practice = () => {
 
     // 📡 SERVER-SIDE VISUALIZATION (Still needed for Graph/AST)
     try {
-      const res = await axios.post("http://localhost:5001/run", { language, code });
+      const stored = JSON.parse(localStorage.getItem('userInfo'));
+      const res = await axios.post("http://localhost:5001/run", { language, code }, {
+        headers: { Authorization: `Bearer ${stored?.token}` }
+      });
 
       // 1. Handle Server-Side Errors
       if (res.data.error) {
