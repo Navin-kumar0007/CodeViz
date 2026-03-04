@@ -15,10 +15,21 @@ const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
+    // Validate password strength
+    if (!password || password.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+    }
+
+    // Sanitize name — strip HTML tags to prevent XSS
+    const sanitizedName = (name || '').replace(/<[^>]*>/g, '').trim();
+    if (!sanitizedName) {
+      return res.status(400).json({ message: 'Name is required' });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'User already exists' });
 
-    const user = await User.create({ name, email, password });
+    const user = await User.create({ name: sanitizedName, email, password });
 
     if (user) {
       res.status(201).json({

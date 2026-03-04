@@ -2,6 +2,25 @@ const Classroom = require('../models/Classroom');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
+// Simple HTML sanitizer — strips all tags
+const sanitizeText = (str) => (str || '').replace(/<[^>]*>/g, '').trim();
+
+// Throttled DB save — only writes once every 5 seconds per classroom
+const pendingSaves = new Map();
+const throttledSave = (classroomId, data) => {
+    if (pendingSaves.has(classroomId)) return;
+    pendingSaves.set(classroomId, true);
+    setTimeout(async () => {
+        try {
+            await Classroom.findByIdAndUpdate(classroomId, data);
+        } catch (err) {
+            console.error('Throttled save error:', err);
+        } finally {
+            pendingSaves.delete(classroomId);
+        }
+    }, 5000);
+};
+
 /**
  * Socket.io handler for classroom real-time features
  * Handles live code broadcasting and classroom presence
@@ -149,8 +168,8 @@ const setupClassroomSocket = (io) => {
                     editorId: socket.userId
                 });
 
-                // Periodically save to database (throttled in real app)
-                await Classroom.findByIdAndUpdate(socket.classroomId, {
+                // Throttled DB save — only writes once every 5 seconds
+                throttledSave(socket.classroomId, {
                     liveCode: data.code,
                     liveLanguage: data.language || 'python'
                 });
@@ -254,7 +273,7 @@ const setupClassroomSocket = (io) => {
                 id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                 userId: userObj.userId,
                 name: userObj.name,
-                text: messageText,
+                text: sanitizeText(messageText).substring(0, 500),
                 isInstructor: userObj.isInstructor,
                 timestamp: new Date().toISOString()
             };

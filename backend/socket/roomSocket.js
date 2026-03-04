@@ -3,6 +3,25 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { getRandomProblem } = require('../scripts/battleProblems');
 
+// Simple HTML sanitizer — strips all tags
+const sanitizeText = (str) => (str || '').replace(/<[^>]*>/g, '').trim();
+
+// Throttled DB save — only writes once every 5 seconds per room
+const pendingRoomSaves = new Map();
+const throttledRoomSave = (roomCode, data) => {
+    if (pendingRoomSaves.has(roomCode)) return;
+    pendingRoomSaves.set(roomCode, true);
+    setTimeout(async () => {
+        try {
+            await Room.findOneAndUpdate({ roomCode }, data);
+        } catch (err) {
+            console.error('Throttled room save error:', err);
+        } finally {
+            pendingRoomSaves.delete(roomCode);
+        }
+    }, 5000);
+};
+
 /**
  * Socket.io handler for peer-to-peer collaboration rooms
  * Namespace: /room
@@ -78,7 +97,11 @@ const setupRoomSocket = (io) => {
                     language: updatedRoom.language,
                     mode: updatedRoom.mode || 'collaborate',
                     battle: updatedRoom.battle || null,
-                    chat: updatedRoom.chat.slice(-50) // Last 50 messages
+                    chat: (updatedRoom.chat || []).slice(-50).map(m => ({
+                        userName: m.userName,
+                        message: m.message,
+                        timestamp: m.timestamp
+                    }))
                 });
 
                 // Broadcast updated participant list to everyone
@@ -112,15 +135,8 @@ const setupRoomSocket = (io) => {
                 userName: socket.userName
             });
 
-            // Save to DB (throttled — only save every few seconds in production)
-            try {
-                await Room.findOneAndUpdate(
-                    { roomCode: socket.roomCode },
-                    { code: data.code }
-                );
-            } catch (error) {
-                console.error('Code save error:', error);
-            }
+            // Throttled DB save — only writes once every 5 seconds
+            throttledRoomSave(socket.roomCode, { code: data.code });
         });
 
         /**
@@ -167,18 +183,18 @@ const setupRoomSocket = (io) => {
             const chatMsg = {
                 user: socket.userId,
                 userName: socket.userName,
-                message: data.message.trim().substring(0, 500), // Max 500 chars
+                message: sanitizeText(data.message).substring(0, 500),
                 timestamp: new Date()
             };
 
             // Broadcast to everyone in room (including sender)
             roomIO.to(socket.roomCode).emit('chat-message', chatMsg);
 
-            // Save to DB
+            // Save to DB with $slice cap at 200 messages
             try {
                 await Room.findOneAndUpdate(
                     { roomCode: socket.roomCode },
-                    { $push: { chat: chatMsg } }
+                    { $push: { chat: { $each: [chatMsg], $slice: -200 } } }
                 );
             } catch (error) {
                 console.error('Chat save error:', error);
