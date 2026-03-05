@@ -23,6 +23,7 @@ const roomRoutes = require('./routes/roomRoutes');
 const dailyChallengeRoutes = require('./routes/dailyChallengeRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const campusRoutes = require('./routes/campusRoutes');
+const interviewRoutes = require('./routes/interviewRoutes');
 
 // Socket handlers
 const setupClassroomSocket = require('./socket/classroomSocket');
@@ -127,6 +128,7 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/challenges', dailyChallengeRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/campus', campusRoutes);
+app.use('/api/interview', interviewRoutes);
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)
 

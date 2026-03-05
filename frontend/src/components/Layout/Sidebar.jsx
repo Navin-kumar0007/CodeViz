@@ -14,6 +14,7 @@ const navItems = [
     { path: '/test-lab', icon: '🧪', label: 'Test Lab', shortcut: 'T' },
     { path: '/translator', icon: '🌐', label: 'Translate', shortcut: 'N' },
     { path: '/campus', icon: '🏫', label: 'Campus', shortcut: 'U' },
+    { path: '/interview-prep', icon: '🎯', label: 'Interview', shortcut: 'I' },
 ];
 
 const bottomItems = [
