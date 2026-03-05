@@ -56,7 +56,30 @@ const AppLayout = ({ children }) => {
         {children}
       </main>
       <StatusBar />
+      <MobileTabBar current={location.pathname} />
     </div>
+  );
+};
+
+// Bottom tab bar for mobile devices
+const MobileTabBar = ({ current }) => {
+  const navigate = useNavigate();
+  const tabs = [
+    { path: '/', icon: '⌂', label: 'Home' },
+    { path: '/practice', icon: '⟩_', label: 'Practice' },
+    { path: '/interview-prep', icon: '🎯', label: 'Interview' },
+    { path: '/forum', icon: '💬', label: 'Forum' },
+    { path: '/progress', icon: '📊', label: 'Reports' }
+  ];
+  return (
+    <nav className="mobile-tab-bar">
+      {tabs.map(t => (
+        <button key={t.path} onClick={() => navigate(t.path)}
+          className={current === t.path ? 'active' : ''}>
+          {t.icon}<span>{t.label}</span>
+        </button>
+      ))}
+    </nav>
   );
 };
 
