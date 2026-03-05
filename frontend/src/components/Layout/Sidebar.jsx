@@ -1,99 +1,154 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const navItems = [
-    { path: '/', icon: '⌂', label: 'Dashboard', shortcut: 'D' },
-    { path: '/practice', icon: '⟩_', label: 'Practice', shortcut: 'P' },
-    { path: '/learn', icon: '📖', label: 'Learn', shortcut: 'L' },
-    { path: '/roadmap', icon: '🗺️', label: 'Roadmap', shortcut: 'M' },
-    { path: '/classroom', icon: '🏫', label: 'Classroom', shortcut: 'C' },
-    { path: '/room', icon: '👥', label: 'Room', shortcut: 'R' },
-    { path: '/quiz-creator', icon: '✏️', label: 'Quiz', shortcut: 'Q' },
-    { path: '/sessions', icon: '🎥', label: 'Sessions', shortcut: 'S' },
-    { path: '/code-review', icon: '🤖', label: 'Review', shortcut: 'V' },
-    { path: '/test-lab', icon: '🧪', label: 'Test Lab', shortcut: 'T' },
-    { path: '/translator', icon: '🌐', label: 'Translate', shortcut: 'N' },
-    { path: '/campus', icon: '🏫', label: 'Campus', shortcut: 'U' },
-    { path: '/interview-prep', icon: '🎯', label: 'Interview', shortcut: 'I' },
-    { path: '/forum', icon: '💬', label: 'Forum', shortcut: 'F' },
-    { path: '/video-lessons', icon: '🎬', label: 'Videos', shortcut: 'W' },
-    { path: '/progress', icon: '📊', label: 'Reports', shortcut: 'G' },
+/* ═══════════════════════════════════════════
+   Sidebar — Grouped Navigation
+   5 categories: Core, Collaborate, Tools, Grow, Admin
+   ═══════════════════════════════════════════ */
+
+const navGroups = [
+    {
+        label: 'Core',
+        items: [
+            { path: '/', icon: '⌂', label: 'Dashboard' },
+            { path: '/practice', icon: '⟩_', label: 'Practice' },
+            { path: '/learn', icon: '📖', label: 'Learn' },
+            { path: '/roadmap', icon: '🗺️', label: 'Roadmap' },
+        ]
+    },
+    {
+        label: 'Collaborate',
+        items: [
+            { path: '/room', icon: '👥', label: 'Collab Room' },
+            { path: '/classroom', icon: '🏫', label: 'Classroom' },
+            { path: '/campus', icon: '🎓', label: 'Campus' },
+            { path: '/forum', icon: '💬', label: 'Forum' },
+        ]
+    },
+    {
+        label: 'Tools',
+        items: [
+            { path: '/code-review', icon: '🤖', label: 'Code Review' },
+            { path: '/test-lab', icon: '🧪', label: 'Test Lab' },
+            { path: '/translator', icon: '🌐', label: 'Translate' },
+            { path: '/quiz-creator', icon: '✏️', label: 'Quiz Creator' },
+        ]
+    },
+    {
+        label: 'Grow',
+        items: [
+            { path: '/interview-prep', icon: '🎯', label: 'Interview Prep' },
+            { path: '/video-lessons', icon: '🎬', label: 'Video Lessons' },
+            { path: '/progress', icon: '📊', label: 'Progress Reports' },
+            { path: '/sessions', icon: '🎥', label: 'Sessions' },
+        ]
+    },
 ];
 
 const bottomItems = [
-    { path: '/instructor', icon: '📊', label: 'Analytics', role: 'instructor' },
-    { path: '/admin', icon: '⚙', label: 'Admin', role: 'admin' },
+    { path: '/instructor', icon: '📈', label: 'Analytics', role: 'instructor' },
+    { path: '/admin', icon: '⚙', label: 'Admin Panel', role: 'admin' },
 ];
 
 const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [user, setUser] = useState(null);
+    const [hoveredPath, setHoveredPath] = useState(null);
 
     useEffect(() => {
         try {
             const info = localStorage.getItem('userInfo');
             // eslint-disable-next-line react-hooks/set-state-in-effect
             if (info) setUser(JSON.parse(info));
-        } catch { /* ignore parsing errors */ }
+        } catch { /* ignore */ }
     }, []);
 
     const isActive = (path) => location.pathname === path;
 
     return (
-        <nav style={styles.sidebar}>
+        <nav style={S.sidebar}>
             {/* Brand */}
-            <div style={styles.brand} onClick={() => navigate('/')}>
-                <span style={styles.brandIcon}>{'{ }'}</span>
+            <div style={S.brand} onClick={() => navigate('/')}>
+                <span style={S.brandIcon}>{'{ }'}</span>
             </div>
 
-            {/* Main Nav */}
-            <div style={styles.navGroup}>
-                {navItems.map(item => (
-                    <button
-                        key={item.path}
-                        onClick={() => navigate(item.path)}
-                        style={{
-                            ...styles.navBtn,
-                            ...(isActive(item.path) ? styles.navBtnActive : {}),
-                        }}
-                        title={`${item.label} (${item.shortcut})`}
-                    >
-                        <span style={styles.navIcon}>{item.icon}</span>
-                        {isActive(item.path) && <div style={styles.activeIndicator} />}
-                    </button>
+            {/* Grouped Nav */}
+            <div style={S.navScroll}>
+                {navGroups.map((group, gi) => (
+                    <div key={group.label}>
+                        {gi > 0 && <div style={S.separator} />}
+                        <div style={S.group}>
+                            {group.items.map(item => (
+                                <div key={item.path} style={{ position: 'relative' }}
+                                    onMouseEnter={() => setHoveredPath(item.path)}
+                                    onMouseLeave={() => setHoveredPath(null)}>
+                                    <button
+                                        onClick={() => navigate(item.path)}
+                                        style={{
+                                            ...S.navBtn,
+                                            ...(isActive(item.path) ? S.navBtnActive : {}),
+                                        }}
+                                    >
+                                        <span style={S.navIcon}>{item.icon}</span>
+                                        {isActive(item.path) && <div style={S.activeBar} />}
+                                    </button>
+                                    {/* Tooltip */}
+                                    {hoveredPath === item.path && (
+                                        <div style={S.tooltip}>
+                                            {item.label}
+                                            <div style={S.tooltipArrow} />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 ))}
             </div>
 
-            {/* Bottom Nav (Role-based) */}
-            <div style={styles.bottomGroup}>
+            {/* Bottom: Role-based + Home + Avatar */}
+            <div style={S.bottomGroup}>
                 {bottomItems
                     .filter(item => user?.role === item.role || user?.role === 'admin')
                     .map(item => (
-                        <button
-                            key={item.path}
-                            onClick={() => navigate(item.path)}
-                            style={{
-                                ...styles.navBtn,
-                                ...(isActive(item.path) ? styles.navBtnActive : {}),
-                            }}
-                            title={item.label}
-                        >
-                            <span style={styles.navIcon}>{item.icon}</span>
-                        </button>
+                        <div key={item.path} style={{ position: 'relative' }}
+                            onMouseEnter={() => setHoveredPath(item.path)}
+                            onMouseLeave={() => setHoveredPath(null)}>
+                            <button
+                                onClick={() => navigate(item.path)}
+                                style={{
+                                    ...S.navBtn,
+                                    ...(isActive(item.path) ? S.navBtnActive : {}),
+                                }}
+                            >
+                                <span style={S.navIcon}>{item.icon}</span>
+                            </button>
+                            {hoveredPath === item.path && (
+                                <div style={S.tooltip}>
+                                    {item.label}
+                                    <div style={S.tooltipArrow} />
+                                </div>
+                            )}
+                        </div>
                     ))
                 }
-                {/* Home Page Link */}
                 <button
                     onClick={() => window.location.href = '/home'}
-                    style={styles.navBtn}
-                    title="Visit Home Page"
+                    style={S.navBtn}
+                    onMouseEnter={() => setHoveredPath('home')}
+                    onMouseLeave={() => setHoveredPath(null)}
                 >
-                    <span style={styles.navIcon}>🏠</span>
+                    <span style={S.navIcon}>🏠</span>
                 </button>
-                {/* User Avatar */}
+                {hoveredPath === 'home' && (
+                    <div style={{ ...S.tooltip, bottom: '48px' }}>
+                        Home Page
+                        <div style={S.tooltipArrow} />
+                    </div>
+                )}
                 {user && (
-                    <div style={styles.avatar} title={user.name}>
+                    <div style={S.avatar} title={user.name}>
                         {user.name?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                 )}
@@ -102,7 +157,7 @@ const Sidebar = () => {
     );
 };
 
-const styles = {
+const S = {
     sidebar: {
         position: 'fixed',
         left: 0,
@@ -125,10 +180,11 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
-        marginBottom: '16px',
+        marginBottom: '8px',
         borderRadius: '10px',
         background: 'linear-gradient(135deg, rgba(97,218,251,0.15), rgba(198,120,221,0.15))',
         transition: 'var(--transition-fast)',
+        flexShrink: 0,
     },
     brandIcon: {
         fontFamily: 'var(--font-code)',
@@ -136,49 +192,102 @@ const styles = {
         fontWeight: 700,
         color: 'var(--accent-blue)',
     },
-    navGroup: {
+    navScroll: {
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '4px',
-        flex: 1,
+        width: '100%',
+        scrollbarWidth: 'none',         // Firefox
+        msOverflowStyle: 'none',        // IE
+    },
+    group: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '2px',
+        padding: '4px 0',
+    },
+    separator: {
+        width: '28px',
+        height: '1px',
+        background: 'var(--border-color)',
+        margin: '4px auto',
+        opacity: 0.6,
     },
     bottomGroup: {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '4px',
+        gap: '2px',
+        flexShrink: 0,
+        paddingTop: '8px',
+        borderTop: '1px solid var(--border-color)',
+        marginTop: '8px',
+        width: '100%',
     },
     navBtn: {
         position: 'relative',
-        width: '42px',
-        height: '42px',
+        width: '44px',
+        height: '44px',
         border: 'none',
         background: 'transparent',
-        borderRadius: '8px',
+        borderRadius: '10px',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        transition: 'var(--transition-fast)',
+        transition: 'all 150ms ease',
         color: 'var(--text-muted)',
     },
     navBtnActive: {
-        background: 'var(--bg-surface)',
+        background: 'rgba(97,218,251,0.1)',
         color: 'var(--text-bright)',
     },
     navIcon: {
         fontSize: '18px',
         fontFamily: 'var(--font-code)',
+        lineHeight: 1,
     },
-    activeIndicator: {
+    activeBar: {
         position: 'absolute',
         left: 0,
-        top: '25%',
-        height: '50%',
+        top: '20%',
+        height: '60%',
         width: '3px',
         background: 'var(--accent-blue)',
         borderRadius: '0 3px 3px 0',
+    },
+    tooltip: {
+        position: 'absolute',
+        left: '56px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        background: 'var(--bg-elevated)',
+        color: 'var(--text-bright)',
+        padding: '6px 12px',
+        borderRadius: '6px',
+        fontSize: '12px',
+        fontFamily: 'var(--font-body)',
+        fontWeight: 500,
+        whiteSpace: 'nowrap',
+        zIndex: 200,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+        border: '1px solid var(--border-color)',
+        pointerEvents: 'none',
+    },
+    tooltipArrow: {
+        position: 'absolute',
+        left: '-4px',
+        top: '50%',
+        transform: 'translateY(-50%) rotate(45deg)',
+        width: '8px',
+        height: '8px',
+        background: 'var(--bg-elevated)',
+        borderLeft: '1px solid var(--border-color)',
+        borderBottom: '1px solid var(--border-color)',
     },
     avatar: {
         width: '34px',
@@ -194,6 +303,7 @@ const styles = {
         fontFamily: 'var(--font-code)',
         marginTop: '8px',
         cursor: 'default',
+        flexShrink: 0,
     },
 };
 
