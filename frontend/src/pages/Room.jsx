@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
-
+import { AnimatePresence } from 'framer-motion';
 const Room = () => {
     const navigate = useNavigate();
     const [view, setView] = useState('lobby'); // 'lobby' | 'live'
@@ -38,6 +38,7 @@ const Room = () => {
     const [battleDifficulty, setBattleDifficulty] = useState('medium');
     const [isHost, setIsHost] = useState(false);
     const [battleSubmitted, setBattleSubmitted] = useState(false);
+    const [battleTestResults, setBattleTestResults] = useState(null); // { passedCount, totalCount, results: [] }
 
     const socketRef = useRef(null);
     const chatEndRef = useRef(null);
@@ -224,9 +225,16 @@ const Room = () => {
         });
 
         socket.on('battle-submission', (data) => {
+            // If this is our own submission, store test case results
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            if (data.userId === userInfo?._id && data.testCaseResults) {
+                setBattleTestResults({ passedCount: data.passedCount, totalCount: data.totalCount, results: data.testCaseResults });
+            }
             setChatMessages(prev => [...prev, {
                 userName: '🤖 Battle',
-                message: `${data.userName} submitted — ${data.correct ? '✅ Correct!' : '❌ Incorrect'}`,
+                message: data.testCaseResults
+                    ? `${data.userName}: ${data.passedCount}/${data.totalCount} test cases passed ${data.correct ? '✅' : '❌'}`
+                    : `${data.userName} submitted — ${data.correct ? '✅ Correct!' : '❌ Incorrect'}`,
                 timestamp: new Date(),
                 isSystem: true
             }]);
@@ -501,27 +509,59 @@ const Room = () => {
                             ))}
                             {!battleSubmitted && (
                                 <button
-                                    onClick={() => {
+                                    onClick={async () => {
                                         setBattleSubmitted(true);
-                                        // Execute code and submit
-                                        fetch('http://localhost:5001/api/code/execute', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user?.token}` },
-                                            body: JSON.stringify({ code, language })
-                                        })
-                                            .then(r => r.json())
-                                            .then(result => {
-                                                const output = result.output || (result.trace ? 'trace_output' : '');
+                                        const testCases = battleProblem?.testCases || [];
+                                        if (testCases.length > 0) {
+                                            // Run code against each test case
+                                            const testOutputs = [];
+                                            for (const tc of testCases) {
+                                                try {
+                                                    const r = await fetch('http://localhost:5001/api/code/execute', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user?.token}` },
+                                                        body: JSON.stringify({ code, language, input: tc.input })
+                                                    });
+                                                    const result = await r.json();
+                                                    testOutputs.push((result.output || '').trim());
+                                                } catch {
+                                                    testOutputs.push('');
+                                                }
+                                            }
+                                            socketRef.current?.emit('battle-submit', { code, testOutputs });
+                                        } else {
+                                            // Legacy single-output
+                                            try {
+                                                const r = await fetch('http://localhost:5001/api/code/execute', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user?.token}` },
+                                                    body: JSON.stringify({ code, language })
+                                                });
+                                                const result = await r.json();
+                                                const output = result.output || '';
                                                 socketRef.current?.emit('battle-submit', { code, output: output.trim() });
-                                            })
-                                            .catch(() => socketRef.current?.emit('battle-submit', { code, output: '' }));
+                                            } catch {
+                                                socketRef.current?.emit('battle-submit', { code, output: '' });
+                                            }
+                                        }
                                     }}
                                     style={{ padding: '6px 16px', background: 'linear-gradient(135deg, #48bb78, #38a169)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}
                                 >
-                                    🚀 Submit
+                                    🚀 Submit ({battleProblem?.testCases?.length || 1} tests)
                                 </button>
                             )}
-                            {battleSubmitted && <span style={{ color: '#48bb78', fontSize: '12px', fontWeight: 'bold' }}>✅ Submitted!</span>}
+                            {battleSubmitted && !battleTestResults && <span style={{ color: '#48bb78', fontSize: '12px', fontWeight: 'bold' }}>⏳ Running tests...</span>}
+                            {battleTestResults && (
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                    {battleTestResults.results.map((r, i) => (
+                                        <span key={i} title={r.passed ? `TC${i + 1}: Passed` : `TC${i + 1}: Expected "${r.expected}" got "${r.actual}"`}
+                                            style={{ fontSize: '16px', cursor: 'help' }}>{r.passed ? '✅' : '❌'}</span>
+                                    ))}
+                                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: battleTestResults.passedCount === battleTestResults.totalCount ? '#48bb78' : '#f56565', marginLeft: '6px' }}>
+                                        {battleTestResults.passedCount}/{battleTestResults.totalCount}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     )}
 

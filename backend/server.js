@@ -79,10 +79,15 @@ const executionLimiter = rateLimit({
 // 2. Create HTTP server (required for Socket.io)
 const server = http.createServer(app);
 
+let allowedOrigins = ['http://localhost:5173', 'http://localhost:3000'];
+if (process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 // 3. Initialize Socket.io
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:5173', 'http://localhost:3000'],
+        origin: allowedOrigins,
         methods: ['GET', 'POST'],
         credentials: true
     }
@@ -96,11 +101,16 @@ setupRoomSocket(io);
 app.set('io', io);
 
 // 4. Middleware
-app.use(cors());
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true
+}));
 app.use(express.json());
 
 // 5. Routes
-app.use('/', executionLimiter, codeRoutes); // 🛡️ Apply strict limit to execution
+app.use('/run', executionLimiter);
+app.use('/trace', executionLimiter);
+app.use('/', codeRoutes); // 🛡️ Apply strict limit to execution endpoints only
 app.use('/api/users', userRoutes);
 app.use('/api/snippets', snippetRoutes);
 app.use('/api/progress', progressRoutes);

@@ -17,6 +17,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
   const [playSpeed, setPlaySpeed] = useState(800); // Speed in ms: 1500=slow, 800=normal, 300=fast, 100=instant
   const [dismissedConcepts, setDismissedConcepts] = useState({}); // Track dismissed concept cards
   const [showVariableTracker, setShowVariableTracker] = useState(true);
+  const [showWatchPanel, setShowWatchPanel] = useState(false); // Variable watch panel
 
   // 🎨 Theme integration
   useTheme();
@@ -855,8 +856,9 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           />
         </div>
 
-        {/* Row 2: Slider + Nav */}
+        {/* Row 2: First | Prev | Slider | Next | Last + Watch toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          <button onClick={() => { setIsPlaying(false); setStepIndex(0); }} style={styles.navBtn} title="First step">⏮</button>
           <button onClick={() => { setIsPlaying(false); setStepIndex(Math.max(0, stepIndex - 1)) }} style={styles.navBtn}>◀</button>
           <input
             type="range"
@@ -867,6 +869,10 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
             style={{ ...styles.slider, width: '80px', flex: 'none' }}
           />
           <button onClick={() => { setIsPlaying(false); setStepIndex(Math.min(traceData.length - 1, stepIndex + 1)) }} style={styles.navBtn}>▶</button>
+          <button onClick={() => { setIsPlaying(false); setStepIndex(traceData.length - 1); }} style={styles.navBtn} title="Last step">⏭</button>
+          <button onClick={() => setShowWatchPanel(!showWatchPanel)} style={{ ...styles.debugBtn, background: showWatchPanel ? 'rgba(102,126,234,0.3)' : 'transparent', fontSize: '12px' }} title="Variable Watch">
+            🔍 Watch
+          </button>
         </div>
       </div>
 
@@ -882,7 +888,41 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           <span style={{ color: '#4ec9b0' }}>🖨 {currentStep.stdout}</span> :
           <span style={{ color: '#ce9178' }}>⚡ Line {currentStep.line}: Executing...</span>
         }
+        <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#555', fontFamily: 'monospace' }}>L{currentStep.line || '?'}</span>
       </Motion.div>
+
+      {/* VARIABLE WATCH PANEL */}
+      {showWatchPanel && Object.keys(currentVariables).length > 0 && (
+        <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.06)', maxHeight: '150px', overflowY: 'auto' }}>
+          <div style={{ fontSize: '11px', color: '#888', fontWeight: 'bold', marginBottom: '6px' }}>🔍 VARIABLE WATCH — Step {stepIndex + 1}</div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+            <thead>
+              <tr style={{ color: '#666', textAlign: 'left' }}>
+                <th style={{ padding: '2px 6px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Name</th>
+                <th style={{ padding: '2px 6px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Type</th>
+                <th style={{ padding: '2px 6px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Value</th>
+                <th style={{ padding: '2px 6px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>State</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(currentVariables).map(([name, value]) => {
+                const state = variableStates[name] || 'unchanged';
+                const stateColor = state === 'new' ? '#48bb78' : state === 'changed' ? '#f6ad55' : '#555';
+                return (
+                  <tr key={name} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <td style={{ padding: '3px 6px', color: '#9cdcfe', fontFamily: 'monospace' }}>{name}</td>
+                    <td style={{ padding: '3px 6px', color: '#6a9955' }}>{Array.isArray(value) ? 'array' : typeof value}</td>
+                    <td style={{ padding: '3px 6px', color: '#dcdcaa', fontFamily: 'monospace', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {Array.isArray(value) ? `[${value.join(', ')}]` : typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                    </td>
+                    <td style={{ padding: '3px 6px', color: stateColor, fontWeight: 'bold', fontSize: '10px' }}>{state.toUpperCase()}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* CANVAS - CATEGORIZED */}
       <div style={styles.canvasArea}>

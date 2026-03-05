@@ -2,6 +2,25 @@ const Classroom = require('../models/Classroom');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
+// Simple HTML sanitizer — strips all tags
+const sanitizeText = (str) => (str || '').replace(/<[^>]*>/g, '').trim();
+
+// Throttled DB save — only writes once every 5 seconds per classroom
+const pendingSaves = new Map();
+const throttledSave = (classroomId, data) => {
+    if (pendingSaves.has(classroomId)) return;
+    pendingSaves.set(classroomId, true);
+    setTimeout(async () => {
+        try {
+            await Classroom.findByIdAndUpdate(classroomId, data);
+        } catch (err) {
+            console.error('Throttled save error:', err);
+        } finally {
+            pendingSaves.delete(classroomId);
+        }
+    }, 5000);
+};
+
 /**
  * Socket.io handler for classroom real-time features
  * Handles live code broadcasting and classroom presence
@@ -149,8 +168,8 @@ const setupClassroomSocket = (io) => {
                     editorId: socket.userId
                 });
 
-                // Periodically save to database (throttled in real app)
-                await Classroom.findByIdAndUpdate(socket.classroomId, {
+                // Throttled DB save — only writes once every 5 seconds
+                throttledSave(socket.classroomId, {
                     liveCode: data.code,
                     liveLanguage: data.language || 'python'
                 });
@@ -254,7 +273,7 @@ const setupClassroomSocket = (io) => {
                 id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                 userId: userObj.userId,
                 name: userObj.name,
-                text: messageText,
+                text: sanitizeText(messageText).substring(0, 500),
                 isInstructor: userObj.isInstructor,
                 timestamp: new Date().toISOString()
             };
@@ -317,6 +336,73 @@ const setupClassroomSocket = (io) => {
             } catch (error) {
                 console.error('End session error:', error);
             }
+        });
+
+        // ─── POLLS / QUIZZES ───
+
+        // In-memory poll storage per classroom
+        if (!classroomIO._polls) classroomIO._polls = new Map();
+        if (!classroomIO._handRaiseQueues) classroomIO._handRaiseQueues = new Map();
+
+        /**
+         * Instructor pushes a poll/quiz to students
+         */
+        socket.on('push-poll', (data) => {
+            if (!socket.classroomId || !socket.isInstructor) return;
+            const poll = {
+                id: Date.now().toString(),
+                question: sanitizeText(data.question || ''),
+                options: (data.options || []).map(o => sanitizeText(o)),
+                votes: {},
+                createdAt: new Date().toISOString()
+            };
+            classroomIO._polls.set(socket.classroomId, poll);
+            classroomIO.to(socket.classroomId).emit('poll-pushed', {
+                id: poll.id, question: poll.question, options: poll.options
+            });
+        });
+
+        /** Student submits poll answer */
+        socket.on('submit-poll-answer', (data) => {
+            if (!socket.classroomId) return;
+            const poll = classroomIO._polls.get(socket.classroomId);
+            if (!poll || poll.id !== data.pollId) return;
+            if (typeof data.optionIndex === 'number' && data.optionIndex >= 0 && data.optionIndex < poll.options.length) {
+                poll.votes[socket.userId] = data.optionIndex;
+            }
+            const voteCounts = poll.options.map(() => 0);
+            Object.values(poll.votes).forEach(idx => { voteCounts[idx]++; });
+            classroomIO.to(socket.classroomId).emit('poll-results', {
+                pollId: poll.id, question: poll.question, options: poll.options,
+                voteCounts, totalVotes: Object.keys(poll.votes).length
+            });
+        });
+
+        /** Instructor closes poll */
+        socket.on('close-poll', () => {
+            if (!socket.classroomId || !socket.isInstructor) return;
+            classroomIO._polls.delete(socket.classroomId);
+            classroomIO.to(socket.classroomId).emit('poll-closed');
+        });
+
+        // ─── HAND RAISE QUEUE ───
+
+        socket.on('raise-hand', () => {
+            if (!socket.classroomId) return;
+            const queue = classroomIO._handRaiseQueues.get(socket.classroomId) || [];
+            if (queue.some(h => h.userId === socket.userId)) return;
+            queue.push({ userId: socket.userId, name: socket.userName || 'Student', raisedAt: new Date().toISOString() });
+            classroomIO._handRaiseQueues.set(socket.classroomId, queue);
+            classroomIO.to(socket.classroomId).emit('hand-raise-queue', queue);
+        });
+
+        socket.on('lower-hand', (data) => {
+            if (!socket.classroomId) return;
+            const targetUserId = (socket.isInstructor && data?.userId) ? data.userId : socket.userId;
+            let queue = classroomIO._handRaiseQueues.get(socket.classroomId) || [];
+            queue = queue.filter(h => h.userId !== targetUserId);
+            classroomIO._handRaiseQueues.set(socket.classroomId, queue);
+            classroomIO.to(socket.classroomId).emit('hand-raise-queue', queue);
         });
 
         /**

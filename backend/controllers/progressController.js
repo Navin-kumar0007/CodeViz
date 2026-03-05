@@ -91,8 +91,9 @@ const syncProgress = async (req, res) => {
         }
 
         // Merge local progress with server (keep most complete)
-        if (localProgress) {
+        if (localProgress && typeof localProgress === 'object') {
             for (const [pathId, localData] of Object.entries(localProgress)) {
+                if (!localData) continue;
                 const serverData = progress.pathProgress.get(pathId);
 
                 if (!serverData) {
@@ -126,7 +127,7 @@ const syncProgress = async (req, res) => {
         }
 
         // Merge achievements (union)
-        if (localAchievements) {
+        if (localAchievements && Array.isArray(localAchievements)) {
             progress.achievements = [...new Set([
                 ...progress.achievements,
                 ...localAchievements

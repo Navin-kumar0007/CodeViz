@@ -111,7 +111,8 @@ const styles = {
     chartWrapper: {
         flex: 1,
         width: '100%',
-        minHeight: '250px'
+        minHeight: '250px',
+        minWidth: '200px',
     },
     footer: {
         marginTop: '10px',

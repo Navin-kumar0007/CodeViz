@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import Sidebar from './components/Layout/Sidebar';
 import StatusBar from './components/Layout/StatusBar';
 import OfflineBanner from './components/Network/OfflineBanner';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Eager Loading for generic pages
 import Login from './pages/Login';
@@ -59,42 +60,44 @@ const App = () => {
   return (
     <Router>
       <OfflineBanner />
-      <AppLayout>
-        <Suspense fallback={
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '15px' }}>
-            <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(167, 139, 250, 0.2)', borderTop: '4px solid #A78BFA', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-            <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-            <p style={{ color: '#888' }}>Loading Workspace...</p>
-          </div>
-        }>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/home" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/snippet/:id" element={<SnippetViewer />} />
-            <Route path="/classroom/join/:code" element={<ClassroomJoinHandler />} />
+      <ErrorBoundary>
+        <AppLayout>
+          <Suspense fallback={
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '15px' }}>
+              <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(167, 139, 250, 0.2)', borderTop: '4px solid #A78BFA', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+              <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+              <p style={{ color: '#888' }}>Loading Workspace...</p>
+            </div>
+          }>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/home" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/snippet/:id" element={<SnippetViewer />} />
+              <Route path="/classroom/join/:code" element={<ClassroomJoinHandler />} />
 
-            {/* Protected Routes */}
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
-            <Route path="/learn" element={<ProtectedRoute><Learn /></ProtectedRoute>} />
-            <Route path="/quiz-creator" element={<ProtectedRoute><QuizCreator /></ProtectedRoute>} />
-            <Route path="/classroom" element={<ProtectedRoute><Classroom /></ProtectedRoute>} />
-            <Route path="/room" element={<ProtectedRoute><Room /></ProtectedRoute>} />
-            <Route path="/instructor" element={<ProtectedRoute><InstructorDashboard /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-            <Route path="/daily-challenge" element={<ProtectedRoute><DailyChallenge /></ProtectedRoute>} />
-            <Route path="/roadmap" element={<ProtectedRoute><Roadmap /></ProtectedRoute>} />
-            <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
-            <Route path="/code-review" element={<ProtectedRoute><CodeReview /></ProtectedRoute>} />
-            <Route path="/test-lab" element={<ProtectedRoute><TestLab /></ProtectedRoute>} />
-            <Route path="/translator" element={<ProtectedRoute><Translator /></ProtectedRoute>} />
-            <Route path="/campus" element={<ProtectedRoute><CampusDashboard /></ProtectedRoute>} />
-            <Route path="/campus/:id" element={<ProtectedRoute><ClassroomDetails /></ProtectedRoute>} />
-          </Routes>
-        </Suspense>
-      </AppLayout>
+              {/* Protected Routes */}
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
+              <Route path="/learn" element={<ProtectedRoute><Learn /></ProtectedRoute>} />
+              <Route path="/quiz-creator" element={<ProtectedRoute><QuizCreator /></ProtectedRoute>} />
+              <Route path="/classroom" element={<ProtectedRoute><Classroom /></ProtectedRoute>} />
+              <Route path="/room" element={<ProtectedRoute><Room /></ProtectedRoute>} />
+              <Route path="/instructor" element={<ProtectedRoute><InstructorDashboard /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+              <Route path="/daily-challenge" element={<ProtectedRoute><DailyChallenge /></ProtectedRoute>} />
+              <Route path="/roadmap" element={<ProtectedRoute><Roadmap /></ProtectedRoute>} />
+              <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
+              <Route path="/code-review" element={<ProtectedRoute><CodeReview /></ProtectedRoute>} />
+              <Route path="/test-lab" element={<ProtectedRoute><TestLab /></ProtectedRoute>} />
+              <Route path="/translator" element={<ProtectedRoute><Translator /></ProtectedRoute>} />
+              <Route path="/campus" element={<ProtectedRoute><CampusDashboard /></ProtectedRoute>} />
+              <Route path="/campus/:id" element={<ProtectedRoute><ClassroomDetails /></ProtectedRoute>} />
+            </Routes>
+          </Suspense>
+        </AppLayout>
+      </ErrorBoundary>
     </Router>
   );
 };

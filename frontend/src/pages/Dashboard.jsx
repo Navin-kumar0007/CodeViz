@@ -73,6 +73,42 @@ const Dashboard = () => {
         </div>
       </header>
 
+      {/* 🔄 Continue Where You Left Off */}
+      {(() => {
+        const lastActivity = (() => {
+          try { return JSON.parse(localStorage.getItem('codeviz_last_activity')); } catch { return null; }
+        })();
+        const lastAutoSave = (() => {
+          try { return JSON.parse(localStorage.getItem('codeviz_autosave')); } catch { return null; }
+        })();
+        if (!lastAutoSave && !lastActivity) return null;
+        return (
+          <div style={styles.continueWidget}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>⏩ Continue Where You Left Off</h3>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              {lastAutoSave && (
+                <div onClick={() => navigate('/practice')} style={styles.continueCard}>
+                  <div style={{ fontSize: '20px', marginBottom: '6px' }}>⟩_</div>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#e0e0e0', marginBottom: '4px' }}>Practice — {(lastAutoSave.language || 'python').toUpperCase()}</div>
+                  <div style={{ fontSize: '11px', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '220px' }}>{(lastAutoSave.code || '').slice(0, 60)}…</div>
+                  <div style={{ fontSize: '10px', color: '#666', marginTop: '6px' }}>{lastAutoSave.timestamp ? new Date(lastAutoSave.timestamp).toLocaleString() : ''}</div>
+                </div>
+              )}
+              <div onClick={() => navigate('/learn')} style={styles.continueCard}>
+                <div style={{ fontSize: '20px', marginBottom: '6px' }}>📖</div>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#e0e0e0', marginBottom: '4px' }}>Learning Path</div>
+                <div style={{ fontSize: '11px', color: '#888' }}>Continue your DSA journey</div>
+              </div>
+              <div onClick={() => navigate('/challenge')} style={styles.continueCard}>
+                <div style={{ fontSize: '20px', marginBottom: '6px' }}>🏆</div>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#e0e0e0', marginBottom: '4px' }}>Daily Challenge</div>
+                <div style={{ fontSize: '11px', color: '#888' }}>Today's challenge awaits</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Daily Challenge & DNA Row */}
       <div style={styles.widgetsRow}>
         <div style={{ flex: 1, minWidth: '300px' }}>
@@ -269,6 +305,24 @@ const styles = {
     gap: '8px',
     alignItems: 'center',
     transition: 'var(--transition-fast)',
+  },
+  continueWidget: {
+    background: 'var(--bg-surface)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '10px',
+    padding: '16px 20px',
+    marginBottom: '20px',
+    maxWidth: '1000px',
+  },
+  continueCard: {
+    background: 'var(--bg-hover)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '8px',
+    padding: '14px 16px',
+    cursor: 'pointer',
+    transition: 'all 200ms ease',
+    minWidth: '180px',
+    flex: '1',
   },
 };
 

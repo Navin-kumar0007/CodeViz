@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
+import { AnimatePresence } from 'framer-motion';
 import Whiteboard from '../components/Whiteboard';
 
 /**
@@ -44,6 +45,16 @@ const Classroom = () => {
     const [isPublic, setIsPublic] = useState(true);
 
     const socketRef = useRef(null);
+
+    // Poll & Hand Raise state
+    const [activePoll, setActivePoll] = useState(null);
+    const [pollResults, setPollResults] = useState(null);
+    const [myPollAnswer, setMyPollAnswer] = useState(null);
+    const [handRaiseQueue, setHandRaiseQueue] = useState([]);
+    const [showPollForm, setShowPollForm] = useState(false);
+    const [pollQuestion, setPollQuestion] = useState('');
+    const [pollOptions, setPollOptions] = useState(['', '', '', '']);
+    const [handRaised, setHandRaised] = useState(false);
 
     // Get user info
     const getUserInfo = () => {
@@ -163,6 +174,25 @@ const Classroom = () => {
 
         socket.on('disconnect', () => {
             setIsConnected(false);
+        });
+
+        // Poll listeners
+        socket.on('poll-pushed', (poll) => {
+            setActivePoll(poll);
+            setPollResults(null);
+            setMyPollAnswer(null);
+        });
+        socket.on('poll-results', (results) => {
+            setPollResults(results);
+        });
+        socket.on('poll-closed', () => {
+            setActivePoll(null);
+            setPollResults(null);
+            setMyPollAnswer(null);
+        });
+        // Hand raise listener
+        socket.on('hand-raise-queue', (queue) => {
+            setHandRaiseQueue(queue);
         });
 
         socketRef.current = socket;
@@ -418,13 +448,96 @@ const Classroom = () => {
                                             ⬛ End Session
                                         </button>
                                     )}
+                                    <button onClick={() => setShowPollForm(prev => !prev)} style={{ ...styles.copyBtn, background: showPollForm ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.15)', color: '#818cf8' }}>
+                                        📊 Poll
+                                    </button>
                                 </>
                             )}
+                            <button onClick={() => {
+                                if (handRaised) {
+                                    socketRef.current?.emit('lower-hand');
+                                    setHandRaised(false);
+                                } else {
+                                    socketRef.current?.emit('raise-hand');
+                                    setHandRaised(true);
+                                }
+                            }} style={{ ...styles.leaveBtn, background: handRaised ? 'rgba(245,158,11,0.3)' : 'transparent', borderColor: handRaised ? '#f59e0b' : 'rgba(255,255,255,0.2)', color: handRaised ? '#f59e0b' : '#888' }}>
+                                {handRaised ? '✋ Lower' : '✋ Raise'}
+                            </button>
                             <button onClick={disconnectFromClassroom} style={styles.leaveBtn}>
                                 Leave
                             </button>
                         </div>
                     </div>
+
+                    {/* Poll Creation Form (Instructor) */}
+                    {showPollForm && isInstructor && (
+                        <div style={{ padding: '12px 16px', background: 'rgba(99,102,241,0.1)', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>
+                            <input placeholder="Poll question..." value={pollQuestion} onChange={e => setPollQuestion(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', background: '#1a1a2e', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '8px', fontSize: '13px' }} />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '8px' }}>
+                                {pollOptions.map((opt, i) => (
+                                    <input key={i} placeholder={`Option ${i + 1}`} value={opt} onChange={e => { const o = [...pollOptions]; o[i] = e.target.value; setPollOptions(o); }} style={{ padding: '6px', borderRadius: '6px', background: '#1a1a2e', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', fontSize: '12px' }} />
+                                ))}
+                            </div>
+                            <button onClick={() => {
+                                const validOptions = pollOptions.filter(o => o.trim());
+                                if (pollQuestion.trim() && validOptions.length >= 2) {
+                                    socketRef.current?.emit('push-poll', { question: pollQuestion.trim(), options: validOptions });
+                                    setShowPollForm(false); setPollQuestion(''); setPollOptions(['', '', '', '']);
+                                }
+                            }} style={{ padding: '6px 16px', background: '#667eea', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Push Poll</button>
+                        </div>
+                    )}
+
+                    {/* Active Poll Overlay */}
+                    {activePoll && (
+                        <div style={{ padding: '12px 16px', background: 'rgba(99,102,241,0.1)', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <strong style={{ color: '#818cf8', fontSize: '14px' }}>📊 {activePoll.question}</strong>
+                                {isInstructor && <button onClick={() => socketRef.current?.emit('close-poll')} style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Close</button>}
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                {activePoll.options.map((opt, i) => (
+                                    <button key={i}
+                                        onClick={() => { if (myPollAnswer === null) { setMyPollAnswer(i); socketRef.current?.emit('submit-poll-answer', { pollId: activePoll.id, optionIndex: i }); } }}
+                                        style={{ padding: '6px 12px', borderRadius: '6px', border: myPollAnswer === i ? '2px solid #667eea' : '1px solid rgba(255,255,255,0.2)', background: myPollAnswer === i ? 'rgba(102,126,234,0.3)' : 'rgba(255,255,255,0.05)', color: '#fff', fontSize: '12px', cursor: myPollAnswer !== null ? 'default' : 'pointer' }}>
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+                            {pollResults && (
+                                <div style={{ marginTop: '10px' }}>
+                                    {pollResults.options.map((opt, i) => {
+                                        const pct = pollResults.totalVotes > 0 ? Math.round((pollResults.voteCounts[i] / pollResults.totalVotes) * 100) : 0;
+                                        return (
+                                            <div key={i} style={{ marginBottom: '4px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#ccc', marginBottom: '2px' }}>
+                                                    <span>{opt}</span><span>{pollResults.voteCounts[i]} ({pct}%)</span>
+                                                </div>
+                                                <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                                                    <div style={{ width: `${pct}%`, height: '100%', background: '#667eea', borderRadius: '3px', transition: 'width 0.3s' }} />
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    <div style={{ fontSize: '10px', color: '#888', marginTop: '4px' }}>{pollResults.totalVotes} vote(s)</div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Hand Raise Queue */}
+                    {isInstructor && handRaiseQueue.length > 0 && (
+                        <div style={{ padding: '8px 16px', background: 'rgba(245,158,11,0.1)', borderBottom: '1px solid rgba(245,158,11,0.2)', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: 'bold' }}>✋ Hands:</span>
+                            {handRaiseQueue.map((h, i) => (
+                                <span key={i} style={{ fontSize: '12px', padding: '2px 8px', background: 'rgba(245,158,11,0.2)', borderRadius: '4px', color: '#f59e0b', cursor: 'pointer' }}
+                                    onClick={() => socketRef.current?.emit('lower-hand', { userId: h.userId })} title="Click to dismiss">
+                                    {h.name} ✕
+                                </span>
+                            ))}
+                        </div>
+                    )}
 
                     <div style={styles.workspaceContainer}>
                         {/* Editor Space */}

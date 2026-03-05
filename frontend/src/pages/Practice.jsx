@@ -15,6 +15,30 @@ import CodeSnapshot from "../components/Social/CodeSnapshot";
 import ComplexityAnalyzer from "../components/Visualizer/ComplexityAnalyzer";
 import SessionRecorder from "../components/Session/SessionRecorder";
 
+// 📋 CODE TEMPLATES LIBRARY
+const CODE_TEMPLATES = {
+  python: {
+    'Binary Search': 'def binary_search(arr, target):\n    left, right = 0, len(arr) - 1\n    while left <= right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n    return -1\n\nprint(binary_search([1,3,5,7,9], 5))',
+    'Merge Sort': 'def merge_sort(arr):\n    if len(arr) <= 1:\n        return arr\n    mid = len(arr) // 2\n    left = merge_sort(arr[:mid])\n    right = merge_sort(arr[mid:])\n    return merge(left, right)\n\ndef merge(left, right):\n    result = []\n    i = j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\n\nprint(merge_sort([38, 27, 43, 3, 9, 82, 10]))',
+    'BFS Graph': 'from collections import deque\n\ndef bfs(graph, start):\n    visited = set()\n    queue = deque([start])\n    visited.add(start)\n    order = []\n    while queue:\n        node = queue.popleft()\n        order.append(node)\n        for neighbor in graph[node]:\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append(neighbor)\n    return order\n\ngraph = {0: [1,2], 1: [0,3], 2: [0,3], 3: [1,2]}\nprint(bfs(graph, 0))',
+    'Linked List': 'class Node:\n    def __init__(self, val):\n        self.val = val\n        self.next = None\n\ndef build_list(values):\n    head = Node(values[0])\n    curr = head\n    for v in values[1:]:\n        curr.next = Node(v)\n        curr = curr.next\n    return head\n\ndef print_list(head):\n    vals = []\n    while head:\n        vals.append(str(head.val))\n        head = head.next\n    print(" -> ".join(vals))\n\nhead = build_list([1, 2, 3, 4, 5])\nprint_list(head)',
+    'Stack Implementation': 'class Stack:\n    def __init__(self):\n        self.items = []\n\n    def push(self, val):\n        self.items.append(val)\n\n    def pop(self):\n        if self.is_empty():\n            return None\n        return self.items.pop()\n\n    def peek(self):\n        return self.items[-1] if self.items else None\n\n    def is_empty(self):\n        return len(self.items) == 0\n\ns = Stack()\nfor x in [10, 20, 30]:\n    s.push(x)\nprint("Top:", s.peek())\nprint("Pop:", s.pop())\nprint("Pop:", s.pop())',
+  },
+  javascript: {
+    'Binary Search': 'function binarySearch(arr, target) {\n  let left = 0, right = arr.length - 1;\n  while (left <= right) {\n    const mid = Math.floor((left + right) / 2);\n    if (arr[mid] === target) return mid;\n    else if (arr[mid] < target) left = mid + 1;\n    else right = mid - 1;\n  }\n  return -1;\n}\nconsole.log(binarySearch([1,3,5,7,9], 5));',
+    'Quick Sort': 'function quickSort(arr) {\n  if (arr.length <= 1) return arr;\n  const pivot = arr[arr.length - 1];\n  const left = arr.filter((x, i) => i < arr.length - 1 && x <= pivot);\n  const right = arr.filter((x, i) => i < arr.length - 1 && x > pivot);\n  return [...quickSort(left), pivot, ...quickSort(right)];\n}\nconsole.log(quickSort([38, 27, 43, 3, 9, 82, 10]));',
+    'DFS Traversal': 'function dfs(graph, start) {\n  const visited = new Set();\n  const order = [];\n  function visit(node) {\n    if (visited.has(node)) return;\n    visited.add(node);\n    order.push(node);\n    for (const neighbor of graph[node]) visit(neighbor);\n  }\n  visit(start);\n  return order;\n}\nconst graph = {0:[1,2], 1:[0,3], 2:[0,3], 3:[1,2]};\nconsole.log(dfs(graph, 0));',
+  },
+  cpp: {
+    'Hello World': '#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}',
+    'Fibonacci': '#include <iostream>\nusing namespace std;\n\nint fibonacci(int n) {\n    if (n <= 1) return n;\n    return fibonacci(n-1) + fibonacci(n-2);\n}\n\nint main() {\n    for (int i = 0; i < 10; i++)\n        cout << fibonacci(i) << " ";\n    cout << endl;\n    return 0;\n}',
+  },
+  java: {
+    'Hello World': 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
+    'Factorial': 'public class Main {\n    static long factorial(int n) {\n        if (n <= 1) return 1;\n        return n * factorial(n - 1);\n    }\n\n    public static void main(String[] args) {\n        for (int i = 1; i <= 10; i++) {\n            System.out.println(i + "! = " + factorial(i));\n        }\n    }\n}',
+  }
+};
+
 const Practice = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('userInfo'));
@@ -24,10 +48,23 @@ const Practice = () => {
   const defaultLang = "python";
 
   // State
-  const [language, setLanguage] = useState(defaultLang);
+  const [language, setLanguage] = useState(() => {
+    const saved = localStorage.getItem('codeviz_autosave');
+    if (saved) {
+      try { return JSON.parse(saved).language || defaultLang; } catch { /* fall through */ }
+    }
+    return defaultLang;
+  });
 
-  // Initialize Code safely
+  // Initialize Code safely — restore from auto-save if available
   const [code, setCode] = useState(() => {
+    const saved = localStorage.getItem('codeviz_autosave');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.code) return parsed.code;
+      } catch { /* fall through */ }
+    }
     if (EXAMPLES && EXAMPLES[defaultLang]) {
       const firstAlgo = Object.keys(EXAMPLES[defaultLang])[0];
       return EXAMPLES[defaultLang][firstAlgo];
@@ -49,6 +86,9 @@ const Practice = () => {
   const [sharingSnippet, setSharingSnippet] = useState(null); // Snippet being shared
   const [showSnapshot, setShowSnapshot] = useState(false); // Code snapshot modal
   const [showComplexity, setShowComplexity] = useState(false); // Complexity analyzer
+  const [executionHistory, setExecutionHistory] = useState([]); // 📜 Execution history
+  const [showTemplates, setShowTemplates] = useState(false); // 📋 Templates dropdown
+  const [showHistory, setShowHistory] = useState(false); // 📜 History dropdown
 
   // 📏 RESIZABLE SPLIT PANE STATE
   const [editorWidth, setEditorWidth] = useState(50); // percentage
@@ -65,6 +105,31 @@ const Practice = () => {
   // ⚡ PERFORMANCE: Loading state and RAF for smooth resize
   const [isExecuting, setIsExecuting] = useState(false);
   const rafRef = useRef(null);
+
+  // 💾 AUTO-SAVE: Save code + language to localStorage every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      localStorage.setItem('codeviz_autosave', JSON.stringify({
+        code, language, timestamp: Date.now()
+      }));
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [code, language]);
+
+  // 💾 Also save on unmount
+  useEffect(() => {
+    return () => {
+      localStorage.setItem('codeviz_autosave', JSON.stringify({
+        code, language, timestamp: Date.now()
+      }));
+      // Track last activity for Dashboard continue widget
+      localStorage.setItem('codeviz_last_activity', JSON.stringify({
+        type: 'practice', language, codePreview: code.slice(0, 100),
+        timestamp: Date.now()
+      }));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 🔄 SMART LANGUAGE SWITCHER
   const handleLanguageChange = (e) => {
@@ -146,7 +211,10 @@ const Practice = () => {
 
     // 📡 SERVER-SIDE VISUALIZATION (Still needed for Graph/AST)
     try {
-      const res = await axios.post("http://localhost:5001/run", { language, code });
+      const stored = JSON.parse(localStorage.getItem('userInfo'));
+      const res = await axios.post("http://localhost:5001/run", { language, code }, {
+        headers: { Authorization: `Bearer ${stored?.token}` }
+      });
 
       // 1. Handle Server-Side Errors
       if (res.data.error) {
@@ -203,6 +271,12 @@ const Practice = () => {
     } finally {
       setIsLoading(false);
       setIsExecuting(false); // Clear loading indicator
+
+      // 📜 Add to execution history (max 10)
+      setExecutionHistory(prev => [
+        { id: Date.now(), language, codePreview: code.slice(0, 80), output: output || error || 'No output', timestamp: new Date().toLocaleTimeString(), success: !error },
+        ...prev.slice(0, 9)
+      ]);
     }
   };
 
@@ -444,6 +518,50 @@ const Practice = () => {
             <option disabled>No examples available</option>
           )}
         </select>
+
+        {/* 📋 TEMPLATES DROPDOWN */}
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setShowTemplates(!showTemplates)} style={{ background: '#553c9a', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+            📋 Templates
+          </button>
+          {showTemplates && (
+            <div style={{ position: 'absolute', top: '40px', left: 0, background: '#2d2d2d', border: '1px solid #555', borderRadius: '8px', width: '220px', maxHeight: '300px', overflowY: 'auto', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+              <div style={{ padding: '8px 12px', borderBottom: '1px solid #444', color: '#aaa', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Templates — {language}</div>
+              {CODE_TEMPLATES[language] ? Object.entries(CODE_TEMPLATES[language]).map(([name, tmplCode]) => (
+                <div key={name} onClick={() => { setCode(tmplCode); setShowTemplates(false); }} style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #3a3a3a', fontSize: '13px', color: '#e0e0e0', transition: 'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#3a3a3a'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >{name}</div>
+              )) : <div style={{ padding: '10px 12px', color: '#666', fontSize: '12px' }}>No templates for {language}</div>}
+            </div>
+          )}
+        </div>
+
+        {/* 📜 EXECUTION HISTORY */}
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setShowHistory(!showHistory)} style={{ background: '#2d5a88', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+            📜 History {executionHistory.length > 0 && `(${executionHistory.length})`}
+          </button>
+          {showHistory && (
+            <div style={{ position: 'absolute', top: '40px', left: 0, background: '#2d2d2d', border: '1px solid #555', borderRadius: '8px', width: '300px', maxHeight: '350px', overflowY: 'auto', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+              <div style={{ padding: '8px 12px', borderBottom: '1px solid #444', color: '#aaa', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Execution History</div>
+              {executionHistory.length === 0 ? (
+                <div style={{ padding: '15px 12px', color: '#666', fontSize: '12px', textAlign: 'center' }}>No runs yet. Hit ▶ Run Code!</div>
+              ) : executionHistory.map(h => (
+                <div key={h.id} onClick={() => { setCode(h.codePreview.length < 80 ? h.codePreview : code); setShowHistory(false); }} style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #3a3a3a', fontSize: '12px' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#3a3a3a'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                    <span style={{ color: h.success ? '#48bb78' : '#f56565' }}>{h.success ? '✅' : '❌'} {h.language}</span>
+                    <span style={{ color: '#888' }}>{h.timestamp}</span>
+                  </div>
+                  <div style={{ color: '#aaa', fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.codePreview}…</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* MAIN CONTENT SPLIT */}

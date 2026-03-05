@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 
 /**
  * InstructorDashboard - Analytics dashboard for instructors

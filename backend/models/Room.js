@@ -131,6 +131,9 @@ const roomSchema = mongoose.Schema(
 // TTL index — auto-delete expired rooms
 roomSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+// Compound index for fast room lookups by code + active status
+roomSchema.index({ roomCode: 1, isActive: 1 });
+
 // Generate unique 6-character code
 roomSchema.statics.generateCode = async function () {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
