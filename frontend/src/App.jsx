@@ -30,6 +30,7 @@ const Translator = lazy(() => import('./pages/Translator'));
 const CampusDashboard = lazy(() => import('./pages/CampusDashboard'));
 const ClassroomDetails = lazy(() => import('./pages/ClassroomDetails'));
 const InterviewPrep = lazy(() => import('./pages/InterviewPrep'));
+const Forum = lazy(() => import('./pages/Forum'));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -96,6 +97,7 @@ const App = () => {
               <Route path="/campus" element={<ProtectedRoute><CampusDashboard /></ProtectedRoute>} />
               <Route path="/campus/:id" element={<ProtectedRoute><ClassroomDetails /></ProtectedRoute>} />
               <Route path="/interview-prep" element={<ProtectedRoute><InterviewPrep /></ProtectedRoute>} />
+              <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
             </Routes>
           </Suspense>
         </AppLayout>

@@ -1,132 +1,220 @@
 const asyncHandler = require('express-async-handler');
 const Discussion = require('../models/Discussion');
-
-// @desc    Get discussions for a lesson
-// @route   GET /api/discussions/:lessonId
-// @access  Private
-// 🧊 Import Redis Client
 const { getClient } = require('../config/redis');
 
-// @desc    Get discussions for a lesson
-// @route   GET /api/discussions/:lessonId
-// @access  Private
+/**
+ * 💬 Discussion Forum Controller
+ * Extended with forum features: categories, likes, resolve, pin, pagination
+ */
+
+// GET /api/discussions/:lessonId — List threads (paginated, filterable)
 const getDiscussions = asyncHandler(async (req, res) => {
     const { lessonId } = req.params;
+    const { category, search, sort = 'latest', page = 1, limit = 20 } = req.query;
 
-    // Support "global" feed or specific lesson
-    const query = lessonId === 'global' ? {} : { lessonId };
-
-    const redis = getClient();
-    const cacheKey = `discussions:${lessonId}`;
-
-    // 1. Check Cache
-    if (redis && redis.isOpen) {
-        try {
-            const cachedData = await redis.get(cacheKey);
-            if (cachedData) {
-                return res.json(JSON.parse(cachedData));
-            }
-        } catch (err) { console.error('Redis Get Error:', err); }
+    // Build query
+    const query = lessonId === 'global' || lessonId === 'all' ? {} : { lessonId };
+    if (category && category !== 'all') query.category = category;
+    if (search) {
+        query.$or = [
+            { title: { $regex: search, $options: 'i' } },
+            { content: { $regex: search, $options: 'i' } },
+            { tags: { $regex: search, $options: 'i' } }
+        ];
     }
 
-    // 2. Fetch from DB
-    // If global, maybe limit? For now, fetch all sorted.
-    const discussions = await Discussion.find(query)
-        .populate('userId', 'name role xp')
-        .populate('replies.userId', 'name role')
-        .sort({ createdAt: -1 });
-
-    // 3. Set Cache
-    if (redis && redis.isOpen) {
-        try {
-            await redis.setEx(cacheKey, 3600, JSON.stringify(discussions));
-        } catch (err) { console.error('Redis Set Error:', err); }
+    // Sort options
+    let sortOpt = { isPinned: -1 };
+    if (sort === 'latest') sortOpt.createdAt = -1;
+    else if (sort === 'popular') sortOpt['likes'] = -1;
+    else if (sort === 'unanswered') {
+        query.replies = { $size: 0 };
+        sortOpt.createdAt = -1;
     }
 
-    res.json(discussions);
+    const skip = (Number(page) - 1) * Number(limit);
+    const [discussions, total] = await Promise.all([
+        Discussion.find(query)
+            .populate('userId', 'name role xp')
+            .sort(sortOpt)
+            .skip(skip)
+            .limit(Number(limit)),
+        Discussion.countDocuments(query)
+    ]);
+
+    res.json({
+        threads: discussions,
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / Number(limit))
+    });
 });
 
-// @desc    Get single discussion by ID
-// @route   GET /api/discussions/thread/:id
-// @access  Private
+// GET /api/discussions/thread/:id — Get single thread with replies
 const getDiscussionById = asyncHandler(async (req, res) => {
     const discussion = await Discussion.findById(req.params.id)
         .populate('userId', 'name role xp')
         .populate('replies.userId', 'name role');
 
-    if (discussion) {
-        res.json(discussion);
-    } else {
+    if (!discussion) {
         res.status(404);
         throw new Error('Discussion not found');
     }
+
+    // Increment views
+    discussion.views = (discussion.views || 0) + 1;
+    await discussion.save();
+
+    res.json(discussion);
 });
 
-// @desc    Post a new discussion/question
-// @route   POST /api/discussions
-// @access  Private
+// POST /api/discussions — Create new thread
 const createDiscussion = asyncHandler(async (req, res) => {
-    const { lessonId, content } = req.body;
+    const { title, content, category = 'general', tags = [], lessonId = 'general' } = req.body;
 
-    if (!lessonId || !content) {
+    if (!title || !content) {
         res.status(400);
-        throw new Error('Please provide lessonId and content');
+        throw new Error('Title and content are required');
     }
 
     const discussion = await Discussion.create({
+        title,
+        content,
+        category,
+        tags: tags.slice(0, 5), // max 5 tags
         lessonId,
-        userId: req.user._id,
-        content
+        userId: req.user._id
     });
 
-    const fullDiscussion = await Discussion.findById(discussion._id).populate('userId', 'name role xp');
-
-    // 🧊 INVALIDATE CACHE
-    const redis = getClient();
-    if (redis && redis.isOpen) {
-        await redis.del(`discussions:${lessonId}`);
-    }
-
-    res.status(201).json(fullDiscussion);
+    const full = await Discussion.findById(discussion._id).populate('userId', 'name role xp');
+    res.status(201).json(full);
 });
 
-// @desc    Reply to a discussion
-// @route   POST /api/discussions/:id/reply
-// @access  Private
+// POST /api/discussions/:id/reply — Reply to thread
 const replyToDiscussion = asyncHandler(async (req, res) => {
     const { content } = req.body;
+    if (!content) {
+        res.status(400);
+        throw new Error('Reply content is required');
+    }
+
     const discussion = await Discussion.findById(req.params.id);
-
-    if (discussion) {
-        const reply = {
-            userId: req.user._id,
-            content
-        };
-
-        discussion.replies.push(reply);
-        await discussion.save();
-
-        // Return updated discussion
-        const updated = await Discussion.findById(req.params.id)
-            .populate('userId', 'name role xp')
-            .populate('replies.userId', 'name role');
-
-        // 🧊 INVALIDATE CACHE (Need lessonId)
-        const redis = getClient();
-        if (redis && redis.isOpen) {
-            await redis.del(`discussions:${discussion.lessonId}`);
-        }
-
-        res.json(updated);
-    } else {
+    if (!discussion) {
         res.status(404);
         throw new Error('Discussion not found');
     }
+
+    discussion.replies.push({ userId: req.user._id, content, likes: [] });
+    await discussion.save();
+
+    const updated = await Discussion.findById(req.params.id)
+        .populate('userId', 'name role xp')
+        .populate('replies.userId', 'name role');
+
+    res.json(updated);
+});
+
+// PUT /api/discussions/:id/like — Toggle upvote on thread
+const toggleLike = asyncHandler(async (req, res) => {
+    const discussion = await Discussion.findById(req.params.id);
+    if (!discussion) {
+        res.status(404);
+        throw new Error('Discussion not found');
+    }
+
+    const userId = req.user._id.toString();
+    const idx = discussion.likes.findIndex(id => id.toString() === userId);
+
+    if (idx >= 0) {
+        discussion.likes.splice(idx, 1); // unlike
+    } else {
+        discussion.likes.push(req.user._id); // like
+    }
+    await discussion.save();
+
+    res.json({ likes: discussion.likes.length, liked: idx < 0 });
+});
+
+// PUT /api/discussions/:id/reply/:replyIdx/like — Toggle upvote on reply
+const toggleReplyLike = asyncHandler(async (req, res) => {
+    const { replyIdx } = req.params;
+    const discussion = await Discussion.findById(req.params.id);
+    if (!discussion) {
+        res.status(404);
+        throw new Error('Discussion not found');
+    }
+
+    const reply = discussion.replies[Number(replyIdx)];
+    if (!reply) {
+        res.status(404);
+        throw new Error('Reply not found');
+    }
+
+    const userId = req.user._id.toString();
+    if (!reply.likes) reply.likes = [];
+    const idx = reply.likes.findIndex(id => id.toString() === userId);
+
+    if (idx >= 0) {
+        reply.likes.splice(idx, 1);
+    } else {
+        reply.likes.push(req.user._id);
+    }
+    await discussion.save();
+
+    res.json({ likes: reply.likes.length, liked: idx < 0 });
+});
+
+// PUT /api/discussions/:id/resolve — Mark thread as resolved
+const resolveThread = asyncHandler(async (req, res) => {
+    const discussion = await Discussion.findById(req.params.id);
+    if (!discussion) {
+        res.status(404);
+        throw new Error('Discussion not found');
+    }
+
+    // Only author or instructor/admin can resolve
+    if (discussion.userId.toString() !== req.user._id.toString() &&
+        !['instructor', 'admin'].includes(req.user.role)) {
+        res.status(403);
+        throw new Error('Not authorized to resolve this thread');
+    }
+
+    const { acceptedReplyIdx } = req.body;
+    discussion.isResolved = !discussion.isResolved;
+    if (acceptedReplyIdx !== undefined) {
+        discussion.acceptedReplyIdx = acceptedReplyIdx;
+    }
+    await discussion.save();
+
+    res.json({ isResolved: discussion.isResolved, acceptedReplyIdx: discussion.acceptedReplyIdx });
+});
+
+// PUT /api/discussions/:id/pin — Pin/unpin thread (instructor/admin only)
+const pinThread = asyncHandler(async (req, res) => {
+    if (!['instructor', 'admin'].includes(req.user.role)) {
+        res.status(403);
+        throw new Error('Only instructors and admins can pin threads');
+    }
+
+    const discussion = await Discussion.findById(req.params.id);
+    if (!discussion) {
+        res.status(404);
+        throw new Error('Discussion not found');
+    }
+
+    discussion.isPinned = !discussion.isPinned;
+    await discussion.save();
+
+    res.json({ isPinned: discussion.isPinned });
 });
 
 module.exports = {
     getDiscussions,
+    getDiscussionById,
     createDiscussion,
     replyToDiscussion,
-    getDiscussionById
+    toggleLike,
+    toggleReplyLike,
+    resolveThread,
+    pinThread
 };
