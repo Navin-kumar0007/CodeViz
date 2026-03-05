@@ -2,7 +2,10 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion as Motion } from 'framer-motion';
 
-/* ────────────────────────  HOME PAGE  ──────────────────────── */
+/* ════════════════════════════════════════════
+   HOME PAGE — CodeViz Landing Page
+   Showcases ALL platform features
+   ════════════════════════════════════════════ */
 const Home = () => {
     const navigate = useNavigate();
     const isLoggedIn = !!localStorage.getItem('userInfo');
@@ -39,7 +42,7 @@ const Home = () => {
                     </h1>
                     <p style={s.sub}>
                         The only platform that lets you <strong>watch algorithms execute step-by-step</strong>,
-                        learn with an AI tutor, and practice in 4 languages — all in one place.
+                        learn with an AI tutor, practice mock interviews, collaborate in real-time, and track your progress — all in one place.
                     </p>
                     <div style={s.langRow}>
                         {['Python', 'JavaScript', 'Java', 'C++'].map((l, i) => (
@@ -93,7 +96,7 @@ const Home = () => {
                     {[
                         { num: '01', icon: '📖', title: 'Learn the Concept', desc: 'Read visual explanations with syntax-highlighted code in your preferred language. Every topic breaks down the "why" before the "how".', color: 'var(--accent-blue)' },
                         { num: '02', icon: '🧪', title: 'Watch It Execute', desc: 'See algorithms run step-by-step with animated visualizations. Watch variables change, pointers move, and stacks grow in real-time.', color: 'var(--accent-green)' },
-                        { num: '03', icon: '🏆', title: 'Prove Your Skills', desc: 'Solve tricky quizzes, edge-case problems, and output-prediction questions. Earn XP, maintain streaks, and climb the leaderboard.', color: 'var(--accent-purple)' },
+                        { num: '03', icon: '🏆', title: 'Prove Your Skills', desc: 'Solve tricky quizzes, ace mock interviews, and track your progress. Earn XP, maintain streaks, and climb the leaderboard.', color: 'var(--accent-purple)' },
                     ].map((step, i) => (
                         <Motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }} style={s.stepCard}>
                             <div style={{ ...s.stepNum, color: step.color }}>{step.num}</div>
@@ -112,26 +115,113 @@ const Home = () => {
                 <LiveSortDemo />
             </section>
 
-            {/* ── Section 4: Features ── */}
+            {/* ── Section 4: ALL Platform Features ── */}
             <section id="features" style={{ ...s.section, background: 'var(--bg-secondary)' }}>
                 <h2 style={s.h2}>Everything You Need to Master Coding</h2>
-                <div style={s.featGrid}>
-                    {[
-                        { icon: '🔬', title: 'Live Visualization', desc: 'Watch variables, stacks, and memory change step-by-step as your code runs — not just output, the entire process.', color: 'var(--accent-blue)' },
-                        { icon: '🎓', title: 'Structured Courses', desc: 'Beginner to Advanced — carefully ordered topics with prerequisites so you never feel lost.', color: 'var(--accent-green)' },
-                        { icon: '🤖', title: 'AI Tutor', desc: 'Stuck? Ask the AI tutor anything. It adapts explanations to your level — no more generic answers.', color: 'var(--accent-yellow)' },
-                        { icon: '🎮', title: 'XP & Streaks', desc: 'Daily check-ins, XP rewards, streak tracking, and a competitive leaderboard to keep you motivated.', color: 'var(--accent-red)' },
-                        { icon: '👥', title: 'Collab Rooms', desc: 'Code together in real-time with shared editors, live cursors, and instant chat.', color: 'var(--accent-cyan)' },
-                        { icon: '🏫', title: 'Live Classrooms', desc: 'Instructors can host live sessions, assign quizzes, and track student progress with analytics.', color: 'var(--accent-purple)' },
-                    ].map((f, i) => (
-                        <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.featCard}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.boxShadow = `0 0 20px ${f.color}22`; }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                            <div style={{ fontSize: '32px', marginBottom: '12px' }}>{f.icon}</div>
-                            <h3 style={{ ...s.h3, color: f.color }}>{f.title}</h3>
-                            <p style={s.cardDesc}>{f.desc}</p>
-                        </Motion.div>
-                    ))}
+                <p style={s.sectionSub}>15+ powerful features in one platform</p>
+
+                {/* Feature Category: Learn & Practice */}
+                <div style={s.featCategory}>
+                    <h3 style={{ ...s.catTitle, color: 'var(--accent-blue)' }}>📚 Learn & Practice</h3>
+                    <div style={s.featGrid}>
+                        {[
+                            { icon: '🔬', title: 'Live Visualization', desc: 'Watch variables, stacks, and memory change step-by-step as your code runs.', color: 'var(--accent-blue)' },
+                            { icon: '🎓', title: 'Structured Courses', desc: 'Beginner to Advanced — carefully ordered topics with clear prerequisites.', color: 'var(--accent-green)' },
+                            { icon: '🗺️', title: 'Learning Roadmap', desc: 'Interactive skill tree that maps your journey from basics to interviews.', color: '#a855f7' },
+                            { icon: '✏️', title: 'Quiz Creator', desc: 'Build, share, and take custom coding quizzes with instant feedback.', color: 'var(--accent-yellow)' },
+                        ].map((f, i) => (
+                            <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.featCard}
+                                onMouseEnter={e => { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.boxShadow = `0 0 20px ${f.color}22`; }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                                <div style={{ fontSize: '28px', marginBottom: '10px' }}>{f.icon}</div>
+                                <h3 style={{ ...s.h3, color: f.color }}>{f.title}</h3>
+                                <p style={s.cardDesc}>{f.desc}</p>
+                            </Motion.div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Feature Category: Collaborate */}
+                <div style={s.featCategory}>
+                    <h3 style={{ ...s.catTitle, color: 'var(--accent-purple)' }}>🤝 Collaborate</h3>
+                    <div style={s.featGrid}>
+                        {[
+                            { icon: '👥', title: 'Collab Rooms', desc: 'Code together in real-time with shared editors, live cursors, and chat.', color: 'var(--accent-cyan)' },
+                            { icon: '🏫', title: 'Live Classrooms', desc: 'Instructors host live sessions with whiteboards, assignments, and analytics.', color: 'var(--accent-purple)' },
+                            { icon: '🎓', title: 'Campus Hub', desc: 'Manage classes, enrollments, assignments, and institutional settings.', color: 'var(--accent-orange)' },
+                            { icon: '💬', title: 'Discussion Forum', desc: 'Ask questions, share solutions, upvote answers — community learning.', color: '#f6ad55' },
+                        ].map((f, i) => (
+                            <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.featCard}
+                                onMouseEnter={e => { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.boxShadow = `0 0 20px ${f.color}22`; }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                                <div style={{ fontSize: '28px', marginBottom: '10px' }}>{f.icon}</div>
+                                <h3 style={{ ...s.h3, color: f.color }}>{f.title}</h3>
+                                <p style={s.cardDesc}>{f.desc}</p>
+                            </Motion.div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Feature Category: Dev Tools */}
+                <div style={s.featCategory}>
+                    <h3 style={{ ...s.catTitle, color: 'var(--accent-green)' }}>🛠️ AI-Powered Dev Tools</h3>
+                    <div style={s.featGrid}>
+                        {[
+                            { icon: '🤖', title: 'AI Code Review', desc: 'Get instant feedback on code quality, complexity, and best practices.', color: 'var(--accent-green)' },
+                            { icon: '🧪', title: 'Test Lab', desc: 'Test your code with custom inputs and edge cases before submitting.', color: 'var(--accent-red)' },
+                            { icon: '🌐', title: 'Code Translator', desc: 'Convert code between Python, JavaScript, Java, and C++ instantly.', color: 'var(--accent-cyan)' },
+                            { icon: '🔍', title: 'Plagiarism Detection', desc: 'Compare submissions for academic integrity with similarity scoring.', color: '#e879f9' },
+                        ].map((f, i) => (
+                            <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.featCard}
+                                onMouseEnter={e => { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.boxShadow = `0 0 20px ${f.color}22`; }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                                <div style={{ fontSize: '28px', marginBottom: '10px' }}>{f.icon}</div>
+                                <h3 style={{ ...s.h3, color: f.color }}>{f.title}</h3>
+                                <p style={s.cardDesc}>{f.desc}</p>
+                            </Motion.div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Feature Category: Career Prep */}
+                <div style={s.featCategory}>
+                    <h3 style={{ ...s.catTitle, color: 'var(--accent-yellow)' }}>🚀 Career Prep & Growth</h3>
+                    <div style={s.featGrid}>
+                        {[
+                            { icon: '🎯', title: 'Mock Interviews', desc: 'Timed interview sessions with curated DSA problems. Track your performance.', color: '#fc8181' },
+                            { icon: '🎬', title: 'Video Lessons', desc: 'Watch topic explanations with YouTube embeds alongside code editors.', color: '#9f7aea' },
+                            { icon: '📊', title: 'Progress Reports', desc: 'Weekly analytics: activity heatmap, weak areas, and recommendations.', color: '#4fd1c5' },
+                            { icon: '🎮', title: 'XP & Gamification', desc: 'Daily check-ins, XP rewards, streak tracking, and leaderboards.', color: 'var(--accent-yellow)' },
+                        ].map((f, i) => (
+                            <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.featCard}
+                                onMouseEnter={e => { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.boxShadow = `0 0 20px ${f.color}22`; }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                                <div style={{ fontSize: '28px', marginBottom: '10px' }}>{f.icon}</div>
+                                <h3 style={{ ...s.h3, color: f.color }}>{f.title}</h3>
+                                <p style={s.cardDesc}>{f.desc}</p>
+                            </Motion.div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Feature Category: Platform */}
+                <div style={s.featCategory}>
+                    <h3 style={{ ...s.catTitle, color: 'var(--accent-cyan)' }}>📱 Platform & Extras</h3>
+                    <div style={s.featGrid}>
+                        {[
+                            { icon: '📱', title: 'Mobile PWA', desc: 'Install on your phone. Review roadmaps, check leaderboards on the go.', color: '#38b2ac' },
+                            { icon: '🎥', title: 'Session Recording', desc: 'Record and replay your coding sessions to review your approach.', color: 'var(--accent-blue)' },
+                            { icon: '🤖', title: 'AI Tutor', desc: 'Stuck? Ask the AI tutor anything. It adapts explanations to your level.', color: 'var(--accent-yellow)' },
+                        ].map((f, i) => (
+                            <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.featCard}
+                                onMouseEnter={e => { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.boxShadow = `0 0 20px ${f.color}22`; }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                                <div style={{ fontSize: '28px', marginBottom: '10px' }}>{f.icon}</div>
+                                <h3 style={{ ...s.h3, color: f.color }}>{f.title}</h3>
+                                <p style={s.cardDesc}>{f.desc}</p>
+                            </Motion.div>
+                        ))}
+                    </div>
                 </div>
             </section>
 
@@ -181,12 +271,16 @@ const Home = () => {
                             {[
                                 ['Step-by-step Visualization', '✅', '❌', '❌', '❌'],
                                 ['AI Tutor', '✅', '🔒 Premium', '❌', '🔒 Premium'],
-                                ['Multi-language (4+)', '✅', '✅', '✅', '❌'],
+                                ['Mock Interview Mode', '✅', '✅', '❌', '❌'],
+                                ['Discussion Forum', '✅', '✅', '✅', '❌'],
+                                ['Video Lessons', '✅', '❌', '❌', '✅'],
+                                ['Progress Reports', '✅', '🔒 Premium', '❌', '🔒 Premium'],
                                 ['Real-time Collab Rooms', '✅', '❌', '❌', '❌'],
                                 ['Live Classrooms', '✅', '❌', '❌', '❌'],
+                                ['Plagiarism Detection', '✅', '❌', '❌', '❌'],
+                                ['Mobile PWA', '✅', '✅', '❌', '✅'],
                                 ['Gamification (XP/Streaks)', '✅', '✅', '✅', '❌'],
                                 ['Free & Open Source', '✅', '❌', '❌', '❌'],
-                                ['Tricky Edge-Case Quizzes', '✅', '❌', '❌', '❌'],
                             ].map((row, i) => (
                                 <tr key={i} style={i % 2 === 0 ? { background: 'var(--bg-surface)' } : {}}>
                                     <td style={s.td}>{row[0]}</td>
@@ -204,7 +298,7 @@ const Home = () => {
             {/* ── Section 7: Interactive Quiz Teaser ── */}
             <section style={s.section}>
                 <h2 style={s.h2}>Think You Know DSA? Try This!</h2>
-                <p style={s.sectionSub}>A taste of the tricky questions you'll find inside</p>
+                <p style={s.sectionSub}>A taste of the tricky questions you&apos;ll find inside</p>
                 <QuizTeaser />
             </section>
 
@@ -221,7 +315,7 @@ const Home = () => {
                     {[
                         { icon: '🎓', num: '10', label: 'Structured Courses', detail: 'Beginner → Advanced' },
                         { icon: '🌐', num: '4', label: 'Languages', detail: 'Python, JS, Java, C++' },
-                        { icon: '🧠', num: '240+', label: 'Quiz Questions', detail: 'Including tricky edge cases' },
+                        { icon: '🛠️', num: '15+', label: 'Platform Features', detail: 'AI Tools, Collab, Mock Interviews' },
                         { icon: '⚡', num: '∞', label: 'Practice Sessions', detail: 'Unlimited code execution' },
                     ].map((stat, i) => (
                         <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.statCard}>
@@ -242,7 +336,7 @@ const Home = () => {
                     ) : (
                         <div style={s.ctaRow}>
                             <Motion.button onClick={() => navigate('/signup')} style={{ ...s.primary, fontSize: '18px', padding: '16px 40px' }} whileHover={{ scale: 1.05 }}>
-                                🚀 Start Learning — It's Free
+                                🚀 Start Learning — It&apos;s Free
                             </Motion.button>
                             <Motion.button onClick={() => navigate('/login')} style={{ ...s.secondary, fontSize: '16px', padding: '14px 30px' }} whileHover={{ scale: 1.05 }}>
                                 Already have an account? Sign In
@@ -451,7 +545,7 @@ int binarySearch(vector<int>& arr, int target) {
     );
 };
 
-/* ───────── Styles ───────── */
+/* ═══════════ Styles ═══════════ */
 const s = {
     page: { background: 'var(--bg-primary)', color: 'var(--text-primary)', minHeight: '100vh' },
     nav: { position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 32px', background: 'rgba(30,30,46,0.85)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border-color)' },
@@ -491,8 +585,11 @@ const s = {
     stepCard: { background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '28px', textAlign: 'center', transition: 'all 0.25s' },
     stepNum: { fontFamily: 'var(--font-code)', fontSize: '36px', fontWeight: 800, opacity: 0.3, marginBottom: '4px' },
 
-    featGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' },
-    featCard: { background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '28px', transition: 'all 0.25s', cursor: 'default' },
+    /* Feature categories */
+    featCategory: { marginBottom: '36px' },
+    catTitle: { fontFamily: 'var(--font-code)', fontSize: '18px', fontWeight: 700, marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' },
+    featGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' },
+    featCard: { background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', transition: 'all 0.25s', cursor: 'default' },
     cardDesc: { fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 },
 
     barContainer: { display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '8px', height: '200px', padding: '10px 0' },

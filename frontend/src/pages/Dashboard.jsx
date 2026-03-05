@@ -262,10 +262,9 @@ const Dashboard = () => {
 const S = {
   container: {
     minHeight: '100vh',
-    padding: '24px 28px 40px',
+    padding: '24px 32px 40px',
     background: 'var(--bg-primary)',
     color: 'var(--text-primary)',
-    maxWidth: '1100px',
   },
 
   /* ── Hero ── */
