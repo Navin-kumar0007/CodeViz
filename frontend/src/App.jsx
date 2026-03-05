@@ -31,6 +31,8 @@ const CampusDashboard = lazy(() => import('./pages/CampusDashboard'));
 const ClassroomDetails = lazy(() => import('./pages/ClassroomDetails'));
 const InterviewPrep = lazy(() => import('./pages/InterviewPrep'));
 const Forum = lazy(() => import('./pages/Forum'));
+const VideoLessons = lazy(() => import('./pages/VideoLessons'));
+const ProgressReports = lazy(() => import('./pages/ProgressReports'));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -98,6 +100,8 @@ const App = () => {
               <Route path="/campus/:id" element={<ProtectedRoute><ClassroomDetails /></ProtectedRoute>} />
               <Route path="/interview-prep" element={<ProtectedRoute><InterviewPrep /></ProtectedRoute>} />
               <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
+              <Route path="/video-lessons" element={<ProtectedRoute><VideoLessons /></ProtectedRoute>} />
+              <Route path="/progress" element={<ProtectedRoute><ProgressReports /></ProtectedRoute>} />
             </Routes>
           </Suspense>
         </AppLayout>

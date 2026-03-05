@@ -16,6 +16,8 @@ const navItems = [
     { path: '/campus', icon: '🏫', label: 'Campus', shortcut: 'U' },
     { path: '/interview-prep', icon: '🎯', label: 'Interview', shortcut: 'I' },
     { path: '/forum', icon: '💬', label: 'Forum', shortcut: 'F' },
+    { path: '/video-lessons', icon: '🎬', label: 'Videos', shortcut: 'W' },
+    { path: '/progress', icon: '📊', label: 'Reports', shortcut: 'G' },
 ];
 
 const bottomItems = [
