@@ -24,6 +24,7 @@ const dailyChallengeRoutes = require('./routes/dailyChallengeRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const campusRoutes = require('./routes/campusRoutes');
 const interviewRoutes = require('./routes/interviewRoutes');
+const plagiarismRoutes = require('./routes/plagiarismRoutes');
 
 // Socket handlers
 const setupClassroomSocket = require('./socket/classroomSocket');
@@ -129,6 +130,7 @@ app.use('/api/challenges', dailyChallengeRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/campus', campusRoutes);
 app.use('/api/interview', interviewRoutes);
+app.use('/api/plagiarism', plagiarismRoutes);
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)
 
