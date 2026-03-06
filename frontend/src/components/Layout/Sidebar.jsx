@@ -12,6 +12,7 @@ const navGroups = [
         items: [
             { path: '/', icon: '⌂', label: 'Dashboard' },
             { path: '/practice', icon: '⟩_', label: 'Practice' },
+            { path: '/problems', icon: '📋', label: 'Problems' },
             { path: '/learn', icon: '📖', label: 'Learn' },
             { path: '/roadmap', icon: '🗺️', label: 'Roadmap' },
         ]
