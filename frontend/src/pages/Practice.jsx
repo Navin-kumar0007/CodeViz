@@ -14,6 +14,7 @@ import ShareModal from "../components/Social/ShareModal";
 import CodeSnapshot from "../components/Social/CodeSnapshot";
 import ComplexityAnalyzer from "../components/Visualizer/ComplexityAnalyzer";
 import SessionRecorder from "../components/Session/SessionRecorder";
+import Terminal from "../components/Terminal/Terminal";
 
 // 📋 CODE TEMPLATES LIBRARY
 const CODE_TEMPLATES = {
@@ -658,6 +659,15 @@ const Practice = () => {
             >
               💻 Console Output
             </button>
+            <button
+              onClick={() => setActiveTab('terminal')}
+              style={{
+                flex: 1, padding: '10px', background: activeTab === 'terminal' ? '#1e1e1e' : 'transparent',
+                color: activeTab === 'terminal' ? '#fff' : '#aaa', border: 'none', cursor: 'pointer', borderTop: activeTab === 'terminal' ? '2px solid #007acc' : 'none'
+              }}
+            >
+              🖥️ Terminal
+            </button>
           </div>
 
           <div style={{ flex: 1, padding: '10px', overflow: 'auto' }}>
@@ -707,6 +717,16 @@ const Practice = () => {
                   </>
                 ) : (output || "No output generated.")}
               </div>
+            )}
+
+            {/* TERMINAL TAB */}
+            {activeTab === 'terminal' && (
+              <Terminal
+                language={language}
+                code={code}
+                height="100%"
+                style={{ border: 'none', borderRadius: 0 }}
+              />
             )}
 
           </div>
