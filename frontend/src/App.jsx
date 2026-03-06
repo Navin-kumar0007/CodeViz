@@ -35,6 +35,7 @@ const VideoLessons = lazy(() => import('./pages/VideoLessons'));
 const ProgressReports = lazy(() => import('./pages/ProgressReports'));
 const ProblemList = lazy(() => import('./pages/ProblemList'));
 const ProblemSolve = lazy(() => import('./pages/ProblemSolve'));
+const GitLearn = lazy(() => import('./pages/GitLearn'));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -129,6 +130,7 @@ const App = () => {
               <Route path="/progress" element={<ProtectedRoute><ProgressReports /></ProtectedRoute>} />
               <Route path="/problems" element={<ProtectedRoute><ProblemList /></ProtectedRoute>} />
               <Route path="/problems/:slug" element={<ProtectedRoute><ProblemSolve /></ProtectedRoute>} />
+              <Route path="/git-learn" element={<ProtectedRoute><GitLearn /></ProtectedRoute>} />
             </Routes>
           </Suspense>
         </AppLayout>

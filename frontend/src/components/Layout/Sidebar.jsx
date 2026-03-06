@@ -15,6 +15,7 @@ const navGroups = [
             { path: '/problems', icon: '📋', label: 'Problems' },
             { path: '/learn', icon: '📖', label: 'Learn' },
             { path: '/roadmap', icon: '🗺️', label: 'Roadmap' },
+            { path: '/git-learn', icon: '🐙', label: 'Git Learn' },
         ]
     },
     {
