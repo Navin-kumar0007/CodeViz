@@ -120,7 +120,7 @@ const TestLab = () => {
                     <p style={styles.subtitle}>Write a function → AI generates edge cases + tests → Validate correctness</p>
                 </div>
                 <div style={styles.langSelect}>
-                    {['python', 'javascript', 'java', 'cpp'].map(l => (
+                    {['python', 'javascript', 'java', 'cpp', 'typescript', 'go', 'c'].map(l => (
                         <button key={l} onClick={() => setLanguage(l)} style={{
                             ...styles.langBtn,
                             ...(language === l ? styles.langActive : {})

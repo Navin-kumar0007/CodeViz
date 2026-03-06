@@ -45,7 +45,7 @@ const Home = () => {
                         learn with an AI tutor, practice mock interviews, collaborate in real-time, and track your progress — all in one place.
                     </p>
                     <div style={s.langRow}>
-                        {['Python', 'JavaScript', 'Java', 'C++'].map((l, i) => (
+                        {['Python', 'JavaScript', 'Java', 'C++', 'TypeScript', 'Go', 'C'].map((l, i) => (
                             <Motion.span key={l} initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 + i * 0.1 }} style={s.pill}>{l}</Motion.span>
                         ))}
                     </div>
@@ -532,7 +532,7 @@ int binarySearch(vector<int>& arr, int target) {
     return -1;
 }`
     };
-    const labels = { python: 'Python', javascript: 'JavaScript', java: 'Java', cpp: 'C++' };
+    const labels = { python: 'Python', javascript: 'JavaScript', java: 'Java', cpp: 'C++', typescript: 'TypeScript', go: 'Go', c: 'C' };
     return (
         <div style={s.codeWin2}>
             <div style={s.langTabs}>

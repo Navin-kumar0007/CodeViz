@@ -506,6 +506,9 @@ const Practice = () => {
           <option value="javascript">JavaScript</option>
           <option value="cpp">C++</option>
           <option value="java">Java</option>
+          <option value="typescript">TypeScript</option>
+          <option value="go">Go</option>
+          <option value="c">C</option>
         </select>
 
         <select onChange={handleAlgoChange} style={{ padding: '8px', borderRadius: '4px', background: '#333', color: 'white', border: '1px solid #555', minWidth: '200px' }}>

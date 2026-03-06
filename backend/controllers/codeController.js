@@ -74,6 +74,30 @@ const executeCode = (req, res) => {
             command = `javac "${tempFile}" && java -cp "${javaDir}" Main`;
             break;
 
+        case 'typescript':
+            tempFile = path.join(tempDir, `temp_${timestamp}.ts`);
+            fs.writeFileSync(tempFile, code);
+            command = `npx ts-node "${tempFile}"`;
+            break;
+
+        case 'go':
+            tempFile = path.join(tempDir, `temp_${timestamp}.go`);
+            fs.writeFileSync(tempFile, code);
+            command = `go run "${tempFile}"`;
+            break;
+
+        case 'c': {
+            let cCode = code;
+            if (!/main\s*\(/.test(code)) {
+                cCode = `#include <stdio.h>\nint main() {\n${code}\nreturn 0;\n}`;
+            }
+            tempFile = path.join(tempDir, `temp_${timestamp}.c`);
+            const cOutFile = path.join(tempDir, `temp_${timestamp}_c.out`);
+            fs.writeFileSync(tempFile, cCode);
+            command = `gcc "${tempFile}" -o "${cOutFile}" && "${cOutFile}"`;
+            break;
+        }
+
         default:
             return res.status(400).json({ error: `Language '${language}' is not supported yet` });
     }
@@ -87,6 +111,10 @@ const executeCode = (req, res) => {
             if (language === 'cpp') {
                 const outFile = path.join(tempDir, `temp_${timestamp}.out`);
                 if (fs.existsSync(outFile)) fs.unlinkSync(outFile);
+            }
+            if (language === 'c') {
+                const cOutFile = path.join(tempDir, `temp_${timestamp}_c.out`);
+                if (fs.existsSync(cOutFile)) fs.unlinkSync(cOutFile);
             }
             if (language === 'java') {
                 const javaDir = path.join(tempDir, `java_${timestamp}`);

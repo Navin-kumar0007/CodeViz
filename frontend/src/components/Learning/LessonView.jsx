@@ -13,14 +13,20 @@ const LANGUAGE_ICONS = {
     python: '🐍',
     javascript: '📜',
     java: '☕',
-    cpp: '⚙️'
+    cpp: '⚙️',
+    typescript: '📘',
+    go: '🔵',
+    c: '🔷'
 };
 
 const LANGUAGE_MAP = {
     python: 'python',
     javascript: 'javascript',
     java: 'java',
-    cpp: 'cpp'
+    cpp: 'cpp',
+    typescript: 'typescript',
+    go: 'go',
+    c: 'c'
 };
 
 const LessonView = ({ lesson, onBack, onComplete }) => {

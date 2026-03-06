@@ -9,6 +9,9 @@ const LANGUAGES = [
     { id: 'javascript', label: 'JavaScript', icon: '⚡' },
     { id: 'java', label: 'Java', icon: '☕' },
     { id: 'cpp', label: 'C++', icon: '⚙️' },
+    { id: 'typescript', label: 'TypeScript', icon: '📘' },
+    { id: 'go', label: 'Go', icon: '🔵' },
+    { id: 'c', label: 'C', icon: '🔷' },
 ];
 
 const Translator = () => {

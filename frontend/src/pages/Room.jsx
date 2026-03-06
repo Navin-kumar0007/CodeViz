@@ -307,7 +307,10 @@ const Room = () => {
         { value: 'python', label: '🐍 Python' },
         { value: 'javascript', label: '⚡ JavaScript' },
         { value: 'java', label: '☕ Java' },
-        { value: 'cpp', label: '⚙️ C++' }
+        { value: 'cpp', label: '⚙️ C++' },
+        { value: 'typescript', label: '📘 TypeScript' },
+        { value: 'go', label: '🔵 Go' },
+        { value: 'c', label: '🔷 C' }
     ];
 
     const COLORS = ['#667eea', '#f093fb', '#4fd1c5', '#f6ad55', '#fc8181', '#9f7aea', '#68d391', '#63b3ed', '#fbb6ce', '#b794f4'];

@@ -85,7 +85,7 @@ print(result)`);
                     <p style={styles.subtitle}>Get scored code reviews with line-by-line annotations on a 0-100 rubric</p>
                 </div>
                 <div style={styles.langSelect}>
-                    {['python', 'javascript', 'java', 'cpp'].map(l => (
+                    {['python', 'javascript', 'java', 'cpp', 'typescript', 'go', 'c'].map(l => (
                         <button key={l} onClick={() => setLanguage(l)} style={{
                             ...styles.langBtn,
                             ...(language === l ? styles.langActive : {})

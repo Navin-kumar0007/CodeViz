@@ -152,6 +152,9 @@ const ClassroomDetails = () => {
                                     <option value="javascript">JavaScript</option>
                                     <option value="cpp">C++</option>
                                     <option value="java">Java</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="go">Go</option>
+                                    <option value="c">C</option>
                                 </select>
                                 <input style={styles.input} type="number" placeholder="Max Points" value={maxPoints} onChange={e => setMaxPoints(e.target.value)} required />
                             </div>
