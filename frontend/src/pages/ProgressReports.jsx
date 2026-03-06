@@ -76,7 +76,7 @@ const ProgressReports = () => {
                         <div style={{ color: '#888', fontSize: '11px' }}>Avg Score</div>
                     </div>
                     <div style={S.statCard}>
-                        <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f6ad55' }}>🔥 {w.user.streak}</div>
+                        <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f6ad55' }}>🔥 {typeof w.user.streak === 'object' ? w.user.streak?.current ?? 0 : w.user.streak}</div>
                         <div style={{ color: '#888', fontSize: '11px' }}>Day Streak</div>
                     </div>
                     <div style={S.statCard}>

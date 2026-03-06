@@ -163,7 +163,7 @@ const Dashboard = () => {
                 <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-bright)', marginBottom: '4px' }}>Learning Path</div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Continue your DSA journey</div>
               </div>
-              <div onClick={() => navigate('/challenge')} style={S.continueCard}>
+              <div onClick={() => navigate('/daily-challenge')} style={S.continueCard}>
                 <div style={{ fontSize: '20px', marginBottom: '6px' }}>🏆</div>
                 <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-bright)', marginBottom: '4px' }}>Daily Challenge</div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Today&apos;s challenge awaits</div>
