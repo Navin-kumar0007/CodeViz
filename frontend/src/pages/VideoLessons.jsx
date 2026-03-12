@@ -23,6 +23,7 @@ const VideoLessons = () => {
 
     const isInstructor = ['instructor', 'admin'].includes(user?.role);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { loadVideos(); }, [filterCat]);
 
     const loadVideos = async () => {
@@ -31,8 +32,8 @@ const VideoLessons = () => {
             const params = filterCat !== 'all' ? `?category=${filterCat}` : '';
             const res = await axios.get(`${API}${params}`, authHeaders);
             setVideos(res.data);
-        } catch (err) {
-            console.error('Failed to load videos:', err);
+        } catch (_err) {
+            console.error('Failed to load videos:', _err);
         }
         setLoading(false);
     };

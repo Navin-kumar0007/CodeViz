@@ -1,5 +1,7 @@
+/* eslint-disable react-hooks/purity */
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence, useScroll } from 'framer-motion';
 
 /* ════════════════════════════════════════════

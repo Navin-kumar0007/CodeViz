@@ -9,6 +9,10 @@ import { motion } from 'framer-motion';
 
 const GlobalBackground = () => {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const particles = React.useMemo(() => [...Array(12)].map(() => ({
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`
+    })), []);
 
     useEffect(() => {
         const handleMouseMove = (e) => setMousePos({ x: e.clientX, y: e.clientY });
@@ -28,10 +32,10 @@ const GlobalBackground = () => {
             }} />
 
             {/* 2. Floating Cybernetic Particles */}
-            {[...Array(12)].map((_, i) => (
+            {particles.map((p, i) => (
                 <motion.div key={i} animate={{ y: [0, -40, 0], rotate: [0, 15, 0], opacity: [0.03, 0.1, 0.03] }}
                     transition={{ duration: 8 + i, repeat: Infinity, ease: 'linear' }}
-                    style={{ position: 'absolute', top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, fontSize: '18px', color: '#fff', pointerEvents: 'none' }}
+                    style={{ position: 'absolute', top: p.top, left: p.left, fontSize: '18px', color: '#fff', pointerEvents: 'none' }}
                 >
                     {['=>', '{ }', '[ ]', '++', '===', 'async', 'ptr'][i % 7]}
                 </motion.div>

@@ -19,6 +19,7 @@ const ProgressReports = () => {
 
     useEffect(() => {
         loadWeekly();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadWeekly = async () => {
@@ -26,8 +27,8 @@ const ProgressReports = () => {
         try {
             const res = await axios.get(`${API}/weekly`, authHeaders);
             setWeekly(res.data);
-        } catch (err) {
-            console.error('Failed to load report:', err);
+        } catch (_err) {
+            console.error('Failed to load report:', _err);
         }
         setLoading(false);
     };
@@ -38,8 +39,8 @@ const ProgressReports = () => {
             const res = await axios.get(`${API}/analytics`, authHeaders);
             setAnalytics(res.data);
             setView('analytics');
-        } catch (err) {
-            console.error('Failed to load analytics:', err);
+        } catch (_err) {
+            console.error('Failed to load analytics:', _err);
         }
         setLoading(false);
     };

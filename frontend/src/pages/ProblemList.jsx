@@ -39,12 +39,12 @@ const ProblemList = () => {
                     setTotal(data.total);
                     setCategories(data.categories || []);
                 }
-            } catch (_err) { /* ignore */ }
+            } catch { /* ignore */ }
 
             try {
                 const { data } = await axios.get(`${API}/submissions/stats`, { headers });
                 if (!cancelled) setStats(data);
-            } catch (_err) { /* ignore */ }
+            } catch { /* ignore */ }
 
             if (!cancelled) setLoading(false);
         };

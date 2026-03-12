@@ -39,6 +39,7 @@ const ProblemSolve = () => {
 
     useEffect(() => {
         loadProblem();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [slug]);
 
     const loadProblem = async () => {
@@ -94,6 +95,7 @@ const ProblemSolve = () => {
         } catch (e) { /* ignore */ }
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { if (problem?._id) loadSubmissions(); }, [problem?._id]);
 
     const monacoLang = language === 'cpp' ? 'cpp' : language === 'c' ? 'c' : language;

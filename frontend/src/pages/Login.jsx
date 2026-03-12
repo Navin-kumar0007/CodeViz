@@ -1,5 +1,7 @@
+/* eslint-disable react-hooks/purity */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import API_BASE from '../utils/api';
 

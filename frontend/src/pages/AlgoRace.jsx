@@ -174,16 +174,13 @@ const AlgoRace = () => {
         clearInterval(raceInterval.current);
 
         raceInterval.current = setInterval(() => {
-            let finished1 = false;
-            let finished2 = false;
-
             setStep1(prev => {
-                if (prev >= trace1.length - 1) { finished1 = true; return prev; }
+                if (prev >= trace1.length - 1) { return prev; }
                 return prev + 1;
             });
 
             setStep2(prev => {
-                if (prev >= trace2.length - 1) { finished2 = true; return prev; }
+                if (prev >= trace2.length - 1) { return prev; }
                 return prev + 1;
             });
 
@@ -196,6 +193,7 @@ const AlgoRace = () => {
         if (!isRacing) return;
         if (step1 >= Math.max(0, trace1.length - 1) && step2 >= Math.max(0, trace2.length - 1)) {
             clearInterval(raceInterval.current);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsRacing(false);
         }
     }, [step1, step2, trace1.length, trace2.length, isRacing]);

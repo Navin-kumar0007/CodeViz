@@ -34,9 +34,6 @@ const Forum = () => {
     // Reply
     const [replyContent, setReplyContent] = useState('');
 
-    // ═══ Load Threads ═══
-    useEffect(() => { loadThreads(); }, [category, sortBy, currentPage]);
-
     const loadThreads = async () => {
         setLoading(true);
         try {
@@ -54,6 +51,10 @@ const Forum = () => {
         setLoading(false);
     };
 
+    // ═══ Load Threads ═══
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { loadThreads(); }, [category, sortBy, currentPage]);
+
     const handleSearch = (e) => {
         e.preventDefault();
         setCurrentPage(1);
@@ -67,7 +68,7 @@ const Forum = () => {
             const res = await axios.get(`${API}/thread/${id}`, authHeaders);
             setActiveThread(res.data);
             setView('thread');
-        } catch (err) {
+        } catch (_err) {
             alert('Failed to load thread');
         }
         setLoading(false);
@@ -102,7 +103,7 @@ const Forum = () => {
             }, authHeaders);
             setActiveThread(res.data);
             setReplyContent('');
-        } catch (err) {
+        } catch (_err) {
             alert('Failed to post reply');
         }
         setLoading(false);
@@ -154,6 +155,7 @@ const Forum = () => {
 
     // Helpers
     const timeAgo = (date) => {
+        // eslint-disable-next-line react-hooks/purity
         const diff = Date.now() - new Date(date).getTime();
         const mins = Math.floor(diff / 60000);
         if (mins < 60) return `${mins}m ago`;

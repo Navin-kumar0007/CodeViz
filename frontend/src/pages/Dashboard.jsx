@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { useMotionValue, useTransform } from 'framer-motion';
 import StreakCounter from '../components/Gamification/StreakCounter';
 import XPBar from '../components/Gamification/XPBar';
 import DailyChallengeWidget from '../components/Gamification/DailyChallengeWidget';
