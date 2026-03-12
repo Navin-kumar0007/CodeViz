@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Warning: no test specified\" && exit 0"
+    "test": "jest --forceExit --detectOpenHandles"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +24,7 @@
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
+    "lru-cache": "^11.2.6",
     "mongoose": "^9.1.2",
     "morgan": "^1.10.1",
     "nodemon": "^3.1.11",
@@ -31,5 +32,9 @@
     "socket.io": "^4.8.3",
     "walk": "^2.3.15",
     "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "supertest": "^7.2.2"
   }
 }

@@ -6,43 +6,51 @@
 
 /* ── CSS Variables (Design Tokens) ── */
 :root {
-  /* Backgrounds */
-  --bg-primary: #1E1E2E;
-  --bg-secondary: #181825;
-  --bg-surface: #252540;
-  --bg-hover: #2A2A45;
-  --bg-elevated: #313150;
+  /* Deep Space Backgrounds */
+  --bg-primary: #050508;
+  --bg-secondary: rgba(10, 10, 15, 0.4);
+  --bg-surface: rgba(10, 10, 15, 0.3);
+  --bg-hover: rgba(13, 242, 242, 0.05);
+  --bg-elevated: rgba(20, 20, 30, 0.6);
 
-  /* Syntax-inspired accent colors */
-  --accent-blue: #61DAFB;
-  --accent-green: #98C379;
-  --accent-red: #E06C75;
-  --accent-purple: #C678DD;
-  --accent-yellow: #E5C07B;
-  --accent-orange: #D19A66;
-  --accent-cyan: #56B6C2;
+  /* Neon Accent Palette */
+  --accent-blue: #0df2f2;   /* Neon Cyan */
+  --accent-green: #00ffaa;  /* Cyber Green */
+  --accent-red: #ff3366;    /* Neon Pink/Red */
+  --accent-purple: #a45afe; /* Vibrant Violet */
+  --accent-yellow: #fce205; /* High-vis Yellow */
+  --accent-orange: #ff7b00; /* Blaze Orange */
+  --accent-cyan: #0df2f2;   /* Bright Cyan (alias) */
 
   /* Text */
-  --text-primary: #CDD6F4;
-  --text-secondary: #A6ADC8;
-  --text-muted: #6C7086;
+  --text-primary: #e0e5ff;
+  --text-secondary: #8890b5;
+  --text-muted: #4a5070;
   --text-bright: #FFFFFF;
 
   /* Borders */
-  --border-color: #313150;
-  --border-active: #61DAFB;
+  --border-color: rgba(255, 255, 255, 0.05);
+  --border-active: rgba(13, 242, 242, 0.3);
+
+  /* Glassmorphism */
+  --glass-blur: blur(50px);
+  --glass-bg: rgba(10, 10, 15, 0.3);
+  --glow-cyan: 0 0 40px rgba(13, 242, 242, 0.3);
+  --glow-purple: 0 0 40px rgba(164, 90, 254, 0.3);
+  --card-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 
   /* Fonts */
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-code: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
   /* Layout */
-  --sidebar-width: 60px;
+  --sidebar-width: 70px;
   --statusbar-height: 28px;
 
   /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 500ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ── Reset & Base ── */
@@ -132,9 +140,9 @@ code, pre, .mono {
 }
 
 /* ── Utility: Glow effects ── */
-.glow-blue { text-shadow: 0 0 10px rgba(97, 218, 251, 0.5); }
-.glow-green { text-shadow: 0 0 10px rgba(152, 195, 121, 0.5); }
-.glow-purple { text-shadow: 0 0 10px rgba(198, 120, 221, 0.5); }
+.glow-blue { text-shadow: 0 0 15px rgba(13, 242, 242, 0.5); }
+.glow-green { text-shadow: 0 0 15px rgba(0, 255, 170, 0.5); }
+.glow-purple { text-shadow: 0 0 15px rgba(164, 90, 254, 0.5); }
 
 /* ── Mobile Responsive ── */
 @media (max-width: 768px) {

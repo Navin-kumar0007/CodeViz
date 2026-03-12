@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import SessionPlayer from '../components/Session/SessionPlayer';
 import SessionRecorder from '../components/Session/SessionRecorder';
+import API_BASE from '../utils/api';
 
-const API = 'http://localhost:5001';
+const API = API_BASE;
 
 const Sessions = () => {
     const [sessions, setSessions] = useState([]);

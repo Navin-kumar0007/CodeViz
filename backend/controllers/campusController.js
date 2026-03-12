@@ -103,7 +103,7 @@ const getClassroomById = asyncHandler(async (req, res) => {
 // @route   POST /api/campus/classrooms/:id/assignments
 // @access  Private (Instructor only)
 const createAssignment = asyncHandler(async (req, res) => {
-    const { title, description, starterCode, language, dueDate, maxPoints, isPublished } = req.body;
+    const { title, description, starterCode, expectedOutput, language, dueDate, maxPoints, isPublished } = req.body;
 
     const classroom = await Classroom.findById(req.params.id);
 
@@ -122,6 +122,7 @@ const createAssignment = asyncHandler(async (req, res) => {
         title,
         description,
         starterCode,
+        expectedOutput,
         language,
         dueDate,
         maxPoints,

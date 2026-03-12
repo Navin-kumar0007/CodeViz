@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
+import API_BASE from '../../utils/api';
 import '@xterm/xterm/css/xterm.css';
 
 /**
@@ -113,7 +114,7 @@ const Terminal = ({ language = 'python', code = '', onRun, height = '250px', sty
                 } else {
                     // Direct execution via backend
                     try {
-                        const res = await fetch('http://localhost:5001/run', {
+                        const res = await fetch(`${API_BASE}/run`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

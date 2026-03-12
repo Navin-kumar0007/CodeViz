@@ -1,0 +1,34 @@
+# CodeViz Secure Code Runner
+# A minimal, hardened image for executing user-submitted code in multiple languages.
+
+FROM alpine:3.19
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    python3 \
+    nodejs \
+    npm \
+    g++ \
+    openjdk17-jre \
+    gcc \
+    bash
+
+# Install JavaScript tracer dependencies globally
+RUN npm install -g acorn astring
+
+# Set NODE_PATH to ensure global modules are found without a local node_modules
+ENV NODE_PATH=/usr/local/lib/node_modules
+
+# Create a non-privileged user
+RUN addgroup -S runner && adduser -S runner -G runner
+
+# Set up working directory
+WORKDIR /home/runner/code
+
+# Ensure the runner user owns the directory
+RUN chown -R runner:runner /home/runner/code
+
+USER runner
+
+# Use a generic entrance or just wait for command
+CMD ["bash"]

@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import debounce from 'lodash/debounce';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
 import Whiteboard from '../components/Whiteboard';
+import API_BASE from '../utils/api';
 
 /**
  * Classroom - Join or create live classroom sessions with instructors
@@ -84,7 +85,7 @@ const Classroom = () => {
 
     const fetchPublicClassrooms = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/classrooms');
+            const res = await fetch(`${API_BASE}/api/classrooms`);
             if (res.ok) {
                 const data = await res.json();
                 setClassrooms(data);
@@ -96,7 +97,7 @@ const Classroom = () => {
 
     const fetchMyClassrooms = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/classrooms/my', {
+            const res = await fetch(`${API_BASE}/api/classrooms/my`, {
                 headers: {
                     'Authorization': `Bearer ${user.token}`
                 }
@@ -118,7 +119,7 @@ const Classroom = () => {
         }
 
         // Connect to socket
-        const socket = io('http://localhost:5001/classroom', {
+        const socket = io(`${API_BASE}/classroom`, {
             auth: { token: user.token }
         });
 
@@ -271,7 +272,7 @@ const Classroom = () => {
         setLoading(true);
 
         try {
-            const res = await fetch('http://localhost:5001/api/classrooms/join', {
+            const res = await fetch(`${API_BASE}/api/classrooms/join`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -326,7 +327,7 @@ const Classroom = () => {
         setLoading(true);
 
         try {
-            const res = await fetch('http://localhost:5001/api/classrooms', {
+            const res = await fetch(`${API_BASE}/api/classrooms`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -360,7 +361,7 @@ const Classroom = () => {
         if (!window.confirm('Are you sure you want to delete this classroom?')) return;
 
         try {
-            const res = await fetch(`http://localhost:5001/api/classrooms/${classroomId}`, {
+            const res = await fetch(`${API_BASE}/api/classrooms/${classroomId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${user.token}`

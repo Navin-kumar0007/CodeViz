@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 
-const API = 'http://localhost:5001';
+const API = API_BASE;
 
 const LANGUAGES = [
     { id: 'python', label: 'Python', icon: '🐍' },

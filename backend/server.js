@@ -28,6 +28,8 @@ const plagiarismRoutes = require('./routes/plagiarismRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const problemRoutes = require('./routes/problemRoutes');
+const peerReviewRoutes = require('./routes/peerReviewRoutes');
+const autograderRoutes = require('./routes/autograderRoutes');
 
 // Socket handlers
 const setupClassroomSocket = require('./socket/classroomSocket');
@@ -137,6 +139,8 @@ app.use('/api/plagiarism', plagiarismRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/problems', problemRoutes);
+app.use('/api/peer-reviews', peerReviewRoutes);
+app.use('/api/autograder', autograderRoutes);
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import API_BASE from '../utils/api';
 
 /**
  * AdminPanel - User and role management dashboard
@@ -38,7 +39,7 @@ const AdminPanel = () => {
 
     const fetchStats = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/admin/stats', {
+            const res = await fetch(`${API_BASE}/api/admin/stats`, {
                 headers: { 'Authorization': `Bearer ${user.token}` }
             });
             if (res.ok) {
@@ -58,7 +59,7 @@ const AdminPanel = () => {
             params.append('page', pagination.page);
             params.append('limit', pagination.limit);
 
-            const res = await fetch(`http://localhost:5001/api/admin/users?${params}`, {
+            const res = await fetch(`${API_BASE}/api/admin/users?${params}`, {
                 headers: { 'Authorization': `Bearer ${user.token}` }
             });
             if (res.ok) {
@@ -108,7 +109,7 @@ const AdminPanel = () => {
         if (!roleModal) return;
 
         try {
-            const res = await fetch(`http://localhost:5001/api/admin/users/${roleModal.userId}/role`, {
+            const res = await fetch(`${API_BASE}/api/admin/users/${roleModal.userId}/role`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ const AdminPanel = () => {
 
     const toggleUserStatus = async (userId, currentStatus) => {
         try {
-            const res = await fetch(`http://localhost:5001/api/admin/users/${userId}/status`, {
+            const res = await fetch(`${API_BASE}/api/admin/users/${userId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -163,7 +164,7 @@ const AdminPanel = () => {
 
     const deleteUser = async (userId) => {
         try {
-            const res = await fetch(`http://localhost:5001/api/admin/users/${userId}`, {
+            const res = await fetch(`${API_BASE}/api/admin/users/${userId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${user.token}` }
             });

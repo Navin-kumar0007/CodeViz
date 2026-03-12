@@ -13,6 +13,13 @@ import { RECURSION_PATH } from './recursion';
 import { HASHMAPS_PATH } from './hashmaps';
 import { QUEUES_PATH } from './queues';
 import { STRINGS_PATH } from './strings';
+import { TREES_PATH } from './trees';
+import { GRAPHS_PATH } from './graphs';
+import { DP_PATH } from './dp';
+import { HEAPS_PATH } from './heaps';
+import { TRIES_PATH } from './tries';
+import { TWOPOINTERS_PATH } from './twopointers';
+import { BACKTRACKING_PATH } from './backtracking';
 
 // All available courses (ordered by difficulty / dependency)
 export const COURSES = [
@@ -25,7 +32,14 @@ export const COURSES = [
     HASHMAPS_PATH,
     STACKS_PATH,
     LINKEDLISTS_PATH,
-    QUEUES_PATH
+    QUEUES_PATH,
+    TREES_PATH,
+    GRAPHS_PATH,
+    HEAPS_PATH,
+    TRIES_PATH,
+    TWOPOINTERS_PATH,
+    BACKTRACKING_PATH,
+    DP_PATH
 ];
 
 // Calculate progress for a specific path

@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Layout/Sidebar';
 import StatusBar from './components/Layout/StatusBar';
 import OfflineBanner from './components/Network/OfflineBanner';
@@ -23,6 +24,7 @@ const InstructorDashboard = lazy(() => import('./pages/InstructorDashboard'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const DailyChallenge = lazy(() => import('./pages/DailyChallenge'));
 const Roadmap = lazy(() => import('./pages/Roadmap'));
+const ConceptMap = lazy(() => import('./pages/ConceptMap'));
 const Sessions = lazy(() => import('./pages/Sessions'));
 const CodeReview = lazy(() => import('./pages/CodeReview'));
 const TestLab = lazy(() => import('./pages/TestLab'));
@@ -36,12 +38,16 @@ const ProgressReports = lazy(() => import('./pages/ProgressReports'));
 const ProblemList = lazy(() => import('./pages/ProblemList'));
 const ProblemSolve = lazy(() => import('./pages/ProblemSolve'));
 const GitLearn = lazy(() => import('./pages/GitLearn'));
+const AlgoRace = lazy(() => import('./pages/AlgoRace'));
+const PeerReview = lazy(() => import('./pages/PeerReview'));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const user = localStorage.getItem('userInfo');
   return user ? children : <Navigate to="/login" />;
 };
+
+import GlobalBackground from './components/Layout/GlobalBackground';
 
 // Layout wrapper — adds Sidebar + StatusBar on protected pages
 const AppLayout = ({ children }) => {
@@ -53,14 +59,17 @@ const AppLayout = ({ children }) => {
   if (isPublic) return <>{children}</>;
 
   return (
-    <div className="app-layout">
-      <Sidebar />
-      <main className="app-main">
-        {children}
-      </main>
-      <StatusBar />
-      <MobileTabBar current={location.pathname} />
-    </div>
+    <>
+      <GlobalBackground />
+      <div className="app-layout" style={{ background: 'transparent' }}>
+        <Sidebar />
+        <main className="app-main">
+          {children}
+        </main>
+        <StatusBar />
+        <MobileTabBar current={location.pathname} />
+      </div>
+    </>
   );
 };
 
@@ -86,6 +95,52 @@ const MobileTabBar = ({ current }) => {
   );
 };
 
+// Separate AnimatedRoutes component to use useLocation hook inside Router
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public Routes */}
+        <Route path="/home" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/snippet/:id" element={<SnippetViewer />} />
+        <Route path="/classroom/join/:code" element={<ClassroomJoinHandler />} />
+
+        {/* Protected Routes */}
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
+        <Route path="/learn" element={<ProtectedRoute><Learn /></ProtectedRoute>} />
+        <Route path="/quiz-creator" element={<ProtectedRoute><QuizCreator /></ProtectedRoute>} />
+        <Route path="/classroom" element={<ProtectedRoute><Classroom /></ProtectedRoute>} />
+        <Route path="/room" element={<ProtectedRoute><Room /></ProtectedRoute>} />
+        <Route path="/instructor" element={<ProtectedRoute><InstructorDashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+        <Route path="/daily-challenge" element={<ProtectedRoute><DailyChallenge /></ProtectedRoute>} />
+        <Route path="/roadmap" element={<ProtectedRoute><Roadmap /></ProtectedRoute>} />
+        <Route path="/concept-map" element={<ProtectedRoute><ConceptMap /></ProtectedRoute>} />
+        <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
+        <Route path="/code-review" element={<ProtectedRoute><CodeReview /></ProtectedRoute>} />
+        <Route path="/peer-review" element={<ProtectedRoute><PeerReview /></ProtectedRoute>} />
+        <Route path="/test-lab" element={<ProtectedRoute><TestLab /></ProtectedRoute>} />
+        <Route path="/translator" element={<ProtectedRoute><Translator /></ProtectedRoute>} />
+        <Route path="/campus" element={<ProtectedRoute><CampusDashboard /></ProtectedRoute>} />
+        <Route path="/campus/:id" element={<ProtectedRoute><ClassroomDetails /></ProtectedRoute>} />
+        <Route path="/interview-prep" element={<ProtectedRoute><InterviewPrep /></ProtectedRoute>} />
+        <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
+        <Route path="/video-lessons" element={<ProtectedRoute><VideoLessons /></ProtectedRoute>} />
+        <Route path="/progress" element={<ProtectedRoute><ProgressReports /></ProtectedRoute>} />
+        <Route path="/problems" element={<ProtectedRoute><ProblemList /></ProtectedRoute>} />
+        <Route path="/problems/:slug" element={<ProtectedRoute><ProblemSolve /></ProtectedRoute>} />
+        <Route path="/git-learn" element={<ProtectedRoute><GitLearn /></ProtectedRoute>} />
+        <Route path="/algo-race" element={<ProtectedRoute><AlgoRace /></ProtectedRoute>} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
 const App = () => {
   return (
     <Router>
@@ -99,39 +154,7 @@ const App = () => {
               <p style={{ color: '#888' }}>Loading Workspace...</p>
             </div>
           }>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/home" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/snippet/:id" element={<SnippetViewer />} />
-              <Route path="/classroom/join/:code" element={<ClassroomJoinHandler />} />
-
-              {/* Protected Routes */}
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
-              <Route path="/learn" element={<ProtectedRoute><Learn /></ProtectedRoute>} />
-              <Route path="/quiz-creator" element={<ProtectedRoute><QuizCreator /></ProtectedRoute>} />
-              <Route path="/classroom" element={<ProtectedRoute><Classroom /></ProtectedRoute>} />
-              <Route path="/room" element={<ProtectedRoute><Room /></ProtectedRoute>} />
-              <Route path="/instructor" element={<ProtectedRoute><InstructorDashboard /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-              <Route path="/daily-challenge" element={<ProtectedRoute><DailyChallenge /></ProtectedRoute>} />
-              <Route path="/roadmap" element={<ProtectedRoute><Roadmap /></ProtectedRoute>} />
-              <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
-              <Route path="/code-review" element={<ProtectedRoute><CodeReview /></ProtectedRoute>} />
-              <Route path="/test-lab" element={<ProtectedRoute><TestLab /></ProtectedRoute>} />
-              <Route path="/translator" element={<ProtectedRoute><Translator /></ProtectedRoute>} />
-              <Route path="/campus" element={<ProtectedRoute><CampusDashboard /></ProtectedRoute>} />
-              <Route path="/campus/:id" element={<ProtectedRoute><ClassroomDetails /></ProtectedRoute>} />
-              <Route path="/interview-prep" element={<ProtectedRoute><InterviewPrep /></ProtectedRoute>} />
-              <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
-              <Route path="/video-lessons" element={<ProtectedRoute><VideoLessons /></ProtectedRoute>} />
-              <Route path="/progress" element={<ProtectedRoute><ProgressReports /></ProtectedRoute>} />
-              <Route path="/problems" element={<ProtectedRoute><ProblemList /></ProtectedRoute>} />
-              <Route path="/problems/:slug" element={<ProtectedRoute><ProblemSolve /></ProtectedRoute>} />
-              <Route path="/git-learn" element={<ProtectedRoute><GitLearn /></ProtectedRoute>} />
-            </Routes>
+            <AnimatedRoutes />
           </Suspense>
         </AppLayout>
       </ErrorBoundary>

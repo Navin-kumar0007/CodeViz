@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 
 /**
  * 💬 Discussion Forum — Threaded discussions with upvotes, replies, search
@@ -9,7 +10,7 @@ const Forum = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('userInfo'));
     const authHeaders = { headers: { Authorization: `Bearer ${user?.token}` } };
-    const API = 'http://localhost:5001/api/discussions';
+    const API = `${API_BASE}/api/discussions`;
 
     // Views: list | thread | new
     const [view, setView] = useState('list');

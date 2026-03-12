@@ -32,42 +32,47 @@ const styles = {
         minWidth: '200px'
     },
     levelBadge: {
-        background: 'linear-gradient(135deg, var(--accent-blue, #61DAFB), var(--accent-purple, #C678DD))',
-        color: '#fff',
+        background: 'linear-gradient(135deg, rgba(97,218,251,0.2), rgba(198,120,221,0.2))',
+        border: '1px solid rgba(198,120,221,0.5)',
+        color: 'var(--text-bright)',
         padding: '4px 10px',
-        borderRadius: '12px',
+        borderRadius: '8px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontWeight: 700,
+        fontWeight: 800,
         fontSize: '11px',
         fontFamily: 'var(--font-code, monospace)',
         whiteSpace: 'nowrap',
-        boxShadow: '0 2px 8px rgba(97,218,251,0.3)',
+        boxShadow: '0 0 15px rgba(198,120,221,0.4)',
         letterSpacing: '0.5px'
     },
     barContainer: {
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        gap: '2px'
+        gap: '4px'
     },
     barBackground: {
         height: '8px',
-        background: 'rgba(255,255,255,0.1)',
+        background: 'rgba(255,255,255,0.05)',
         borderRadius: '4px',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxShadow: 'inset 0 0 5px rgba(0,0,0,0.5)'
     },
     barFill: {
         height: '100%',
-        background: 'linear-gradient(90deg, var(--accent-blue, #61DAFB), var(--accent-purple, #C678DD))',
+        background: 'linear-gradient(90deg, #4facfe, #00f2fe)',
         borderRadius: '4px',
-        transition: 'width 0.5s ease-out'
+        transition: 'width 0.5s ease-out',
+        boxShadow: '0 0 10px #00f2fe'
     },
     xpText: {
         fontSize: '10px',
-        color: '#aaa',
-        textAlign: 'right'
+        color: 'var(--text-secondary)',
+        fontFamily: 'var(--font-code)',
+        textAlign: 'right',
+        letterSpacing: '1px',
     }
 };
 

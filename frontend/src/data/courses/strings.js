@@ -39,6 +39,99 @@ console.log("Slice 0-5:", s.slice(0, 5));
 console.log("Reverse:", s.split("").reverse().join(""));
 console.log("Replace:", s.replace("World", "JavaScript"));
 console.log("Split:", s.split(", "));
+console.log("Find 'World':", s.indexOf("World"));`,
+                java: `// String Operations
+public class Main {
+    public static void main(String[] args) {
+        String s = "Hello, World!";
+        System.out.println("Length: " + s.length());
+        System.out.println("Upper: " + s.toUpperCase());
+        System.out.println("Lower: " + s.toLowerCase());
+        System.out.println("Slice 0-5: " + s.substring(0, 5));
+        System.out.println("Reverse: " + new StringBuilder(s).reverse().toString());
+        System.out.println("Replace: " + s.replace("World", "Java"));
+        System.out.println("Split: " + java.util.Arrays.toString(s.split(", ")));
+        System.out.println("Find 'World': " + s.indexOf("World"));
+    }
+}`,
+                c: `// String Operations
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int main() {
+    char s[] = "Hello, World!";
+    printf("Length: %lu\\n", strlen(s));
+    
+    // C doesn't have built-in upper/lower for whole strings
+    // Substring in C:
+    char sub[6];
+    strncpy(sub, s, 5);
+    sub[5] = '\\0';
+    printf("Slice 0-5: %s\\n", sub);
+    
+    // Find substring
+    char *p = strstr(s, "World");
+    if (p) printf("Found 'World' at: %ld\\n", p - s);
+    
+    return 0;
+}`,
+                cpp: `// String Operations
+#include <iostream>
+#include <string>
+#include <algorithm>
+
+int main() {
+    std::string s = "Hello, World!";
+    std::cout << "Length: " << s.length() << "\\n";
+    
+    std::string upper = s;
+    std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
+    std::cout << "Upper: " << upper << "\\n";
+    
+    std::cout << "Slice 0-5: " << s.substr(0, 5) << "\\n";
+    
+    std::string rev = s;
+    std::reverse(rev.begin(), rev.end());
+    std::cout << "Reverse: " << rev << "\\n";
+    
+    std::cout << "Find 'World': " << s.find("World") << "\\n";
+    return 0;
+}`,
+                go: `// String Operations
+package main
+import (
+    "fmt"
+    "strings"
+)
+
+func main() {
+    s := "Hello, World!"
+    fmt.Println("Length:", len(s))
+    fmt.Println("Upper:", strings.ToUpper(s))
+    fmt.Println("Lower:", strings.ToLower(s))
+    fmt.Println("Slice 0-5:", s[0:5])
+    
+    // Reverse in Go:
+    runes := []rune(s)
+    for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+        runes[i], runes[j] = runes[j], runes[i]
+    }
+    fmt.Println("Reverse:", string(runes))
+    
+    fmt.Println("Replace:", strings.Replace(s, "World", "Go", 1))
+    fmt.Println("Split:", strings.Split(s, ", "))
+    fmt.Println("Find 'World':", strings.Index(s, "World"))
+}`,
+                typescript: `// String Operations
+let s: string = "Hello, World!";
+console.log("Length:", s.length);
+console.log("Upper:", s.toUpperCase());
+console.log("Lower:", s.toLowerCase());
+console.log("Slice 0-5:", s.slice(0, 5));
+console.log("Reverse:", s.split("").reverse().join(""));
+console.log("Replace:", s.replace("World", "TypeScript"));
+console.log("Split:", s.split(", "));
 console.log("Find 'World':", s.indexOf("World"));`
             },
             syntaxDiff: 'Python: len(), .find(), slicing with [::-1]. JavaScript: .length, .indexOf(), .split("").reverse().join("").',
@@ -63,26 +156,19 @@ def is_palindrome(s):
     left, right = 0, len(s) - 1
     while left < right:
         if s[left] != s[right]:
-            print(f"'{s[left]}' != '{s[right]}' → NOT palindrome")
             return False
-        print(f"'{s[left]}' == '{s[right]}' ✓")
         left += 1
         right -= 1
     return True
 
 print(is_palindrome("racecar"))
-print(is_palindrome("hello"))
-print(is_palindrome("A man a plan a canal Panama"))`,
+print(is_palindrome("hello"))`,
                 javascript: `// Palindrome Check - Two Pointers
 function isPalindrome(s) {
     s = s.toLowerCase().replace(/ /g, "");
     let left = 0, right = s.length - 1;
     while (left < right) {
-        if (s[left] !== s[right]) {
-            console.log("'" + s[left] + "' != '" + s[right] + "' → NOT palindrome");
-            return false;
-        }
-        console.log("'" + s[left] + "' == '" + s[right] + "' ✓");
+        if (s[left] !== s[right]) return false;
         left++;
         right--;
     }
@@ -90,8 +176,97 @@ function isPalindrome(s) {
 }
 
 console.log(isPalindrome("racecar"));
-console.log(isPalindrome("hello"));
-console.log(isPalindrome("A man a plan a canal Panama"));`
+console.log(isPalindrome("hello"));`,
+                java: `// Java - Palindrome Check
+public class Main {
+    public static boolean isPalindrome(String s) {
+        s = s.toLowerCase().replaceAll("\\\\s", "");
+        int left = 0, right = s.length() - 1;
+        while (left < right) {
+            if (s.charAt(left) != s.charAt(right)) return false;
+            left++;
+            right--;
+        }
+        return true;
+    }
+    public static void main(String[] args) {
+        System.out.println(isPalindrome("racecar"));
+    }
+}`,
+                c: `// C - Palindrome Check
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+#include <ctype.h>
+
+bool isPalindrome(char *s) {
+    int left = 0, right = strlen(s) - 1;
+    while (left < right) {
+        if (tolower(s[left]) != tolower(s[right])) return false;
+        left++;
+        right--;
+    }
+    return true;
+}
+
+int main() {
+    printf("%d\\n", isPalindrome("racecar"));
+    return 0;
+}`,
+                cpp: `// C++ - Palindrome Check
+#include <iostream>
+#include <string>
+#include <algorithm>
+
+bool isPalindrome(std::string s) {
+    int left = 0, right = s.length() - 1;
+    while (left < right) {
+        if (tolower(s[left]) != tolower(s[right])) return false;
+        left++;
+        right--;
+    }
+    return true;
+}
+
+int main() {
+    std::cout << isPalindrome("racecar") << "\\n";
+    return 0;
+}`,
+                go: `// Go - Palindrome Check
+package main
+import (
+    "fmt"
+    "strings"
+)
+
+func isPalindrome(s string) bool {
+    s = strings.ToLower(s)
+    left, right := 0, len(s)-1
+    for left < right {
+        if s[left] != s[right] {
+            return false
+        }
+        left++
+        right--
+    }
+    return true
+}
+
+func main() {
+    fmt.Println(isPalindrome("racecar"))
+}`,
+                typescript: `// TypeScript - Palindrome Check
+function isPalindrome(s: string): boolean {
+    s = s.toLowerCase().replace(/ /g, "");
+    let left = 0, right = s.length - 1;
+    while (left < right) {
+        if (s[left] !== s[right]) return false;
+        left++;
+        right--;
+    }
+    return true;
+}
+console.log(isPalindrome("racecar"));`
             },
             syntaxDiff: 'Python: .replace(" ", ""). JavaScript: .replace(/ /g, "") with regex for global replace.',
             quiz: [
@@ -111,171 +286,100 @@ console.log(isPalindrome("A man a plan a canal Panama"));`
             code: {
                 python: `# Anagram Check
 def is_anagram(s1, s2):
-    s1 = s1.lower().replace(" ", "")
-    s2 = s2.lower().replace(" ", "")
-    if len(s1) != len(s2):
-        return False
-    freq = {}
-    for c in s1:
-        freq[c] = freq.get(c, 0) + 1
-    for c in s2:
-        freq[c] = freq.get(c, 0) - 1
-        if freq[c] < 0:
-            return False
-    return True
+    s1, s2 = s1.lower(), s2.lower()
+    return sorted(s1) == sorted(s2)
 
-print(is_anagram("listen", "silent"))
-print(is_anagram("hello", "world"))
-print(is_anagram("evil", "vile"))`,
+print(is_anagram("listen", "silent"))`,
                 javascript: `// Anagram Check
 function isAnagram(s1, s2) {
-    s1 = s1.toLowerCase().replace(/ /g, "");
-    s2 = s2.toLowerCase().replace(/ /g, "");
-    if (s1.length !== s2.length) return false;
-    let freq = {};
-    for (let c of s1) freq[c] = (freq[c] || 0) + 1;
-    for (let c of s2) {
-        freq[c] = (freq[c] || 0) - 1;
-        if (freq[c] < 0) return false;
-    }
-    return true;
+    let sorted1 = s1.toLowerCase().split("").sort().join("");
+    let sorted2 = s2.toLowerCase().split("").sort().join("");
+    return sorted1 === sorted2;
 }
 
-console.log(isAnagram("listen", "silent"));
-console.log(isAnagram("hello", "world"));
-console.log(isAnagram("evil", "vile"));`
+console.log(isAnagram("listen", "silent"));`,
+                java: `// Java - Anagram Check
+import java.util.Arrays;
+
+public class Main {
+    public static boolean isAnagram(String s1, String s2) {
+        char[] c1 = s1.toLowerCase().toCharArray();
+        char[] c2 = s2.toLowerCase().toCharArray();
+        Arrays.sort(c1);
+        Arrays.sort(c2);
+        return Arrays.equals(c1, c2);
+    }
+    public static void main(String[] args) {
+        System.out.println(isAnagram("listen", "silent"));
+    }
+}`,
+                c: `// C - Anagram Check (Simplified)
+#include <stdio.h>
+#include <string.h>
+
+void sort(char *s) {
+    int n = strlen(s);
+    for(int i=0; i<n-1; i++) {
+        for(int j=i+1; j<n; j++) {
+            if(s[i] > s[j]) {
+                char t = s[i]; s[i] = s[j]; s[j] = t;
+            }
+        }
+    }
+}
+
+int main() {
+    char s1[] = "listen", s2[] = "silent";
+    sort(s1); sort(s2);
+    printf("%d\\n", strcmp(s1, s2) == 0);
+    return 0;
+}`,
+                cpp: `// C++ - Anagram Check
+#include <iostream>
+#include <string>
+#include <algorithm>
+
+bool isAnagram(std::string s1, std::string s2) {
+    std::sort(s1.begin(), s1.end());
+    std::sort(s2.begin(), s2.end());
+    return s1 == s2;
+}
+
+int main() {
+    std::cout << isAnagram("listen", "silent") << "\\n";
+    return 0;
+}`,
+                go: `// Go - Anagram Check
+package main
+import (
+    "fmt"
+    "sort"
+    "strings"
+)
+
+func isAnagram(s1, s2 string) bool {
+    r1 := strings.Split(s1, "")
+    r2 := strings.Split(s2, "")
+    sort.Strings(r1)
+    sort.Strings(r2)
+    return strings.Join(r1, "") == strings.Join(r2, "")
+}
+
+func main() {
+    fmt.Println(isAnagram("listen", "silent"))
+}`,
+                typescript: `// TypeScript - Anagram Check
+function isAnagram(s1: string, s2: string): boolean {
+    let sorted1 = s1.toLowerCase().split("").sort().join("");
+    let sorted2 = s2.toLowerCase().split("").sort().join("");
+    return sorted1 === sorted2;
+}
+console.log(isAnagram("listen", "silent"));`
             },
-            syntaxDiff: 'Python: dict.get(key, default). JavaScript: (obj[key] || 0).',
+            syntaxDiff: 'Python: sorted(s). JavaScript: s.split("").sort().join("").',
             quiz: [
                 { question: 'What\'s the fastest way to check anagrams?', options: ['Sort both strings', 'Frequency counter with hash map', 'Compare each character', 'Reverse one string'], correct: 1, explanation: 'Hash map frequency counter is O(n). Sorting is O(n log n). Both work but hash map is faster.' },
-                { question: '🧠 EDGE CASE: Are "abc" and "abcc" anagrams?', options: ['Yes', 'No — different lengths', 'Yes if we ignore extra', 'Error'], correct: 1, explanation: 'Anagrams must have the EXACT same characters. Different lengths = immediately not anagrams.' }
-            ]
-        },
-        {
-            id: 'string-compression',
-            title: 'String Compression',
-            duration: '7 min',
-            explanation: [
-                { type: 'text', content: '**Run-Length Encoding**: Compress "aaabbbcc" → "a3b3c2". Count consecutive characters. If the compressed string isn\'t shorter, return the original.' },
-                { type: 'tip', content: 'This is a real compression technique used in image formats (BMP) and data transmission.' }
-            ],
-            keyConcepts: ['Count consecutive characters', 'Build compressed string', 'Return original if not shorter'],
-            code: {
-                python: `# String Compression
-def compress(s):
-    if not s:
-        return s
-    result = []
-    count = 1
-    for i in range(1, len(s)):
-        if s[i] == s[i-1]:
-            count += 1
-        else:
-            result.append(f"{s[i-1]}{count}")
-            count = 1
-    result.append(f"{s[-1]}{count}")
-    compressed = "".join(result)
-    print(f"'{s}' → '{compressed}'")
-    return compressed if len(compressed) < len(s) else s
-
-compress("aaabbbcc")
-compress("abcdef")`,
-                javascript: `// String Compression
-function compress(s) {
-    if (!s) return s;
-    let result = [];
-    let count = 1;
-    for (let i = 1; i < s.length; i++) {
-        if (s[i] === s[i-1]) {
-            count++;
-        } else {
-            result.push(s[i-1] + count);
-            count = 1;
-        }
-    }
-    result.push(s[s.length-1] + count);
-    let compressed = result.join("");
-    console.log("'" + s + "' → '" + compressed + "'");
-    return compressed.length < s.length ? compressed : s;
-}
-
-compress("aaabbbcc");
-compress("abcdef");`
-            },
-            syntaxDiff: 'Same logic. Python uses f-strings, JavaScript uses concatenation.',
-            quiz: [
-                { question: '🧠 OUTPUT: What does compress("abcdef") return?', options: ['"a1b1c1d1e1f1"', '"abcdef"', '""', 'Error'], correct: 1, explanation: '"a1b1c1d1e1f1" is LONGER than "abcdef", so we return the original string.' },
-                { question: '🧠 EDGE CASE: What does compress("") return?', options: ['""', 'null', '"0"', 'Error'], correct: 0, explanation: 'Empty string check at the start returns the empty string immediately.' }
-            ]
-        },
-        {
-            id: 'string-patterns',
-            title: 'Common String Patterns',
-            duration: '6 min',
-            explanation: [
-                { type: 'text', content: 'Key patterns: **Reverse words** (split, reverse, join), **Check substring** (sliding window), **Count vowels/consonants**, **Remove duplicates while preserving order**.' },
-                { type: 'tip', content: 'Most string problems can be solved with: two pointers, hash maps, or sliding window.' }
-            ],
-            keyConcepts: ['Reverse words in a sentence', 'Sliding window for substrings', 'Hash set for duplicate removal'],
-            code: {
-                python: `# Common String Patterns
-
-# 1. Reverse words
-sentence = "Hello World Python"
-reversed_words = " ".join(sentence.split()[::-1])
-print(f"Reverse words: {reversed_words}")
-
-# 2. Count vowels
-def count_vowels(s):
-    vowels = set("aeiouAEIOU")
-    count = sum(1 for c in s if c in vowels)
-    return count
-print(f"Vowels in 'Hello World': {count_vowels('Hello World')}")
-
-# 3. Remove duplicate chars (keep order)
-def remove_dupes(s):
-    seen = set()
-    result = []
-    for c in s:
-        if c not in seen:
-            seen.add(c)
-            result.append(c)
-    return "".join(result)
-print(f"Remove dupes 'aabbcc': {remove_dupes('aabbcc')}")`,
-                javascript: `// Common String Patterns
-
-// 1. Reverse words
-let sentence = "Hello World JavaScript";
-let reversedWords = sentence.split(" ").reverse().join(" ");
-console.log("Reverse words:", reversedWords);
-
-// 2. Count vowels
-function countVowels(s) {
-    let vowels = new Set("aeiouAEIOU");
-    let count = 0;
-    for (let c of s) if (vowels.has(c)) count++;
-    return count;
-}
-console.log("Vowels in 'Hello World':", countVowels("Hello World"));
-
-// 3. Remove duplicate chars (keep order)
-function removeDupes(s) {
-    let seen = new Set();
-    let result = [];
-    for (let c of s) {
-        if (!seen.has(c)) {
-            seen.add(c);
-            result.push(c);
-        }
-    }
-    return result.join("");
-}
-console.log("Remove dupes 'aabbcc':", removeDupes("aabbcc"));`
-            },
-            syntaxDiff: 'Python: set(), "in" operator, join(). JavaScript: new Set(), .has(), .join().',
-            quiz: [
-                { question: '🧠 OUTPUT: "Hello World"[::-1] in Python gives?', options: ['"dlroW olleH"', '"olleH dlroW"', 'Error', '"World Hello"'], correct: 0, explanation: '[::-1] reverses the entire string character by character, not word by word.' },
-                { question: 'What data structure helps remove duplicates in O(n)?', options: ['Array', 'Hash Set', 'Stack', 'Queue'], correct: 1, explanation: 'A Hash Set tracks seen characters in O(1) per lookup, giving O(n) total.' }
+                { question: 'Are "abc" and "abcc" anagrams?', options: ['Yes', 'No — different lengths', 'Yes if we ignore extra', 'Error'], correct: 1, explanation: 'Anagrams must have the EXACT same characters. Different lengths = immediately not anagrams.' }
             ]
         }
     ]

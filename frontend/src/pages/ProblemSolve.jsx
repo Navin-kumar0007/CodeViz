@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Editor from '@monaco-editor/react';
+import API_BASE from '../utils/api';
 
-const API = 'http://localhost:5001/api/problems';
+const API = `${API_BASE}/api/problems`;
 const DIFF_COLORS = { easy: '#48bb78', medium: '#f6ad55', hard: '#fc8181' };
 const VERDICT_STYLES = {
     accepted: { color: '#48bb78', icon: '✅', label: 'Accepted' },
@@ -60,7 +61,8 @@ const ProblemSolve = () => {
         setRunning(true);
         setResult(null);
         try {
-            const { data } = await axios.post('http://localhost:5001/run', { language, code }, { headers });
+            const input = problem?.examples?.[0]?.input || '';
+            const { data } = await axios.post(`${API_BASE}/run`, { language, code, input }, { headers });
             setResult({ type: 'run', output: data.output || data.error || 'No output', trace: data.trace });
         } catch (err) {
             setResult({ type: 'run', output: 'Error running code' });

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import API_BASE from '../utils/api';
 
 /**
  * InstructorDashboard - Analytics dashboard for instructors
@@ -45,7 +46,7 @@ const InstructorDashboard = () => {
     const fetchDashboard = async () => {
         try {
             setLoading(true);
-            const res = await fetch('http://localhost:5001/api/analytics/dashboard', {
+            const res = await fetch(`${API_BASE}/api/analytics/dashboard`, {
                 headers: { 'Authorization': `Bearer ${user.token}` }
             });
 
@@ -74,10 +75,10 @@ const InstructorDashboard = () => {
         try {
             // Fetch detailed analytics for this classroom
             const [analyticsRes, studentsRes] = await Promise.all([
-                fetch(`http://localhost:5001/api/analytics/classroom/${classroom._id}`, {
+                fetch(`${API_BASE}/api/analytics/classroom/${classroom._id}`, {
                     headers: { 'Authorization': `Bearer ${user.token}` }
                 }),
-                fetch(`http://localhost:5001/api/analytics/classroom/${classroom._id}/students?sortBy=${sortBy}&order=${sortOrder}`, {
+                fetch(`${API_BASE}/api/analytics/classroom/${classroom._id}/students?sortBy=${sortBy}&order=${sortOrder}`, {
                     headers: { 'Authorization': `Bearer ${user.token}` }
                 })
             ]);

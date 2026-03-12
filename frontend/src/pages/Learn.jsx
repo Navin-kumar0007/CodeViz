@@ -10,6 +10,7 @@ import QuizBrowser from '../components/Learning/QuizBrowser';
 import Recommendations from '../components/Learning/Recommendations';
 import { COURSES, getPathProgress, getTotalProgress } from '../data/courses';
 import { ACHIEVEMENTS, checkAchievements, getAchievement } from '../data/achievements';
+import API_BASE from '../utils/api';
 
 /**
  * Learn.jsx - Main Structured Learning Page
@@ -44,7 +45,7 @@ const Learn = () => {
         if (!user || !user.token) return null;
 
         try {
-            const res = await fetch('http://localhost:5001/api/progress/sync', {
+            const res = await fetch(`${API_BASE}/api/progress/sync`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

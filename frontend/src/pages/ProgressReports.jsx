@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 
 /**
  * 📊 Progress Reports — Weekly summary, analytics, activity heatmap, recommendations
@@ -9,7 +10,7 @@ const ProgressReports = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('userInfo'));
     const authHeaders = { headers: { Authorization: `Bearer ${user?.token}` } };
-    const API = 'http://localhost:5001/api/reports';
+    const API = `${API_BASE}/api/reports`;
 
     const [view, setView] = useState('weekly');
     const [weekly, setWeekly] = useState(null);

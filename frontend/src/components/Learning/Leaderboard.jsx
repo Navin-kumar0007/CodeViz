@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import API_BASE from '../../utils/api';
 
 /**
  * Leaderboard - Shows top learners ranked by score
@@ -19,7 +20,7 @@ const Leaderboard = ({ onClose, currentUserId }) => {
 
     const fetchLeaderboard = useCallback(async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/leaderboard');
+            const res = await fetch(`${API_BASE}/api/leaderboard`);
             const data = await res.json();
             setLeaders(data);
         } catch (error) {
@@ -32,7 +33,7 @@ const Leaderboard = ({ onClose, currentUserId }) => {
     const fetchUserRank = useCallback(async () => {
         if (!currentUserId) return;
         try {
-            const res = await fetch(`http://localhost:5001/api/leaderboard/rank/${currentUserId}`);
+            const res = await fetch(`${API_BASE}/api/leaderboard/rank/${currentUserId}`);
             const data = await res.json();
             setUserRank(data);
         } catch (error) {
@@ -49,7 +50,7 @@ const Leaderboard = ({ onClose, currentUserId }) => {
     useEffect(() => {
         if (activeView !== 'weekly') return;
         setLoading(true);
-        fetch('http://localhost:5001/api/leaderboard/weekly')
+        fetch(`${API_BASE}/api/leaderboard/weekly`)
             .then(r => r.json())
             .then(data => { setWeeklyData(data); setLoading(false); })
             .catch(() => setLoading(false));
@@ -59,7 +60,7 @@ const Leaderboard = ({ onClose, currentUserId }) => {
     useEffect(() => {
         if (activeView !== 'skill') return;
         setLoading(true);
-        fetch(`http://localhost:5001/api/leaderboard/skill/${selectedSkill}`)
+        fetch(`${API_BASE}/api/leaderboard/skill/${selectedSkill}`)
             .then(r => r.json())
             .then(data => { setSkillData(data); setLoading(false); })
             .catch(() => setLoading(false));

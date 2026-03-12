@@ -15,6 +15,7 @@ import CodeSnapshot from "../components/Social/CodeSnapshot";
 import ComplexityAnalyzer from "../components/Visualizer/ComplexityAnalyzer";
 import SessionRecorder from "../components/Session/SessionRecorder";
 import Terminal from "../components/Terminal/Terminal";
+import API_BASE from '../utils/api';
 
 // 📋 CODE TEMPLATES LIBRARY
 const CODE_TEMPLATES = {
@@ -24,6 +25,10 @@ const CODE_TEMPLATES = {
     'BFS Graph': 'from collections import deque\n\ndef bfs(graph, start):\n    visited = set()\n    queue = deque([start])\n    visited.add(start)\n    order = []\n    while queue:\n        node = queue.popleft()\n        order.append(node)\n        for neighbor in graph[node]:\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append(neighbor)\n    return order\n\ngraph = {0: [1,2], 1: [0,3], 2: [0,3], 3: [1,2]}\nprint(bfs(graph, 0))',
     'Linked List': 'class Node:\n    def __init__(self, val):\n        self.val = val\n        self.next = None\n\ndef build_list(values):\n    head = Node(values[0])\n    curr = head\n    for v in values[1:]:\n        curr.next = Node(v)\n        curr = curr.next\n    return head\n\ndef print_list(head):\n    vals = []\n    while head:\n        vals.append(str(head.val))\n        head = head.next\n    print(" -> ".join(vals))\n\nhead = build_list([1, 2, 3, 4, 5])\nprint_list(head)',
     'Stack Implementation': 'class Stack:\n    def __init__(self):\n        self.items = []\n\n    def push(self, val):\n        self.items.append(val)\n\n    def pop(self):\n        if self.is_empty():\n            return None\n        return self.items.pop()\n\n    def peek(self):\n        return self.items[-1] if self.items else None\n\n    def is_empty(self):\n        return len(self.items) == 0\n\ns = Stack()\nfor x in [10, 20, 30]:\n    s.push(x)\nprint("Top:", s.peek())\nprint("Pop:", s.pop())\nprint("Pop:", s.pop())',
+  },
+  systems: {
+    'Child Process IPC': '// Parent process\nconst { fork } = require("child_process");\nconsole.log("Spawning child...");\n// Simulated IPC for visualizer\nconsole.log("Parent: Sending task to child");\nconsole.log("Child: Factorial of 5 is 120");',
+    'Stream Transformation': 'const { Transform } = require("stream");\nconst upper = new Transform({\n  transform(chunk, enc, cb) {\n    this.push(chunk.toString().toUpperCase());\n    cb();\n  }\n});\nconsole.log("Original: test");\nconsole.log("Transformed: TEST");',
   },
   javascript: {
     'Binary Search': 'function binarySearch(arr, target) {\n  let left = 0, right = arr.length - 1;\n  while (left <= right) {\n    const mid = Math.floor((left + right) / 2);\n    if (arr[mid] === target) return mid;\n    else if (arr[mid] < target) left = mid + 1;\n    else right = mid - 1;\n  }\n  return -1;\n}\nconsole.log(binarySearch([1,3,5,7,9], 5));',
@@ -87,10 +92,20 @@ const Practice = () => {
   const [sharingSnippet, setSharingSnippet] = useState(null); // Snippet being shared
   const [showSnapshot, setShowSnapshot] = useState(false); // Code snapshot modal
   const [showComplexity, setShowComplexity] = useState(false); // Complexity analyzer
+  const [showNarrator, setShowNarrator] = useState(false); // AI Code Narrator
+  const [narratorData, setNarratorData] = useState(null);
+  const [isNarrating, setIsNarrating] = useState(false);
+
+  // 🕵️ AI AUTHORSHIP DETECTION STATES
+  const [showDetective, setShowDetective] = useState(false);
+  const [detectionData, setDetectionData] = useState(null);
+  const [isDetecting, setIsDetecting] = useState(false);
+
   const [executionHistory, setExecutionHistory] = useState([]); // 📜 Execution history
   const [showTemplates, setShowTemplates] = useState(false); // 📋 Templates dropdown
   const [showHistory, setShowHistory] = useState(false); // 📜 History dropdown
 
+  // 1. Existing Handlers...
   // 📏 RESIZABLE SPLIT PANE STATE
   const [editorWidth, setEditorWidth] = useState(50); // percentage
   const [isDragging, setIsDragging] = useState(false);
@@ -194,7 +209,6 @@ const Practice = () => {
 
       try {
         // Run code safely
-        // Run code safely
         new Function(code)();
         setOutput(logs.join('\n'));
         setActiveTab("console");
@@ -202,8 +216,6 @@ const Practice = () => {
         setError(err.toString());
         setIsLoading(false);
         setIsExecuting(false);
-        // Don't return, allow falling back to server if it was just a runtime error? 
-        // Actually for JS, if it fails locally, it likely fails remotely. But let's keep consistency.
         console.log = originalLog; // Restore
         return;
       }
@@ -213,7 +225,7 @@ const Practice = () => {
     // 📡 SERVER-SIDE VISUALIZATION (Still needed for Graph/AST)
     try {
       const stored = JSON.parse(localStorage.getItem('userInfo'));
-      const res = await axios.post("http://localhost:5001/run", { language, code }, {
+      const res = await axios.post(`${API_BASE}/run`, { language, code }, {
         headers: { Authorization: `Bearer ${stored?.token}` }
       });
 
@@ -223,47 +235,24 @@ const Practice = () => {
         setActiveTab("console");
       }
 
-      // 2. Handle JavaScript (Special JSON Parsing)
-      else if (language === 'javascript') {
-        try {
-          const parsedTrace = typeof res.data.output === 'string'
-            ? JSON.parse(res.data.output)
-            : res.data.output;
-
-          if (Array.isArray(parsedTrace)) {
-            setTraceData(parsedTrace);
-
-            // Extract logs
-            let logs = "";
-            parsedTrace.forEach(step => {
-              if (step.stdout) logs += step.stdout;
-            });
-            setOutput(logs || "Visualization Started...");
-            setActiveTab("visualizer");
-          } else {
-            throw new Error("Output is not a valid trace array");
-          }
-        } catch {
-          setOutput(res.data.output || "No output");
-          setActiveTab("console");
-        }
-      }
-
-      // 3. Handle C++ / Java (Text Only)
-      else if (res.data.output) {
-        setOutput(res.data.output);
+      // 2. Handle C++ / Java / TS / Go / C (Text Only)
+      else if (['cpp', 'java', 'typescript', 'go', 'c'].includes(language)) {
+        setOutput(res.data.output || "No output");
         setTraceData([]);
         setActiveTab("console");
       }
 
-      // 4. Handle Python (Standard Visualization)
+      // 3. Handle Python & JavaScript (Visualization)
       else {
-        // 🛡️ CRITICAL FIX: Default to [] if trace is missing
+        // 🛡️ Default to [] if trace is missing
         const safeTrace = res.data.trace || [];
         setTraceData(safeTrace);
+        setOutput(res.data.output || "");
 
         if (safeTrace.length > 0) {
           setActiveTab("visualizer");
+        } else {
+          setActiveTab("console");
         }
       }
 
@@ -288,7 +277,7 @@ const Practice = () => {
     if (!title) return;
 
     try {
-      await axios.post("http://localhost:5001/api/snippets", {
+      await axios.post(`${API_BASE}/api/snippets`, {
         userId: user._id, title, code, language
       }, {
         headers: { Authorization: `Bearer ${user.token}` }
@@ -297,6 +286,44 @@ const Practice = () => {
       fetchSnippets();
     } catch (err) {
       alert("❌ Save failed: " + err.message);
+    }
+  };
+
+  // 🎙️ FETCH AI NARRATION
+  const fetchNarration = async () => {
+    if (!code) return alert("Write some code first!");
+    setIsNarrating(true);
+    setShowNarrator(true);
+    try {
+      const stored = JSON.parse(localStorage.getItem('userInfo'));
+      const res = await axios.post(`${API_BASE}/api/ai/narrate`, {
+        code, language, skillLevel: "beginner"
+      }, { headers: { Authorization: `Bearer ${stored?.token}` } });
+      setNarratorData(res.data.narrationData);
+    } catch (e) {
+      alert("Error: " + (e.response?.data?.message || e.message));
+      setShowNarrator(false);
+    } finally {
+      setIsNarrating(false);
+    }
+  };
+
+  // 🕵️ FETCH AI AUTHORSHIP DETECTION (NEW FOR PROFESSOR)
+  const verifyAuthorship = async () => {
+    if (!code || code.length < 10) return alert("Please write a larger block of code to analyze!");
+    setIsDetecting(true);
+    setShowDetective(true);
+    try {
+      const stored = JSON.parse(localStorage.getItem('userInfo'));
+      const res = await axios.post(`${API_BASE}/api/ai/detect`, {
+        code, language
+      }, { headers: { Authorization: `Bearer ${stored?.token}` } });
+      setDetectionData(res.data.detection);
+    } catch (e) {
+      alert("Error: " + (e.response?.data?.message || e.message));
+      setShowDetective(false);
+    } finally {
+      setIsDetecting(false);
     }
   };
 
@@ -320,7 +347,7 @@ const Practice = () => {
         isPublic: false
       };
 
-      await axios.post("http://localhost:5001/api/sessions", payload, {
+      await axios.post(`${API_BASE}/api/sessions`, payload, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       alert("✅ Session saved successfully! You can view it in the Sessions tab.");
@@ -337,7 +364,7 @@ const Practice = () => {
   const confirmShare = async () => {
     if (!sharingSnippet) return;
     try {
-      await axios.put(`http://localhost:5001/api/snippets/${sharingSnippet._id}/share`, {}, {
+      await axios.put(`${API_BASE}/api/snippets/${sharingSnippet._id}/share`, {}, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       alert(`✅ Copied to clipboard: http://localhost:5173/snippet/${sharingSnippet._id} (Mock URL)`);
@@ -352,7 +379,7 @@ const Practice = () => {
   const fetchSnippets = async () => {
     if (!user) return;
     try {
-      const res = await axios.get(`http://localhost:5001/api/snippets/${user._id}`, {
+      const res = await axios.get(`${API_BASE}/api/snippets/${user._id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       // 🛡️ SAFETY CHECK: Ensure it's an array
@@ -428,6 +455,10 @@ const Practice = () => {
           <button onClick={() => navigate('/')} style={{ background: '#333', color: '#aaa', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>← Dashboard</button>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
+
+          {/* 🕵️ THE NEW AI DETECTIVE TOOL */}
+          <button onClick={showDetective ? () => setShowDetective(false) : verifyAuthorship} style={{ background: showDetective ? '#dc2626' : '#991b1b', color: '#fff', border: '1px solid #f87171', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 0 10px rgba(220,38,38,0.3)' }}>🕵️‍♀️ {isDetecting ? 'Scanning...' : showDetective ? 'Hide Analysis' : 'Detect AI Code'}</button>
+
           <button onClick={() => setShowSnippetList(!showSnippetList)} style={{ background: '#444', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer' }}>📂 My Snippets</button>
 
           {/* Theme Toggle Button */}
@@ -472,6 +503,7 @@ const Practice = () => {
             </div>
           )}
 
+          <button onClick={showNarrator ? () => setShowNarrator(false) : fetchNarration} style={{ background: showNarrator ? '#eab308' : '#ca8a04', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>🎙️ {isNarrating ? 'Thinking...' : showNarrator ? 'Hide Narrator' : 'AI Narrator'}</button>
           <button onClick={() => setShowSnapshot(true)} style={{ background: '#764ba2', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>📸 Snapshot</button>
           <button onClick={() => setShowComplexity(!showComplexity)} style={{ background: showComplexity ? '#a855f7' : '#553c9a', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>📊 {showComplexity ? 'Hide Complexity' : 'Complexity'}</button>
           <button onClick={handleSave} style={{ background: '#2ea043', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>💾 Save Code</button>
@@ -588,8 +620,104 @@ const Practice = () => {
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          borderBottom: isMobile ? '1px solid #333' : 'none'
+          borderBottom: isMobile ? '1px solid #333' : 'none',
+          position: 'relative' // For absolute positioning the narrator
         }}>
+
+          {/* 🎙️ AI NARRATOR FLOATING PANEL */}
+          {showNarrator && (
+            <div style={{ position: 'absolute', top: '10px', right: '10px', width: '320px', maxHeight: '80%', background: 'rgba(20, 20, 30, 0.95)', border: '1px solid #ca8a04', borderRadius: '8px', zIndex: 10, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', overflow: 'hidden' }}>
+              <div style={{ padding: '10px', background: '#ca8a04', color: '#fff', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
+                <span>🎙️ AI Code Narrator</span>
+                <button onClick={() => setShowNarrator(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+              </div>
+              <div style={{ padding: '15px', overflowY: 'auto', flex: 1, fontSize: '13px', lineHeight: '1.5', color: '#e2e8f0' }}>
+                {isNarrating ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px', fontStyle: 'italic', color: '#aaa' }}>
+                    Generating narrative... ⏳
+                  </div>
+                ) : narratorData ? (
+                  <div>
+                    <div style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                      <strong style={{ color: '#fbbf24' }}>Summary:</strong> {narratorData.summary}
+                    </div>
+                    {narratorData.narration && narratorData.narration.map((n, i) => (
+                      <div key={i} style={{ marginBottom: '12px', padding: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', borderLeft: '3px solid #fbbf24' }}>
+                        <span style={{ fontWeight: 'bold', color: '#60a5fa', marginRight: '6px' }}>{n.line ? `Line ${n.line}:` : n.block ? `${n.block}:` : 'Note:'}</span>
+                        <span>{n.explanation}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: '#fc8181' }}>Failed to load narration.</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 🕵️ AI DETECTIVE FLOATING PANEL */}
+          {showDetective && (
+            <div style={{ position: 'absolute', top: '10px', right: showNarrator ? '340px' : '10px', width: '350px', maxHeight: '90%', background: 'rgba(15, 23, 42, 0.98)', border: '1px solid #ef4444', borderRadius: '8px', zIndex: 11, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2)', backdropFilter: 'blur(10px)', overflow: 'hidden' }}>
+              <div style={{ padding: '12px', background: 'linear-gradient(90deg, #991b1b, #dc2626)', color: '#fff', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', borderBottom: '1px solid #7f1d1d' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🕵️‍♀️ AI Authorship Analysis
+                </span>
+                <button onClick={() => setShowDetective(false)} style={{ background: 'transparent', border: 'none', color: '#ffb3b3', cursor: 'pointer', fontSize: '16px', lineHeight: '1' }}>✕</button>
+              </div>
+              <div style={{ padding: '15px', overflowY: 'auto', flex: 1, fontSize: '13px', lineHeight: '1.6', color: '#f8fafc' }}>
+                {isDetecting ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '150px', gap: '15px' }}>
+                    <div style={{ width: '40px', height: '40px', border: '3px solid #334155', borderTopColor: '#ef4444', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                    <div style={{ color: '#94a3b8', fontStyle: 'italic', animation: 'pulse 2s infinite' }}>Analyzing code signatures...</div>
+                  </div>
+                ) : detectionData ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+
+                    {/* Probability Score Header */}
+                    <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '15px', borderRadius: '8px', border: '1px solid #334155', textAlign: 'center' }}>
+                      <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#94a3b8', marginBottom: '5px' }}>Probability of AI Generation</div>
+                      <div style={{ fontSize: '36px', fontWeight: '900', color: detectionData.aiProbability > 70 ? '#ef4444' : detectionData.aiProbability > 40 ? '#f59e0b' : '#22c55e', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                        {detectionData.aiProbability}%
+                      </div>
+                      <div style={{ marginTop: '5px', fontSize: '14px', fontWeight: 'bold', color: '#e2e8f0' }}>
+                        Verdict: <span style={{ color: detectionData.aiProbability > 70 ? '#ef4444' : detectionData.aiProbability > 40 ? '#f59e0b' : '#22c55e' }}>{detectionData.verdict}</span>
+                      </div>
+                    </div>
+
+                    {/* Analysis Narrative */}
+                    <div>
+                      <h4 style={{ color: '#f87171', margin: '0 0 8px 0', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Detailed Analysis</h4>
+                      <p style={{ margin: 0, color: '#cbd5e1' }}>{detectionData.analysis}</p>
+                    </div>
+
+                    {/* Telltale Signs */}
+                    {detectionData.telltaleSigns && detectionData.telltaleSigns.length > 0 && (
+                      <div>
+                        <h4 style={{ color: '#f87171', margin: '0 0 8px 0', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Detected Signatures</h4>
+                        <ul style={{ margin: 0, paddingLeft: '20px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {detectionData.telltaleSigns.map((sign, i) => (
+                            <li key={i}>{sign}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <style>
+                      {`
+                        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+                      `}
+                    </style>
+                  </div>
+                ) : (
+                  <div style={{ color: '#ef4444', textAlign: 'center', padding: '20px' }}>
+                    Failed to load analysis. The code block might be too small or the service is temporarily unavailable.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <CodeEditor
             code={code}
             setCode={setCode}

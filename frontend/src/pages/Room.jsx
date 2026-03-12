@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import API_BASE from '../utils/api';
 const Room = () => {
     const navigate = useNavigate();
     const [view, setView] = useState('lobby'); // 'lobby' | 'live'
@@ -67,7 +68,7 @@ const Room = () => {
 
     const fetchActiveRooms = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/rooms/active', {
+            const res = await fetch(`${API_BASE}/api/rooms/active`, {
                 headers: { 'Authorization': `Bearer ${user?.token}` }
             });
             if (res.ok) setActiveRooms(await res.json());
@@ -81,7 +82,7 @@ const Room = () => {
         if (!roomName.trim()) { setError('Enter a room name'); return; }
         setError(''); setLoading(true);
         try {
-            const res = await fetch('http://localhost:5001/api/rooms', {
+            const res = await fetch(`${API_BASE}/api/rooms`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -105,7 +106,7 @@ const Room = () => {
         if (!roomCode) { setError('Enter a room code'); return; }
         setError(''); setLoading(true);
         try {
-            const res = await fetch('http://localhost:5001/api/rooms/join', {
+            const res = await fetch(`${API_BASE}/api/rooms/join`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -127,7 +128,7 @@ const Room = () => {
     const connectToRoom = (roomCode) => {
         if (socketRef.current) socketRef.current.disconnect();
 
-        const socket = io('http://localhost:5001/room', {
+        const socket = io(`${API_BASE}/room`, {
             auth: { token: user?.token }
         });
 
@@ -520,7 +521,7 @@ const Room = () => {
                                             const testOutputs = [];
                                             for (const tc of testCases) {
                                                 try {
-                                                    const r = await fetch('http://localhost:5001/api/code/execute', {
+                                                    const r = await fetch(`${API_BASE}/run`, {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user?.token}` },
                                                         body: JSON.stringify({ code, language, input: tc.input })
@@ -535,7 +536,7 @@ const Room = () => {
                                         } else {
                                             // Legacy single-output
                                             try {
-                                                const r = await fetch('http://localhost:5001/api/code/execute', {
+                                                const r = await fetch(`${API_BASE}/run`, {
                                                     method: 'POST',
                                                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user?.token}` },
                                                     body: JSON.stringify({ code, language })

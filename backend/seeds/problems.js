@@ -497,6 +497,9 @@ const PROBLEMS = [
     },
 ];
 
+const PROBLEMS_EXTENDED = require('./problems_extended');
+const ALL_PROBLEMS = [...PROBLEMS, ...PROBLEMS_EXTENDED];
+
 async function seed() {
     try {
         await mongoose.connect(process.env.MONGO_URI);
@@ -505,12 +508,12 @@ async function seed() {
         await Problem.deleteMany({});
         console.log('Cleared existing problems');
 
-        await Problem.insertMany(PROBLEMS);
-        console.log(`✅ Seeded ${PROBLEMS.length} problems successfully!`);
+        await Problem.insertMany(ALL_PROBLEMS);
+        console.log(`✅ Seeded ${ALL_PROBLEMS.length} problems successfully!`);
 
         // Print category breakdown
         const cats = {};
-        PROBLEMS.forEach(p => { cats[p.category] = (cats[p.category] || 0) + 1; });
+        ALL_PROBLEMS.forEach(p => { cats[p.category] = (cats[p.category] || 0) + 1; });
         console.log('\nCategory breakdown:');
         Object.entries(cats).sort((a, b) => b[1] - a[1]).forEach(([cat, count]) => {
             console.log(`  ${cat}: ${count} problems`);

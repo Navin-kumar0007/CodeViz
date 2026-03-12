@@ -1,638 +1,718 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion as Motion } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence, useScroll } from 'framer-motion';
 
 /* ════════════════════════════════════════════
-   HOME PAGE — CodeViz Landing Page
-   Showcases ALL platform features
+   HOME PAGE — Highly Interactive & Innovative
+   7 Slides, Unique Transitions, Enhanced Demos
    ════════════════════════════════════════════ */
+
 const Home = () => {
     const navigate = useNavigate();
     const isLoggedIn = !!localStorage.getItem('userInfo');
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const [ripples, setRipples] = useState([]);
+
+    useEffect(() => {
+        const handleMouseMove = (e) => setMousePos({ x: e.clientX, y: e.clientY });
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, []);
+
+    const addRipple = (e) => {
+        // Only add ripples if we click outside buttons/links
+        if (e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'a') return;
+        const drop = { x: e.clientX, y: e.clientY, id: Date.now() };
+        setRipples(prev => [...prev, drop]);
+        setTimeout(() => setRipples(prev => prev.filter(r => r.id !== drop.id)), 1000);
+    };
 
     return (
-        <div style={s.page}>
-            {/* Sticky Nav */}
-            <nav style={s.nav}>
-                <span style={s.logo}>{'{'} <span style={s.logoAccent}>CodeViz</span> {'}'}</span>
-                <div style={s.navLinks}>
-                    <a href="#features" style={s.navLink}>Features</a>
-                    <a href="#demo" style={s.navLink}>Try It</a>
-                    <a href="#path" style={s.navLink}>Courses</a>
-                    <a href="#compare" style={s.navLink}>Why Us</a>
-                    {isLoggedIn ? (
-                        <button onClick={() => navigate('/')} style={s.navBtn}>Go to Dashboard →</button>
-                    ) : (
-                        <>
-                            <button onClick={() => navigate('/login')} style={s.navLinkBtn}>Sign In</button>
-                            <button onClick={() => navigate('/signup')} style={s.navBtn}>Get Started Free</button>
-                        </>
-                    )}
+        <div style={s.page} onClick={addRipple}>
+            {/* 4. Fluid Ripples */}
+            {ripples.map(r => (
+                <motion.div key={r.id} initial={{ scale: 0, opacity: 0.8 }} animate={{ scale: 4, opacity: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}
+                    style={{ position: 'fixed', left: r.x - 50, top: r.y - 50, width: 100, height: 100, border: '2px solid var(--accent-blue)', borderRadius: '50%', pointerEvents: 'none', zIndex: 9999 }} />
+            ))}
+            
+            {/* Ambient Nebula Glows */}
+            <div style={{ ...s.blurGlow, top: '-20%', left: '-10%', background: '#c678dd' }} />
+            <div style={{ ...s.blurGlow, top: '40%', right: '-20%', background: '#00f2fe' }} />
+
+            {/* 1. Dynamic Mouse Spotlight */}
+            <div style={{
+                ...s.spotlight,
+                background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(97,218,251,0.06), transparent 40%)`
+            }} />
+
+            <FloatingBackground mousePos={mousePos} />
+            <Navbar navigate={navigate} isLoggedIn={isLoggedIn} />
+
+            {/* Slide 1: Hero */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 1 }}
+            >
+                <HeroSection navigate={navigate} />
+            </motion.div>
+
+            {/* Slide 2: Sorting (Transition: 3D Depth Zoom) */}
+            <motion.section
+                id="demo"
+                initial={{ scale: 0.8, opacity: 0, z: -100 }}
+                whileInView={{ scale: 1, opacity: 1, z: 0 }}
+                viewport={{ once: false, amount: 0.5 }}
+                transition={{ type: "spring", stiffness: 50 }}
+                style={s.section}
+            >
+                <div style={s.sectionHeader}>
+                    <h2 style={s.h2}>Visualize the Logic</h2>
+                    <p style={s.h2Sub}>Pick an algorithm and watch the numbers shift in real-time.</p>
                 </div>
-            </nav>
+                <EnhancedSortDemo />
+            </motion.section>
 
-            {/* ── Section 1: Hero ── */}
-            <section style={s.hero}>
-                <Motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} style={s.heroText}>
-                    <div style={s.badge}>{'>'} Learn DSA • Visualize Algorithms • Build Skills</div>
-                    <h1 style={s.h1}>
-                        See Your Code<br />
-                        <span style={s.gradient}>Come Alive</span>
-                        <span className="cursor-blink">_</span>
-                    </h1>
-                    <p style={s.sub}>
-                        The only platform that lets you <strong>watch algorithms execute step-by-step</strong>,
-                        learn with an AI tutor, practice mock interviews, collaborate in real-time, and track your progress — all in one place.
-                    </p>
-                    <div style={s.langRow}>
-                        {['Python', 'JavaScript', 'Java', 'C++', 'TypeScript', 'Go', 'C'].map((l, i) => (
-                            <Motion.span key={l} initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 + i * 0.1 }} style={s.pill}>{l}</Motion.span>
-                        ))}
-                    </div>
-                    <div style={s.ctaRow}>
-                        {isLoggedIn ? (
-                            <Motion.button onClick={() => navigate('/')} style={s.primary} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                Open Dashboard →
-                            </Motion.button>
-                        ) : (
-                            <>
-                                <Motion.button onClick={() => navigate('/signup')} style={s.primary} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                    🚀 Start Learning — Free
-                                </Motion.button>
-                                <Motion.button onClick={() => navigate('/login')} style={s.secondary} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                    Sign In →
-                                </Motion.button>
-                            </>
-                        )}
-                    </div>
-                </Motion.div>
-
-                <Motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.3 }} style={s.codeWin}>
-                    <div style={s.codeBar}>
-                        <span style={{ ...s.dot, background: '#E06C75' }} />
-                        <span style={{ ...s.dot, background: '#E5C07B' }} />
-                        <span style={{ ...s.dot, background: '#98C379' }} />
-                        <span style={s.codeFile}>bubble_sort.py</span>
-                    </div>
-                    <pre style={s.code}>{`def bubble_sort(arr):
-    n = len(arr)
-    for i in range(n):
-        for j in range(0, n-i-1):
-            if arr[j] > arr[j+1]:
-                arr[j], arr[j+1] = arr[j+1], arr[j]
-    return arr`}</pre>
-                    <div style={s.codeOut}>
-                        <span style={{ color: 'var(--accent-green)' }}>✓ Visualize each swap!</span><br />
-                        <span style={{ color: 'var(--text-muted)' }}>{'>'} Output: [12, 22, 25, 34, 64]</span>
-                    </div>
-                </Motion.div>
-            </section>
-
-            {/* ── Section 2: How It Works ── */}
-            <section style={{ ...s.section, background: 'var(--bg-secondary)' }}>
-                <h2 style={s.h2}>How It Works</h2>
-                <p style={s.sectionSub}>Three steps to master Data Structures & Algorithms</p>
-                <div style={s.stepsRow}>
-                    {[
-                        { num: '01', icon: '📖', title: 'Learn the Concept', desc: 'Read visual explanations with syntax-highlighted code in your preferred language. Every topic breaks down the "why" before the "how".', color: 'var(--accent-blue)' },
-                        { num: '02', icon: '🧪', title: 'Watch It Execute', desc: 'See algorithms run step-by-step with animated visualizations. Watch variables change, pointers move, and stacks grow in real-time.', color: 'var(--accent-green)' },
-                        { num: '03', icon: '🏆', title: 'Prove Your Skills', desc: 'Solve tricky quizzes, ace mock interviews, and track your progress. Earn XP, maintain streaks, and climb the leaderboard.', color: 'var(--accent-purple)' },
-                    ].map((step, i) => (
-                        <Motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }} style={s.stepCard}>
-                            <div style={{ ...s.stepNum, color: step.color }}>{step.num}</div>
-                            <div style={{ fontSize: '32px', marginBottom: '8px' }}>{step.icon}</div>
-                            <h3 style={{ ...s.h3, color: step.color }}>{step.title}</h3>
-                            <p style={s.cardDesc}>{step.desc}</p>
-                        </Motion.div>
-                    ))}
+            {/* Slide 3: Roadmap (Transition: Side-Swipe Parallax) */}
+            <motion.section
+                id="path"
+                initial={{ x: 100, opacity: 0 }}
+                whileInView={{ x: 0, opacity: 1 }}
+                viewport={{ once: false, amount: 0.5 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                style={{ ...s.section, background: 'rgba(255,255,255,0.01)' }}
+            >
+                <div style={s.sectionHeader}>
+                    <h2 style={s.h2}>Master the Curriculum</h2>
+                    <p style={s.h2Sub}>A comprehensive 17+ module roadmap to technical excellence.</p>
                 </div>
-            </section>
+                <DenseSkillTree />
+            </motion.section>
 
-            {/* ── Section 3: Interactive Demo ── */}
-            <section id="demo" style={s.section}>
-                <h2 style={s.h2}>Try It Right Now — No Signup Needed</h2>
-                <p style={s.sectionSub}>Pick an algorithm and watch it sort in real-time</p>
-                <LiveSortDemo />
-            </section>
-
-            {/* ── Section 4: ALL Platform Features ── */}
-            <section id="features" style={{ ...s.section, background: 'var(--bg-secondary)' }}>
-                <h2 style={s.h2}>Everything You Need to Master Coding</h2>
-                <p style={s.sectionSub}>15+ powerful features in one platform</p>
-
-                {/* Feature Category: Learn & Practice */}
-                <div style={s.featCategory}>
-                    <h3 style={{ ...s.catTitle, color: 'var(--accent-blue)' }}>📚 Learn & Practice</h3>
-                    <div style={s.featGrid}>
-                        {[
-                            { icon: '🔬', title: 'Live Visualization', desc: 'Watch variables, stacks, and memory change step-by-step as your code runs.', color: 'var(--accent-blue)' },
-                            { icon: '🎓', title: 'Structured Courses', desc: 'Beginner to Advanced — carefully ordered topics with clear prerequisites.', color: 'var(--accent-green)' },
-                            { icon: '🗺️', title: 'Learning Roadmap', desc: 'Interactive skill tree that maps your journey from basics to interviews.', color: '#a855f7' },
-                            { icon: '✏️', title: 'Quiz Creator', desc: 'Build, share, and take custom coding quizzes with instant feedback.', color: 'var(--accent-yellow)' },
-                        ].map((f, i) => (
-                            <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.featCard}
-                                onMouseEnter={e => { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.boxShadow = `0 0 20px ${f.color}22`; }}
-                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                                <div style={{ fontSize: '28px', marginBottom: '10px' }}>{f.icon}</div>
-                                <h3 style={{ ...s.h3, color: f.color }}>{f.title}</h3>
-                                <p style={s.cardDesc}>{f.desc}</p>
-                            </Motion.div>
-                        ))}
-                    </div>
+            {/* Slide 4: Features (Transition: Grid Reveal / 3D Flip) */}
+            <motion.section
+                id="features"
+                initial={{ rotateX: 45, opacity: 0 }}
+                whileInView={{ rotateX: 0, opacity: 1 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 1 }}
+                style={s.section}
+            >
+                <div style={s.sectionHeader}>
+                    <h2 style={s.h2}>Engineered for Mastery</h2>
+                    <p style={s.h2Sub}>Professional-grade tools for modern developers.</p>
                 </div>
-
-                {/* Feature Category: Collaborate */}
-                <div style={s.featCategory}>
-                    <h3 style={{ ...s.catTitle, color: 'var(--accent-purple)' }}>🤝 Collaborate</h3>
-                    <div style={s.featGrid}>
-                        {[
-                            { icon: '👥', title: 'Collab Rooms', desc: 'Code together in real-time with shared editors, live cursors, and chat.', color: 'var(--accent-cyan)' },
-                            { icon: '🏫', title: 'Live Classrooms', desc: 'Instructors host live sessions with whiteboards, assignments, and analytics.', color: 'var(--accent-purple)' },
-                            { icon: '🎓', title: 'Campus Hub', desc: 'Manage classes, enrollments, assignments, and institutional settings.', color: 'var(--accent-orange)' },
-                            { icon: '💬', title: 'Discussion Forum', desc: 'Ask questions, share solutions, upvote answers — community learning.', color: '#f6ad55' },
-                        ].map((f, i) => (
-                            <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.featCard}
-                                onMouseEnter={e => { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.boxShadow = `0 0 20px ${f.color}22`; }}
-                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                                <div style={{ fontSize: '28px', marginBottom: '10px' }}>{f.icon}</div>
-                                <h3 style={{ ...s.h3, color: f.color }}>{f.title}</h3>
-                                <p style={s.cardDesc}>{f.desc}</p>
-                            </Motion.div>
-                        ))}
-                    </div>
+                <div style={s.featureGrid}>
+                    <FeatureCard icon="🔬" title="Memory Inspector" desc="Visualize pointers, stack frames, and heap allocation." color="var(--accent-blue)" />
+                    <FeatureCard icon="🤖" title="AI Code Narrator" desc="Line-by-line audio and text explanation of your logic." color="var(--accent-purple)" />
+                    <FeatureCard icon="🏁" title="Performance Race" desc="Compare time complexities with real-world datasets." color="var(--accent-green)" />
+                    <FeatureCard icon="🧩" title="Concept Mapping" desc="Connect themes between recursion and dynamic programming." color="var(--accent-red)" />
+                    <FeatureCard icon="📱" title="Universal Sync" desc="Code on any device with instant cloud synchronization." color="var(--accent-yellow)" />
+                    <FeatureCard icon="📊" title="Analytics Engine" desc="Identify your weak areas with deep behavioral metrics." color="var(--accent-cyan)" />
                 </div>
+            </motion.section>
 
-                {/* Feature Category: Dev Tools */}
-                <div style={s.featCategory}>
-                    <h3 style={{ ...s.catTitle, color: 'var(--accent-green)' }}>🛠️ AI-Powered Dev Tools</h3>
-                    <div style={s.featGrid}>
-                        {[
-                            { icon: '🤖', title: 'AI Code Review', desc: 'Get instant feedback on code quality, complexity, and best practices.', color: 'var(--accent-green)' },
-                            { icon: '🧪', title: 'Test Lab', desc: 'Test your code with custom inputs and edge cases before submitting.', color: 'var(--accent-red)' },
-                            { icon: '🌐', title: 'Code Translator', desc: 'Convert code between Python, JavaScript, Java, and C++ instantly.', color: 'var(--accent-cyan)' },
-                            { icon: '🔍', title: 'Plagiarism Detection', desc: 'Compare submissions for academic integrity with similarity scoring.', color: '#e879f9' },
-                        ].map((f, i) => (
-                            <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.featCard}
-                                onMouseEnter={e => { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.boxShadow = `0 0 20px ${f.color}22`; }}
-                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                                <div style={{ fontSize: '28px', marginBottom: '10px' }}>{f.icon}</div>
-                                <h3 style={{ ...s.h3, color: f.color }}>{f.title}</h3>
-                                <p style={s.cardDesc}>{f.desc}</p>
-                            </Motion.div>
-                        ))}
-                    </div>
+            {/* Slide 5: Quiz (Transition: Focus Blur) */}
+            <motion.section
+                initial={{ filter: "blur(20px)", opacity: 0 }}
+                whileInView={{ filter: "blur(0px)", opacity: 1 }}
+                viewport={{ once: false, amount: 0.6 }}
+                transition={{ duration: 0.8 }}
+                style={{ ...s.section, background: 'rgba(255,255,255,0.01)' }}
+            >
+                <div style={s.sectionHeader}>
+                    <h2 style={s.h2}>Instant Assessment</h2>
+                    <p style={s.h2Sub}>Test your cross-language proficiency with interactive challenges.</p>
                 </div>
+                <MultiQuizEngine />
+            </motion.section>
 
-                {/* Feature Category: Career Prep */}
-                <div style={s.featCategory}>
-                    <h3 style={{ ...s.catTitle, color: 'var(--accent-yellow)' }}>🚀 Career Prep & Growth</h3>
-                    <div style={s.featGrid}>
-                        {[
-                            { icon: '🎯', title: 'Mock Interviews', desc: 'Timed interview sessions with curated DSA problems. Track your performance.', color: '#fc8181' },
-                            { icon: '🎬', title: 'Video Lessons', desc: 'Watch topic explanations with YouTube embeds alongside code editors.', color: '#9f7aea' },
-                            { icon: '📊', title: 'Progress Reports', desc: 'Weekly analytics: activity heatmap, weak areas, and recommendations.', color: '#4fd1c5' },
-                            { icon: '🎮', title: 'XP & Gamification', desc: 'Daily check-ins, XP rewards, streak tracking, and leaderboards.', color: 'var(--accent-yellow)' },
-                        ].map((f, i) => (
-                            <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.featCard}
-                                onMouseEnter={e => { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.boxShadow = `0 0 20px ${f.color}22`; }}
-                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                                <div style={{ fontSize: '28px', marginBottom: '10px' }}>{f.icon}</div>
-                                <h3 style={{ ...s.h3, color: f.color }}>{f.title}</h3>
-                                <p style={s.cardDesc}>{f.desc}</p>
-                            </Motion.div>
-                        ))}
-                    </div>
+            {/* Slide 6: Multi-Lang (Transition: Console Slide-Up) */}
+            <motion.section
+                initial={{ y: 200, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                viewport={{ once: false, amount: 0.4 }}
+                transition={{ type: "spring", damping: 15 }}
+                style={s.section}
+            >
+                <div style={s.sectionHeader}>
+                    <h2 style={s.h2}>Polyglot Playground</h2>
+                    <p style={s.h2Sub}>The same visual lesson, available in 7 major languages.</p>
                 </div>
+                <PolyglotEngine />
+            </motion.section>
 
-                {/* Feature Category: Platform */}
-                <div style={s.featCategory}>
-                    <h3 style={{ ...s.catTitle, color: 'var(--accent-cyan)' }}>📱 Platform & Extras</h3>
-                    <div style={s.featGrid}>
-                        {[
-                            { icon: '📱', title: 'Mobile PWA', desc: 'Install on your phone. Review roadmaps, check leaderboards on the go.', color: '#38b2ac' },
-                            { icon: '🎥', title: 'Session Recording', desc: 'Record and replay your coding sessions to review your approach.', color: 'var(--accent-blue)' },
-                            { icon: '🤖', title: 'AI Tutor', desc: 'Stuck? Ask the AI tutor anything. It adapts explanations to your level.', color: 'var(--accent-yellow)' },
-                        ].map((f, i) => (
-                            <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.featCard}
-                                onMouseEnter={e => { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.boxShadow = `0 0 20px ${f.color}22`; }}
-                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                                <div style={{ fontSize: '28px', marginBottom: '10px' }}>{f.icon}</div>
-                                <h3 style={{ ...s.h3, color: f.color }}>{f.title}</h3>
-                                <p style={s.cardDesc}>{f.desc}</p>
-                            </Motion.div>
-                        ))}
-                    </div>
+            {/* Slide 7: CTA (Transition: Radial Expansion) */}
+            <motion.section
+                initial={{ scale: 0.5, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                viewport={{ once: false, amount: 0.8 }}
+                transition={{ duration: 0.6 }}
+                style={s.finalCta}
+            >
+                <div style={s.statsWrapper}>
+                    <StatItem num="12K+" label="Visual Learners" />
+                    <StatItem num="18+" label="Core Modules" />
+                    <StatItem num="7" label="Languages" />
+                    <StatItem num="98%" label="Satisfaction" />
                 </div>
-            </section>
-
-            {/* ── Section 5: Learning Path ── */}
-            <section id="path" style={s.section}>
-                <h2 style={s.h2}>Your Learning Journey</h2>
-                <p style={s.sectionSub}>A structured roadmap from beginner to interview-ready</p>
-                <div style={s.pathContainer}>
-                    {[
-                        { name: 'Basics', icon: '📦', level: 'Beginner', color: 'var(--accent-green)' },
-                        { name: 'Arrays', icon: '📊', level: 'Beginner', color: 'var(--accent-green)' },
-                        { name: 'Strings', icon: '📝', level: 'Beginner', color: 'var(--accent-green)' },
-                        { name: 'Searching', icon: '🔍', level: 'Intermediate', color: 'var(--accent-yellow)' },
-                        { name: 'Sorting', icon: '📈', level: 'Intermediate', color: 'var(--accent-yellow)' },
-                        { name: 'Recursion', icon: '🔄', level: 'Intermediate', color: 'var(--accent-yellow)' },
-                        { name: 'Hash Maps', icon: '🗂️', level: 'Intermediate', color: 'var(--accent-yellow)' },
-                        { name: 'Stacks', icon: '📚', level: 'Advanced', color: 'var(--accent-red)' },
-                        { name: 'Linked Lists', icon: '🔗', level: 'Advanced', color: 'var(--accent-red)' },
-                        { name: 'Queues', icon: '🚶', level: 'Advanced', color: 'var(--accent-red)' },
-                    ].map((c, i) => (
-                        <Motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} style={s.pathNode}>
-                            <div style={s.pathIcon}>{c.icon}</div>
-                            <div style={s.pathName}>{c.name}</div>
-                            <div style={{ ...s.pathBadge, background: `${c.color}20`, color: c.color, borderColor: `${c.color}40` }}>{c.level}</div>
-                            {i < 9 && <div style={s.pathArrow}>→</div>}
-                        </Motion.div>
-                    ))}
+                <div style={s.premiumPanel}>
+                    <h2 style={{ ...s.h2, fontSize: '48px', marginBottom: '20px' }}>Ready to Start?</h2>
+                    <p style={{ marginBottom: '40px', color: '#888', maxWidth: '600px', margin: '0 auto 40px' }}>Join the community of thousands who chose to see their code, not just read it.</p>
+                    <button onClick={() => navigate('/signup')} style={s.ultimateBtn}>Join CodeViz Free</button>
                 </div>
-            </section>
+            </motion.section>
 
-            {/* ── Section 6: Why CodeViz vs Others ── */}
-            <section id="compare" style={{ ...s.section, background: 'var(--bg-secondary)' }}>
-                <h2 style={s.h2}>Why CodeViz?</h2>
-                <p style={s.sectionSub}>See how we compare to other learning platforms</p>
-                <div style={s.tableWrap}>
-                    <table style={s.table}>
-                        <thead>
-                            <tr>
-                                <th style={s.th}>Feature</th>
-                                <th style={{ ...s.th, color: 'var(--accent-blue)' }}>CodeViz</th>
-                                <th style={s.th}>LeetCode</th>
-                                <th style={s.th}>HackerRank</th>
-                                <th style={s.th}>Codecademy</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {[
-                                ['Step-by-step Visualization', '✅', '❌', '❌', '❌'],
-                                ['AI Tutor', '✅', '🔒 Premium', '❌', '🔒 Premium'],
-                                ['Mock Interview Mode', '✅', '✅', '❌', '❌'],
-                                ['Discussion Forum', '✅', '✅', '✅', '❌'],
-                                ['Video Lessons', '✅', '❌', '❌', '✅'],
-                                ['Progress Reports', '✅', '🔒 Premium', '❌', '🔒 Premium'],
-                                ['Real-time Collab Rooms', '✅', '❌', '❌', '❌'],
-                                ['Live Classrooms', '✅', '❌', '❌', '❌'],
-                                ['Plagiarism Detection', '✅', '❌', '❌', '❌'],
-                                ['Mobile PWA', '✅', '✅', '❌', '✅'],
-                                ['Gamification (XP/Streaks)', '✅', '✅', '✅', '❌'],
-                                ['Free & Open Source', '✅', '❌', '❌', '❌'],
-                            ].map((row, i) => (
-                                <tr key={i} style={i % 2 === 0 ? { background: 'var(--bg-surface)' } : {}}>
-                                    <td style={s.td}>{row[0]}</td>
-                                    <td style={{ ...s.td, fontWeight: 600 }}>{row[1]}</td>
-                                    <td style={s.td}>{row[2]}</td>
-                                    <td style={s.td}>{row[3]}</td>
-                                    <td style={s.td}>{row[4]}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            {/* ── Section 7: Interactive Quiz Teaser ── */}
-            <section style={s.section}>
-                <h2 style={s.h2}>Think You Know DSA? Try This!</h2>
-                <p style={s.sectionSub}>A taste of the tricky questions you&apos;ll find inside</p>
-                <QuizTeaser />
-            </section>
-
-            {/* ── Section 8: Multi-Language Code ── */}
-            <section style={{ ...s.section, background: 'var(--bg-secondary)' }}>
-                <h2 style={s.h2}>Write Once, Learn in 4 Languages</h2>
-                <p style={s.sectionSub}>Every lesson shows code in Python, JavaScript, Java & C++ side-by-side</p>
-                <MultiLangPreview />
-            </section>
-
-            {/* ── Section 9: Stats + Final CTA ── */}
-            <section style={s.section}>
-                <div style={s.statsGrid}>
-                    {[
-                        { icon: '🎓', num: '10', label: 'Structured Courses', detail: 'Beginner → Advanced' },
-                        { icon: '🌐', num: '4', label: 'Languages', detail: 'Python, JS, Java, C++' },
-                        { icon: '🛠️', num: '15+', label: 'Platform Features', detail: 'AI Tools, Collab, Mock Interviews' },
-                        { icon: '⚡', num: '∞', label: 'Practice Sessions', detail: 'Unlimited code execution' },
-                    ].map((stat, i) => (
-                        <Motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={s.statCard}>
-                            <div style={{ fontSize: '28px', marginBottom: '8px' }}>{stat.icon}</div>
-                            <div style={s.statNum}>{stat.num}</div>
-                            <div style={s.statLabel}>{stat.label}</div>
-                            <div style={s.statDetail}>{stat.detail}</div>
-                        </Motion.div>
-                    ))}
-                </div>
-                <div style={s.finalCTA}>
-                    <h2 style={s.h2}>Ready to See Your Code Come Alive?</h2>
-                    <p style={{ ...s.sectionSub, marginBottom: '24px' }}>Join thousands of developers mastering DSA the visual way</p>
-                    {isLoggedIn ? (
-                        <Motion.button onClick={() => navigate('/')} style={{ ...s.primary, fontSize: '18px', padding: '16px 40px' }} whileHover={{ scale: 1.05 }}>
-                            Go to Dashboard →
-                        </Motion.button>
-                    ) : (
-                        <div style={s.ctaRow}>
-                            <Motion.button onClick={() => navigate('/signup')} style={{ ...s.primary, fontSize: '18px', padding: '16px 40px' }} whileHover={{ scale: 1.05 }}>
-                                🚀 Start Learning — It&apos;s Free
-                            </Motion.button>
-                            <Motion.button onClick={() => navigate('/login')} style={{ ...s.secondary, fontSize: '16px', padding: '14px 30px' }} whileHover={{ scale: 1.05 }}>
-                                Already have an account? Sign In
-                            </Motion.button>
-                        </div>
-                    )}
-                </div>
-            </section>
-
-            {/* Footer */}
             <footer style={s.footer}>
-                <span style={s.logo}>{'{'} <span style={s.logoAccent}>CodeViz</span> {'}'}</span>
-                <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'var(--font-code)' }}>
-                    © 2026 CodeViz — Learn DSA Visually
-                </span>
+                <div style={s.footerLeft}>
+                    <span style={s.logoText}>CodeViz</span>
+                    <p style={{ fontSize: '12px', color: '#444' }}>Beyond the syntax. Into the logic.</p>
+                </div>
+                <div style={s.footerMeta}>
+                    <span>Privacy Policy</span> • <span>Terms of Service</span> • <span>Contact Us</span>
+                </div>
             </footer>
         </div>
     );
 };
 
-/* ───────── Sub-Component: Live Sort Demo ───────── */
-const LiveSortDemo = () => {
+/* ───────── Slide Components ───────── */
+
+const HeroSection = ({ navigate }) => {
+    // 3. Live Typing Terminal
+    const fullCode = `void dfs(int u) {
+    visited[u] = true;
+    viz.step(u); 
+    for(int v : adj[u]) {
+        if(!visited[v]) dfs(v);
+    }
+}`;
+    const [typedCode, setTypedCode] = useState('');
+    const [cursorVisible, setCursorVisible] = useState(true);
+
+    useEffect(() => {
+        let current = '';
+        let i = 0;
+        const interval = setInterval(() => {
+            current += fullCode[i];
+            setTypedCode(current);
+            i++;
+            if (i >= fullCode.length) clearInterval(interval);
+        }, 40);
+        return () => clearInterval(interval);
+    }, [fullCode]);
+
+    useEffect(() => {
+        const cursorInt = setInterval(() => setCursorVisible(v => !v), 500);
+        return () => clearInterval(cursorInt);
+    }, []);
+
+    return (
+        <section style={s.hero}>
+            <div style={s.heroContent}>
+                <div style={s.heroTextSide}>
+                    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} style={s.ultraBadge}>
+                        <span style={s.pulseDot} /> NEURAL RENDERING ENGINE v3.0
+                    </motion.div>
+                    <KineticText text="Architect the " style={s.h1} spanText="Future." spanStyle={s.gradientText} />
+                    <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} style={s.subText}>
+                        CodeViz transforms dry syntax into immersive, interactive, high-fidelity 3D geometric journeys. Watch every pointer, array shift, and recursion depth come to life in radiant detail.
+                    </motion.p>
+                    <div style={s.ctaGroup}>
+                        <MagneticButton onClick={() => navigate('/signup')} style={s.primaryBtn}>Initialize Adventure</MagneticButton>
+                        <MagneticButton onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })} style={s.secondaryBtn}>Explore Demos</MagneticButton>
+                    </div>
+                </div>
+                <TiltCard>
+                    <div style={s.heroConsole}>
+                        <div style={s.consoleTop}>
+                            <div style={s.consoleDots}><span style={{ ...s.cDot, background: '#ff5f56' }} /><span style={{ ...s.cDot, background: '#ffbd2e' }} /><span style={{ ...s.cDot, background: '#27c93f' }} /></div>
+                            <div style={s.consoleTab}>recursive_dfs.cpp</div>
+                        </div>
+                        <div style={s.consoleBody}>
+                            <pre style={s.consoleCode}>
+                                {typedCode}
+                                <span style={{ opacity: cursorVisible ? 1 : 0, color: '#fff' }}>▋</span>
+                            </pre>
+                        </div>
+                        <div style={s.consoleOverlay}>
+                            <div style={s.vizStatus}>3D PERSPECTIVE: ON</div>
+                        </div>
+                    </div>
+                </TiltCard>
+            </div>
+        </section>
+    );
+};
+
+const EnhancedSortDemo = () => {
     const [arr, setArr] = useState([64, 34, 25, 12, 22, 11, 90, 45]);
-    const [sorting, setSorting] = useState(false);
-    const [activeIdx, setActiveIdx] = useState([-1, -1]);
-    const [sorted, setSorted] = useState(false);
     const [algo, setAlgo] = useState('bubble');
-    const timeouts = useRef([]);
+    const [sorting, setSorting] = useState(false);
+    const [active, setActive] = useState([-1, -1]);
+    const max = Math.max(...arr);
 
-    const reset = () => {
-        timeouts.current.forEach(clearTimeout);
-        setArr(Array.from({ length: 8 }, () => Math.floor(Math.random() * 90) + 10));
-        setSorting(false);
-        setSorted(false);
-        setActiveIdx([-1, -1]);
-    };
-
-    const runSort = () => {
-        setSorting(true);
-        setSorted(false);
-        const a = [...arr];
-        const steps = [];
-
-        if (algo === 'bubble') {
-            for (let i = 0; i < a.length; i++)
-                for (let j = 0; j < a.length - i - 1; j++) {
-                    steps.push({ i: j, j: j + 1, arr: [...a] });
-                    if (a[j] > a[j + 1]) { [a[j], a[j + 1]] = [a[j + 1], a[j]]; steps.push({ i: j, j: j + 1, arr: [...a] }); }
+    const bubbleSort = async (a) => {
+        for (let i = 0; i < a.length; i++) {
+            for (let j = 0; j < a.length - i - 1; j++) {
+                setActive([j, j + 1]);
+                await new Promise(r => setTimeout(r, 80));
+                if (a[j] > a[j + 1]) {
+                    [a[j], a[j + 1]] = [a[j + 1], a[j]];
+                    setArr([...a]);
                 }
-        } else {
-            for (let i = 1; i < a.length; i++) {
-                let key = a[i], j = i - 1;
-                while (j >= 0 && a[j] > key) { steps.push({ i: j, j: j + 1, arr: [...a] }); a[j + 1] = a[j]; j--; }
-                a[j + 1] = key;
-                steps.push({ i: j + 1, j: i, arr: [...a] });
             }
         }
-
-        steps.forEach((step, idx) => {
-            const t = setTimeout(() => {
-                setArr(step.arr);
-                setActiveIdx([step.i, step.j]);
-                if (idx === steps.length - 1) setTimeout(() => { setSorting(false); setSorted(true); setActiveIdx([-1, -1]); }, 200);
-            }, idx * 100);
-            timeouts.current.push(t);
-        });
     };
 
-    const maxVal = Math.max(...arr);
+    const selectionSort = async (a) => {
+        for (let i = 0; i < a.length; i++) {
+            let min = i;
+            for (let j = i + 1; j < a.length; j++) {
+                setActive([min, j]);
+                await new Promise(r => setTimeout(r, 80));
+                if (a[j] < a[min]) min = j;
+            }
+            [a[i], a[min]] = [a[min], a[i]];
+            setArr([...a]);
+        }
+    };
+
+    const insertionSort = async (a) => {
+        for (let i = 1; i < a.length; i++) {
+            let key = a[i];
+            let j = i - 1;
+            setActive([i, j]);
+            while (j >= 0 && a[j] > key) {
+                a[j + 1] = a[j];
+                j = j - 1;
+                setActive([i, j]);
+                setArr([...a]);
+                await new Promise(r => setTimeout(r, 80));
+            }
+            a[j + 1] = key;
+            setArr([...a]);
+        }
+    };
+
+    const runSort = async () => {
+        setSorting(true);
+        const a = [...arr];
+        if (algo === 'bubble') await bubbleSort(a);
+        else if (algo === 'selection') await selectionSort(a);
+        else if (algo === 'insertion') await insertionSort(a);
+        setActive([-1, -1]);
+        setSorting(false);
+    };
+
     return (
-        <div style={{ textAlign: 'center' }}>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
-                {['bubble', 'insertion'].map(a => (
-                    <button key={a} onClick={() => { if (!sorting) setAlgo(a); }} style={{ ...s.algoTab, ...(algo === a ? s.algoTabActive : {}) }}>
-                        {a === 'bubble' ? 'Bubble Sort' : 'Insertion Sort'}
-                    </button>
+        <div style={s.demoContainer}>
+            <div style={s.algoTabs}>
+                {['bubble', 'selection', 'insertion'].map(n => (
+                    <button key={n} onClick={() => setAlgo(n)} style={{ ...s.algoTab, background: algo === n ? 'rgba(97,218,251,0.1)' : 'transparent', color: algo === n ? '#61dafb' : '#555' }}>{n.toUpperCase()}</button>
                 ))}
             </div>
-            <div style={s.barContainer}>
-                {arr.map((val, i) => (
-                    <div key={i} style={{
-                        width: '40px', height: `${(val / maxVal) * 180}px`,
-                        background: activeIdx.includes(i) ? 'var(--accent-red)' : sorted ? 'var(--accent-green)' : 'var(--accent-blue)',
-                        borderRadius: '4px 4px 0 0', transition: 'all 100ms ease',
-                        display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: '4px',
-                        fontSize: '11px', fontFamily: 'var(--font-code)', color: '#fff', fontWeight: 600,
-                    }}>{val}</div>
+            <div style={s.visualizerBox}>
+                {arr.map((v, i) => (
+                    <motion.div key={i} layout style={{
+                        width: '45px',
+                        height: `${(v / max) * 160 + 40}px`,
+                        background: active.includes(i) ? 'var(--accent-red)' : 'var(--accent-blue)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'center',
+                        color: active.includes(i) ? '#fff' : 'rgba(0,0,0,0.6)',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        paddingTop: '10px',
+                        boxShadow: active.includes(i) ? '0 0 20px var(--accent-red)' : 'none'
+                    }}>
+                        {v}
+                    </motion.div>
                 ))}
             </div>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '20px' }}>
-                <button onClick={runSort} disabled={sorting} style={{ ...s.primary, opacity: sorting ? 0.5 : 1, padding: '10px 24px', fontSize: '14px' }}>
-                    {sorting ? '⏳ Sorting...' : '▶ Run'}
-                </button>
-                <button onClick={reset} style={{ ...s.secondary, padding: '10px 24px', fontSize: '14px' }}>🔄 Randomize</button>
+            <div style={s.vizControls}>
+                <button onClick={runSort} disabled={sorting} style={s.runBtn}>{sorting ? 'Sorting...' : `Run ${algo}`}</button>
+                <button onClick={() => setArr(arr.map(() => Math.floor(Math.random() * 80) + 10))} style={s.randBtn}>Randomize</button>
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '10px', fontFamily: 'var(--font-code)' }}>
-                {sorted ? '✅ Sorted! Click Randomize to try again' : `Watch ${algo === 'bubble' ? 'Bubble' : 'Insertion'} Sort in action — compare both!`}
-            </p>
         </div>
     );
 };
 
-/* ───────── Sub-Component: Quiz Teaser ───────── */
-const QuizTeaser = () => {
-    const questions = [
-        { q: 'What does this Python code print?\narr = [1, 2, 3]\narr.append([4, 5])\nprint(len(arr))', opts: ['3', '4', '5', 'Error'], ans: 1, why: 'append() adds [4,5] as a single element — so arr = [1, 2, 3, [4, 5]], length = 4.' },
-        { q: 'What is the time complexity of Binary Search?', opts: ['O(n)', 'O(log n)', 'O(n²)', 'O(1)'], ans: 1, why: 'Binary Search halves the search space each step — O(log n).' },
-        { q: 'In JavaScript, what does [10, 9, 8].sort() return?', opts: ['[8, 9, 10]', '[10, 9, 8]', '[10, 8, 9]', 'Error'], ans: 2, why: 'JS sort() converts to strings by default: "10" < "8" < "9" lexicographically → [10, 8, 9].' },
-    ];
-    const [idx, setIdx] = useState(0);
-    const [selected, setSelected] = useState(null);
-    const q = questions[idx];
+const DenseSkillTree = () => {
+    // 2. Interactive Physics Roadmap
+    const constraintsRef = useRef(null);
+    return (
+        <div style={s.treeView} ref={constraintsRef}>
+            <div style={s.treeGrid}>
+                <PhysicsNode constraintsRef={constraintsRef} icon="📦" label="Basics" col="var(--accent-blue)" />
+                <PhysicsNode constraintsRef={constraintsRef} icon="📊" label="Arrays" col="var(--accent-green)" />
+                <PhysicsNode constraintsRef={constraintsRef} icon="🔤" label="Strings" col="var(--accent-cyan)" />
+                <PhysicsNode constraintsRef={constraintsRef} icon="🥞" label="Stacks" col="var(--accent-purple)" />
+                <PhysicsNode constraintsRef={constraintsRef} icon="🚶" label="Queues" col="var(--accent-yellow)" />
+                <PhysicsNode constraintsRef={constraintsRef} icon="🔍" label="Searching" col="var(--accent-orange)" />
+                <PhysicsNode constraintsRef={constraintsRef} icon="🕸️" label="Graph" col="var(--accent-red)" />
+                <PhysicsNode constraintsRef={constraintsRef} icon="🧠" label="DP" col="var(--accent-blue)" />
+            </div>
+            <div style={s.treeLines}>
+                <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, opacity: 0.1, pointerEvents: 'none' }}>
+                    <line x1="12.5%" y1="25%" x2="37.5%" y2="25%" stroke="white" strokeWidth="1" />
+                    <line x1="37.5%" y1="25%" x2="62.5%" y2="25%" stroke="white" strokeWidth="1" />
+                    <line x1="62.5%" y1="25%" x2="87.5%" y2="25%" stroke="white" strokeWidth="1" />
+                    <line x1="12.5%" y1="75%" x2="37.5%" y2="75%" stroke="white" strokeWidth="1" />
+                    <line x1="37.5%" y1="75%" x2="62.5%" y2="75%" stroke="white" strokeWidth="1" />
+                    <line x1="62.5%" y1="75%" x2="87.5%" y2="75%" stroke="white" strokeWidth="1" />
+                </svg>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: '40px', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+                * Yes, you can drag and throw the nodes.
+            </div>
+        </div>
+    );
+};
 
-    const next = () => { setIdx((idx + 1) % questions.length); setSelected(null); };
+const MultiQuizEngine = () => {
+    const [quizIdx, setQuizIdx] = useState(0);
+    const [selected, setSelected] = useState(null);
+    const quizzes = [
+        { lang: 'Python', q: 'Which is used for List Comprehension?', opts: ['( )', '[ ]', '{ }', '< >'], ans: 1, info: '[x for x in list] is Pythonic.' },
+        { lang: 'Java', q: 'How do you create a Pointer?', opts: ['*', '&', 'Object obj', 'new Obj()'], ans: 3, info: 'Java handles memory via references & "new".' },
+        { lang: 'JS', q: 'What is the type of NaN?', opts: ['NaN', 'number', 'undefined', 'object'], ans: 1, info: 'typeof NaN is actually "number"!' }
+    ];
+
+    const cur = quizzes[quizIdx];
 
     return (
-        <div style={s.quizCard}>
-            <div style={s.quizQ}>
-                <pre style={{ margin: 0, fontFamily: 'var(--font-code)', fontSize: '14px', whiteSpace: 'pre-wrap', color: 'var(--text-bright)', lineHeight: 1.6 }}>{q.q}</pre>
+        <div style={s.quizHost}>
+            <div style={s.quizHeaderBox}>
+                <span style={s.quizLang}>{cur.lang} Challenge</span>
+                <span style={s.quizPg}>{quizIdx + 1} / 3</span>
             </div>
-            <div style={s.quizOpts}>
-                {q.opts.map((opt, i) => (
+            <p style={s.quizText}>{cur.q}</p>
+            <div style={s.quizOptions}>
+                {cur.opts.map((o, i) => (
                     <button key={i} onClick={() => setSelected(i)} style={{
-                        ...s.quizOpt,
-                        borderColor: selected === null ? 'var(--border-color)' : i === q.ans ? 'var(--accent-green)' : selected === i ? 'var(--accent-red)' : 'var(--border-color)',
-                        background: selected === null ? 'var(--bg-surface)' : i === q.ans ? 'rgba(152,195,121,0.1)' : selected === i ? 'rgba(224,108,117,0.1)' : 'var(--bg-surface)',
+                        ...s.quizBtn,
+                        borderColor: selected === i ? (i === cur.ans ? 'var(--accent-green)' : 'var(--accent-red)') : 'rgba(255,255,255,0.05)',
+                        background: selected === i ? (i === cur.ans ? 'rgba(152,195,121,0.05)' : 'rgba(224,108,117,0.05)') : 'transparent'
                     }}>
-                        <span style={s.quizOptLetter}>{String.fromCharCode(65 + i)}</span> {opt}
+                        {o} {selected === i && (i === cur.ans ? '✅' : '❌')}
                     </button>
                 ))}
             </div>
             {selected !== null && (
-                <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={s.quizExplain}>
-                    <span style={{ color: selected === q.ans ? 'var(--accent-green)' : 'var(--accent-red)', fontWeight: 700 }}>
-                        {selected === q.ans ? '✅ Correct!' : '❌ Not quite.'}
-                    </span>{' '}
-                    {q.why}
-                    <br />
-                    <button onClick={next} style={{ ...s.primary, marginTop: '12px', padding: '8px 20px', fontSize: '13px' }}>Next Question →</button>
-                </Motion.div>
+                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '13px', color: '#888', marginBottom: '16px' }}>{cur.info}</p>
+                    <button onClick={() => { setQuizIdx((quizIdx + 1) % 3); setSelected(null); }} style={s.nextBtn}>Next Challenge →</button>
+                </div>
             )}
         </div>
     );
 };
 
-/* ───────── Sub-Component: Multi-Language Preview ───────── */
-const MultiLangPreview = () => {
-    const [lang, setLang] = useState('python');
-    const snippets = {
-        python: `# Python - Binary Search
-def binary_search(arr, target):
-    low, high = 0, len(arr) - 1
-    while low <= high:
-        mid = (low + high) // 2
-        if arr[mid] == target:
-            return mid
-        elif arr[mid] < target:
-            low = mid + 1
-        else:
-            high = mid - 1
-    return -1`,
-        javascript: `// JavaScript - Binary Search
-function binarySearch(arr, target) {
-    let low = 0, high = arr.length - 1;
-    while (low <= high) {
-        let mid = Math.floor((low + high) / 2);
-        if (arr[mid] === target) return mid;
-        else if (arr[mid] < target) low = mid + 1;
-        else high = mid - 1;
-    }
-    return -1;
-}`,
-        java: `// Java - Binary Search
-public static int binarySearch(int[] arr, int target) {
-    int low = 0, high = arr.length - 1;
-    while (low <= high) {
-        int mid = (low + high) / 2;
-        if (arr[mid] == target) return mid;
-        else if (arr[mid] < target) low = mid + 1;
-        else high = mid - 1;
-    }
-    return -1;
-}`,
-        cpp: `// C++ - Binary Search
-int binarySearch(vector<int>& arr, int target) {
-    int low = 0, high = arr.size() - 1;
-    while (low <= high) {
-        int mid = (low + high) / 2;
-        if (arr[mid] == target) return mid;
-        else if (arr[mid] < target) low = mid + 1;
-        else high = mid - 1;
-    }
-    return -1;
-}`
+const PolyglotEngine = () => {
+    const [lang, setLang] = useState('cpp');
+    const examples = {
+        cpp: 'struct Node {\n  int val;\n  Node *next;\n};',
+        java: 'class Node {\n  int val;\n  Node next;\n}',
+        python: 'class Node:\n    def __init__(self, x):\n        self.val = x\n        self.next = None',
+        go: 'type Node struct {\n    val  int\n    next *Node\n}',
+        ts: 'interface Node {\n  val: number;\n  next: Node | null;\n}'
     };
-    const labels = { python: 'Python', javascript: 'JavaScript', java: 'Java', cpp: 'C++', typescript: 'TypeScript', go: 'Go', c: 'C' };
     return (
-        <div style={s.codeWin2}>
-            <div style={s.langTabs}>
-                {Object.keys(labels).map(l => (
-                    <button key={l} onClick={() => setLang(l)} style={{ ...s.langTab, ...(lang === l ? s.langTabActive : {}) }}>{labels[l]}</button>
+        <div style={s.polyHost}>
+            <div style={s.polySidebar}>
+                {Object.keys(examples).map(l => (
+                    <button key={l} onClick={() => setLang(l)} style={{ ...s.polyTab, color: lang === l ? '#fff' : '#444', borderLeft: lang === l ? '2px solid var(--accent-blue)' : 'none' }}>{l.toUpperCase()}</button>
                 ))}
             </div>
-            <pre style={s.code2}>{snippets[lang]}</pre>
+            <div style={s.polyCode}>
+                {/* 5. Code Execution Scanner */}
+                <motion.div
+                    animate={{ top: ['0%', '100%', '0%'] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                    style={{ position: 'absolute', left: 0, right: 0, height: '2px', background: 'var(--accent-purple)', boxShadow: '0 0 20px 2px var(--accent-purple)', opacity: 0.5, zIndex: 5, pointerEvents: 'none' }}
+                />
+                <pre style={{ margin: 0, fontFamily: 'monospace', color: 'var(--accent-cyan)' }}>{examples[lang]}</pre>
+                <div style={s.polyOverlay}>LIVE COMPILER EMULATION ACTIVE</div>
+            </div>
         </div>
     );
 };
 
-/* ═══════════ Styles ═══════════ */
-const s = {
-    page: { background: 'var(--bg-primary)', color: 'var(--text-primary)', minHeight: '100vh' },
-    nav: { position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 32px', background: 'rgba(30,30,46,0.85)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border-color)' },
-    logo: { fontFamily: 'var(--font-code)', fontSize: '16px', fontWeight: 700, color: 'var(--text-muted)' },
-    logoAccent: { color: 'var(--accent-blue)' },
-    navLinks: { display: 'flex', alignItems: 'center', gap: '20px' },
-    navLink: { fontFamily: 'var(--font-code)', fontSize: '13px', color: 'var(--text-secondary)', textDecoration: 'none' },
-    navLinkBtn: { fontFamily: 'var(--font-code)', fontSize: '13px', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer' },
-    navBtn: { fontFamily: 'var(--font-code)', fontSize: '13px', padding: '8px 18px', background: 'var(--accent-blue)', color: '#111', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 },
+/* ───────── Utility Widgets ───────── */
 
-    hero: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '60px', padding: '80px 40px 60px', maxWidth: '1200px', margin: '0 auto', minHeight: '80vh', flexWrap: 'wrap' },
-    heroText: { flex: 1, minWidth: '320px', maxWidth: '550px' },
-    badge: { display: 'inline-block', padding: '6px 16px', background: 'rgba(97,218,251,0.1)', border: '1px solid rgba(97,218,251,0.25)', borderRadius: '20px', fontSize: '12px', color: 'var(--accent-blue)', marginBottom: '20px', fontFamily: 'var(--font-code)' },
-    h1: { fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 800, lineHeight: 1.1, margin: '0 0 20px', fontFamily: 'var(--font-code)' },
-    gradient: { background: 'linear-gradient(135deg, var(--accent-blue), var(--accent-purple), var(--accent-cyan))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' },
-    sub: { fontSize: '16px', color: 'var(--text-secondary)', lineHeight: 1.7, margin: '0 0 25px' },
-    langRow: { display: 'flex', gap: '10px', marginBottom: '30px', flexWrap: 'wrap' },
-    pill: { padding: '5px 14px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '16px', fontSize: '12px', color: 'var(--accent-green)', fontFamily: 'var(--font-code)' },
-    ctaRow: { display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' },
-    primary: { padding: '14px 32px', background: 'linear-gradient(135deg, var(--accent-blue), var(--accent-purple))', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '15px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-code)', boxShadow: '0 4px 20px rgba(97,218,251,0.3)' },
-    secondary: { padding: '14px 32px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-secondary)', fontSize: '15px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-code)' },
+const KineticText = ({ text, style, spanText, spanStyle }) => {
+    const [display, setDisplay] = useState(text.split('').map(() => '!'));
+    const [spanDisplay, setSpanDisplay] = useState(spanText ? spanText.split('').map(() => '!') : []);
 
-    codeWin: { flex: 1, minWidth: '320px', maxWidth: '480px', background: 'var(--bg-surface)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' },
-    codeBar: { display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' },
-    dot: { width: '12px', height: '12px', borderRadius: '50%' },
-    codeFile: { marginLeft: 'auto', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-code)' },
-    code: { padding: '20px', margin: 0, fontSize: '13px', lineHeight: 1.7, color: 'var(--accent-blue)', fontFamily: 'var(--font-code)', overflow: 'hidden' },
-    codeOut: { padding: '12px 20px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid var(--border-color)', fontSize: '12px', fontFamily: 'var(--font-code)', lineHeight: 1.6 },
+    useEffect(() => {
+        let iterations = 0;
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+        const interval = setInterval(() => {
+            setDisplay(prev => prev.map((char, index) => {
+                if (index < iterations) return text[index];
+                return chars[Math.floor(Math.random() * chars.length)];
+            }));
+            if (spanText) {
+                setSpanDisplay(prev => prev.map((char, index) => {
+                    if (index < iterations) return spanText[index];
+                    return chars[Math.floor(Math.random() * chars.length)];
+                }));
+            }
+            if (iterations >= Math.max(text.length, spanText ? spanText.length : 0)) clearInterval(interval);
+            iterations += 1 / 3;
+        }, 30);
+        return () => clearInterval(interval);
+    }, [text, spanText]);
 
-    section: { padding: '80px 40px', maxWidth: '1100px', margin: '0 auto' },
-    h2: { textAlign: 'center', fontSize: '28px', fontWeight: 700, fontFamily: 'var(--font-code)', marginBottom: '12px', color: 'var(--text-bright)' },
-    h3: { fontSize: '16px', fontWeight: 600, fontFamily: 'var(--font-code)', margin: '0 0 6px' },
-    sectionSub: { textAlign: 'center', color: 'var(--text-muted)', marginBottom: '40px', fontSize: '14px' },
-
-    /* How it works */
-    stepsRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' },
-    stepCard: { background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '28px', textAlign: 'center', transition: 'all 0.25s' },
-    stepNum: { fontFamily: 'var(--font-code)', fontSize: '36px', fontWeight: 800, opacity: 0.3, marginBottom: '4px' },
-
-    /* Feature categories */
-    featCategory: { marginBottom: '36px' },
-    catTitle: { fontFamily: 'var(--font-code)', fontSize: '18px', fontWeight: 700, marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' },
-    featGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' },
-    featCard: { background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', transition: 'all 0.25s', cursor: 'default' },
-    cardDesc: { fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 },
-
-    barContainer: { display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '8px', height: '200px', padding: '10px 0' },
-    algoTab: { fontFamily: 'var(--font-code)', fontSize: '13px', padding: '8px 18px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', color: 'var(--text-muted)', transition: 'all 0.2s' },
-    algoTabActive: { background: 'var(--accent-blue)', color: '#111', borderColor: 'var(--accent-blue)', fontWeight: 600 },
-
-    /* Learning path */
-    pathContainer: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', alignItems: 'center' },
-    pathNode: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '14px 12px 10px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '10px', minWidth: '85px', position: 'relative' },
-    pathIcon: { fontSize: '24px' },
-    pathName: { fontSize: '11px', fontFamily: 'var(--font-code)', color: 'var(--text-bright)', fontWeight: 600 },
-    pathBadge: { fontSize: '9px', fontFamily: 'var(--font-code)', padding: '2px 8px', borderRadius: '10px', border: '1px solid', fontWeight: 600, letterSpacing: '0.3px' },
-    pathArrow: { position: 'absolute', right: '-14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-blue)', fontFamily: 'var(--font-code)', fontSize: '14px', fontWeight: 700 },
-
-    /* Comparison table */
-    tableWrap: { overflowX: 'auto' },
-    table: { width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-code)', fontSize: '13px' },
-    th: { padding: '12px 16px', textAlign: 'left', borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' },
-    td: { padding: '10px 16px', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' },
-
-    /* Quiz teaser */
-    quizCard: { maxWidth: '600px', margin: '0 auto', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden' },
-    quizQ: { padding: '24px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)' },
-    quizOpts: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '20px' },
-    quizOpt: { fontFamily: 'var(--font-code)', fontSize: '13px', padding: '12px 16px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' },
-    quizOptLetter: { fontWeight: 700, color: 'var(--accent-blue)', fontSize: '14px', minWidth: '18px' },
-    quizExplain: { padding: '16px 20px', borderTop: '1px solid var(--border-color)', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 },
-
-    /* Multi-lang */
-    codeWin2: { maxWidth: '700px', margin: '0 auto', background: 'var(--bg-surface)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' },
-    langTabs: { display: 'flex', borderBottom: '1px solid var(--border-color)' },
-    langTab: { flex: 1, padding: '10px', background: 'transparent', border: 'none', color: 'var(--text-muted)', fontFamily: 'var(--font-code)', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' },
-    langTabActive: { background: 'var(--bg-hover)', color: 'var(--accent-blue)', borderBottom: '2px solid var(--accent-blue)' },
-    code2: { padding: '20px', margin: 0, fontSize: '13px', lineHeight: 1.7, color: 'var(--accent-green)', fontFamily: 'var(--font-code)', overflow: 'auto', maxHeight: '320px' },
-
-    /* Stats */
-    statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '60px' },
-    statCard: { textAlign: 'center', padding: '24px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px' },
-    statNum: { fontSize: '32px', fontWeight: 800, fontFamily: 'var(--font-code)', color: 'var(--accent-blue)' },
-    statLabel: { fontSize: '13px', color: 'var(--text-bright)', fontFamily: 'var(--font-code)', marginTop: '4px', fontWeight: 600 },
-    statDetail: { fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' },
-    finalCTA: { textAlign: 'center' },
-    footer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 40px', borderTop: '1px solid var(--border-color)' },
+    return (
+        <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} style={style}>
+            {display.join('')}<br />
+            {spanText && <span style={spanStyle}>{spanDisplay.join('')}</span>}
+        </motion.h1>
+    );
 };
+
+const MagneticButton = ({ children, onClick, style }) => {
+    const ref = useRef(null);
+    const [pos, setPos] = useState({ x: 0, y: 0 });
+
+    const mouseMove = (e) => {
+        const { clientX, clientY } = e;
+        const { height, width, left, top } = ref.current.getBoundingClientRect();
+        const middleX = clientX - (left + width / 2);
+        const middleY = clientY - (top + height / 2);
+        setPos({ x: middleX * 0.45, y: middleY * 0.45 });
+    };
+    const mouseLeave = () => setPos({ x: 0, y: 0 });
+
+    return (
+        <motion.button ref={ref} onMouseMove={mouseMove} onMouseLeave={mouseLeave} onClick={onClick}
+            animate={{ x: pos.x, y: pos.y }}
+            transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+            style={style}
+        >
+            {children}
+        </motion.button>
+    );
+};
+
+const PhysicsNode = ({ constraintsRef, icon, label, col }) => (
+    <motion.div
+        drag
+        dragConstraints={constraintsRef}
+        dragElastic={0.2}
+        dragSnapToOrigin={true}
+        whileHover={{ scale: 1.1, cursor: 'grab' }}
+        whileDrag={{ scale: 1.2, cursor: 'grabbing', zIndex: 100 }}
+        style={s.treeNode}
+    >
+        <div style={{ ...s.nodeBox, background: col }}>{icon}</div>
+        <span style={s.nodeText}>{label}</span>
+    </motion.div>
+);
+
+const StatItem = ({ num, label }) => (
+    <div style={s.statItem}>
+        <div style={s.statVal}>{num}</div>
+        <div style={s.statLabel}>{label}</div>
+    </div>
+);
+
+const FeatureCard = ({ icon, title, desc, color }) => {
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const [isHover, setIsHover] = useState(false);
+    return (
+        <motion.div
+            onMouseMove={e => {
+                const r = e.currentTarget.getBoundingClientRect();
+                setMousePos({ x: e.clientX - r.left, y: e.clientY - r.top });
+            }}
+            onMouseEnter={() => setIsHover(true)}
+            onMouseLeave={() => setIsHover(false)}
+            whileHover={{ y: -8, scale: 1.03 }}
+            style={{ 
+                ...s.fCard, 
+                border: `1px solid rgba(255,255,255,0.08)`, 
+                background: 'rgba(255,255,255,0.01)',
+                backdropFilter: 'blur(10px)',
+                position: 'relative', 
+                overflow: 'hidden',
+                boxShadow: isHover ? `0 15px 40px rgba(0,0,0,0.4)` : 'none'
+            }}
+        >
+            <motion.div style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none',
+                background: `radial-gradient(500px circle at ${mousePos.x}px ${mousePos.y}px, ${color}35 0%, transparent 70%)`,
+                mixBlendMode: 'screen', opacity: isHover ? 1 : 0, transition: 'opacity 0.3s ease'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ fontSize: '32px', marginBottom: '16px', filter: `drop-shadow(0 0 10px ${color})` }}>{icon}</div>
+                <h4 style={{ fontSize: '18px', fontWeight: 900, marginBottom: '12px', color: '#fff', letterSpacing: '-0.5px' }}>{title}</h4>
+                <p style={{ fontSize: '13px', color: '#888', lineHeight: 1.7 }}>{desc}</p>
+            </div>
+        </motion.div>
+    );
+};
+
+const Navbar = ({ navigate, isLoggedIn }) => (
+    <div style={s.nav}>
+        <div style={{ fontSize: '18px', fontWeight: 900, fontFamily: 'monospace', cursor: 'pointer' }} onClick={() => navigate('/')}>
+            <span style={{ color: 'var(--accent-blue)' }}>{'<'}</span>
+            CodeViz
+            <span style={{ color: 'var(--accent-purple)' }}>{'/>'}</span>
+        </div>
+        <div style={s.navItems}>
+            <a href="#demo" style={s.navI}>Demo</a>
+            <a href="#path" style={s.navI}>Curriculum</a>
+            <a href="#features" style={s.navI}>Tech</a>
+            {isLoggedIn ? (
+                <button onClick={() => navigate('/')} style={s.loginBtn}>Console</button>
+            ) : (
+                <button onClick={() => navigate('/login')} style={s.loginBtn}>Initialize</button>
+            )}
+        </div>
+    </div>
+);
+
+const TiltCard = ({ children }) => {
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+    const rx = useTransform(y, [-0.5, 0.5], ["10deg", "-10deg"]);
+    const ry = useTransform(x, [-0.5, 0.5], ["-10deg", "10deg"]);
+    return (
+        <motion.div style={{ perspective: '1200px', rotateX: rx, rotateY: ry, transformStyle: 'preserve-3d' }}
+            onMouseMove={e => {
+                const r = e.currentTarget.getBoundingClientRect();
+                x.set((e.clientX - r.left) / r.width - 0.5);
+                y.set((e.clientY - r.top) / r.height - 0.5);
+            }}
+            onMouseLeave={() => { x.set(0); y.set(0); }}
+        >
+            {children}
+        </motion.div>
+    );
+};
+
+const FloatingBackground = () => (
+    <div style={s.floatBg}>
+        {[...Array(12)].map((_, i) => (
+            <motion.div key={i} animate={{ y: [0, -40, 0], rotate: [0, 15, 0], opacity: [0.05, 0.15, 0.05] }}
+                transition={{ duration: 6 + i, repeat: Infinity, ease: 'linear' }}
+                style={{ position: 'absolute', top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, fontSize: '20px', color: '#fff' }}
+            >
+                {['=>', '{ }', '[ ]', '++', '===', 'async', 'ptr'][i % 7]}
+            </motion.div>
+        ))}
+        <div style={{ ...s.blurGlow, top: '10%', left: '5%', background: 'var(--accent-blue)' }} />
+        <div style={{ ...s.blurGlow, bottom: '20%', right: '5%', background: 'var(--accent-purple)' }} />
+    </div>
+);
+
+/* ───────── Advanced Styles ───────── */
+/* ───────── Advanced Premium Styles (Stitch Inspired) ───────── */
+const s = {
+    page: { 
+        background: '#050508', // Deepest charcoal
+        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)',
+        backgroundSize: '40px 40px',
+        color: '#fff', 
+        minHeight: '100vh', 
+        fontFamily: '"Outfit", "Inter", system-ui, sans-serif', 
+        overflowX: 'hidden' 
+    },
+    spotlight: { position: 'fixed', inset: 0, zIndex: 5, pointerEvents: 'none' },
+    floatBg: { position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' },
+    
+    // Nebula Glows
+    blurGlow: { position: 'absolute', width: '800px', height: '800px', borderRadius: '50%', filter: 'blur(200px)', opacity: 0.15 },
+
+    // Glassmorphic Nav
+    nav: { position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '1200px', zIndex: 1000, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 40px', background: 'rgba(10, 10, 15, 0.4)', backdropFilter: 'blur(40px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' },
+    navItems: { display: 'flex', alignItems: 'center', gap: '35px' },
+    navI: { color: '#a0a0ab', textDecoration: 'none', fontSize: '14px', fontWeight: 600, transition: 'color 0.2s', letterSpacing: '0.5px' },
+    loginBtn: { background: '#fff', color: '#000', border: 'none', padding: '10px 24px', borderRadius: '12px', fontWeight: 800, letterSpacing: '0.5px', cursor: 'pointer', boxShadow: '0 0 20px rgba(255,255,255,0.2)' },
+
+    hero: { position: 'relative', zIndex: 10, minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '140px 50px 100px' },
+    heroContent: { maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '60px', flexWrap: 'wrap', justifyContent: 'center' },
+    heroTextSide: { flex: '1 1 500px', minWidth: '400px', zIndex: 20 },
+    ultraBadge: { display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '8px 18px', background: 'rgba(0, 242, 254, 0.05)', borderRadius: '30px', border: '1px solid rgba(0, 242, 254, 0.2)', fontSize: '12px', fontWeight: 800, color: '#00f2fe', marginBottom: '30px', boxShadow: '0 0 20px rgba(0,242,254,0.1)' },
+    pulseDot: { width: '8px', height: '8px', borderRadius: '50%', background: '#00f2fe', boxShadow: '0 0 15px #00f2fe' },
+    
+    // Premium Typography
+    h1: { fontSize: 'clamp(48px, 6vw, 85px)', fontWeight: 950, lineHeight: 1.05, marginBottom: '25px', letterSpacing: '-2px' },
+    gradientText: { background: 'linear-gradient(135deg, #0df2f2 0%, #a45afe 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textShadow: '0 0 60px rgba(13,242,242,0.4)', paddingRight: '15px' },
+    subText: { fontSize: '18px', color: '#aab', lineHeight: 1.6, marginBottom: '40px', maxWidth: '500px', fontWeight: 300, letterSpacing: '0.5px' },
+    ctaGroup: { display: 'flex', gap: '20px', alignItems: 'center' },
+    
+    // Neon CTA
+    primaryBtn: { background: 'linear-gradient(135deg, #0df2f2 0%, #1771f1 100%)', color: '#000', border: '1px solid #0df2f2', padding: '20px 48px', borderRadius: '12px', fontSize: '18px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 0 40px rgba(13,242,242,0.6), inset 0 0 15px rgba(255,255,255,0.4)', transition: 'transform 0.2s, box-shadow 0.2s', letterSpacing: '1px', textTransform: 'uppercase' },
+    secondaryBtn: { background: 'rgba(255,255,255,0.01)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '20px 48px', borderRadius: '12px', fontSize: '18px', fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(30px)', transition: 'background 0.2s, border-color 0.2s' },
+
+    // 3D Massive Tilted Console
+    heroConsole: { width: '560px', height: '360px', background: '#0a0a0f', borderRadius: '24px', border: '2px solid rgba(13,242,242,0.2)', overflow: 'hidden', boxShadow: '-30px 45px 90px rgba(0,0,0,0.9), 0 0 60px rgba(164, 90, 254, 0.15)', position: 'relative', transform: 'perspective(2000px) rotateY(-18deg) rotateX(12deg) scale(1.0)', transformStyle: 'preserve-3d', zIndex: 10 },
+    consoleTop: { background: 'rgba(255,255,255,0.01)', padding: '12px 20px', display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' },
+    consoleDots: { display: 'flex', gap: '8px' },
+    cDot: { width: '12px', height: '12px', borderRadius: '50%' },
+    consoleTab: { flex: 1, textAlign: 'center', fontSize: '12px', color: '#666', fontFamily: 'monospace', fontWeight: 700, letterSpacing: '1px' },
+    consoleBody: { padding: '30px', height: '100%', background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,242,254,0.02) 100%)' },
+    consoleCode: { margin: 0, fontFamily: '"JetBrains Mono", monospace', fontSize: '16px', color: '#4facfe', lineHeight: 1.7, textShadow: '0 0 10px rgba(79,172,254,0.3)' },
+    consoleOverlay: { position: 'absolute', bottom: '25px', right: '25px' },
+    vizStatus: { background: 'rgba(164, 90, 254, 0.2)', color: '#a45afe', padding: '8px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 900, border: '1px solid rgba(164, 90, 254, 0.5)', boxShadow: '0 0 30px rgba(164,90,254,0.3)', letterSpacing: '2px', textTransform: 'uppercase' },
+
+    section: { position: 'relative', zIndex: 10, padding: '120px 50px', maxWidth: '1400px', margin: '0 auto' },
+    sectionHeader: { textAlign: 'center', marginBottom: '80px' },
+    h2: { fontSize: '56px', fontWeight: 900, marginBottom: '20px', letterSpacing: '-1.5px' },
+    h2Sub: { fontSize: '20px', color: '#666', maxWidth: '600px', margin: '0 auto' },
+
+    demoContainer: { background: 'rgba(10, 10, 15, 0.6)', backdropFilter: 'blur(50px)', padding: '60px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 40px 100px rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center' },
+    algoTabs: { display: 'flex', gap: '15px', marginBottom: '50px', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.02)' },
+    algoTab: { border: 'none', padding: '14px 28px', borderRadius: '10px', fontSize: '14px', fontWeight: 800, cursor: 'pointer', transition: 'all 0.3s' },
+    visualizerBox: { display: 'flex', alignItems: 'flex-end', gap: '12px', height: '260px', marginBottom: '60px', width: '100%', justifyContent: 'center' },
+    vizControls: { display: 'flex', gap: '20px' },
+    runBtn: { background: '#00f2fe', color: '#000', border: 'none', padding: '16px 36px', borderRadius: '12px', fontSize: '16px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 0 30px rgba(0,242,254,0.4)' },
+    randBtn: { background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,0.1)', padding: '16px 36px', borderRadius: '12px', fontSize: '16px', fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s, color 0.2s' },
+
+    treeView: { padding: '60px 0', position: 'relative', width: '100%', maxWidth: '900px', margin: '0 auto' },
+    treeGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '80px', justifyItems: 'center' },
+    treeNode: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', zIndex: 10 },
+    nodeBox: { width: '80px', height: '80px', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.02)', backdropFilter: 'blur(10px)' },
+    nodeText: { fontSize: '14px', fontWeight: 800, color: '#666', letterSpacing: '1px' },
+
+    quizHost: { maxWidth: '850px', margin: '0 auto', background: 'rgba(10, 10, 15, 0.7)', backdropFilter: 'blur(50px)', padding: '60px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 50px 120px rgba(0,0,0,0.8)' },
+    quizHeaderBox: { display: 'flex', justifyContent: 'space-between', marginBottom: '40px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '20px' },
+    quizLang: { fontSize: '14px', fontWeight: 900, color: '#c678dd', letterSpacing: '1.5px', textTransform: 'uppercase' },
+    quizPg: { fontSize: '14px', color: '#555', fontWeight: 700 },
+    quizText: { fontSize: '26px', fontWeight: 800, marginBottom: '40px', textAlign: 'center', lineHeight: 1.5 },
+    quizOptions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
+    quizBtn: { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '24px', borderRadius: '16px', color: '#fff', textAlign: 'left', cursor: 'pointer', transition: 'all 0.3s', fontSize: '16px', fontWeight: 600 },
+    nextBtn: { background: 'linear-gradient(135deg, #c678dd 0%, #9f7aea 100%)', color: '#000', border: 'none', padding: '16px 32px', borderRadius: '12px', fontSize: '15px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 0 30px rgba(198,120,221,0.4)', marginTop: '30px', justifySelf: 'end' },
+
+    polyHost: { display: 'flex', background: '#050508', borderRadius: '32px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', height: '400px', boxShadow: '0 40px 80px rgba(0,0,0,0.5)' },
+    polySidebar: { width: '180px', background: 'rgba(255,255,255,0.01)', padding: '30px 0', borderRight: '1px solid rgba(255,255,255,0.05)' },
+    polyTab: { width: '100%', background: 'transparent', border: 'none', padding: '16px 30px', textAlign: 'left', fontSize: '13px', fontWeight: 800, cursor: 'pointer', fontFamily: 'monospace', color: '#666', transition: 'color 0.2s' },
+    polyCode: { flex: 1, padding: '50px', position: 'relative', background: '#0a0a0f' },
+    polyOverlay: { position: 'absolute', top: '20px', right: '20px', fontSize: '12px', fontWeight: 900, color: '#444', letterSpacing: '1px' },
+
+    featureGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '50px' },
+    fCard: { padding: '50px', background: 'rgba(10, 10, 15, 0.3)', backdropFilter: 'blur(50px)', borderRadius: '32px', border: '1px solid rgba(13,242,242,0.1)', transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s', cursor: 'pointer', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' },
+
+    finalCta: { padding: '160px 50px', textAlign: 'center', position: 'relative' },
+    statsWrapper: { display: 'flex', justifyContent: 'center', gap: '100px', marginBottom: '120px', flexWrap: 'wrap' },
+    statItem: { textAlign: 'center' },
+    statVal: { fontSize: '64px', fontWeight: 950, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '10px', textShadow: '0 0 30px rgba(0,242,254,0.3)' },
+    statLabel: { fontSize: '16px', fontWeight: 800, color: '#555', textTransform: 'uppercase', letterSpacing: '2px' },
+    premiumPanel: { maxWidth: '1000px', margin: '0 auto', padding: '120px 50px', background: 'radial-gradient(ellipse at top, rgba(0, 242, 254, 0.1) 0%, rgba(10,10,15,0.6) 70%)', borderRadius: '48px', border: '1px solid rgba(0,242,254,0.15)', boxShadow: '0 60px 150px rgba(0,0,0,0.8), inset 0 0 50px rgba(0,242,254,0.05)', backdropFilter: 'blur(40px)' },
+    ultimateBtn: { background: '#fff', color: '#000', padding: '24px 60px', borderRadius: '20px', fontSize: '20px', fontWeight: 900, border: 'none', cursor: 'pointer', boxShadow: '0 30px 60px rgba(255,255,255,0.2), inset 0 0 20px rgba(0,0,0,0.1)', transition: 'transform 0.2s', letterSpacing: '1px' },
+
+    footer: { padding: '100px 50px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#050508' },
+    footerLeft: { display: 'flex', flexDirection: 'column', gap: '10px' },
+    footerMeta: { fontSize: '14px', color: '#444', display: 'flex', gap: '30px', fontWeight: 600 },
+    logoText: { fontSize: '32px', fontWeight: 950, marginBottom: '15px', color: '#fff', letterSpacing: '-1px' }
+};
+
 
 export default Home;

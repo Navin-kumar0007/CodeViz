@@ -1,8 +1,9 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import CodeDiffViewer from './CodeDiffViewer';
+import API_BASE from '../../utils/api';
 
-const API_URL = 'http://localhost:5001/api/ai';
+const API_URL = `${API_BASE}/api/ai`;
 
 const AIAssistant = ({ code, language = 'python', error = null }) => {
     const [isOpen, setIsOpen] = useState(false);

@@ -34,7 +34,7 @@ try {
 const varList = Array.from(declaredVars);
 
 // 3. Safe Variable Capture
-const snapshotString = `{` + varList.map(v => 
+const snapshotString = `{` + varList.map(v =>
     `${v}: (() => { try { return ${v}; } catch(e) { return undefined; } })()`
 ).join(',') + `}`;
 
@@ -57,20 +57,24 @@ function _recordStep(lineNum, state) {
         }
     }
 
-    _trace.push({
+    const step = {
         line: lineNum,
         variables: frozenState,
         stdout: ""
-    });
+    };
+    process.stdout.write(JSON.stringify(step) + '\\n');
 }
 
 // Trap console.log
 const originalLog = console.log;
 console.log = function(...args) {
     const output = args.join(" ") + "\\n";
-    if(_trace.length > 0) {
-        _trace[_trace.length - 1].stdout += output;
-    }
+    const logStep = {
+        line: -1, // Log step
+        variables: {},
+        stdout: output
+    };
+    process.stdout.write(JSON.stringify(logStep) + '\\n');
 };
 `;
 
@@ -95,22 +99,22 @@ function injectTracer(ast) {
                 walk(stmt);
             });
             node.body = newBody;
-        } 
+        }
         else if (['ForStatement', 'WhileStatement', 'DoWhileStatement'].includes(node.type)) {
-             if (node.body.type !== 'BlockStatement') {
+            if (node.body.type !== 'BlockStatement') {
                 node.body = { type: 'BlockStatement', body: [node.body] };
-             }
-             const lineNum = node.loc ? node.loc.start.line : 0;
-             node.body.body.unshift(createRecordCall(lineNum));
-             walk(node.body);
+            }
+            const lineNum = node.loc ? node.loc.start.line : 0;
+            node.body.body.unshift(createRecordCall(lineNum));
+            walk(node.body);
         }
         else {
-             for (const key in node) {
+            for (const key in node) {
                 if (node[key] && typeof node[key] === 'object') {
                     if (Array.isArray(node[key])) node[key].forEach(walk);
                     else walk(node[key]);
                 }
-             }
+            }
         }
     };
 
@@ -123,21 +127,18 @@ try {
     injectTracer(ast);
     const instrumentedCode = astring.generate(ast);
 
-    // 👇 THIS IS THE KEY CHANGE
-    // We use process.stdout.write instead of console.log for the final output
-    // so our own trap doesn't catch it!
     const finalScript = `
+        const fs = require('fs');
         ${TRACER_LIB}
         try {
             ${instrumentedCode}
         } catch(e) {
-            process.stdout.write(JSON.stringify({ error: e.message }));
+            process.stdout.write(JSON.stringify({ error: e.message, line: 0 }) + '\\n');
         }
-        process.stdout.write(JSON.stringify(_trace));
     `;
-    
+
     eval(finalScript);
 
 } catch (e) {
-    console.log("[]"); 
+    console.log(JSON.stringify({ error: "Compilation/Parsing Error", line: 0 }));
 }

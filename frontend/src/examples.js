@@ -1071,6 +1071,40 @@ public class Main {
 }`
             }
         }
+    },
+
+    "⚙️ Systems Mastery": {
+        description: "Advanced Node.js concepts: Streams, IPC, and Architecture.",
+        examples: {
+            "Child Process IPC": {
+                javascript: `// Parent process demo
+const { fork } = require('child_process');
+console.log('Spawning child to calculate factorial...');
+
+// This is a visualization-friendly representation of IPC
+const message = { task: 'calculate', value: 5 };
+console.log('Parent sends:', message);
+
+// Simulate child response
+const response = { result: 120 };
+console.log('Child returns:', response);`
+            },
+            "Stream Transform": {
+                javascript: `// Transform stream demo
+const { Transform } = require('stream');
+
+const upperCaseTr = new Transform({
+  transform(chunk, encoding, callback) {
+    this.push(chunk.toString().toUpperCase());
+    callback();
+  }
+});
+
+console.log('Original: hello world');
+// Simulated transformation for visualizer
+console.log('Transformed: HELLO WORLD');`
+            }
+        }
     }
 };
 

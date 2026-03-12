@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import Editor from '@monaco-editor/react';
+import API_BASE from '../utils/api';
 
-const API = 'http://localhost:5001';
+const API = API_BASE;
 
 const ClassroomDetails = () => {
     const { id } = useParams();
@@ -22,6 +24,14 @@ const ClassroomDetails = () => {
     const [language, setLanguage] = useState('python');
     const [dueDate, setDueDate] = useState('');
     const [maxPoints, setMaxPoints] = useState(100);
+    const [expectedOutput, setExpectedOutput] = useState('');
+
+    // Assignment solve modal
+    const [showSolveModal, setShowSolveModal] = useState(false);
+    const [activeAssignment, setActiveAssignment] = useState(null);
+    const [solveCode, setSolveCode] = useState('');
+    const [solveResult, setSolveResult] = useState(null);
+    const [isAutograding, setIsAutograding] = useState(false);
 
     const headers = useMemo(() => {
         return { Authorization: `Bearer ${user?.token}` };
@@ -56,7 +66,7 @@ const ClassroomDetails = () => {
         e.preventDefault();
         try {
             await axios.post(`${API}/api/campus/classrooms/${id}/assignments`, {
-                title, description, starterCode, language, dueDate, maxPoints, isPublished: true
+                title, description, starterCode, expectedOutput, language, dueDate, maxPoints, isPublished: true
             }, { headers });
             setShowCreateModal(false);
             fetchData();
@@ -70,6 +80,33 @@ const ClassroomDetails = () => {
     if (!classroom) return <div style={styles.center}>Classroom not found</div>;
 
     const isInstructor = user?.role === 'instructor' && classroom.instructor._id === user._id;
+
+    const openSolveModal = (assignment) => {
+        setActiveAssignment(assignment);
+        setSolveCode(assignment.starterCode || '');
+        setSolveResult(null);
+        setShowSolveModal(true);
+    };
+
+    const handleSolveSubmit = async () => {
+        setIsAutograding(true);
+        try {
+            const { data } = await axios.post(`${API}/api/autograder/${activeAssignment._id}`, {
+                code: solveCode
+            }, { headers });
+
+            setSolveResult(data);
+            if (data.success) {
+                fetchData(); // Refresh assignments list to see grade
+            }
+        } catch (err) {
+            setSolveResult({
+                success: false,
+                feedback: err.response?.data?.message || err.response?.data?.error || 'Failed to submit'
+            });
+        }
+        setIsAutograding(false);
+    };
 
     return (
         <div style={styles.page}>
@@ -128,8 +165,16 @@ const ClassroomDetails = () => {
                                         </span>
                                     )}
                                 </div>
-                                {!isInstructor && (
-                                    <button style={styles.solveBtn}>Solve Assignment</button>
+                                <button
+                                    style={a.submissions?.some(s => s.student === user._id) ? styles.secondaryBtnFull : styles.solveBtn}
+                                    onClick={() => openSolveModal(a)}
+                                >
+                                    {a.submissions?.some(s => s.student === user._id) ? 'Re-Submit Assignment' : 'Solve Assignment'}
+                                </button>
+                                {a.submissions?.some(s => s.student === user._id) && (
+                                    <div style={{ marginTop: '10px', padding: '10px', background: 'rgba(72,187,120,0.1)', color: '#48bb78', borderRadius: '4px', textAlign: 'center', fontWeight: 'bold' }}>
+                                        Score: {a.submissions.find(s => s.student === user._id).grade} / {a.maxPoints}
+                                    </div>
                                 )}
                             </div>
                         ))
@@ -168,11 +213,67 @@ const ClassroomDetails = () => {
                                 onChange={e => setStarterCode(e.target.value)}
                             />
 
+                            <textarea
+                                style={{ ...styles.textarea, fontFamily: 'monospace' }}
+                                placeholder="Expected Output (Exact match for Autograder)"
+                                value={expectedOutput}
+                                onChange={e => setExpectedOutput(e.target.value)}
+                            />
+
                             <div style={styles.modalActions}>
                                 <button type="button" style={styles.secondaryBtn} onClick={() => setShowCreateModal(false)}>Cancel</button>
                                 <button type="submit" style={styles.primaryBtn}>Publish</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Solve Assignment Modal */}
+            {showSolveModal && activeAssignment && (
+                <div style={styles.modalOverlay}>
+                    <div style={{ ...styles.modal, maxWidth: '800px', width: '90vw', height: '80vh', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                            <h2 style={{ margin: 0 }}>Solve: {activeAssignment.title}</h2>
+                            <button onClick={() => setShowSolveModal(false)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer' }}>&times;</button>
+                        </div>
+                        <p style={{ color: '#cbd5e0', marginBottom: '15px' }}>{activeAssignment.description}</p>
+
+                        <div style={{ flex: 1, border: '1px solid #4a5568', borderRadius: '8px', overflow: 'hidden', marginBottom: '15px' }}>
+                            <Editor
+                                height="100%"
+                                language={activeAssignment.language}
+                                theme="vs-dark"
+                                value={solveCode}
+                                onChange={setSolveCode}
+                                options={{ minimap: { enabled: false } }}
+                            />
+                        </div>
+
+                        {solveResult && (
+                            <div style={{
+                                padding: '15px',
+                                background: solveResult.isCorrect ? 'rgba(72,187,120,0.1)' : 'rgba(252,129,129,0.1)',
+                                border: `1px solid ${solveResult.isCorrect ? '#48bb78' : '#fc8181'}`,
+                                borderRadius: '8px',
+                                marginBottom: '15px'
+                            }}>
+                                <h3 style={{ margin: '0 0 10px 0', color: solveResult.isCorrect ? '#48bb78' : '#fc8181' }}>
+                                    {solveResult.isCorrect ? '✅ Autograder Passed!' : '❌ Autograder Failed'}
+                                    <span style={{ float: 'right' }}>{solveResult.grade} / {activeAssignment.maxPoints} pts</span>
+                                </h3>
+                                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '13px', color: '#e2e8f0' }}>
+                                    {solveResult.feedback}
+                                </pre>
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '15px' }}>
+                            <button onClick={() => setShowSolveModal(false)} style={styles.secondaryBtn}>Close</button>
+                            <button onClick={handleSolveSubmit} disabled={isAutograding} style={styles.primaryBtn}>
+                                {isAutograding ? '⏳ Autograding...' : '🚀 Submit Code'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -206,6 +307,7 @@ const styles = {
     langTag: { background: '#4a5568', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' },
     dueTag: { background: 'rgba(252, 129, 129, 0.2)', color: '#fc8181', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' },
     solveBtn: { width: '100%', background: '#48bb78', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+    secondaryBtnFull: { width: '100%', background: 'transparent', color: '#fff', border: '1px solid #48bb78', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
     modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
     modal: { background: '#1a202c', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '600px', border: '1px solid #4a5568' },
     form: { display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' },

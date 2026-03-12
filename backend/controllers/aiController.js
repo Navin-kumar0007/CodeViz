@@ -1,5 +1,6 @@
-const geminiService = require('../services/geminiService');
+const aiService = require('../services/aiService');
 const CodeReviewScore = require('../models/CodeReviewScore');
+const workerService = require('../services/workerService');
 
 /**
  * @route   POST /api/ai/hint
@@ -15,7 +16,7 @@ const getHint = async (req, res) => {
             return res.status(400).json({ message: 'Code is required' });
         }
 
-        const hint = await geminiService.getHint(
+        const hint = await aiService.getHint(
             code,
             language || 'python',
             problem,
@@ -45,7 +46,7 @@ const explainError = async (req, res) => {
             return res.status(400).json({ message: 'Code and error are required' });
         }
 
-        const explanation = await geminiService.explainError(
+        const explanation = await aiService.explainError(
             code,
             error,
             language || 'python',
@@ -75,7 +76,7 @@ const suggestOptimizations = async (req, res) => {
             return res.status(400).json({ message: 'Code is required' });
         }
 
-        const suggestions = await geminiService.suggestOptimizations(
+        const suggestions = await aiService.suggestOptimizations(
             code,
             language || 'python',
             userId,
@@ -104,7 +105,7 @@ const reviewCode = async (req, res) => {
             return res.status(400).json({ message: 'Code is required' });
         }
 
-        const review = await geminiService.reviewCode(
+        const review = await aiService.reviewCode(
             code,
             language || 'python',
             userId,
@@ -133,19 +134,15 @@ const analyzeComplexity = async (req, res) => {
             return res.status(400).json({ message: 'Code is required' });
         }
 
-        const raw = await geminiService.analyzeComplexity(
+        const raw = await aiService.analyzeComplexity(
             code,
             language || 'python',
             userId
         );
 
-        // Parse JSON response from Gemini
-        try {
-            const analysis = JSON.parse(raw.replace(/```json?\n?/g, '').replace(/```/g, '').trim());
-            res.json({ analysis, type: 'complexity' });
-        } catch {
-            res.json({ analysis: { raw }, type: 'complexity' });
-        }
+        // --- Offload to Worker Thread for non-blocking parsing ---
+        const analysis = await workerService.parseAiResponse(raw, 'complexity');
+        res.json({ analysis, type: 'complexity' });
     } catch (error) {
         res.status(error.message.includes('Rate limit') ? 429 : 500)
             .json({ message: error.message });
@@ -166,7 +163,7 @@ const optimizeWithDiff = async (req, res) => {
             return res.status(400).json({ message: 'Code is required' });
         }
 
-        const raw = await geminiService.optimizeWithDiff(
+        const raw = await aiService.optimizeWithDiff(
             code,
             language || 'python',
             userId,
@@ -174,13 +171,9 @@ const optimizeWithDiff = async (req, res) => {
             teachingStyle || 'standard'
         );
 
-        // Parse JSON response from Gemini
-        try {
-            const diff = JSON.parse(raw.replace(/```json?\n?/g, '').replace(/```/g, '').trim());
-            res.json({ diff, type: 'optimize-diff' });
-        } catch {
-            res.json({ diff: { raw }, type: 'optimize-diff' });
-        }
+        // --- Offload parsing to worker thread ---
+        const diff = await workerService.parseAiResponse(raw, 'optimize-diff');
+        res.json({ diff, type: 'optimize-diff' });
     } catch (error) {
         res.status(error.message.includes('Rate limit') ? 429 : 500)
             .json({ message: error.message });
@@ -200,7 +193,7 @@ const rubricReview = async (req, res) => {
             return res.status(400).json({ message: 'Code is required' });
         }
 
-        const raw = await geminiService.rubricReview(
+        const raw = await aiService.rubricReview(
             code,
             language || 'python',
             userId,
@@ -208,9 +201,10 @@ const rubricReview = async (req, res) => {
             teachingStyle || 'standard'
         );
 
-        try {
-            const review = JSON.parse(raw.replace(/```json?\n?/g, '').replace(/```/g, '').trim());
+        // --- Offload parsing to worker thread ---
+        const review = await workerService.parseAiResponse(raw, 'rubric');
 
+        if (review.overallScore !== undefined) {
             // Save score to database for history tracking
             await CodeReviewScore.create({
                 userId: req.user._id,
@@ -220,11 +214,9 @@ const rubricReview = async (req, res) => {
                 categories: review.categories,
                 annotations: review.annotations || []
             });
-
-            res.json({ review, type: 'rubric-review' });
-        } catch {
-            res.json({ review: { raw }, type: 'rubric-review' });
         }
+
+        res.json({ review, type: 'rubric-review' });
     } catch (error) {
         res.status(error.message.includes('Rate limit') ? 429 : 500)
             .json({ message: error.message });
@@ -266,7 +258,7 @@ const generateTestCases = async (req, res) => {
             return res.status(400).json({ message: 'Code is required' });
         }
 
-        const raw = await geminiService.generateTests(
+        const raw = await aiService.generateTests(
             code,
             language || 'python',
             userId
@@ -301,7 +293,7 @@ const translateCode = async (req, res) => {
             return res.status(400).json({ message: 'Target language is required' });
         }
 
-        const raw = await geminiService.translateCode(
+        const raw = await aiService.translateCode(
             code,
             sourceLanguage || 'python',
             targetLanguage,
@@ -320,6 +312,99 @@ const translateCode = async (req, res) => {
     }
 };
 
+/**
+ * @route   POST /api/ai/narrate
+ * @desc    Explain code line-by-line
+ * @access  Private
+ */
+const narrateCode = async (req, res) => {
+    try {
+        const { code, language, skillLevel, teachingStyle } = req.body;
+        const userId = req.user._id.toString();
+
+        if (!code) {
+            return res.status(400).json({ message: 'Code is required' });
+        }
+
+        const raw = await aiService.narrateCode(
+            code,
+            language || 'python',
+            userId,
+            skillLevel || req.user.skillLevel || 'beginner',
+            teachingStyle || 'standard'
+        );
+
+        try {
+            const narrationData = JSON.parse(raw.replace(/```json?\n?/g, '').replace(/```/g, '').trim());
+            res.json({ narrationData, type: 'narrate' });
+        } catch {
+            res.json({ narrationData: { raw }, type: 'narrate' });
+        }
+    } catch (error) {
+        res.status(error.message.includes('Rate limit') ? 429 : 500)
+            .json({ message: error.message });
+    }
+};
+
+/**
+ * @route   POST /api/ai/detect
+ * @desc    Detect AI vs Human probability for a piece of code
+ * @access  Private
+ */
+const detectAI = async (req, res) => {
+    try {
+        const { code, language } = req.body;
+        const userId = req.user._id.toString();
+
+        if (!code) {
+            return res.status(400).json({ message: 'Code is required' });
+        }
+
+        const raw = await aiService.detectAI(
+            code,
+            language || 'python',
+            userId
+        );
+
+        try {
+            const detection = JSON.parse(raw.replace(/```json?\n?/g, '').replace(/```/g, '').trim());
+            res.json({ detection, type: 'detect' });
+        } catch {
+            res.json({ detection: { raw }, type: 'detect' });
+        }
+    } catch (error) {
+        res.status(error.message.includes('Rate limit') ? 429 : 500)
+            .json({ message: error.message });
+    }
+};
+
+/**
+ * @route   POST /api/ai/ghost-hint
+ * @desc    Proactive hint when student is stuck
+ */
+const ghostHint = async (req, res) => {
+    try {
+        const { code, language, errors, timeSpent, skillLevel, teachingStyle } = req.body;
+        const userId = req.user._id;
+
+        const nudge = await aiService.ghostHint(
+            code,
+            language || 'python',
+            errors || '',
+            timeSpent || 0,
+            userId,
+            skillLevel || req.user.skillLevel || 'beginner',
+            teachingStyle || 'standard'
+        );
+
+        res.json({ nudge });
+    } catch (error) {
+        // Ghost hints should be silent/optional, but we'll return 200 with empty nudge if it fails
+        console.error("👻 Ghost Hint Error:", error.message);
+        res.json({ nudge: null });
+    }
+};
+
 module.exports = {
     getHint,
     explainError,
@@ -330,5 +415,8 @@ module.exports = {
     rubricReview,
     getReviewHistory,
     generateTestCases,
-    translateCode
+    translateCode,
+    narrateCode,
+    detectAI,
+    ghostHint
 };

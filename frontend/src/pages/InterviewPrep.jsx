@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 
 /**
  * 🎯 Interview Prep — Timed Mock Interviews
@@ -64,7 +65,7 @@ const InterviewPrep = () => {
     const handleStart = async () => {
         setLoading(true);
         try {
-            const res = await axios.post('http://localhost:5001/api/interview/start', {
+            const res = await axios.post(`${API_BASE}/api/interview/start`, {
                 mode: selectedMode,
                 problemCount
             }, authHeaders);
@@ -95,7 +96,7 @@ const InterviewPrep = () => {
         try {
             const timeTaken = Math.round((Date.now() - problemStartTime) / 1000);
             const res = await axios.post(
-                `http://localhost:5001/api/interview/submit/${session._id}`,
+                `${API_BASE}/api/interview/submit/${session._id}`,
                 { problemId, code: codes[problemId], language: 'python', timeTaken },
                 authHeaders
             );
@@ -112,7 +113,7 @@ const InterviewPrep = () => {
         setLoading(true);
         try {
             const res = await axios.post(
-                `http://localhost:5001/api/interview/end/${session._id}`,
+                `${API_BASE}/api/interview/end/${session._id}`,
                 {},
                 authHeaders
             );
@@ -129,8 +130,8 @@ const InterviewPrep = () => {
         setLoading(true);
         try {
             const [histRes, statsRes] = await Promise.all([
-                axios.get('http://localhost:5001/api/interview/history', authHeaders),
-                axios.get('http://localhost:5001/api/interview/stats', authHeaders)
+                axios.get(`${API_BASE}/api/interview/history`, authHeaders),
+                axios.get(`${API_BASE}/api/interview/stats`, authHeaders)
             ]);
             setHistory(histRes.data);
             setStats(statsRes.data);

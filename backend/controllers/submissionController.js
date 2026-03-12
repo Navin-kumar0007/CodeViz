@@ -1,8 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-const { exec } = require('child_process');
 const Submission = require('../models/Submission');
 const Problem = require('../models/Problem');
+const dockerService = require('../services/dockerService');
 
 // POST /api/submit — run code against all test cases
 const submitSolution = async (req, res) => {
@@ -101,101 +99,24 @@ const submitSolution = async (req, res) => {
     }
 };
 
-// Run code against a single test case input
-function runSingleTest(code, language, input) {
-    return new Promise((resolve) => {
-        const tempDir = path.join(__dirname, '../temp');
-        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+/**
+ * Run code against a single test case input using Docker Sandbox
+ */
+async function runSingleTest(code, language, input) {
+    try {
+        const result = await dockerService.runInSandbox(code, language, input);
 
-        const timestamp = Date.now() + '_' + Math.random().toString(36).slice(2);
-        let command, tempFile, cleanupFiles = [];
-
-        // Wrap code to read from stdin
-        switch (language) {
-            case 'python':
-                tempFile = path.join(tempDir, `sub_${timestamp}.py`);
-                fs.writeFileSync(tempFile, code);
-                command = `echo ${JSON.stringify(input)} | python3 "${tempFile}"`;
-                cleanupFiles.push(tempFile);
-                break;
-
-            case 'javascript':
-                tempFile = path.join(tempDir, `sub_${timestamp}.js`);
-                fs.writeFileSync(tempFile, code);
-                command = `echo ${JSON.stringify(input)} | node "${tempFile}"`;
-                cleanupFiles.push(tempFile);
-                break;
-
-            case 'cpp':
-                tempFile = path.join(tempDir, `sub_${timestamp}.cpp`);
-                const cppOut = path.join(tempDir, `sub_${timestamp}.out`);
-                fs.writeFileSync(tempFile, code);
-                command = `g++ "${tempFile}" -o "${cppOut}" 2>&1 && echo ${JSON.stringify(input)} | "${cppOut}"`;
-                cleanupFiles.push(tempFile, cppOut);
-                break;
-
-            case 'java': {
-                const jDir = path.join(tempDir, `java_sub_${timestamp}`);
-                if (!fs.existsSync(jDir)) fs.mkdirSync(jDir);
-                let jCode = code;
-                if (!/class\s+Main/.test(jCode)) jCode = jCode.replace(/class\s+\w+/, 'class Main');
-                tempFile = path.join(jDir, 'Main.java');
-                fs.writeFileSync(tempFile, jCode);
-                command = `javac "${tempFile}" 2>&1 && echo ${JSON.stringify(input)} | java -cp "${jDir}" Main`;
-                cleanupFiles.push(jDir);
-                break;
-            }
-
-            case 'c':
-                tempFile = path.join(tempDir, `sub_${timestamp}.c`);
-                const cOut = path.join(tempDir, `sub_${timestamp}_c.out`);
-                fs.writeFileSync(tempFile, code);
-                command = `gcc "${tempFile}" -o "${cOut}" 2>&1 && echo ${JSON.stringify(input)} | "${cOut}"`;
-                cleanupFiles.push(tempFile, cOut);
-                break;
-
-            case 'typescript':
-                tempFile = path.join(tempDir, `sub_${timestamp}.ts`);
-                fs.writeFileSync(tempFile, code);
-                command = `echo ${JSON.stringify(input)} | npx ts-node "${tempFile}"`;
-                cleanupFiles.push(tempFile);
-                break;
-
-            case 'go':
-                tempFile = path.join(tempDir, `sub_${timestamp}.go`);
-                fs.writeFileSync(tempFile, code);
-                command = `echo ${JSON.stringify(input)} | go run "${tempFile}"`;
-                cleanupFiles.push(tempFile);
-                break;
-
-            default:
-                return resolve({ error: `Unsupported language: ${language}` });
-        }
-
-        exec(command, { timeout: 10000, maxBuffer: 1024 * 1024 * 5 }, (error, stdout, stderr) => {
-            // Cleanup
-            cleanupFiles.forEach(f => {
-                try {
-                    if (fs.existsSync(f)) {
-                        if (fs.statSync(f).isDirectory()) fs.rmSync(f, { recursive: true, force: true });
-                        else fs.unlinkSync(f);
-                    }
-                } catch (e) { /* ignore */ }
-            });
-
-            if (error) {
-                if (error.killed) return resolve({ error: 'TLE', timeout: true, output: '' });
-                const isCompileErr = stderr && (stderr.includes('error:') || stderr.includes('Error'));
-                return resolve({
-                    error: stderr || error.message,
-                    compilationError: isCompileErr,
-                    output: stdout || ''
-                });
-            }
-
-            resolve({ output: stdout, error: null });
-        });
-    });
+        // Map dockerService results to the format expected by the controller
+        return {
+            output: result.output || '',
+            error: result.error || '',
+            timeout: result.timeout || false,
+            exitCode: result.exitCode
+        };
+    } catch (error) {
+        console.error('Sandbox execution error:', error);
+        return { error: error.message, output: '' };
+    }
 }
 
 // GET /api/submissions/:problemId — user's past submissions

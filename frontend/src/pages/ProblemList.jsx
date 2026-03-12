@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 
-const API = 'http://localhost:5001/api/problems';
+const API = `${API_BASE}/api/problems`;
 
 const DIFFICULTY_COLORS = {
     easy: '#48bb78', medium: '#f6ad55', hard: '#fc8181'
