@@ -17,11 +17,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Install Dependencies
-        run: cd frontend && npm ci
+        run: cd frontend && npm install --no-audit --no-fund
 
       - name: Lint
         run: cd frontend && npm run lint
@@ -44,11 +42,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
 
       - name: Install Dependencies
-        run: cd backend && npm ci
+        run: cd backend && npm install --no-audit --no-fund
 
       - name: Test
         run: cd backend && npm test
