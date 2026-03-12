@@ -42,7 +42,7 @@ const VideoLessons = () => {
         try {
             const res = await axios.get(`${API}/${id}`, authHeaders);
             setSelectedVideo(res.data);
-        } catch (err) {
+        } catch {
             alert('Failed to load video');
         }
     };

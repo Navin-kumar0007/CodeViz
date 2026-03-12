@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import React from 'react';
 import API_BASE from '../../utils/api';
 
 const API = API_BASE;

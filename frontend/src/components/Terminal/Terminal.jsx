@@ -20,7 +20,6 @@ const Terminal = ({ language = 'python', code = '', onRun, height = '250px', sty
     const termRef = useRef(null);
     const xtermRef = useRef(null);
     const fitAddonRef = useRef(null);
-    const [currentLine, setCurrentLine] = useState('');
     const historyRef = useRef([]);
     const historyIndexRef = useRef(-1);
 
@@ -44,6 +43,7 @@ const Terminal = ({ language = 'python', code = '', onRun, height = '250px', sty
         term.writeln('\x1b[90mCommands: run • clear • help\x1b[0m');
         term.writeln('');
         term.write(PROMPT);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [language]);
 
     const executeCommand = useCallback(async (cmd) => {
@@ -181,7 +181,7 @@ const Terminal = ({ language = 'python', code = '', onRun, height = '250px', sty
 
         // Delay fit to ensure container is sized
         setTimeout(() => {
-            try { fitAddon.fit(); } catch { }
+            try { fitAddon.fit(); } catch { /* ignore */ }
         }, 100);
 
         xtermRef.current = term;
@@ -191,7 +191,7 @@ const Terminal = ({ language = 'python', code = '', onRun, height = '250px', sty
 
         // Handle resize
         const observer = new ResizeObserver(() => {
-            try { fitAddon.fit(); } catch { }
+            try { fitAddon.fit(); } catch { /* ignore */ }
         });
         observer.observe(termRef.current);
 

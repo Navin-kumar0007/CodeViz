@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/purity */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -48,7 +47,6 @@ const InterviewPrep = () => {
             setTimeLeft(remaining);
             if (remaining <= 0) {
                 clearInterval(timerRef.current);
-                // eslint-disable-next-line no-use-before-define
                 handleEndSession();
             }
         }, 1000);

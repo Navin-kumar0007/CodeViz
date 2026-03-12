@@ -65,7 +65,7 @@ const ProblemSolve = () => {
             const input = problem?.examples?.[0]?.input || '';
             const { data } = await axios.post(`${API_BASE}/run`, { language, code, input }, { headers });
             setResult({ type: 'run', output: data.output || data.error || 'No output', trace: data.trace });
-        } catch (err) {
+        } catch {
             setResult({ type: 'run', output: 'Error running code' });
         }
         setRunning(false);
@@ -81,7 +81,7 @@ const ProblemSolve = () => {
             }, { headers });
             setResult({ type: 'submit', ...data });
             loadSubmissions();
-        } catch (err) {
+        } catch {
             setResult({ type: 'submit', verdict: 'runtime_error', testResults: [], totalTests: 0, passedTests: 0 });
         }
         setSubmitting(false);
@@ -92,7 +92,7 @@ const ProblemSolve = () => {
         try {
             const { data } = await axios.get(`${API}/submissions/${problem._id}`, { headers });
             setSubmissions(data);
-        } catch (e) { /* ignore */ }
+        } catch { /* ignore */ }
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -68,7 +68,7 @@ const Forum = () => {
             const res = await axios.get(`${API}/thread/${id}`, authHeaders);
             setActiveThread(res.data);
             setView('thread');
-        } catch (_err) {
+        } catch {
             alert('Failed to load thread');
         }
         setLoading(false);
@@ -103,7 +103,7 @@ const Forum = () => {
             }, authHeaders);
             setActiveThread(res.data);
             setReplyContent('');
-        } catch (_err) {
+        } catch {
             alert('Failed to post reply');
         }
         setLoading(false);
@@ -155,7 +155,6 @@ const Forum = () => {
 
     // Helpers
     const timeAgo = (date) => {
-        // eslint-disable-next-line react-hooks/purity
         const diff = Date.now() - new Date(date).getTime();
         const mins = Math.floor(diff / 60000);
         if (mins < 60) return `${mins}m ago`;

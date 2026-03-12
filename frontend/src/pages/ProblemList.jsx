@@ -51,6 +51,7 @@ const ProblemList = () => {
 
         fetchData();
         return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token, filter.difficulty, filter.category, refreshKey]);
 
     const handleSearch = useCallback((e) => {
