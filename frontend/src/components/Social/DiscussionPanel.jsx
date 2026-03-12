@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_BASE from '../../utils/api';
 
 const DiscussionPanel = ({ lessonId }) => {
     const [discussions, setDiscussions] = useState([]);
@@ -15,7 +16,7 @@ const DiscussionPanel = ({ lessonId }) => {
             const config = {
                 headers: { Authorization: `Bearer ${user.token}` }
             };
-            const res = await axios.get(`http://localhost:5001/api/discussions/${lessonId}`, config);
+            const res = await axios.get(`${API_BASE}/api/discussions/${lessonId}`, config);
             setDiscussions(res.data);
             setLoading(false);
         } catch (error) {
@@ -38,7 +39,7 @@ const DiscussionPanel = ({ lessonId }) => {
                 headers: { Authorization: `Bearer ${user.token}` }
             };
 
-            await axios.post('http://localhost:5001/api/discussions', {
+            await axios.post(`${API_BASE}/api/discussions`, {
                 lessonId,
                 content: newComment
             }, config);
@@ -58,7 +59,7 @@ const DiscussionPanel = ({ lessonId }) => {
                 headers: { Authorization: `Bearer ${user.token}` }
             };
 
-            await axios.post(`http://localhost:5001/api/discussions/${discussionId}/reply`, {
+            await axios.post(`${API_BASE}/api/discussions/${discussionId}/reply`, {
                 content: replyContent
             }, config);
 
@@ -106,7 +107,7 @@ const DiscussionPanel = ({ lessonId }) => {
 
             {/* Discussion List */}
             <div style={styles.list}>
-                {discussions.length === 0 ? (
+                {!Array.isArray(discussions) || discussions.length === 0 ? (
                     <div style={styles.empty}>Be the first to start a discussion!</div>
                 ) : (
                     discussions.map(discussion => (

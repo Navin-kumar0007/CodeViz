@@ -3,195 +3,395 @@
 > eslint .
 
 
-/Users/navin/CodeViz/frontend/src/components/AI/AIAssistant.jsx
-  39:1  error  Parsing error: 'return' outside of function
-
-/Users/navin/CodeViz/frontend/src/components/ConceptCard.jsx
-  129:17  error  Parsing error: Expected corresponding JSX closing tag for <Motion.div>
-
-/Users/navin/CodeViz/frontend/src/components/Editor/CodeEditor.jsx
-  12:41  error  '_monaco' is defined but never used  no-unused-vars
-
-/Users/navin/CodeViz/frontend/src/components/ErrorBoundary.jsx
-  17:37  error  '_error' is defined but never used  no-unused-vars
-
-/Users/navin/CodeViz/frontend/src/components/Learning/Quiz.jsx
-   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u          no-unused-vars
-  34:11  error  'score' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
-
-/Users/navin/CodeViz/frontend/src/components/Learning/QuizBrowser.jsx
-   2:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                    no-unused-vars
-   8:33  error    'onTakeQuiz' is defined but never used                                                                           no-unused-vars
-  17:8   warning  React Hook useEffect has a missing dependency: 'fetchQuizzes'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-/Users/navin/CodeViz/frontend/src/components/Learning/Recommendations.jsx
-   2:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                            no-unused-vars
-  16:22  error    'e' is defined but never used                                                                                            no-unused-vars
-  53:8   warning  React Hook useEffect has a missing dependency: 'fetchRecommendations'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-/Users/navin/CodeViz/frontend/src/components/Social/DiscussionPanel.jsx
-  14:9  error    Error: Cannot access variable before it is declared
-
-`fetchDiscussions` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
-
-  12 |
-  13 |     useEffect(() => {
-> 14 |         fetchDiscussions();
-     |         ^^^^^^^^^^^^^^^^ `fetchDiscussions` accessed before it is declared
-  15 |     }, [lessonId]);
-  16 |
-  17 |     const fetchDiscussions = async () => {
-
-  15 |     }, [lessonId]);
-  16 |
-> 17 |     const fetchDiscussions = async () => {
-     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 18 |         try {
-     | ^^^^^^^^^^^^^
-> 19 |             const config = {
-     …
-     | ^^^^^^^^^^^^^
-> 28 |         }
-     | ^^^^^^^^^^^^^
-> 29 |     };
-     | ^^^^^^^ `fetchDiscussions` is declared here
-  30 |
-  31 |     const handleSubmit = async (e) => {
-  32 |         e.preventDefault();  react-hooks/immutability
-  15:8  warning  React Hook useEffect has a missing dependency: 'fetchDiscussions'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/exhaustive-deps
-
-/Users/navin/CodeViz/frontend/src/components/Social/ShareModal.jsx
-  1:17  error  'useState' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
-
-/Users/navin/CodeViz/frontend/src/components/VariableTracker.jsx
-   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
-  21:57  error  'e' is defined but never used                                                  no-unused-vars
-  76:70  error  'idx' is defined but never used                                                no-unused-vars
-
-/Users/navin/CodeViz/frontend/src/components/Visualizer/Canvas.jsx
-    2:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                            no-unused-vars
-   21:11  error    'colors' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                   no-unused-vars
-   34:28  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                react-hooks/rules-of-hooks
-   44:57  error    'e' is defined but never used                                                                                                                                                                                                            no-unused-vars
-   44:60  error    Empty block statement                                                                                                                                                                                                                    no-empty
-   55:27  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                react-hooks/rules-of-hooks
-  122:26  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                react-hooks/rules-of-hooks
-  136:3   error    React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                              react-hooks/rules-of-hooks
-  138:6   warning  React Hook useEffect has a missing dependency: 'currentVariables'. Either include it or remove the dependency array                                                                                                                      react-hooks/exhaustive-deps
-  144:3   error    React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                              react-hooks/rules-of-hooks
-  150:6   warning  React Hook useEffect has a missing dependency: 'setStepIndex'. Either include it or remove the dependency array. If 'setStepIndex' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
-
-/Users/navin/CodeViz/frontend/src/components/Visualizer/SearchVisualizer.jsx
-   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
-  18:5   error  'currentIndex' is assigned a value but never used                              no-unused-vars
-
-/Users/navin/CodeViz/frontend/src/components/Visualizer/SortingVisualizer.jsx
-   1:17  error  'useMemo' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
-   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u   no-unused-vars
-  12:5   error  'state' is defined but never used                                               no-unused-vars
-  19:5   error  'getVariableColor' is assigned a value but never used                           no-unused-vars
-
-/Users/navin/CodeViz/frontend/src/components/Visualizer/VirtualizedArray.jsx
+/Users/navin/CodeViz/frontend/src/components/Gamification/SkillTreeWidget.jsx
   3:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
 
-/Users/navin/CodeViz/frontend/src/contexts/ThemeContext.jsx
-  148:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+/Users/navin/CodeViz/frontend/src/components/Layout/GlobalBackground.jsx
+   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  34:60  error  Error: Cannot call impure function during render
 
-/Users/navin/CodeViz/frontend/src/pages/AdminPanel.jsx
-    3:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-unused-vars
-   49:9   error    Error: Cannot access variable before it is declared
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
 
-`fetchData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+  32 |                 <motion.div key={i} animate={{ y: [0, -40, 0], rotate: [0, 15, 0], opacity: [0.03, 0.1, 0.03] }}
+  33 |                     transition={{ duration: 8 + i, repeat: Infinity, ease: 'linear' }}
+> 34 |                     style={{ position: 'absolute', top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, fontSize: '18px', color: '#fff', pointerEvents: 'none' }}
+     |                                                            ^^^^^^^^^^^^^ Cannot call impure function
+  35 |                 >
+  36 |                     {['=>', '{ }', '[ ]', '++', '===', 'async', 'ptr'][i % 7]}
+  37 |                 </motion.div>                                   react-hooks/purity
+  34:93  error  Error: Cannot call impure function during render
 
-  47 |             return;
-  48 |         }
-> 49 |         fetchData();
-     |         ^^^^^^^^^ `fetchData` accessed before it is declared
-  50 |     }, []);
-  51 |
-  52 |     // Fetch on filter/page change
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
 
-  57 |     }, [searchQuery, roleFilter, pagination.page, pagination.limit]);
-  58 |
-> 59 |     const fetchData = async () => {
-     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 60 |         setLoading(true);
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^
-> 61 |         await Promise.all([fetchStats(), fetchUsers()]);
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^
-> 62 |         setLoading(false);
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^
-> 63 |     };
-     | ^^^^^^^ `fetchData` is declared here
-  64 |
-  65 |     const fetchStats = async () => {
-  66 |         try {                                      react-hooks/immutability
-   50:8   warning  React Hook useEffect has missing dependencies: 'fetchData', 'navigate', and 'user'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
-   55:13  error    Error: Cannot access variable before it is declared
+  32 |                 <motion.div key={i} animate={{ y: [0, -40, 0], rotate: [0, 15, 0], opacity: [0.03, 0.1, 0.03] }}
+  33 |                     transition={{ duration: 8 + i, repeat: Infinity, ease: 'linear' }}
+> 34 |                     style={{ position: 'absolute', top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, fontSize: '18px', color: '#fff', pointerEvents: 'none' }}
+     |                                                                                             ^^^^^^^^^^^^^ Cannot call impure function
+  35 |                 >
+  36 |                     {['=>', '{ }', '[ ]', '++', '===', 'async', 'ptr'][i % 7]}
+  37 |                 </motion.div>  react-hooks/purity
 
-`fetchUsers` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+/Users/navin/CodeViz/frontend/src/components/Terminal/Terminal.jsx
+   23:12  error    'currentLine' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                       no-unused-vars
+   23:25  error    'setCurrentLine' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                    no-unused-vars
+   47:8   warning  React Hook useCallback has a missing dependency: 'LANG_COLORS'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  184:43  error    Empty block statement                                                                                             no-empty
+  194:43  error    Empty block statement                                                                                             no-empty
 
-  53 |     useEffect(() => {
-  54 |         if (user?.role === 'admin') {
-> 55 |             fetchUsers();
-     |             ^^^^^^^^^^ `fetchUsers` accessed before it is declared
-  56 |         }
-  57 |     }, [searchQuery, roleFilter, pagination.page, pagination.limit]);
-  58 |
+/Users/navin/CodeViz/frontend/src/pages/AlgoRace.jsx
+  177:17  error  'finished1' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+  178:17  error  'finished2' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+  199:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
 
-   77 |     };
-   78 |
->  79 |     const fetchUsers = async () => {
-      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->  80 |         try {
-      | ^^^^^^^^^^^^^
->  81 |             const params = new URLSearchParams();
-      …
-      | ^^^^^^^^^^^^^
->  97 |         }
-      | ^^^^^^^^^^^^^
->  98 |     };
-      | ^^^^^^^ `fetchUsers` is declared here
-   99 |
-  100 |     const confirmRoleChange = (userId, userName, currentRole, newRole) => {
-  101 |         if (currentRole === newRole) return;  react-hooks/immutability
-   57:8   warning  React Hook useEffect has missing dependencies: 'fetchUsers' and 'user?.role'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
-  130:18  error    'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
-  157:18  error    'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
-  181:18  error    'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
-  186:11  error    'formatDate' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
 
-/Users/navin/CodeViz/frontend/src/pages/Classroom.jsx
-    3:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                             no-unused-vars
-   12:13  error    'id' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                        no-unused-vars
-   54:8   warning  React Hook useEffect has missing dependencies: 'fetchMyClassrooms' and 'user?.token'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-  199:18  error    'error' is defined but never used                                                                                                         no-unused-vars
-  247:18  error    'error' is defined but never used                                                                                                         no-unused-vars
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  197 |         if (step1 >= Math.max(0, trace1.length - 1) && step2 >= Math.max(0, trace2.length - 1)) {
+  198 |             clearInterval(raceInterval.current);
+> 199 |             setIsRacing(false);
+      |             ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  200 |         }
+  201 |     }, [step1, step2, trace1.length, trace2.length, isRacing]);
+  202 |  react-hooks/set-state-in-effect
+
+/Users/navin/CodeViz/frontend/src/pages/ConceptMap.jsx
+  1:27  error  'useEffect' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars
 
 /Users/navin/CodeViz/frontend/src/pages/Dashboard.jsx
-  32:6  warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  1:38  error  'useRef' is defined but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars
+  3:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars
+  3:34  error  'useSpring' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
 
-/Users/navin/CodeViz/frontend/src/pages/InstructorDashboard.jsx
-   3:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                no-unused-vars
-  46:8   warning  React Hook useEffect has missing dependencies: 'fetchDashboard', 'navigate', and 'user'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+/Users/navin/CodeViz/frontend/src/pages/Forum.jsx
+   38:23  error    Error: Cannot access variable before it is declared
 
-/Users/navin/CodeViz/frontend/src/pages/Learn.jsx
-   3:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                      no-unused-vars
-  29:12  error    'syncInProgress' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                     no-unused-vars
-  97:8   warning  React Hook useEffect has a missing dependency: 'syncWithServer'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+`loadThreads` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  36 |
+  37 |     // ═══ Load Threads ═══
+> 38 |     useEffect(() => { loadThreads(); }, [category, sortBy, currentPage]);
+     |                       ^^^^^^^^^^^ `loadThreads` accessed before it is declared
+  39 |
+  40 |     const loadThreads = async () => {
+  41 |         setLoading(true);
+
+  38 |     useEffect(() => { loadThreads(); }, [category, sortBy, currentPage]);
+  39 |
+> 40 |     const loadThreads = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 41 |         setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |         try {
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 54 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 55 |     };
+     | ^^^^^^^ `loadThreads` is declared here
+  56 |
+  57 |     const handleSearch = (e) => {
+  58 |         e.preventDefault();  react-hooks/immutability
+   38:41  warning  React Hook useEffect has a missing dependency: 'loadThreads'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+   70:18  error    'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+  105:18  error    'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+  157:22  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  155 |     // Helpers
+  156 |     const timeAgo = (date) => {
+> 157 |         const diff = Date.now() - new Date(date).getTime();
+      |                      ^^^^^^^^^^ Cannot call impure function
+  158 |         const mins = Math.floor(diff / 60000);
+  159 |         if (mins < 60) return `${mins}m ago`;
+  160 |         const hrs = Math.floor(mins / 60);                                                                                                                                                                                                                                                                                                                                react-hooks/purity
+
+/Users/navin/CodeViz/frontend/src/pages/GitLearn.jsx
+  272:38  error  Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `lesson`, but the source dependencies were [lesson?.id, activeLessonIdx]. Inferred less specific property than source.
+
+  270 |     const lesson = GIT_LESSONS[activeLessonIdx];
+  271 |
+> 272 |     const markComplete = useCallback(() => {
+      |                                      ^^^^^^^
+> 273 |         setCompletedLessons(prev => {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 274 |             const next = new Set(prev);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 275 |             next.add(lesson.id);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 276 |             return next;
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 277 |         });
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 278 |         if (activeLessonIdx < GIT_LESSONS.length - 1) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 279 |             setActiveLessonIdx(i => i + 1);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 280 |         }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 281 |     }, [lesson?.id, activeLessonIdx]);
+      | ^^^^^^ Could not preserve existing manual memoization
+  282 |
+  283 |     return (
+  284 |         <div style={S.page}>  react-hooks/preserve-manual-memoization
+
+/Users/navin/CodeViz/frontend/src/pages/Home.jsx
+    3:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+    3:34  error  'useSpring' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+    3:76  error  'useScroll' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  605:56  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  603 |             <motion.div key={i} animate={{ y: [0, -40, 0], rotate: [0, 15, 0], opacity: [0.05, 0.15, 0.05] }}
+  604 |                 transition={{ duration: 6 + i, repeat: Infinity, ease: 'linear' }}
+> 605 |                 style={{ position: 'absolute', top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, fontSize: '20px', color: '#fff' }}
+      |                                                        ^^^^^^^^^^^^^ Cannot call impure function
+  606 |             >
+  607 |                 {['=>', '{ }', '[ ]', '++', '===', 'async', 'ptr'][i % 7]}
+  608 |             </motion.div>                                   react-hooks/purity
+  605:89  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  603 |             <motion.div key={i} animate={{ y: [0, -40, 0], rotate: [0, 15, 0], opacity: [0.05, 0.15, 0.05] }}
+  604 |                 transition={{ duration: 6 + i, repeat: Infinity, ease: 'linear' }}
+> 605 |                 style={{ position: 'absolute', top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, fontSize: '20px', color: '#fff' }}
+      |                                                                                         ^^^^^^^^^^^^^ Cannot call impure function
+  606 |             >
+  607 |                 {['=>', '{ }', '[ ]', '++', '===', 'async', 'ptr'][i % 7]}
+  608 |             </motion.div>  react-hooks/purity
+
+/Users/navin/CodeViz/frontend/src/pages/InterviewPrep.jsx
+   26:62  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  24 |     const [submissions, setSubmissions] = useState({});
+  25 |     const [timeLeft, setTimeLeft] = useState(0);
+> 26 |     const [problemStartTime, setProblemStartTime] = useState(Date.now());
+     |                                                              ^^^^^^^^^^ Cannot call impure function
+  27 |     const timerRef = useRef(null);
+  28 |
+  29 |     // Results state                                                                                                                                                                                                                                                                                                                                                             react-hooks/purity
+   50:17  error    Error: Cannot access variable before it is declared
+
+`handleEndSession` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  48 |             if (remaining <= 0) {
+  49 |                 clearInterval(timerRef.current);
+> 50 |                 handleEndSession();
+     |                 ^^^^^^^^^^^^^^^^ `handleEndSession` accessed before it is declared
+  51 |             }
+  52 |         }, 1000);
+  53 |
+
+  109 |
+  110 |     // ═══ End Session ═══
+> 111 |     const handleEndSession = async () => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 112 |         clearInterval(timerRef.current);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 113 |         setLoading(true);
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 125 |         setLoading(false);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 126 |     };
+      | ^^^^^^^ `handleEndSession` is declared here
+  127 |
+  128 |     // ═══ Load History ═══
+  129 |     const loadHistory = async () => {  react-hooks/immutability
+   55:8   warning  React Hook useEffect has a missing dependency: 'handleEndSession'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/exhaustive-deps
+   76:33  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  74 |             setProblems(res.data.problems);
+  75 |             setCurrentProblem(0);
+> 76 |             setProblemStartTime(Date.now());
+     |                                 ^^^^^^^^^^ Cannot call impure function
+  77 |
+  78 |             // Initialize codes with starter code
+  79 |             const initialCodes = {};                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/purity
+   97:43  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+   95 |         setLoading(true);
+   96 |         try {
+>  97 |             const timeTaken = Math.round((Date.now() - problemStartTime) / 1000);
+      |                                           ^^^^^^^^^^ Cannot call impure function
+   98 |             const res = await axios.post(
+   99 |                 `${API_BASE}/api/interview/submit/${session._id}`,
+  100 |                 { problemId, code: codes[problemId], language: 'python', timeTaken },                                                                                                                                                                                                                                                                                       react-hooks/purity
+  148:29  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  146 |     const goToProblem = (idx) => {
+  147 |         setCurrentProblem(idx);
+> 148 |         setProblemStartTime(Date.now());
+      |                             ^^^^^^^^^^ Cannot call impure function
+  149 |     };
+  150 |
+  151 |     // ═══════════════════════════════════════                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/purity
 
 /Users/navin/CodeViz/frontend/src/pages/Login.jsx
-  28:14  error  'err' is defined but never used  no-unused-vars
+   3:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  40:22  error  Error: Cannot call impure function during render
 
-/Users/navin/CodeViz/frontend/src/pages/Practice.jsx
-  125:9   warning  Unused eslint-disable directive (no problems were reported from 'no-new-func')
-  171:18  error    'e' is defined but never used                                                                                                  no-unused-vars
-  256:51  warning  React Hook useEffect has missing dependencies: 'fetchSnippets' and 'user'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-  299:6   warning  React Hook useEffect has a missing dependency: 'handleMouseMove'. Either include it or remove the dependency array             react-hooks/exhaustive-deps
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
 
-/Users/navin/CodeViz/frontend/src/pages/SnippetViewer.jsx
-  28:22  error  '_' is defined but never used  no-unused-vars
+  38 |             background: 'rgba(97,218,251,0.3)',
+  39 |             boxShadow: '0:0 10px rgba(97,218,251,0.5)',
+> 40 |             opacity: Math.random() * 0.5 + 0.2
+     |                      ^^^^^^^^^^^^^ Cannot call impure function
+  41 |           }}
+  42 |         />
+  43 |       ))}  react-hooks/purity
 
-✖ 63 problems (49 errors, 14 warnings)
-  0 errors and 1 warning potentially fixable with the `--fix` option.
+/Users/navin/CodeViz/frontend/src/pages/PeerReview.jsx
+  32:8  warning  React Hook useEffect has missing dependencies: 'fetchReviews', 'navigate', and 'user'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/pages/ProblemList.jsx
+  42:22  error    '_err' is defined but never used                                                                                  no-unused-vars
+  47:22  error    '_err' is defined but never used                                                                                  no-unused-vars
+  54:8   warning  React Hook useEffect has a missing dependency: 'filter.search'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/pages/ProblemSolve.jsx
+  41:9   error    Error: Cannot access variable before it is declared
+
+`loadProblem` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  39 |
+  40 |     useEffect(() => {
+> 41 |         loadProblem();
+     |         ^^^^^^^^^^^ `loadProblem` accessed before it is declared
+  42 |     }, [slug]);
+  43 |
+  44 |     const loadProblem = async () => {
+
+  42 |     }, [slug]);
+  43 |
+> 44 |     const loadProblem = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 45 |         setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 46 |         try {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 47 |             const { data } = await axios.get(`${API}/${slug}`, { headers });
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 48 |             setProblem(data);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 49 |             setCode(data.starterCode?.[language] || `# Write your solution for: ${data.title}\n`);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 50 |         } catch (err) { console.error(err); }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 51 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 52 |     };
+     | ^^^^^^^ `loadProblem` is declared here
+  53 |
+  54 |     const handleLanguageChange = (lang) => {
+  55 |         setLanguage(lang);  react-hooks/immutability
+  42:8   warning  React Hook useEffect has a missing dependency: 'loadProblem'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/exhaustive-deps
+  67:18  error    'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  83:18  error    'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  94:18  error    'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-unused-vars
+  97:63  warning  React Hook useEffect has a missing dependency: 'loadSubmissions'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/pages/ProgressReports.jsx
+  21:9  error    Error: Cannot access variable before it is declared
+
+`loadWeekly` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  19 |
+  20 |     useEffect(() => {
+> 21 |         loadWeekly();
+     |         ^^^^^^^^^^ `loadWeekly` accessed before it is declared
+  22 |     }, []);
+  23 |
+  24 |     const loadWeekly = async () => {
+
+  22 |     }, []);
+  23 |
+> 24 |     const loadWeekly = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 25 |         setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 26 |         try {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 27 |             const res = await axios.get(`${API}/weekly`, authHeaders);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |             setWeekly(res.data);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |         } catch (err) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |             console.error('Failed to load report:', err);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |         }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |     };
+     | ^^^^^^^ `loadWeekly` is declared here
+  34 |
+  35 |     const loadAnalytics = async () => {
+  36 |         setLoading(true);  react-hooks/immutability
+  22:8  warning  React Hook useEffect has a missing dependency: 'loadWeekly'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+
+/Users/navin/CodeViz/frontend/src/pages/Signup.jsx
+   3:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  40:22  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  38 |             background: 'rgba(97,218,251,0.3)',
+  39 |             boxShadow: '0:0 10px rgba(97,218,251,0.5)',
+> 40 |             opacity: Math.random() * 0.5 + 0.2
+     |                      ^^^^^^^^^^^^^ Cannot call impure function
+  41 |           }}
+  42 |         />
+  43 |       ))}  react-hooks/purity
+
+/Users/navin/CodeViz/frontend/src/pages/VideoLessons.jsx
+  26:23  error    Error: Cannot access variable before it is declared
+
+`loadVideos` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  24 |     const isInstructor = ['instructor', 'admin'].includes(user?.role);
+  25 |
+> 26 |     useEffect(() => { loadVideos(); }, [filterCat]);
+     |                       ^^^^^^^^^^ `loadVideos` accessed before it is declared
+  27 |
+  28 |     const loadVideos = async () => {
+  29 |         setLoading(true);
+
+  26 |     useEffect(() => { loadVideos(); }, [filterCat]);
+  27 |
+> 28 |     const loadVideos = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |         setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |         try {
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 38 |     };
+     | ^^^^^^^ `loadVideos` is declared here
+  39 |
+  40 |     const openVideo = async (id) => {
+  41 |         try {  react-hooks/immutability
+  26:40  warning  React Hook useEffect has a missing dependency: 'loadVideos'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/exhaustive-deps
+  44:18  error    'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+
+✖ 53 problems (44 errors, 9 warnings)
 

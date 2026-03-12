@@ -3,6 +3,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import Quiz from './Quiz';
 import Canvas from '../Visualizer/Canvas';
 import DiscussionPanel from '../Social/DiscussionPanel';
+import API_BASE from '../../utils/api';
 
 /**
  * LessonView - Full lesson display with explanation, code, and quiz
@@ -13,14 +14,20 @@ const LANGUAGE_ICONS = {
     python: '🐍',
     javascript: '📜',
     java: '☕',
-    cpp: '⚙️'
+    cpp: '⚙️',
+    typescript: '📘',
+    go: '🔵',
+    c: '🔷'
 };
 
 const LANGUAGE_MAP = {
     python: 'python',
     javascript: 'javascript',
     java: 'java',
-    cpp: 'cpp'
+    cpp: 'cpp',
+    typescript: 'typescript',
+    go: 'go',
+    c: 'c'
 };
 
 const LessonView = ({ lesson, onBack, onComplete }) => {
@@ -49,9 +56,14 @@ const LessonView = ({ lesson, onBack, onComplete }) => {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:5001/trace', {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const token = userInfo?.token;
+            const response = await fetch(`${API_BASE}/trace`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     code: code,
                     language: LANGUAGE_MAP[selectedLang] || 'python'

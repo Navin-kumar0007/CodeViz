@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
 import LearningPath from '../components/Learning/LearningPath';
 import LessonList from '../components/Learning/LessonList';
 import LessonView from '../components/Learning/LessonView';
@@ -10,6 +10,7 @@ import QuizBrowser from '../components/Learning/QuizBrowser';
 import Recommendations from '../components/Learning/Recommendations';
 import { COURSES, getPathProgress, getTotalProgress } from '../data/courses';
 import { ACHIEVEMENTS, checkAchievements, getAchievement } from '../data/achievements';
+import API_BASE from '../utils/api';
 
 /**
  * Learn.jsx - Main Structured Learning Page
@@ -44,7 +45,7 @@ const Learn = () => {
         if (!user || !user.token) return null;
 
         try {
-            const res = await fetch('http://localhost:5001/api/progress/sync', {
+            const res = await fetch(`${API_BASE}/api/progress/sync`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

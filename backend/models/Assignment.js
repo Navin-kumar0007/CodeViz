@@ -56,6 +56,12 @@ const assignmentSchema = mongoose.Schema(
             default: ''
         },
 
+        // Expected output for automated grading
+        expectedOutput: {
+            type: String,
+            default: ''
+        },
+
         // Starter code template
         starterCode: {
             type: String,

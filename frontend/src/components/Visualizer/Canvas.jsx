@@ -240,6 +240,72 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
     </Motion.div>
   );
 
+  // 🧠 CALL STACK VISUALIZATION
+  const renderCallStack = () => {
+    if (!currentStep || !currentStep.call_stack || currentStep.call_stack.length === 0) return null;
+
+    return (
+      <div style={{ marginBottom: '20px', background: 'rgba(20,20,30,0.6)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px' }}>
+          <span>🥞</span> Execution Call Stack
+        </h3>
+
+        <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '8px' }}>
+          <AnimatePresence mode="popLayout">
+            {currentStep.call_stack.map((frame, idx) => {
+              const isActive = idx === currentStep.call_stack.length - 1;
+              return (
+                <Motion.div
+                  key={`${frame.function}-${idx}`}
+                  initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                  style={{
+                    background: isActive ? 'linear-gradient(90deg, #4c1d95, #6d28d9)' : 'rgba(76, 29, 149, 0.2)',
+                    border: `1px solid ${isActive ? '#8b5cf6' : '#4c1d95'}`,
+                    padding: '10px 15px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '5px',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {isActive && (
+                    <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#a78bfa' }} />
+                  )}
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 'bold', color: isActive ? '#fff' : '#c4b5fd', fontFamily: 'monospace', fontSize: '14px' }}>
+                      {frame.function}()
+                    </span>
+                    <span style={{ fontSize: '11px', color: isActive ? '#ddd' : '#6b7280' }}>
+                      Line {frame.line}
+                    </span>
+                  </div>
+
+                  {Object.keys(frame.variables || {}).length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                      {Object.entries(frame.variables).map(([k, v]) => (
+                        <div key={k} style={{ fontSize: '11px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>
+                          <span style={{ color: '#9cdcfe' }}>{k}</span>: <span style={{ color: '#ce9178' }}>
+                            {Array.isArray(v) ? '[...]' : typeof v === 'object' ? '{...}' : String(v)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      </div>
+    );
+  };
+
   // 🔥 ENHANCED ARRAY VISUALIZER (with algorithm detection)
   const renderArray = (name, arr, state) => {
     // Use virtual scrolling for arrays > 50 elements
@@ -994,6 +1060,9 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
               onDismiss={() => setDismissedConcepts(prev => ({ ...prev, graph: true }))}
             />
           )}
+
+          {/* 🥞 NEW: CALL STACK RENDERING */}
+          {renderCallStack()}
 
           {/* CATEGORIZED SECTIONS */}
           {Object.keys(currentVariables).length > 0 ? (

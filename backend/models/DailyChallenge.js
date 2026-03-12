@@ -22,7 +22,5 @@ const dailyChallengeSchema = mongoose.Schema({
     challengeIndex: { type: Number, unique: true }, // rotating index (0-29)
 }, { timestamps: true });
 
-// Index for fast daily lookup
-dailyChallengeSchema.index({ dateActive: 1 });
-
+// Index for fast daily lookup is already defined in field
 module.exports = mongoose.model('DailyChallenge', dailyChallengeSchema);

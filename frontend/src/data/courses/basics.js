@@ -51,6 +51,72 @@ let isStudent = true;    // Boolean (true/false)
 
 console.log("Name:", name);
 console.log("Age:", age);
+console.log("Is student:", isStudent);`,
+                java: `// Java Variables
+public class Main {
+    public static void main(String[] args) {
+        String name = "Alice";    // String
+        int age = 25;             // Integer
+        double height = 5.6;      // Double 
+        boolean isStudent = true; // Boolean
+
+        System.out.println("Name: " + name);
+        System.out.println("Age: " + age);
+        System.out.println("Is student: " + isStudent);
+    }
+}`,
+                c: `// C Variables
+#include <stdio.h>
+#include <stdbool.h>
+
+int main() {
+    char name[] = "Alice";  // String 
+    int age = 25;           // Integer
+    float height = 5.6f;    // Float
+    bool isStudent = true;  // Boolean
+
+    printf("Name: %s\\n", name);
+    printf("Age: %d\\n", age);
+    printf("Is student: %d\\n", isStudent);
+    return 0;
+}`,
+                cpp: `// C++ Variables
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string name = "Alice"; // String
+    int age = 25;               // Integer
+    float height = 5.6f;        // Float
+    bool isStudent = true;      // Boolean
+
+    std::cout << "Name: " << name << "\\n";
+    std::cout << "Age: " << age << "\\n";
+    std::cout << "Is student: " << isStudent << "\\n";
+    return 0;
+}`,
+                go: `// Go Variables
+package main
+import "fmt"
+
+func main() {
+    name := "Alice"      // Inferred string
+    var age int = 25     // Explicit integer
+    height := 5.6        // Inferred float64
+    isStudent := true    // Inferred bool
+
+    fmt.Println("Name:", name)
+    fmt.Println("Age:", age)
+    fmt.Println("Is student:", isStudent)
+}`,
+                typescript: `// TypeScript Variables
+let name: string = "Alice";      // String
+let age: number = 25;            // Number
+let height: number = 5.6;        // Number
+let isStudent: boolean = true;   // Boolean
+
+console.log("Name:", name);
+console.log("Age:", age);
 console.log("Is student:", isStudent);`
             },
             syntaxDiff: 'Python uses no semicolons and no "let" keyword. JavaScript uses camelCase (isStudent) while Python uses snake_case (is_student).',
@@ -124,6 +190,120 @@ print(f"Grade: {grade}")`,
                 javascript: `// JavaScript If-Else
 let score = 85;
 let grade;
+
+if (score >= 90) {
+    grade = "A";
+    console.log("Excellent!");
+} else if (score >= 80) {
+    grade = "B";
+    console.log("Good job!");
+} else if (score >= 70) {
+    grade = "C";
+    console.log("Not bad!");
+} else {
+    grade = "F";
+    console.log("Need improvement");
+}
+
+console.log("Grade:", grade);`,
+                java: `// Java If-Else
+public class Main {
+    public static void main(String[] args) {
+        int score = 85;
+        String grade;
+
+        if (score >= 90) {
+            grade = "A";
+            System.out.println("Excellent!");
+        } else if (score >= 80) {
+            grade = "B";
+            System.out.println("Good job!");
+        } else if (score >= 70) {
+            grade = "C";
+            System.out.println("Not bad!");
+        } else {
+            grade = "F";
+            System.out.println("Need improvement");
+        }
+
+        System.out.println("Grade: " + grade);
+    }
+}`,
+                c: `// C If-Else
+#include <stdio.h>
+
+int main() {
+    int score = 85;
+    char grade;
+
+    if (score >= 90) {
+        grade = 'A';
+        printf("Excellent!\\n");
+    } else if (score >= 80) {
+        grade = 'B';
+        printf("Good job!\\n");
+    } else if (score >= 70) {
+        grade = 'C';
+        printf("Not bad!\\n");
+    } else {
+        grade = 'F';
+        printf("Need improvement\\n");
+    }
+
+    printf("Grade: %c\\n", grade);
+    return 0;
+}`,
+                cpp: `// C++ If-Else
+#include <iostream>
+
+int main() {
+    int score = 85;
+    char grade;
+
+    if (score >= 90) {
+        grade = 'A';
+        std::cout << "Excellent!\\n";
+    } else if (score >= 80) {
+        grade = 'B';
+        std::cout << "Good job!\\n";
+    } else if (score >= 70) {
+        grade = 'C';
+        std::cout << "Not bad!\\n";
+    } else {
+        grade = 'F';
+        std::cout << "Need improvement\\n";
+    }
+
+    std::cout << "Grade: " << grade << "\\n";
+    return 0;
+}`,
+                go: `// Go If-Else
+package main
+import "fmt"
+
+func main() {
+    score := 85
+    var grade string
+
+    if score >= 90 {
+        grade = "A"
+        fmt.Println("Excellent!")
+    } else if score >= 80 {
+        grade = "B"
+        fmt.Println("Good job!")
+    } else if score >= 70 {
+        grade = "C"
+        fmt.Println("Not bad!")
+    } else {
+        grade = "F"
+        fmt.Println("Need improvement")
+    }
+
+    fmt.Println("Grade:", grade)
+}`,
+                typescript: `// TypeScript If-Else
+let score: number = 85;
+let grade: string;
 
 if (score >= 90) {
     grade = "A";
@@ -218,6 +398,100 @@ for (let num = 1; num <= 5; num++) {
     console.log("Added", num, "Total:", total);
 }
 
+console.log("Final sum:", total);`,
+                java: `// Java For Loop
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Counting to 5:");
+
+        for (int i = 1; i <= 5; i++) {
+            System.out.println("Count: " + i);
+        }
+
+        // Sum numbers 1 to 5
+        int total = 0;
+        for (int num = 1; num <= 5; num++) {
+            total += num;
+            System.out.println("Added " + num + ", Total: " + total);
+        }
+
+        System.out.println("Final sum: " + total);
+    }
+}`,
+                c: `// C For Loop
+#include <stdio.h>
+
+int main() {
+    printf("Counting to 5:\\n");
+
+    for (int i = 1; i <= 5; i++) {
+        printf("Count: %d\\n", i);
+    }
+
+    // Sum numbers 1 to 5
+    int total = 0;
+    for (int num = 1; num <= 5; num++) {
+        total += num;
+        printf("Added %d, Total: %d\\n", num, total);
+    }
+
+    printf("Final sum: %d\\n", total);
+    return 0;
+}`,
+                cpp: `// C++ For Loop
+#include <iostream>
+
+int main() {
+    std::cout << "Counting to 5:\\n";
+
+    for (int i = 1; i <= 5; i++) {
+        std::cout << "Count: " << i << "\\n";
+    }
+
+    // Sum numbers 1 to 5
+    int total = 0;
+    for (int num = 1; num <= 5; num++) {
+        total += num;
+        std::cout << "Added " << num << ", Total: " << total << "\\n";
+    }
+
+    std::cout << "Final sum: " << total << "\\n";
+    return 0;
+}`,
+                go: `// Go For Loop
+package main
+import "fmt"
+
+func main() {
+    fmt.Println("Counting to 5:")
+
+    for i := 1; i <= 5; i++ {
+        fmt.Println("Count:", i)
+    }
+
+    // Sum numbers 1 to 5
+    total := 0
+    for num := 1; num <= 5; num++ {
+        total += num
+        fmt.Printf("Added %d, Total: %d\\n", num, total)
+    }
+
+    fmt.Println("Final sum:", total)
+}`,
+                typescript: `// TypeScript For Loop
+console.log("Counting to 5:");
+
+for (let i: number = 1; i <= 5; i++) {
+    console.log("Count:", i);
+}
+
+// Sum numbers 1 to 5
+let total: number = 0;
+for (let num: number = 1; num <= 5; num++) {
+    total += num;
+    console.log(\`Added \${num}, Total: \${total}\`);
+}
+
 console.log("Final sum:", total);`
             },
             syntaxDiff: 'Python uses "for i in range(start, end)" which is cleaner. JavaScript uses the classic "for (init; condition; increment)" format.',
@@ -299,9 +573,78 @@ while (count > 0) {
     count = count - 1;
 }
 
+console.log("Blast off! 🚀");`,
+                java: `// Java While Loop
+public class Main {
+    public static void main(String[] args) {
+        int count = 5;
+
+        System.out.println("Countdown:");
+        while (count > 0) {
+            System.out.println(count + "...");
+            count--;
+        }
+
+        System.out.println("Blast off! 🚀");
+    }
+}`,
+                c: `// C While Loop
+#include <stdio.h>
+
+int main() {
+    int count = 5;
+
+    printf("Countdown:\\n");
+    while (count > 0) {
+        printf("%d...\\n", count);
+        count--;
+    }
+
+    printf("Blast off! 🚀\\n");
+    return 0;
+}`,
+                cpp: `// C++ While Loop
+#include <iostream>
+
+int main() {
+    int count = 5;
+
+    std::cout << "Countdown:\\n";
+    while (count > 0) {
+        std::cout << count << "...\\n";
+        count--;
+    }
+
+    std::cout << "Blast off! 🚀\\n";
+    return 0;
+}`,
+                go: `// Go While Loop
+package main
+import "fmt"
+
+func main() {
+    count := 5
+
+    fmt.Println("Countdown:")
+    for count > 0 { // Go uses 'for' instead of 'while'
+        fmt.Printf("%d...\\n", count)
+        count--
+    }
+
+    fmt.Println("Blast off! 🚀")
+}`,
+                typescript: `// TypeScript While Loop
+let count: number = 5;
+
+console.log("Countdown:");
+while (count > 0) {
+    console.log(count + "...");
+    count = count - 1;
+}
+
 console.log("Blast off! 🚀");`
             },
-            syntaxDiff: 'Both languages use similar while loop syntax. The main difference is semicolons and parentheses around the condition.',
+            syntaxDiff: 'Go doesn\'t have a "while" keyword - it uses a "for" loop with only a condition. Python and JS both have "while".',
             quiz: [
                 {
                     question: 'When does a while loop stop?',
@@ -384,6 +727,107 @@ function add(a, b) {
 }
 
 let sumResult = add(5, 3);
+console.log("5 + 3 =", sumResult);`,
+                java: `// Java Functions
+public class Main {
+    // Define the function (method in Java)
+    static String greet(String name) {
+        return "Hello, " + name + "!";
+    }
+
+    static int add(int a, int b) {
+        return a + b;
+    }
+
+    public static void main(String[] args) {
+        // Call the function
+        String result = greet("Alice");
+        System.out.println(result);
+
+        int sumResult = add(5, 3);
+        System.out.println("5 + 3 = " + sumResult);
+    }
+}`,
+                c: `// C Functions
+#include <stdio.h>
+
+// Function declarations
+void greet(char name[]) {
+    printf("Hello, %s!\\n", name);
+}
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    // Call the function
+    greet("Alice");
+
+    int sumResult = add(5, 3);
+    printf("5 + 3 = %d\\n", sumResult);
+    return 0;
+}`,
+                cpp: `// C++ Functions
+#include <iostream>
+#include <string>
+
+// Function definition
+std::string greet(std::string name) {
+    return "Hello, " + name + "!";
+}
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    // Call the function
+    std::string result = greet("Alice");
+    std::cout << result << "\\n";
+
+    int sumResult = add(5, 3);
+    std::cout << "5 + 3 = " << sumResult << "\\n";
+    return 0;
+}`,
+                go: `// Go Functions
+package main
+import "fmt"
+
+// Function definition
+func greet(name string) string {
+    return "Hello, " + name + "!"
+}
+
+func add(a int, b int) int {
+    return a + b
+}
+
+func main() {
+    // Call the function
+    result := greet("Alice")
+    fmt.Println(result)
+
+    sumResult := add(5, 3)
+    fmt.Printf("5 + 3 = %d\\n", sumResult)
+}`,
+                typescript: `// TypeScript Functions
+function greet(name: string): string {
+    // Say hello to someone
+    let message: string = "Hello, " + name + "!";
+    return message;
+}
+
+// Call the function
+let result: string = greet("Alice");
+console.log(result);
+
+// Function with multiple parameters
+function add(a: number, b: number): number {
+    return a + b;
+}
+
+let sumResult: number = add(5, 3);
 console.log("5 + 3 =", sumResult);`
             },
             syntaxDiff: 'Python uses "def" to define functions. JavaScript uses "function". Python functions can have docstrings for documentation.',
@@ -420,6 +864,123 @@ console.log("5 + 3 =", sumResult);`
                     ],
                     correct: 1,
                     explanation: 'Parameters are the inputs a function receives. They let you customize what the function does.'
+                }
+            ]
+        },
+        {
+            id: 'type-systems',
+            title: 'Static vs Dynamic Typing',
+            duration: '12 min',
+            explanation: [
+                {
+                    type: 'text',
+                    content: 'You might have noticed a major difference in how variables are created across different languages. Languages like **Python** and **JavaScript** use **Dynamic Typing**. This means they figure out the data type automatically, and a variable can change types later.'
+                },
+                {
+                    type: 'tip',
+                    content: 'Dynamic Typing is like an adjustable box. You can put a number in it today, and a string in it tomorrow.'
+                },
+                {
+                    type: 'text',
+                    content: 'Languages like **Java**, **C**, **C++**, and **Go** use **Static Typing**. You must explicitly tell the computer what type of data the variable will hold (like `int` for integer, or `String` for text). Once defined, that variable can NEVER hold a different type of data.'
+                },
+                {
+                    type: 'warning',
+                    content: 'Static typing prevents many bugs before the code even runs because the compiler checks that all data fits perfectly into its declared boxes.'
+                }
+            ],
+            keyConcepts: [
+                'Dynamic Typing: Types are inferred at runtime',
+                'Static Typing: Types are checked during compilation',
+                'Dynamic is faster to write, Static is safer for large apps',
+                'Variables in static languages cannot change types later'
+            ],
+            code: {
+                python: `# Python (Dynamic)
+box = 42          # Python knows it's an integer
+print(f"I contain data: {box}")
+
+box = "Hello!"    # Perfectly fine! The type changes to String.
+print(f"Now I contain data: {box}")`,
+                javascript: `// JavaScript (Dynamic)
+let box = 42;         // JS infers it as a Number
+console.log("I contain data:", box);
+
+box = "Hello!";       // Valid! The variable now holds a String.
+console.log("Now I contain data:", box);`,
+                java: `// Java (Static)
+public class Main {
+    public static void main(String[] args) {
+        int box = 42;    // Explicitly declared as integer
+        System.out.println("I contain data: " + box);
+        
+        // box = "Hello!"; 
+        // ERROR! A String cannot be put in an int variable!
+    }
+}`,
+                c: `// C (Static)
+#include <stdio.h>
+
+int main() {
+    int box = 42;
+    printf("I contain data: %d\\n", box);
+    
+    // box = "Hello!"; 
+    // ERROR! Incompatible types.
+    return 0;
+}`,
+                cpp: `// C++ (Static)
+#include <iostream>
+
+int main() {
+    int box = 42;
+    std::cout << "I contain data: " << box << "\\n";
+    
+    // box = "Hello!"; 
+    // ERROR! Cannot change the type of 'box'.
+    return 0;
+}`,
+                go: `// Go (Static, but with type inference)
+package main
+import "fmt"
+
+func main() {
+    box := 42 // Go infers 'int', but rigidly locks it!
+    fmt.Println("I contain data:", box)
+    
+    // box = "Hello!" 
+    // ERROR! Cannot use type string as type int in assignment
+}`,
+                typescript: `// TypeScript (Static with Optional Inference)
+let box: any = 42; // TypeScript can behave dynamically with 'any'
+console.log("I contain data:", box);
+
+let typedBox: number = 42;
+// typedBox = "Hello!"; // TypeScript ERROR! Type 'string' is not assignable to type 'number'.`
+            },
+            syntaxDiff: 'Dynamic typing needs no type declarations. Static typing requires rigid type definitions like "int" or "string", even if inferred like in Go.',
+            quiz: [
+                {
+                    question: 'Which of these pairs use Dynamic Typing?',
+                    options: [
+                        'Java and C',
+                        'Python and JavaScript',
+                        'C++ and Go',
+                        'Java and Python'
+                    ],
+                    correct: 1,
+                    explanation: 'Python and JavaScript are dynamically-typed, meaning variables can hold different types of data over their lifetime without explicit declarations.'
+                },
+                {
+                    question: 'What is a major advantage of Static Typing?',
+                    options: [
+                        "It is much faster to write",
+                        "You don't have to remember data types",
+                        "The compiler catches type-related bugs before the code runs",
+                        "Variables can change types freely"
+                    ],
+                    correct: 2,
+                    explanation: 'Because types are checked during compilation, static typing catches many errors early, making large applications much safer and more reliable.'
                 }
             ]
         }

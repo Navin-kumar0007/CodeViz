@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_BASE from '../../utils/api';
 import {
     Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip
 } from 'recharts';
 
-const API = 'http://localhost:5001';
+const API = API_BASE;
 
 const AlgorithmDNA = () => {
     const [dnaData, setDnaData] = useState([]);
@@ -16,7 +17,7 @@ const AlgorithmDNA = () => {
                 const userInfo = JSON.parse(localStorage.getItem('userInfo'));
                 if (!userInfo) return;
 
-                const { data } = await axios.get(`${API}/api/gamification/dna`, {
+                const { data } = await axios.get(`${API}/api/progress/dna`, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
 
@@ -31,7 +32,7 @@ const AlgorithmDNA = () => {
 
     if (loading) return <div style={styles.loading}>Analyzing DNA...</div>;
 
-    if (!dnaData || dnaData.length === 0) {
+    if (!dnaData || !Array.isArray(dnaData) || dnaData.length === 0) {
         return (
             <div style={styles.container}>
                 <h3 style={styles.title}>🧬 Algorithm DNA</h3>

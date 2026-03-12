@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 
 /**
  * 🏆 DAILY CHALLENGE PAGE
@@ -20,19 +21,30 @@ const DailyChallenge = () => {
     const [timeLeft, setTimeLeft] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [challengeMode, setChallengeMode] = useState('daily'); // 'daily' or 'ai-coach'
     const editorRef = useRef(null);
 
-    // Fetch today's challenge (runs once on mount)
+    // Fetch today's challenge (runs when mode changes)
     useEffect(() => {
         const fetchChallenge = async () => {
             try {
                 const stored = JSON.parse(localStorage.getItem('userInfo'));
                 if (!stored?.token) return;
-                const res = await axios.get('http://localhost:5001/api/challenges/today', {
+                const endpoint = challengeMode === 'ai-coach'
+                    ? `${API_BASE}/api/challenges/personalized`
+                    : `${API_BASE}/api/challenges/today`;
+
+                const res = await axios.get(endpoint, {
                     headers: { Authorization: `Bearer ${stored.token}` }
                 });
+
                 setChallenge(res.data);
                 setCode(res.data.starterCode);
+                setOutput('');
+                setResult(null);
+                setHintsUsed(0);
+                setShowHint(false);
+                setError(null);
                 setLoading(false);
             } catch (err) {
                 setError(err.response?.data?.error || err.response?.data?.message || 'Failed to load challenge');
@@ -40,7 +52,7 @@ const DailyChallenge = () => {
             }
         };
         fetchChallenge();
-    }, []);
+    }, [challengeMode]);
 
     // Countdown timer to midnight UTC
     useEffect(() => {
@@ -66,7 +78,7 @@ const DailyChallenge = () => {
         setIsRunning(true);
         setOutput('');
         try {
-            const res = await axios.post('http://localhost:5001/run', {
+            const res = await axios.post(`${API_BASE}/run`, {
                 language: challenge.language || 'python',
                 code
             }, {
@@ -75,12 +87,13 @@ const DailyChallenge = () => {
             if (res.data.error) {
                 setOutput(`❌ Error: ${res.data.error}`);
             } else {
+                // The backend now provides a cleaned 'output', but we add a safety check
                 let finalOutput = res.data.output;
 
-                // If it's python and didn't directly return 'output', check trace for stdout
+                // Fallback for older backend versions or missing output field
                 if (!finalOutput && res.data.trace && Array.isArray(res.data.trace)) {
                     finalOutput = res.data.trace
-                        .filter(step => step.stdout)
+                        .filter(step => step && step.stdout)
                         .map(step => step.stdout)
                         .join('');
                 }
@@ -102,7 +115,7 @@ const DailyChallenge = () => {
         }
         setIsRunning(true);
         try {
-            const res = await axios.post('http://localhost:5001/api/challenges/submit', {
+            const res = await axios.post(`${API_BASE}/api/challenges/submit`, {
                 challengeId: challenge._id,
                 output
             }, {
@@ -162,6 +175,22 @@ const DailyChallenge = () => {
                     <button onClick={() => navigate('/')} style={styles.backBtn}>← Back</button>
                     <h1 style={styles.title}>🏆 Daily Challenge</h1>
                 </div>
+
+                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '4px' }}>
+                    <button
+                        onClick={() => setChallengeMode('daily')}
+                        style={{ ...styles.toggleBtn, ...(challengeMode === 'daily' ? styles.toggleActive : {}) }}
+                    >
+                        📅 Daily
+                    </button>
+                    <button
+                        onClick={() => setChallengeMode('ai-coach')}
+                        style={{ ...styles.toggleBtn, ...(challengeMode === 'ai-coach' ? styles.toggleActive : {}) }}
+                    >
+                        🤖 AI Coach
+                    </button>
+                </div>
+
                 <div style={styles.timerBox}>
                     <span style={styles.timerLabel}>Next challenge in</span>
                     <span style={styles.timer}>{timeLeft}</span>
@@ -367,6 +396,21 @@ const styles = {
         fontFamily: 'var(--font-code, monospace)',
         color: '#f6ad55',
         letterSpacing: '2px'
+    },
+    toggleBtn: {
+        background: 'transparent',
+        border: 'none',
+        color: '#888',
+        padding: '8px 16px',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        fontSize: '14px',
+        transition: 'all 0.2s'
+    },
+    toggleActive: {
+        background: '#667eea',
+        color: '#fff',
     },
     challengeCard: {
         background: 'rgba(255,255,255,0.03)',

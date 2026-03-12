@@ -25,15 +25,18 @@ const styles = {
     container: {
         display: 'flex',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, #FF512F, #DD2476)',
+        background: 'rgba(255, 81, 47, 0.15)', // Glassy neon background
+        border: '1px solid rgba(255, 81, 47, 0.3)', // Neon edge
         padding: '8px 16px',
         borderRadius: '20px',
         color: '#fff',
-        boxShadow: '0 4px 10px rgba(221, 36, 118, 0.3)'
+        boxShadow: '0 4px 15px rgba(255, 81, 47, 0.2)', // Intense outer glow
+        backdropFilter: 'blur(10px)',
     },
     icon: {
         fontSize: '24px',
-        marginRight: '10px'
+        marginRight: '10px',
+        textShadow: '0 0 10px rgba(255, 81, 47, 0.5)',
     },
     textContainer: {
         display: 'flex',
@@ -42,10 +45,13 @@ const styles = {
     count: {
         fontWeight: 'bold',
         fontSize: '14px',
-        lineHeight: '1.2'
+        color: 'var(--text-bright)',
+        lineHeight: '1.2',
+        textShadow: '0 0 5px rgba(255, 81, 47, 0.4)',
     },
     longest: {
         fontSize: '10px',
+        color: 'var(--text-secondary)',
         opacity: 0.9
     }
 };

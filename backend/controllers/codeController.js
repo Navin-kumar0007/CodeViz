@@ -1,125 +1,91 @@
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
+const dockerService = require('../services/dockerService');
 
-const executeCode = (req, res) => {
-    const { language, code } = req.body;
+const executeCode = async (req, res) => {
+    const { language, code, input, socketId } = req.body;
 
     if (!code) return res.status(400).json({ error: "No code provided" });
 
-    const tempDir = path.join(__dirname, '../temp');
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+    console.log(`🚀 Executing ${language} in Docker Sandbox...`);
 
-    const timestamp = Date.now();
-    let command;
-    let tempFile;
+    const io = req.app.get('io');
+    const traceArray = [];
 
-    // 🧠 LANGUAGE SWITCHER
-    switch (language) {
-        case 'python':
-            tempFile = path.join(tempDir, `temp_${timestamp}.py`);
-            fs.writeFileSync(tempFile, code);
-            const runnerScript = path.join(__dirname, '../engine/tracer.py');
-            command = `python3 "${runnerScript}" "${tempFile}"`;
-            break;
+    // --- Prepare Tracer Wrappers ---
+    let finalCode = code;
+    let runnerRequired = false;
 
-        case 'cpp':
-            let cppCode = code;
-            // Inject C++ boilerplate if 'main' is missing
-            if (!/main\s*\(/.test(code)) {
-                cppCode = `#include <iostream>\nusing namespace std;\nint main() {\n${code}\nreturn 0;\n}`;
-            }
-            tempFile = path.join(tempDir, `temp_${timestamp}.cpp`);
-            const outFile = path.join(tempDir, `temp_${timestamp}.out`);
-            fs.writeFileSync(tempFile, cppCode);
-            command = `g++ "${tempFile}" -o "${outFile}" && "${outFile}"`;
-            break;
+    if (language === 'python') {
+        // We need to write the user code to a file that tracer.py can read
+        // But runInSandbox takes the 'code' string.
+        // So we wrap the student code inside a tracer execution string
+        const runnerPath = path.join(__dirname, '../engine/tracer.py');
+        const tracerSource = fs.readFileSync(runnerPath, 'utf8');
 
-        case 'javascript': // 👈 NEW: Node.js support
-            tempFile = path.join(tempDir, `temp_${timestamp}.js`);
-            fs.writeFileSync(tempFile, code);
-            command = `node "${tempFile}"`;
-            const jsRunner = path.join(__dirname, '../engine/jsTracer.js');
-            command = `node "${jsRunner}" "${tempFile}"`;
-            break;
+        // We inject the student code into a multi-line string in Python
+        // and have Python write it to a temp file INSIDE the container
+        finalCode = `
+import os
+with open('/home/runner/code/student_code.py', 'w') as f:
+    f.write(${JSON.stringify(code)})
 
-        case 'java': // 👈 NEW: Java support
-            let javaCode = code;
+# Now run the tracer
+${tracerSource.replace("sys.argv[1]", "'/home/runner/code/student_code.py'")}
+`;
+        runnerRequired = true;
+    } else if (language === 'javascript') {
+        const runnerPath = path.join(__dirname, '../engine/jsTracer.js');
+        const tracerSource = fs.readFileSync(runnerPath, 'utf8');
 
-            if (/public\s+class\s+Main/.test(code)) {
-                // User already provided the correct structure (like our presets)
-                javaCode = code;
-            } else if (/main\s*\(/.test(code)) {
-                // User provided main() but no public class Main
-                if (/class\s+\w+/.test(code)) {
-                    // User provided a class. Force name to Main so javac Main.java works
-                    javaCode = code.replace(/class\s+\w+/, 'class Main');
-                } else {
-                    // User provided main() but no class wrapper
-                    javaCode = `public class Main {\n${code}\n}`;
-                }
-            } else {
-                // User provided raw code, no main()
-                javaCode = `public class Main {\n    public static void main(String[] args) {\n${code}\n    }\n}`;
-            }
-
-            // We use a unique subfolder to avoid conflicts
-            const javaDir = path.join(tempDir, `java_${timestamp}`);
-            if (!fs.existsSync(javaDir)) fs.mkdirSync(javaDir);
-
-            tempFile = path.join(javaDir, 'Main.java');
-            fs.writeFileSync(tempFile, javaCode);
-
-            // Compile then Run
-            command = `javac "${tempFile}" && java -cp "${javaDir}" Main`;
-            break;
-
-        default:
-            return res.status(400).json({ error: `Language '${language}' is not supported yet` });
+        finalCode = `
+require('fs').writeFileSync('/home/runner/code/student_code.js', ${JSON.stringify(code)});
+process.argv[2] = '/home/runner/code/student_code.js';
+${tracerSource}
+`;
+        runnerRequired = true;
     }
 
-    console.log(`🚀 Executing: ${language}...`);
-
-    exec(command, { timeout: 10000, maxBuffer: 1024 * 1024 * 5 }, (error, stdout, stderr) => {
-        // Enforce STRICT Sandbox Cleanup
-        try {
-            if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
-            if (language === 'cpp') {
-                const outFile = path.join(tempDir, `temp_${timestamp}.out`);
-                if (fs.existsSync(outFile)) fs.unlinkSync(outFile);
-            }
-            if (language === 'java') {
-                const javaDir = path.join(tempDir, `java_${timestamp}`);
-                if (fs.existsSync(javaDir)) fs.rmSync(javaDir, { recursive: true, force: true });
-            }
-        } catch (cleanupError) {
-            console.error("🧹 Cleanup Error:", cleanupError);
-        }
-
-        if (error) {
-            console.error("❌ Exec Error:", stderr || error.message);
-            if (error.killed) {
-                return res.json({ error: "Execution Timed Out: Infinite loop or process ran longer than 10 seconds." });
-            }
-            return res.json({ error: stderr || "Execution failed" });
-        }
-
-        // Handle Python Visualization vs Plain Output
-        if (language === 'python') {
+    try {
+        const onStream = (line) => {
             try {
-                const lines = stdout.trim().split('\n');
-                const traceArray = JSON.parse(lines[lines.length - 1]);
-                // Frontend expects { trace: [...] } format
-                res.json({ trace: traceArray });
+                const step = JSON.parse(line);
+                traceArray.push(step);
+
+                // If the user is connected via socket, push the step LIVE
+                if (socketId && io) {
+                    io.to(socketId).emit('execution_step', step);
+                }
             } catch (e) {
-                // Fallback if python prints something that isn't JSON
-                res.json({ output: stdout });
+                // Not JSON (maybe plain print output)
+                if (socketId && io) {
+                    io.to(socketId).emit('execution_step', { stdout: line + '\n' });
+                }
             }
-        } else {
-            // JS, CPP, Java just return text
-            res.json({ output: stdout });
+        };
+
+        const result = await dockerService.runInSandbox(finalCode, language, input || '', onStream);
+
+        if (result.error && !result.output) {
+            return res.json({ error: result.error });
         }
-    });
+
+        // Return the full trace for backward compatibility
+        // Clean output: prioritize the joined stdout from parsed trace steps if using tracers
+        const cleanedOutput = traceArray.length > 0
+            ? traceArray.map(t => t.stdout || '').join('')
+            : result.output;
+
+        res.json({
+            trace: traceArray,
+            output: cleanedOutput || result.output || '',
+            error: result.error
+        });
+
+    } catch (error) {
+        console.error("❌ Execution Error:", error);
+        res.status(500).json({ error: "Execution failed during sandboxing" });
+    }
 };
 
 module.exports = { executeCode };

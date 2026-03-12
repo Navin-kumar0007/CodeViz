@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 
-const API = 'http://localhost:5001';
+const API = API_BASE;
 
 const CodeReview = () => {
     const [code, setCode] = useState(`def bubble_sort(arr):
@@ -85,7 +86,7 @@ print(result)`);
                     <p style={styles.subtitle}>Get scored code reviews with line-by-line annotations on a 0-100 rubric</p>
                 </div>
                 <div style={styles.langSelect}>
-                    {['python', 'javascript', 'java', 'cpp'].map(l => (
+                    {['python', 'javascript', 'java', 'cpp', 'typescript', 'go', 'c'].map(l => (
                         <button key={l} onClick={() => setLanguage(l)} style={{
                             ...styles.langBtn,
                             ...(language === l ? styles.langActive : {})

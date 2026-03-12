@@ -287,6 +287,7 @@ const setupRoomSocket = (io) => {
                 const testCases = problem.testCases || [];
                 let testCaseResults = [];
                 let isCorrect = false;
+                let userOutput = '';
 
                 if (testCases.length > 0) {
                     // New multi-test format — compare output per test case
@@ -298,9 +299,11 @@ const setupRoomSocket = (io) => {
                         return { passed: actual === expected, input: tc.input, expected, actual };
                     });
                     isCorrect = testCaseResults.every(r => r.passed);
+                    // For multi-test, we store a summary or the first output as 'output'
+                    userOutput = outputs.length > 0 ? outputs[0] : '';
                 } else {
                     // Legacy single-output format (backward compatible)
-                    const userOutput = (data.output || '').trim();
+                    userOutput = (data.output || '').trim();
                     const expectedOutput = (problem.expectedOutput || '').trim();
                     isCorrect = userOutput === expectedOutput;
                     testCaseResults = [{ passed: isCorrect, input: '', expected: expectedOutput, actual: userOutput }];

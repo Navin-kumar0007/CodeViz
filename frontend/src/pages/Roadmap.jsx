@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { CAREER_PATHS, getNodesForPath, getEdgesForPath, CATEGORY_COLORS } from '../data/roadmapData';
+import API_BASE from '../utils/api';
 
-const API_URL = 'http://localhost:5001/api';
+const API_URL = `${API_BASE}/api`;
 
 const Roadmap = () => {
     const navigate = useNavigate();

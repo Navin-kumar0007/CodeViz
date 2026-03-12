@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE from '../../utils/api';
 
 /**
  * 🏆 DAILY CHALLENGE WIDGET
@@ -17,7 +18,7 @@ const DailyChallengeWidget = () => {
             try {
                 const user = JSON.parse(localStorage.getItem('userInfo'));
                 if (!user?.token) { setLoading(false); return; }
-                const res = await axios.get('http://localhost:5001/api/challenges/today', {
+                const res = await axios.get(`${API_BASE}/api/challenges/today`, {
                     headers: { Authorization: `Bearer ${user.token}` }
                 });
                 setChallenge(res.data);

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import API_BASE from '../../utils/api';
 
-const API_URL = 'http://localhost:5001/api/ai';
+const API_URL = `${API_BASE}/api/ai`;
 
 /**
  * ComplexityAnalyzer — Shows Big-O analysis with growth curve chart

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import API_BASE from '../../utils/api';
 
-const API_URL = 'http://localhost:5001/api/recommendations';
+const API_URL = `${API_BASE}/api/recommendations`;
 
 const Recommendations = ({ onNavigate }) => {
     const [data, setData] = useState(null);

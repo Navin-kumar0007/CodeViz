@@ -36,6 +36,6 @@ const sessionSchema = mongoose.Schema(
 
 // Index for fast lookup
 sessionSchema.index({ userId: 1, createdAt: -1 });
-sessionSchema.index({ shareToken: 1 });
+// shareToken index is already defined in field with unique: true
 
 module.exports = mongoose.model('Session', sessionSchema);

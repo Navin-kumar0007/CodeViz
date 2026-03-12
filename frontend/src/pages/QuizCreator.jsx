@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import API_BASE from '../utils/api';
 
 /**
  * QuizCreator - Page for instructors to create custom quizzes
@@ -92,7 +93,7 @@ const QuizCreator = () => {
                 return;
             }
 
-            const res = await fetch('http://localhost:5001/api/quizzes', {
+            const res = await fetch(`${API_BASE}/api/quizzes`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

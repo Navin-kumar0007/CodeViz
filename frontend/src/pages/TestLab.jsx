@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 
-const API = 'http://localhost:5001';
+const API = API_BASE;
 
 const TestLab = () => {
     const [code, setCode] = useState(`def two_sum(nums, target):
@@ -120,7 +121,7 @@ const TestLab = () => {
                     <p style={styles.subtitle}>Write a function → AI generates edge cases + tests → Validate correctness</p>
                 </div>
                 <div style={styles.langSelect}>
-                    {['python', 'javascript', 'java', 'cpp'].map(l => (
+                    {['python', 'javascript', 'java', 'cpp', 'typescript', 'go', 'c'].map(l => (
                         <button key={l} onClick={() => setLanguage(l)} style={{
                             ...styles.langBtn,
                             ...(language === l ? styles.langActive : {})

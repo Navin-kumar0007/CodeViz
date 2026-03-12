@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CodeEditor from '../components/Editor/CodeEditor';
+import API_BASE from '../utils/api';
 
 const SnippetViewer = () => {
     const { id } = useParams();
@@ -15,7 +16,7 @@ const SnippetViewer = () => {
         const fetchSnippet = async () => {
             try {
                 // Fetch from shared endpoint
-                const res = await axios.get(`http://localhost:5001/api/snippets/public/all`);
+                const res = await axios.get(`${API_BASE}/api/snippets/public/all`);
                 // Filter manually for now (in real app, use specific ID endpoint)
                 const found = res.data.find(s => s._id === id);
 

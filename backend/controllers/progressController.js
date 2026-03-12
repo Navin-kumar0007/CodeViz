@@ -1,4 +1,6 @@
 const LearningProgress = require('../models/LearningProgress');
+const skillTreeService = require('../services/skillTreeService');
+const dnaService = require('../services/dnaService');
 
 // @desc    Get user's learning progress
 // @route   GET /api/progress
@@ -22,6 +24,30 @@ const getProgress = async (req, res) => {
             totalScore: progress.totalScore,
             lessonsCompleted: progress.lessonsCompleted
         });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get user's skill tree mastery
+// @route   GET /api/progress/skill-tree
+// @access  Private
+const getSkillTree = async (req, res) => {
+    try {
+        const skillTree = await skillTreeService.getSkillTree(req.user._id);
+        res.json(skillTree);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get user's DNA Radar profile
+// @route   GET /api/progress/dna
+// @access  Private
+const getDNA = async (req, res) => {
+    try {
+        const dna = await dnaService.getStudentDNA(req.user._id);
+        res.json(dna);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -151,4 +177,4 @@ const syncProgress = async (req, res) => {
     }
 };
 
-module.exports = { getProgress, updateProgress, syncProgress };
+module.exports = { getProgress, updateProgress, syncProgress, getSkillTree, getDNA };

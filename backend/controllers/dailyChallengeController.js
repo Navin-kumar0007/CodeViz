@@ -220,10 +220,70 @@ const replayChallenge = asyncHandler(async (req, res) => {
     });
 });
 
+// @desc    Get a personalized challenge based on user's weak areas
+// @route   GET /api/challenges/personalized
+// @access  Private
+const getTodaysPersonalized = asyncHandler(async (req, res) => {
+    const today = getTodayUTC();
+    const user = await User.findById(req.user._id).select('completedChallenges xp');
+
+    // Get weak areas from recommendation service
+    const recommendationService = require('../services/recommendationService');
+    const { weakAreas } = await recommendationService.getRecommendations(req.user._id);
+
+    // Pick the top weak area, or default to "Arrays"
+    const targetCategory = weakAreas && weakAreas.length > 0 ? weakAreas[0] : "Arrays";
+
+    // Find a challenge in that category that the user hasn't completed
+    let challenge = null;
+    const completedIds = user.completedChallenges.map(c => c.challengeId.toString());
+
+    challenge = await DailyChallenge.findOne({
+        category: targetCategory,
+        _id: { $nin: completedIds }
+    });
+
+    // If we couldn't find an uncompleted one in the weak area, fallback to any uncompleted challenge
+    if (!challenge) {
+        challenge = await DailyChallenge.findOne({ _id: { $nin: completedIds } });
+    }
+
+    // If they completed EVERYTHING, just give them a random one in their weak area
+    if (!challenge) {
+        challenge = await DailyChallenge.findOne({ category: targetCategory });
+    }
+
+    if (!challenge) {
+        // Ultimate fallback
+        challenge = await DailyChallenge.findOne();
+    }
+
+    const alreadyCompleted = user.completedChallenges?.some(
+        c => c.challengeId === challenge._id.toString() &&
+            new Date(c.completedAt).toDateString() === today.toDateString()
+    );
+
+    res.json({
+        _id: challenge._id,
+        title: `AI Coach: ${challenge.title}`,
+        description: `Based on your recent activity, we recommend practicing **${targetCategory}**. \n\n${challenge.description}`,
+        difficulty: challenge.difficulty,
+        category: challenge.category,
+        starterCode: challenge.starterCode,
+        language: challenge.language,
+        hints: challenge.hints,
+        xpReward: Math.round(challenge.xpReward * 1.5), // Bonus XP for personalized
+        alreadyCompleted: !!alreadyCompleted,
+        isPersonalized: true,
+        targetCategory
+    });
+});
+
 module.exports = {
     getTodaysChallenge,
     submitChallenge,
     getChallengeHistory,
     getTodaysTiered,
+    getTodaysPersonalized,
     replayChallenge
 };

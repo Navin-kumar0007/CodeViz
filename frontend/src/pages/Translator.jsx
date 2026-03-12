@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 
-const API = 'http://localhost:5001';
+const API = API_BASE;
 
 const LANGUAGES = [
     { id: 'python', label: 'Python', icon: '🐍' },
     { id: 'javascript', label: 'JavaScript', icon: '⚡' },
     { id: 'java', label: 'Java', icon: '☕' },
     { id: 'cpp', label: 'C++', icon: '⚙️' },
+    { id: 'typescript', label: 'TypeScript', icon: '📘' },
+    { id: 'go', label: 'Go', icon: '🔵' },
+    { id: 'c', label: 'C', icon: '🔷' },
 ];
 
 const Translator = () => {
