@@ -18,12 +18,12 @@ const SortingVisualizer = ({
 }) => {
     // Color scheme
     const colors = {
-        default: 'linear-gradient(135deg, #667eea, #764ba2)',
-        comparing: 'linear-gradient(135deg, #f6ad55, #ed8936)',
-        swapping: 'linear-gradient(135deg, #fc8181, #f56565)',
-        sorted: 'linear-gradient(135deg, #48bb78, #38a169)',
+        default: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
+        comparing: 'linear-gradient(135deg, var(--accent-yellow), #ed8936)',
+        swapping: 'linear-gradient(135deg, var(--accent-red), #f56565)',
+        sorted: 'linear-gradient(135deg, var(--accent-green), #38a169)',
         highlight: 'linear-gradient(135deg, #4fc3f7, #29b6f6)',
-        found: 'linear-gradient(135deg, #68d391, #48bb78)'
+        found: 'linear-gradient(135deg, #68d391, var(--accent-green))'
     };
 
     // Get background for each element
@@ -146,12 +146,12 @@ const SortingVisualizer = ({
                     style={styles.statusBar}
                 >
                     {swappingIndices.length > 0 && (
-                        <span style={{ color: '#fc8181' }}>
+                        <span style={{ color: 'var(--accent-red)' }}>
                             🔄 Swapping arr[{swappingIndices[0]}]={arr[swappingIndices[0]]} ↔ arr[{swappingIndices[1]}]={arr[swappingIndices[1]]}
                         </span>
                     )}
                     {comparingIndices.length > 0 && swappingIndices.length === 0 && (
-                        <span style={{ color: '#f6ad55' }}>
+                        <span style={{ color: 'var(--accent-yellow)' }}>
                             ⚖️ Comparing arr[{comparingIndices[0]}]={arr[comparingIndices[0]]} with arr[{comparingIndices[1]}]={arr[comparingIndices[1]]}
                         </span>
                     )}
@@ -163,11 +163,11 @@ const SortingVisualizer = ({
 
 const styles = {
     wrapper: {
-        background: 'rgba(20, 20, 35, 0.9)',
+        background: 'var(--bg-white)',
         backdropFilter: 'blur(10px)',
         borderRadius: '16px',
         padding: '12px',
-        border: '1px solid rgba(102, 126, 234, 0.3)',
+        border: '1px solid rgba(13, 148, 136, 0.3)',
         boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)'
     },
     header: {
@@ -176,16 +176,16 @@ const styles = {
         alignItems: 'center',
         marginBottom: '10px',
         paddingBottom: '8px',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
+        borderBottom: '1px solid var(--border-color)'
     },
     name: {
         fontSize: '16px',
         fontWeight: 'bold',
-        color: '#fff'
+        color: 'var(--text-primary)'
     },
     subtitle: {
         fontSize: '11px',
-        color: '#888'
+        color: 'var(--text-muted)'
     },
     legend: {
         display: 'flex',
@@ -195,7 +195,7 @@ const styles = {
         padding: '4px 10px',
         borderRadius: '12px',
         fontSize: '10px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontWeight: 'bold'
     },
     arrayContainer: {
@@ -219,8 +219,8 @@ const styles = {
         minHeight: '30px'
     },
     pointer: {
-        background: 'linear-gradient(135deg, #fbd38d, #f6ad55)',
-        color: '#1a1a2e',
+        background: 'linear-gradient(135deg, #fbd38d, var(--accent-yellow))',
+        color: 'var(--text-primary)',
         padding: '2px 8px',
         borderRadius: '8px',
         fontSize: '11px',
@@ -228,7 +228,7 @@ const styles = {
         marginBottom: '2px'
     },
     pointerArrow: {
-        color: '#f6ad55',
+        color: 'var(--accent-yellow)',
         fontSize: '10px'
     },
     valueBox: {
@@ -238,7 +238,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontWeight: 'bold',
         fontSize: '12px',
         cursor: 'pointer',
@@ -246,13 +246,13 @@ const styles = {
     },
     indexLabel: {
         fontSize: '10px',
-        color: '#666',
+        color: 'var(--text-muted)',
         fontFamily: 'monospace'
     },
     statusBar: {
         marginTop: '15px',
         padding: '8px 12px',
-        background: 'rgba(0, 0, 0, 0.3)',
+        background: 'var(--bg-muted)',
         borderRadius: '6px',
         textAlign: 'center',
         fontSize: '11px',

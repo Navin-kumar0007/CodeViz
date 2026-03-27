@@ -64,7 +64,7 @@ const styles = {
         justifyContent: 'center'
     },
     title: {
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontWeight: '500',
         textAlign: 'center',
         maxWidth: '80px',

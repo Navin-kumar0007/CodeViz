@@ -18,8 +18,8 @@ const CodeSnapshot = ({ isOpen, onClose, code, language, userName }) => {
             bg: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)',
             codeBg: 'rgba(0, 0, 0, 0.4)',
             text: '#e4e4e7',
-            accent: '#667eea',
-            border: 'rgba(102, 126, 234, 0.3)'
+            accent: 'var(--accent-teal)',
+            border: 'rgba(13, 148, 136, 0.3)'
         },
         oceanBlue: {
             name: 'Ocean Blue',
@@ -47,7 +47,7 @@ const CodeSnapshot = ({ isOpen, onClose, code, language, userName }) => {
         },
         midnight: {
             name: 'Midnight',
-            bg: 'linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)',
+            bg: 'linear-gradient(135deg, #F7F8FA, #E5E7EB, #D1D5DB)',
             codeBg: 'rgba(0, 0, 0, 0.3)',
             text: '#94a3b8',
             accent: '#7c3aed',
@@ -214,7 +214,7 @@ const CodeSnapshot = ({ isOpen, onClose, code, language, userName }) => {
                             onChange={(e) => setShowWatermark(e.target.checked)}
                             style={{ marginRight: '6px' }}
                         />
-                        <span style={{ fontSize: '11px', color: '#888' }}>Watermark</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Watermark</span>
                     </label>
                 </div>
 
@@ -314,14 +314,14 @@ const styles = {
         zIndex: 1000
     },
     modal: {
-        background: '#1a1a2e',
+        background: 'var(--bg-muted)',
         borderRadius: '16px',
         padding: '24px',
         maxWidth: '700px',
         width: '90vw',
         maxHeight: '90vh',
         overflowY: 'auto',
-        border: '1px solid rgba(255,255,255,0.1)',
+        border: '1px solid var(--border-color)',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
     },
     modalHeader: {
@@ -333,13 +333,13 @@ const styles = {
     modalTitle: {
         margin: 0,
         fontSize: '18px',
-        color: '#fff',
-        fontFamily: 'Inter, sans-serif'
+        color: 'var(--text-primary)',
+        fontFamily: 'var(--font-body)'
     },
     closeBtn: {
         background: 'transparent',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '20px',
         cursor: 'pointer'
     },
@@ -417,8 +417,8 @@ const styles = {
     downloadBtn: {
         flex: 1,
         padding: '12px',
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
-        color: '#fff',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
+        color: 'var(--text-primary)',
         border: 'none',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -430,8 +430,8 @@ const styles = {
         flex: 1,
         padding: '12px',
         background: 'transparent',
-        color: '#667eea',
-        border: '1px solid #667eea',
+        color: 'var(--accent-teal)',
+        border: '1px solid var(--accent-teal)',
         borderRadius: '8px',
         cursor: 'pointer',
         fontWeight: 'bold',

@@ -7,6 +7,7 @@ export const GRAPHS_PATH = {
     id: 'graphs',
     title: 'Graphs & Traversals',
     icon: '🕸️',
+    category: 'Data Structures',
     description: 'Model real-world networks using vertices and edges, and learn BFS and DFS algorithms.',
     prerequisites: ['trees'],
     lessons: [

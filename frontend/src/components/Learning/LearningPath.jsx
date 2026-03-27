@@ -16,7 +16,7 @@ const LearningPath = ({ path, progress, isLocked, onClick }) => {
                 ...styles.card,
                 opacity: isLocked ? 0.6 : 1,
                 cursor: isLocked ? 'not-allowed' : 'pointer',
-                borderColor: progress === 100 ? '#48bb78' : 'rgba(255,255,255,0.1)'
+                borderColor: progress === 100 ? 'var(--accent-green)' : 'rgba(255,255,255,0.1)'
             }}
         >
             {/* Lock overlay */}
@@ -56,8 +56,8 @@ const LearningPath = ({ path, progress, isLocked, onClick }) => {
                         style={{
                             ...styles.progressFill,
                             background: progress === 100
-                                ? 'linear-gradient(90deg, #48bb78, #38a169)'
-                                : 'linear-gradient(90deg, #667eea, #764ba2)'
+                                ? 'linear-gradient(90deg, var(--accent-green), #38a169)'
+                                : 'linear-gradient(90deg, var(--accent-teal), var(--accent-purple))'
                         }}
                     />
                 </div>
@@ -97,15 +97,15 @@ const styles = {
         marginBottom: '10px'
     },
     lockText: {
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '12px'
     },
     completeBadge: {
         position: 'absolute',
         top: '10px',
         right: '10px',
-        background: 'linear-gradient(135deg, #48bb78, #38a169)',
-        color: 'white',
+        background: 'linear-gradient(135deg, var(--accent-green), #38a169)',
+        color: 'var(--text-primary)',
         padding: '4px 10px',
         borderRadius: '20px',
         fontSize: '10px',
@@ -115,12 +115,12 @@ const styles = {
         width: '70px',
         height: '70px',
         borderRadius: '50%',
-        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2))',
+        background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.2), rgba(118, 75, 162, 0.2))',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         margin: '0 auto 15px',
-        border: '2px solid rgba(102, 126, 234, 0.3)'
+        border: '2px solid rgba(13, 148, 136, 0.3)'
     },
     icon: {
         fontSize: '32px'
@@ -129,17 +129,17 @@ const styles = {
         margin: '0 0 8px 0',
         fontSize: '18px',
         fontWeight: 'bold',
-        color: '#fff'
+        color: 'var(--text-primary)'
     },
     description: {
         margin: '0 0 15px 0',
         fontSize: '13px',
-        color: '#888',
+        color: 'var(--text-muted)',
         lineHeight: '1.4'
     },
     lessonCount: {
         fontSize: '11px',
-        color: '#666',
+        color: 'var(--text-muted)',
         marginBottom: '15px'
     },
     progressContainer: {
@@ -160,7 +160,7 @@ const styles = {
     },
     progressText: {
         fontSize: '12px',
-        color: '#888',
+        color: 'var(--text-muted)',
         minWidth: '35px'
     }
 };

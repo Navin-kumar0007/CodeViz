@@ -474,10 +474,10 @@ const Classroom = () => {
                     {/* Poll Creation Form (Instructor) */}
                     {showPollForm && isInstructor && (
                         <div style={{ padding: '12px 16px', background: 'rgba(99,102,241,0.1)', borderBottom: '1px solid rgba(99,102,241,0.2)' }}>
-                            <input placeholder="Poll question..." value={pollQuestion} onChange={e => setPollQuestion(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', background: '#1a1a2e', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '8px', fontSize: '13px' }} />
+                            <input placeholder="Poll question..." value={pollQuestion} onChange={e => setPollQuestion(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', background: 'var(--bg-muted)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', marginBottom: '8px', fontSize: '13px' }} />
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '8px' }}>
                                 {pollOptions.map((opt, i) => (
-                                    <input key={i} placeholder={`Option ${i + 1}`} value={opt} onChange={e => { const o = [...pollOptions]; o[i] = e.target.value; setPollOptions(o); }} style={{ padding: '6px', borderRadius: '6px', background: '#1a1a2e', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', fontSize: '12px' }} />
+                                    <input key={i} placeholder={`Option ${i + 1}`} value={opt} onChange={e => { const o = [...pollOptions]; o[i] = e.target.value; setPollOptions(o); }} style={{ padding: '6px', borderRadius: '6px', background: 'var(--bg-muted)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '12px' }} />
                                 ))}
                             </div>
                             <button onClick={() => {
@@ -486,7 +486,7 @@ const Classroom = () => {
                                     socketRef.current?.emit('push-poll', { question: pollQuestion.trim(), options: validOptions });
                                     setShowPollForm(false); setPollQuestion(''); setPollOptions(['', '', '', '']);
                                 }
-                            }} style={{ padding: '6px 16px', background: '#667eea', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Push Poll</button>
+                            }} style={{ padding: '6px 16px', background: 'var(--accent-teal)', border: 'none', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Push Poll</button>
                         </div>
                     )}
 
@@ -501,7 +501,7 @@ const Classroom = () => {
                                 {activePoll.options.map((opt, i) => (
                                     <button key={i}
                                         onClick={() => { if (myPollAnswer === null) { setMyPollAnswer(i); socketRef.current?.emit('submit-poll-answer', { pollId: activePoll.id, optionIndex: i }); } }}
-                                        style={{ padding: '6px 12px', borderRadius: '6px', border: myPollAnswer === i ? '2px solid #667eea' : '1px solid rgba(255,255,255,0.2)', background: myPollAnswer === i ? 'rgba(102,126,234,0.3)' : 'rgba(255,255,255,0.05)', color: '#fff', fontSize: '12px', cursor: myPollAnswer !== null ? 'default' : 'pointer' }}>
+                                        style={{ padding: '6px 12px', borderRadius: '6px', border: myPollAnswer === i ? '2px solid var(--accent-teal)' : '1px solid rgba(255,255,255,0.2)', background: myPollAnswer === i ? 'rgba(13,148,136,0.3)' : 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '12px', cursor: myPollAnswer !== null ? 'default' : 'pointer' }}>
                                         {opt}
                                     </button>
                                 ))}
@@ -516,12 +516,12 @@ const Classroom = () => {
                                                     <span>{opt}</span><span>{pollResults.voteCounts[i]} ({pct}%)</span>
                                                 </div>
                                                 <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-                                                    <div style={{ width: `${pct}%`, height: '100%', background: '#667eea', borderRadius: '3px', transition: 'width 0.3s' }} />
+                                                    <div style={{ width: `${pct}%`, height: '100%', background: 'var(--accent-teal)', borderRadius: '3px', transition: 'width 0.3s' }} />
                                                 </div>
                                             </div>
                                         );
                                     })}
-                                    <div style={{ fontSize: '10px', color: '#888', marginTop: '4px' }}>{pollResults.totalVotes} vote(s)</div>
+                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>{pollResults.totalVotes} vote(s)</div>
                                 </div>
                             )}
                         </div>
@@ -649,7 +649,7 @@ const Classroom = () => {
                                 <h4 style={styles.rosterTitle}>💬 Classroom Chat</h4>
                                 <div style={styles.chatMessages}>
                                     {chatMessages.length === 0 ? (
-                                        <div style={{ color: '#888', textAlign: 'center', marginTop: '20px' }}>
+                                        <div style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: '20px' }}>
                                             No messages yet. Start the conversation!
                                         </div>
                                     ) : (
@@ -664,7 +664,7 @@ const Classroom = () => {
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <span style={{ fontWeight: 'bold', color: msg.isInstructor ? '#2ecc71' : '#667eea', fontSize: '12px' }}>
+                                                        <span style={{ fontWeight: 'bold', color: msg.isInstructor ? '#2ecc71' : 'var(--accent-teal)', fontSize: '12px' }}>
                                                             {msg.name} {msg.isInstructor && '(Host)'}:
                                                         </span>
                                                         <div style={{ fontSize: '13px', marginTop: '3px' }}>{msg.text}</div>
@@ -913,7 +913,7 @@ const Classroom = () => {
                                         <div style={styles.empty}>
                                             <span style={{ fontSize: '32px' }}>📭</span>
                                             <p>No classrooms yet</p>
-                                            <p style={{ fontSize: '12px', color: '#666' }}>
+                                            <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                                                 Join a classroom or create one to get started
                                             </p>
                                         </div>
@@ -932,8 +932,8 @@ const styles = {
     container: {
         minHeight: '100vh',
         boxSizing: 'border-box',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-        color: '#fff',
+        background: 'var(--bg-primary)',
+        color: 'var(--text-primary)',
         padding: '20px',
         display: 'flex',
         flexDirection: 'column'
@@ -944,13 +944,13 @@ const styles = {
         justifyContent: 'space-between',
         marginBottom: '20px',
         paddingBottom: '15px',
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        borderBottom: '1px solid var(--border-color)',
         flexShrink: 0
     },
     backBtn: {
         background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.2)',
-        color: '#fff',
+        border: '1px solid var(--border-color)',
+        color: 'var(--text-primary)',
         padding: '8px 16px',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -961,7 +961,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        background: 'rgba(102, 126, 234, 0.2)',
+        background: 'rgba(13, 148, 136, 0.2)',
         padding: '8px 16px',
         borderRadius: '20px',
         fontSize: '13px'
@@ -983,7 +983,7 @@ const styles = {
         flex: 1,
         background: 'rgba(255, 255, 255, 0.03)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
-        color: '#888',
+        color: 'var(--text-muted)',
         padding: '12px',
         borderRadius: '10px',
         cursor: 'pointer',
@@ -992,9 +992,9 @@ const styles = {
         transition: 'all 0.2s'
     },
     activeTab: {
-        background: 'rgba(102, 126, 234, 0.2)',
-        borderColor: 'rgba(102, 126, 234, 0.5)',
-        color: '#fff'
+        background: 'rgba(13, 148, 136, 0.2)',
+        borderColor: 'rgba(13, 148, 136, 0.5)',
+        color: 'var(--text-primary)'
     },
     error: {
         display: 'flex',
@@ -1037,7 +1037,7 @@ const styles = {
         padding: '25px'
     },
     panelTitle: { margin: '0 0 8px 0', fontSize: '20px' },
-    panelDescription: { color: '#888', fontSize: '14px', marginBottom: '25px' },
+    panelDescription: { color: 'var(--text-muted)', fontSize: '14px', marginBottom: '25px' },
     inputGroup: { display: 'flex', gap: '10px', marginBottom: '30px' },
     input: {
         flex: 1,
@@ -1045,15 +1045,15 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '10px',
         padding: '14px 16px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '16px',
         letterSpacing: '2px',
         textAlign: 'center'
     },
     joinBtn: {
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
         border: 'none',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '14px 24px',
         borderRadius: '10px',
         cursor: 'pointer',
@@ -1064,7 +1064,7 @@ const styles = {
     sectionTitle: {
         margin: '0 0 15px 0',
         fontSize: '14px',
-        color: '#888',
+        color: 'var(--text-muted)',
         textTransform: 'uppercase',
         letterSpacing: '1px'
     },
@@ -1086,7 +1086,7 @@ const styles = {
         alignItems: 'center',
         gap: '10px'
     },
-    classroomMeta: { color: '#888', fontSize: '12px' },
+    classroomMeta: { color: 'var(--text-muted)', fontSize: '12px' },
     liveBadge: {
         background: '#e53935',
         padding: '2px 8px',
@@ -1096,9 +1096,9 @@ const styles = {
         animation: 'pulse 1s infinite'
     },
     viewBtn: {
-        background: 'rgba(102, 126, 234, 0.2)',
-        border: '1px solid rgba(102, 126, 234, 0.4)',
-        color: '#667eea',
+        background: 'rgba(13, 148, 136, 0.2)',
+        border: '1px solid rgba(13, 148, 136, 0.4)',
+        color: 'var(--accent-teal)',
         padding: '8px 16px',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -1132,7 +1132,7 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '10px',
         padding: '14px 16px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '14px'
     },
     formTextarea: {
@@ -1140,15 +1140,15 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '10px',
         padding: '14px 16px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '14px',
         minHeight: '80px',
         resize: 'vertical'
     },
     createBtn: {
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
         border: 'none',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '14px',
         borderRadius: '10px',
         cursor: 'pointer',
@@ -1176,7 +1176,7 @@ const styles = {
         fontSize: '18px'
     },
     note: {
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '12px',
         textAlign: 'center',
         padding: '15px',
@@ -1184,7 +1184,7 @@ const styles = {
         borderRadius: '8px',
         border: '1px solid rgba(255, 215, 0, 0.2)'
     },
-    empty: { textAlign: 'center', padding: '30px', color: '#888' },
+    empty: { textAlign: 'center', padding: '30px', color: 'var(--text-muted)' },
     // Live session styles
     liveContainer: {
         maxWidth: '1600px',
@@ -1201,14 +1201,14 @@ const styles = {
         borderRadius: '12px'
     },
     liveTitleText: { margin: '0 0 5px 0', fontSize: '18px' },
-    liveStatus: { fontSize: '13px', color: '#888' },
+    liveStatus: { fontSize: '13px', color: 'var(--text-muted)' },
     liveIndicator: { color: '#e53935', fontWeight: 'bold' },
-    offlineIndicator: { color: '#888' },
+    offlineIndicator: { color: 'var(--text-muted)' },
     liveActions: { display: 'flex', gap: '10px' },
     startBtn: {
         background: 'linear-gradient(135deg, #43a047, #66bb6a)',
         border: 'none',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '10px 20px',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -1217,7 +1217,7 @@ const styles = {
     stopBtn: {
         background: 'linear-gradient(135deg, #e53935, #ef5350)',
         border: 'none',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '10px 20px',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -1226,15 +1226,15 @@ const styles = {
     leaveBtn: {
         background: 'rgba(255, 255, 255, 0.1)',
         border: '1px solid rgba(255, 255, 255, 0.2)',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '10px 20px',
         borderRadius: '8px',
         cursor: 'pointer'
     },
     activeViewBtn: {
-        background: 'rgba(102, 126, 234, 0.4)',
-        border: '1px solid #667eea',
-        color: '#fff',
+        background: 'rgba(13, 148, 136, 0.4)',
+        border: '1px solid var(--accent-teal)',
+        color: 'var(--text-primary)',
         padding: '5px 12px',
         borderRadius: '6px',
         cursor: 'pointer',
@@ -1243,7 +1243,7 @@ const styles = {
     },
     inactiveViewBtn: {
         background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.2)',
+        border: '1px solid var(--border-color)',
         color: '#ccc',
         padding: '5px 12px',
         borderRadius: '6px',
@@ -1257,10 +1257,10 @@ const styles = {
         padding: '10px 15px',
         background: 'rgba(255, 255, 255, 0.05)',
         fontSize: '13px',
-        color: '#888'
+        color: 'var(--text-muted)'
     },
     languageBadge: {
-        background: 'rgba(102, 126, 234, 0.3)',
+        background: 'rgba(13, 148, 136, 0.3)',
         padding: '3px 10px',
         borderRadius: '10px',
         fontSize: '11px'
@@ -1364,7 +1364,7 @@ const styles = {
     },
     grantBtn: {
         background: '#2ecc71',
-        color: '#fff',
+        color: 'var(--text-primary)',
         border: 'none',
         padding: '6px 12px',
         borderRadius: '6px',
@@ -1374,7 +1374,7 @@ const styles = {
     },
     revokeBtn: {
         background: '#e74c3c',
-        color: '#fff',
+        color: 'var(--text-primary)',
         border: 'none',
         padding: '6px 12px',
         borderRadius: '6px',
@@ -1396,7 +1396,7 @@ const styles = {
     yieldBtn: {
         background: '#e74c3c',
         border: 'none',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '10px',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -1436,15 +1436,15 @@ const styles = {
         flex: 1,
         background: 'rgba(255, 255, 255, 0.1)',
         border: '1px solid rgba(255, 255, 255, 0.2)',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '8px 10px',
         borderRadius: '6px',
         fontSize: '13px',
         outline: 'none'
     },
     chatSendBtn: {
-        background: '#667eea',
-        color: '#fff',
+        background: 'var(--accent-teal)',
+        color: 'var(--text-primary)',
         border: 'none',
         padding: '8px 12px',
         borderRadius: '6px',

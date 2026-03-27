@@ -4,11 +4,11 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 const themes = {
     dark: {
         // Backgrounds
-        background: '#1a1a2e',
-        backgroundGradientStart: '#1a1a2e',
-        backgroundGradientEnd: '#16213e',
-        surface: '#252526',
-        elevated: '#2d2d30',
+        background: '#1E293B',
+        backgroundGradientStart: '#1E293B',
+        backgroundGradientEnd: '#0F172A',
+        surface: '#334155',
+        elevated: '#475569',
 
         // Borders & Dividers
         border: '#444',
@@ -22,9 +22,9 @@ const themes = {
         // Brand Colors
         primary: '#007acc',
         primaryHover: '#0098ff',
-        success: '#2ea043',
-        successHover: '#26843b',
-        warning: '#f6ad55',
+        success: 'var(--accent-teal)',
+        successHover: 'var(--accent-teal-hover)',
+        warning: 'var(--accent-yellow)',
         error: '#f87171',
 
         // Interactive
@@ -33,12 +33,12 @@ const themes = {
         inputBg: 'rgba(37, 37, 38, 0.8)',
 
         // Visualization Colors
-        arrayGradientStart: '#667eea',
-        arrayGradientEnd: '#764ba2',
-        stackColor: '#f6ad55',
+        arrayGradientStart: 'var(--accent-teal)',
+        arrayGradientEnd: 'var(--accent-purple)',
+        stackColor: 'var(--accent-yellow)',
         queueColor: '#4299e1',
         treeColor: '#4fc3f7',
-        graphColor: '#667eea',
+        graphColor: 'var(--accent-teal)',
         linkedListColor: '#4fc3f7',
 
         // Glass Effects
@@ -111,7 +111,7 @@ export const ThemeProvider = ({ children }) => {
     // Load theme from localStorage or default to 'dark'
     const [theme, setTheme] = useState(() => {
         const savedTheme = localStorage.getItem('codeVizTheme');
-        return savedTheme || 'dark';
+        return savedTheme || 'light';
     });
 
     // Toggle between themes

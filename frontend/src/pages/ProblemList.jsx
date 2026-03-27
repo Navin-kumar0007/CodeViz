@@ -6,7 +6,7 @@ import API_BASE from '../utils/api';
 const API = `${API_BASE}/api/problems`;
 
 const DIFFICULTY_COLORS = {
-    easy: '#48bb78', medium: '#f6ad55', hard: '#fc8181'
+    easy: 'var(--accent-green)', medium: 'var(--accent-yellow)', hard: 'var(--accent-red)'
 };
 
 const ProblemList = () => {
@@ -81,15 +81,15 @@ const ProblemList = () => {
                         </div>
                         <div style={S.statDivider} />
                         <div style={S.statItem}>
-                            <span style={{ ...S.statNum, color: '#48bb78' }}>{stats.byDifficulty?.easy || 0}</span>
+                            <span style={{ ...S.statNum, color: 'var(--accent-green)' }}>{stats.byDifficulty?.easy || 0}</span>
                             <span style={S.statLabel}>Easy</span>
                         </div>
                         <div style={S.statItem}>
-                            <span style={{ ...S.statNum, color: '#f6ad55' }}>{stats.byDifficulty?.medium || 0}</span>
+                            <span style={{ ...S.statNum, color: 'var(--accent-yellow)' }}>{stats.byDifficulty?.medium || 0}</span>
                             <span style={S.statLabel}>Medium</span>
                         </div>
                         <div style={S.statItem}>
-                            <span style={{ ...S.statNum, color: '#fc8181' }}>{stats.byDifficulty?.hard || 0}</span>
+                            <span style={{ ...S.statNum, color: 'var(--accent-red)' }}>{stats.byDifficulty?.hard || 0}</span>
                             <span style={S.statLabel}>Hard</span>
                         </div>
                     </div>
@@ -143,7 +143,7 @@ const ProblemList = () => {
                                 <span style={{ width: '40px', fontSize: '14px' }}>
                                     {p.solved ? '✅' : <span style={{ opacity: 0.3 }}>○</span>}
                                 </span>
-                                <span style={{ flex: 1, color: '#e4e4e7', fontWeight: 500 }}>
+                                <span style={{ flex: 1, color: 'var(--text-primary)', fontWeight: 500 }}>
                                     {p.order}. {p.title}
                                 </span>
                                 <span style={{ width: '100px' }}>
@@ -151,10 +151,10 @@ const ProblemList = () => {
                                         {p.difficulty}
                                     </span>
                                 </span>
-                                <span style={{ width: '120px', color: '#888', fontSize: '12px', textTransform: 'capitalize' }}>
+                                <span style={{ width: '120px', color: 'var(--text-muted)', fontSize: '12px', textTransform: 'capitalize' }}>
                                     {p.category.replace(/_/g, ' ')}
                                 </span>
-                                <span style={{ width: '100px', color: '#888', fontSize: '12px' }}>
+                                <span style={{ width: '100px', color: 'var(--text-muted)', fontSize: '12px' }}>
                                     {p.stats?.totalSubmissions > 0
                                         ? `${Math.round((p.stats.acceptedSubmissions / p.stats.totalSubmissions) * 100)}%`
                                         : '—'}
@@ -169,48 +169,48 @@ const ProblemList = () => {
 };
 
 const S = {
-    page: { minHeight: '100vh', background: 'var(--bg-primary, #1a1a2e)', fontFamily: 'Inter, sans-serif', color: '#e4e4e7' },
+    page: { minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' },
     container: { padding: '24px', maxWidth: '1100px', margin: '0 auto' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' },
-    title: { margin: 0, fontSize: '28px', fontWeight: 800, background: 'linear-gradient(135deg, #667eea, #764ba2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-    subtitle: { color: '#888', fontSize: '13px', marginTop: '4px' },
-    backBtn: { background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#888', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' },
+    title: { margin: 0, fontSize: '28px', fontWeight: 800, background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
+    subtitle: { color: 'var(--text-muted)', fontSize: '13px', marginTop: '4px' },
+    backBtn: { background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' },
 
     statsBar: {
         display: 'flex', alignItems: 'center', gap: '24px', padding: '16px 24px',
-        background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--bg-muted)', borderRadius: '12px', border: '1px solid var(--border-color)',
         marginBottom: '20px'
     },
     statItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
-    statNum: { fontSize: '22px', fontWeight: 'bold', color: '#667eea' },
-    statLabel: { fontSize: '10px', color: '#888', textTransform: 'uppercase' },
+    statNum: { fontSize: '22px', fontWeight: 'bold', color: 'var(--accent-teal)' },
+    statLabel: { fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' },
     statDivider: { width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)' },
 
     filters: { display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' },
     searchForm: { display: 'flex', gap: '8px', flex: 1, minWidth: '200px' },
     searchInput: {
-        flex: 1, padding: '8px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)',
-        background: 'rgba(255,255,255,0.05)', color: '#e4e4e7', fontSize: '13px', outline: 'none'
+        flex: 1, padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border-color)',
+        background: 'var(--bg-muted)', color: 'var(--text-primary)', fontSize: '13px', outline: 'none'
     },
-    searchBtn: { padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#667eea', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' },
-    filterBtns: { display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '3px' },
+    searchBtn: { padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--accent-teal)', color: 'var(--text-on-teal)', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' },
+    filterBtns: { display: 'flex', gap: '4px', background: 'var(--bg-muted)', borderRadius: '8px', padding: '3px' },
     filterBtn: {
         padding: '6px 14px', border: 'none', borderRadius: '6px', background: 'transparent',
         fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
     },
     filterActive: { background: 'rgba(255,255,255,0.08)' },
     catSelect: {
-        padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)',
-        background: 'rgba(255,255,255,0.05)', color: '#e4e4e7', fontSize: '12px', outline: 'none'
+        padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)',
+        background: 'var(--bg-muted)', color: 'var(--text-primary)', fontSize: '12px', outline: 'none'
     },
 
     table: {
-        background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--bg-muted)', borderRadius: '12px', border: '1px solid var(--border-color)',
         overflow: 'hidden'
     },
     tableHeader: {
         display: 'flex', alignItems: 'center', padding: '12px 20px', gap: '12px',
-        borderBottom: '1px solid rgba(255,255,255,0.08)', color: '#888', fontSize: '11px',
+        borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-muted)', fontSize: '11px',
         fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px'
     },
     tableRow: {
@@ -218,7 +218,7 @@ const S = {
         borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer',
         transition: 'background 0.15s', fontSize: '13px'
     },
-    loadingRow: { padding: '40px', textAlign: 'center', color: '#888' },
+    loadingRow: { padding: '40px', textAlign: 'center', color: 'var(--text-muted)' },
     diffBadge: {
         padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, textTransform: 'capitalize'
     },

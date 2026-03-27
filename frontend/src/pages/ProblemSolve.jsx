@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Editor from '@monaco-editor/react';
 import API_BASE from '../utils/api';
+import AstFlowchart from '../components/Visualizer/AstFlowchart';
+import TraceRibbon from '../components/Visualizer/TraceRibbon';
 
 const API = `${API_BASE}/api/problems`;
-const DIFF_COLORS = { easy: '#48bb78', medium: '#f6ad55', hard: '#fc8181' };
+const DIFF_COLORS = { easy: 'var(--accent-green)', medium: 'var(--accent-yellow)', hard: 'var(--accent-red)' };
 const VERDICT_STYLES = {
-    accepted: { color: '#48bb78', icon: '✅', label: 'Accepted' },
-    wrong_answer: { color: '#fc8181', icon: '❌', label: 'Wrong Answer' },
-    time_limit_exceeded: { color: '#f6ad55', icon: '⏱️', label: 'Time Limit Exceeded' },
-    runtime_error: { color: '#fc8181', icon: '💥', label: 'Runtime Error' },
-    compilation_error: { color: '#fc8181', icon: '🔧', label: 'Compilation Error' },
+    accepted: { color: 'var(--accent-green)', icon: '✅', label: 'Accepted' },
+    wrong_answer: { color: 'var(--accent-red)', icon: '❌', label: 'Wrong Answer' },
+    time_limit_exceeded: { color: 'var(--accent-yellow)', icon: '⏱️', label: 'Time Limit Exceeded' },
+    runtime_error: { color: 'var(--accent-red)', icon: '💥', label: 'Runtime Error' },
+    compilation_error: { color: 'var(--accent-red)', icon: '🔧', label: 'Compilation Error' },
 };
 
 const LANG_LABELS = {
@@ -36,6 +38,7 @@ const ProblemSolve = () => {
     const [showHints, setShowHints] = useState(false);
     const [hintIndex, setHintIndex] = useState(0);
     const [submissions, setSubmissions] = useState([]);
+    const workspaceRef = useRef(null);
 
     useEffect(() => {
         loadProblem();
@@ -104,7 +107,8 @@ const ProblemSolve = () => {
     if (!problem) return <div style={S.page}><div style={S.loading}>Problem not found</div></div>;
 
     return (
-        <div style={S.page}>
+        <div style={S.page} ref={workspaceRef}>
+            <TraceRibbon containerRef={workspaceRef} />
             {/* Top Bar */}
             <div style={S.topBar}>
                 <button onClick={() => navigate('/problems')} style={S.backBtn}>← Problems</button>
@@ -123,10 +127,10 @@ const ProblemSolve = () => {
                 {/* Left: Problem Description */}
                 <div style={S.leftPanel}>
                     <div style={S.tabs}>
-                        {['description', 'submissions'].map(t => (
+                        {['description', 'submissions', 'ast'].map(t => (
                             <button key={t} onClick={() => setActiveTab(t)}
                                 style={{ ...S.tab, ...(activeTab === t ? S.tabActive : {}) }}>
-                                {t === 'description' ? '📝 Description' : '📊 Submissions'}
+                                {t === 'description' ? '📝 Description' : t === 'submissions' ? '📊 Submissions' : '🧠 Architecture (AST)'}
                             </button>
                         ))}
                     </div>
@@ -140,9 +144,9 @@ const ProblemSolve = () => {
                                 <div key={i} style={S.exampleBox}>
                                     <div style={S.exampleHeader}>Example {i + 1}</div>
                                     <div style={S.exampleContent}>
-                                        <div><strong style={{ color: '#888' }}>Input:</strong> <code style={S.code}>{ex.input}</code></div>
-                                        <div><strong style={{ color: '#888' }}>Output:</strong> <code style={S.code}>{ex.output}</code></div>
-                                        {ex.explanation && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>💡 {ex.explanation}</div>}
+                                        <div><strong style={{ color: 'var(--text-muted)' }}>Input:</strong> <code style={S.code}>{ex.input}</code></div>
+                                        <div><strong style={{ color: 'var(--text-muted)' }}>Output:</strong> <code style={S.code}>{ex.output}</code></div>
+                                        {ex.explanation && <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px' }}>💡 {ex.explanation}</div>}
                                     </div>
                                 </div>
                             ))}
@@ -181,22 +185,34 @@ const ProblemSolve = () => {
                                 </div>
                             )}
                         </div>
-                    ) : (
+                    ) : activeTab === 'submissions' ? (
                         <div style={S.descContent}>
                             {submissions.length === 0 ? (
-                                <p style={{ color: '#888', textAlign: 'center', padding: '20px' }}>No submissions yet</p>
+                                <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>No submissions yet</p>
                             ) : submissions.map((s, i) => {
                                 const vs = VERDICT_STYLES[s.verdict] || {};
                                 return (
                                     <div key={i} style={S.submissionRow}>
                                         <span style={{ color: vs.color, fontWeight: 'bold' }}>{vs.icon} {vs.label}</span>
-                                        <span style={{ color: '#888', fontSize: '11px' }}>{s.language} • {s.passedTests}/{s.totalTests} passed</span>
-                                        <span style={{ color: '#666', fontSize: '10px' }}>{new Date(s.createdAt).toLocaleString()}</span>
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{s.language} • {s.passedTests}/{s.totalTests} passed</span>
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{new Date(s.createdAt).toLocaleString()}</span>
                                     </div>
                                 );
                             })}
                         </div>
-                    )}
+                    ) : activeTab === 'ast' ? (
+                        <div style={{...S.descContent, padding: 0}}>
+                             {language === 'javascript' ? (
+                                <AstFlowchart code={code} />
+                             ) : (
+                                <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                    <div style={{ fontSize: '32px', marginBottom: '16px' }}>⚠️</div>
+                                    <h3>AST Flowchart Synthesis requires JavaScript</h3>
+                                    <p style={{ fontSize: '13px', marginTop: '8px' }}>Please switch language to JavaScript to view the Abstract Syntax Tree.</p>
+                                </div>
+                             )}
+                        </div>
+                    ) : null}
                 </div>
 
                 {/* Right: Editor + Output */}
@@ -241,7 +257,7 @@ const ProblemSolve = () => {
                                         color: VERDICT_STYLES[result.verdict]?.color || '#888'
                                     }}>
                                         {VERDICT_STYLES[result.verdict]?.icon} {VERDICT_STYLES[result.verdict]?.label || result.verdict}
-                                        <span style={{ marginLeft: '12px', fontSize: '12px', color: '#888' }}>
+                                        <span style={{ marginLeft: '12px', fontSize: '12px', color: 'var(--text-muted)' }}>
                                             {result.passedTests}/{result.totalTests} test cases passed
                                         </span>
                                     </div>
@@ -251,15 +267,15 @@ const ProblemSolve = () => {
                                         {result.testResults?.map((tc, i) => (
                                             <div key={i} style={{ ...S.testCase, borderColor: tc.passed ? 'rgba(72,187,120,0.3)' : 'rgba(252,129,129,0.3)' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                                                    <span style={{ fontWeight: 'bold', color: tc.passed ? '#48bb78' : '#fc8181' }}>
+                                                    <span style={{ fontWeight: 'bold', color: tc.passed ? 'var(--accent-green)' : 'var(--accent-red)' }}>
                                                         {tc.passed ? '✅' : '❌'} Test {i + 1}
                                                     </span>
                                                 </div>
                                                 {!tc.passed && tc.input !== '[hidden]' && (
                                                     <div style={S.testDetail}>
-                                                        <div><span style={{ color: '#888' }}>Input:</span> <code>{tc.input}</code></div>
-                                                        <div><span style={{ color: '#888' }}>Expected:</span> <code style={{ color: '#48bb78' }}>{tc.expectedOutput}</code></div>
-                                                        <div><span style={{ color: '#888' }}>Got:</span> <code style={{ color: '#fc8181' }}>{tc.actualOutput}</code></div>
+                                                        <div><span style={{ color: 'var(--text-muted)' }}>Input:</span> <code>{tc.input}</code></div>
+                                                        <div><span style={{ color: 'var(--text-muted)' }}>Expected:</span> <code style={{ color: 'var(--accent-green)' }}>{tc.expectedOutput}</code></div>
+                                                        <div><span style={{ color: 'var(--text-muted)' }}>Got:</span> <code style={{ color: 'var(--accent-red)' }}>{tc.actualOutput}</code></div>
                                                     </div>
                                                 )}
                                             </div>
@@ -276,69 +292,73 @@ const ProblemSolve = () => {
 };
 
 const S = {
-    page: { height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary, #1a1a2e)', fontFamily: 'Inter, sans-serif', color: '#e4e4e7' },
-    loading: { padding: '40px', textAlign: 'center', color: '#888' },
+    page: { height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' },
+    loading: { padding: '40px', textAlign: 'center', color: 'var(--text-muted)' },
 
     topBar: {
         display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px',
         borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0
     },
-    backBtn: { background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#888', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px' },
-    problemTitle: { fontSize: '16px', fontWeight: 700, color: '#e4e4e7' },
+    backBtn: { background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px' },
+    problemTitle: { fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' },
     diffBadge: { fontSize: '11px', fontWeight: 700, textTransform: 'capitalize' },
     langSelect: {
-        padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)',
-        background: 'rgba(255,255,255,0.05)', color: '#e4e4e7', fontSize: '12px', outline: 'none'
+        padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-color)',
+        background: 'var(--bg-muted)', color: 'var(--text-primary)', fontSize: '12px', outline: 'none'
     },
 
     main: { display: 'flex', flex: 1, overflow: 'hidden' },
 
     leftPanel: {
-        width: '45%', display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255,255,255,0.08)',
+        width: '45%', display: 'flex', flexDirection: 'column', 
+        background: 'var(--bg-glass)',
+        backdropFilter: 'var(--glass-blur)',
+        WebkitBackdropFilter: 'var(--glass-blur)',
+        borderRight: 'var(--glass-border)',
         overflow: 'auto'
     },
-    tabs: { display: 'flex', gap: '4px', padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' },
-    tab: { padding: '6px 14px', border: 'none', borderRadius: '6px', background: 'transparent', color: '#888', fontSize: '12px', fontWeight: 600, cursor: 'pointer' },
-    tabActive: { background: 'rgba(255,255,255,0.08)', color: '#e4e4e7' },
+    tabs: { display: 'flex', gap: '4px', padding: '10px 16px', borderBottom: 'var(--glass-border)' },
+    tab: { padding: '6px 14px', border: 'none', borderRadius: '0px', background: 'transparent', color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' },
+    tabActive: { background: 'rgba(255,255,255,0.05)', color: 'var(--accent-cyan)', borderBottom: '2px solid var(--accent-cyan)' },
     descContent: { padding: '16px 20px', overflow: 'auto', flex: 1 },
     descText: { fontSize: '14px', lineHeight: 1.7, color: '#d1d5db', whiteSpace: 'pre-line', marginBottom: '16px' },
 
-    exampleBox: { marginBottom: '12px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' },
-    exampleHeader: { padding: '8px 14px', fontSize: '12px', fontWeight: 700, color: '#888', background: 'rgba(255,255,255,0.03)' },
+    exampleBox: { marginBottom: '12px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' },
+    exampleHeader: { padding: '8px 14px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-muted)' },
     exampleContent: { padding: '12px 14px', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px' },
-    code: { background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '12px' },
+    code: { background: 'var(--bg-muted)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '12px' },
 
     section: { marginTop: '16px' },
-    sectionTitle: { margin: '0 0 8px 0', fontSize: '13px', color: '#888', fontWeight: 700 },
-    constraintList: { margin: 0, paddingLeft: '20px', fontSize: '12px', color: '#888', lineHeight: 1.8 },
+    sectionTitle: { margin: '0 0 8px 0', fontSize: '13px', color: 'var(--text-muted)', fontWeight: 700 },
+    constraintList: { margin: 0, paddingLeft: '20px', fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.8 },
 
-    hintBtn: { background: 'rgba(102,126,234,0.1)', border: '1px solid rgba(102,126,234,0.3)', color: '#667eea', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 },
-    hintBox: { marginTop: '8px', padding: '10px 14px', background: 'rgba(102,126,234,0.08)', borderRadius: '8px', fontSize: '13px', color: '#a78bfa' },
-    nextHintBtn: { marginTop: '8px', background: 'transparent', border: 'none', color: '#667eea', cursor: 'pointer', fontSize: '12px' },
-    companyTag: { padding: '3px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 600, background: 'rgba(255,255,255,0.05)', color: '#888', border: '1px solid rgba(255,255,255,0.08)' },
+    hintBtn: { background: 'rgba(13,148,136,0.1)', border: '1px solid rgba(13,148,136,0.3)', color: 'var(--accent-teal)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 },
+    hintBox: { marginTop: '8px', padding: '10px 14px', background: 'rgba(13,148,136,0.08)', borderRadius: '8px', fontSize: '13px', color: '#a78bfa' },
+    nextHintBtn: { marginTop: '8px', background: 'transparent', border: 'none', color: 'var(--accent-teal)', cursor: 'pointer', fontSize: '12px' },
+    companyTag: { padding: '3px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 600, background: 'var(--bg-muted)', color: 'var(--text-muted)', border: '1px solid var(--border-color)' },
 
     submissionRow: {
-        padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
+        padding: '12px 0', borderBottom: '1px solid var(--border-color)',
         display: 'flex', flexDirection: 'column', gap: '4px'
     },
 
-    rightPanel: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
-    editorWrap: { flex: 1, minHeight: 0 },
-    actionBar: { display: 'flex', gap: '8px', padding: '10px 16px', borderTop: '1px solid rgba(255,255,255,0.08)' },
+    rightPanel: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg-glass)', backdropFilter: 'var(--glass-blur)', borderLeft: 'var(--glass-border)' },
+    editorWrap: { flex: 1, minHeight: 0, borderBottom: 'var(--glass-border)' },
+    actionBar: { display: 'flex', gap: '8px', padding: '10px 16px', background: 'rgba(0,0,0,0.2)' },
     runBtn: {
-        padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-        background: 'rgba(255,255,255,0.08)', color: '#e4e4e7', fontSize: '13px', fontWeight: 700
+        padding: '8px 20px', borderRadius: '0px', border: '1px solid var(--border-ghost)', cursor: 'pointer',
+        background: 'transparent', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 700, transition: 'all 0.2s'
     },
     submitBtn: {
-        padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-        background: 'linear-gradient(135deg, #48bb78, #38a169)', color: '#fff', fontSize: '13px', fontWeight: 700
+        padding: '8px 20px', borderRadius: '0px', border: 'none', cursor: 'pointer',
+        background: 'var(--accent-cyan)', color: 'var(--text-inverse)', fontSize: '13px', fontWeight: 700, transition: 'all 0.2s'
     },
 
     resultPanel: { maxHeight: '250px', overflow: 'auto', borderTop: '1px solid rgba(255,255,255,0.08)' },
-    resultHeader: { padding: '10px 16px', fontSize: '14px', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.05)' },
+    resultHeader: { padding: '10px 16px', fontSize: '14px', fontWeight: 700, borderBottom: '1px solid var(--border-color)' },
     resultOutput: { margin: 0, padding: '12px 16px', fontSize: '13px', fontFamily: 'monospace', color: '#d1d5db', whiteSpace: 'pre-wrap' },
     testResults: { padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: '8px' },
-    testCase: { padding: '10px 14px', borderRadius: '8px', border: '1px solid', background: 'rgba(255,255,255,0.02)' },
+    testCase: { padding: '10px 14px', borderRadius: '8px', border: '1px solid', background: 'var(--bg-muted)' },
     testDetail: { display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', fontFamily: 'monospace' },
 };
 

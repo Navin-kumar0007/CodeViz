@@ -18,7 +18,7 @@ const ClassroomJoinHandler = () => {
     }, [code, navigate]);
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#fff', background: '#1e1e1e' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-primary)', background: 'var(--bg-white)' }}>
             <h2>Joining Classroom {code}...</h2>
         </div>
     );

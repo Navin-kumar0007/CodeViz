@@ -51,7 +51,9 @@ const methodToPrompt = {
     translateCode: 'translateCode',
     narrateCode: 'narrateCode',
     detectAI: 'detectAI',
-    ghostHint: 'ghostHint'
+    ghostHint: 'ghostHint',
+    generateInterviewTestCases: 'generateInterviewTestCases',
+    generateInterviewProblems: 'generateInterviewProblems'
 };
 
 Object.entries(methodToPrompt).forEach(([method, promptKey]) => {
@@ -63,7 +65,31 @@ Object.entries(methodToPrompt).forEach(([method, promptKey]) => {
         }
 
         const prompt = promptFn(...args);
-        return await generateGroqResponse(prompt);
+        const content = await generateGroqResponse(prompt);
+
+        // Auto-parse JSON only for methods where geminiService.js also auto-parses them.
+        // Other methods expect strings to be returned so the controller/worker can parse them.
+        const jsonMethods = [
+            'socraticTutor', 'analyzeIntuition', 'generateInterviewTestCases',
+            'generateInterviewProblems'
+        ];
+
+        if (jsonMethods.includes(method)) {
+            try {
+                return JSON.parse(content);
+            } catch (e) {
+                console.error(`Failed to parse Groq JSON for ${method}:`, e);
+                // Try one more aggressive cleanup if first parse fails
+                try {
+                    const cleaned = content.replace(/```json|```/g, '').trim();
+                    return JSON.parse(cleaned);
+                } catch (e2) {
+                    throw new Error(`Invalid JSON from Groq for ${method}`);
+                }
+            }
+        }
+
+        return content;
     };
 });
 

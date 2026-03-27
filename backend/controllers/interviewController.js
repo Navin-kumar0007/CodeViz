@@ -1,6 +1,8 @@
 const InterviewSession = require('../models/InterviewSession');
 const { getProblems, getProblemById } = require('../data/interviewProblems');
 const { protect } = require('../middleware/authMiddleware');
+const dockerService = require('../services/dockerService');
+const aiService = require('../services/aiService');
 
 /**
  * 🎯 Interview Prep Controller
@@ -22,8 +24,8 @@ const startSession = async (req, res) => {
             status: 'active'
         });
         if (existing) {
-            // Return existing active session
-            const problems = existing.problems.map(id => getProblemById(id));
+            // Return existing active session using the dynamic problem objects straight from the DB
+            const problems = existing.problems || [];
             return res.json({
                 session: existing,
                 problems: problems.map(p => ({
@@ -36,7 +38,7 @@ const startSession = async (req, res) => {
                     companies: p.companies,
                     hints: p.hints,
                     starterCode: p.starterCode,
-                    testCases: p.testCases.map(tc => ({ input: tc.input })) // hide expected output
+                    testCases: p.testCases ? p.testCases.map(tc => ({ input: tc.input })) : [] // hide expected output
                 })),
                 resumed: true
             });
@@ -46,13 +48,31 @@ const startSession = async (req, res) => {
         const timeLimits = { easy: 30, medium: 45, hard: 60, mixed: 45 };
         const count = Math.min(Math.max(problemCount, 2), 6);
 
-        // Get random problems for this mode
-        const selectedProblems = getProblems(mode, count);
+        // Get robust dynamic problems from AI (Fallbacks to static if AI fails)
+        console.log(`🤖 Generating ${count} dynamic AI problems for interview...`);
+        let selectedProblems = [];
+        try {
+            selectedProblems = await aiService.generateInterviewProblems(mode, count, req.user._id);
+            if (!Array.isArray(selectedProblems) || selectedProblems.length === 0) {
+                throw new Error("AI returned empty problems.");
+            }
+            // Detect mock/placeholder problems — never show these to users
+            const isMock = selectedProblems.some(p => 
+                String(p.id).startsWith('mock-ai-') || String(p.title).includes('Mock AI Problem')
+            );
+            if (isMock) {
+                console.warn("⚠️ AI returned mock/placeholder problems. Using static problem bank instead.");
+                selectedProblems = getProblems(mode, count);
+            }
+        } catch (e) {
+            console.error("AI Problem Generation Failed. Falling back to static problem bank.", e);
+            selectedProblems = getProblems(mode, count);
+        }
 
         const session = await InterviewSession.create({
             userId: req.user._id,
             mode,
-            problems: selectedProblems.map(p => p.id),
+            problems: selectedProblems, // Store the full objects in the DB
             timeLimit: timeLimits[mode],
             startedAt: new Date(),
             status: 'active'
@@ -95,37 +115,93 @@ const submitSolution = async (req, res) => {
             return res.status(400).json({ error: 'Session already completed' });
         }
 
-        // Get the problem data
-        const problem = getProblemById(problemId);
-        if (!problem) return res.status(404).json({ error: 'Problem not found' });
+        // Get the problem data from the dynamic AI array in the session
+        const problem = session.problems.find(p => p.id === problemId);
+        if (!problem) return res.status(404).json({ error: 'Problem not found in session' });
 
-        // Run code against test cases (simplified — uses eval for Python-like logic)
+        // Generate AI test cases dynamically
+        let allTestCases = [...problem.testCases];
+        try {
+            console.log(`🤖 Generating dynamic test cases for problem: ${problem.title}`);
+            const dynamicTestCases = await aiService.generateInterviewTestCases(
+                `Title: ${problem.title}\nDescription: ${problem.description}\nStarter Code: ${problem.starterCode}\nDifficulty: ${problem.difficulty}`,
+                req.user._id
+            );
+            
+            if (dynamicTestCases && Array.isArray(dynamicTestCases) && dynamicTestCases.length > 0) {
+                console.log(`✅ Successfully generated ${dynamicTestCases.length} dynamic AI test cases!`);
+                // Append the rigorous dynamic AI test cases to the static defaults
+                allTestCases = [...allTestCases, ...dynamicTestCases];
+            } else {
+                console.warn(`⚠️ Warning: AI returned empty dynamic test cases, reverting to static.`);
+            }
+        } catch (e) {
+            console.error(`AI Test Generation failed for interview submission:`, e);
+            // Fallback to static testcases silently
+        }
+
+        // Extract test boilerplate from starter code
+        let testBoilerplate = "";
+        if (problem.starterCode.includes("# Test")) {
+            testBoilerplate = "\n# Test\n" + problem.starterCode.split("# Test")[1];
+        } else if (problem.starterCode.includes("// Test")) {
+            testBoilerplate = "\n// Test\n" + problem.starterCode.split("// Test")[1];
+        } else if (problem.starterCode.includes("/* Test */")) {
+            testBoilerplate = "\n/* Test */\n" + problem.starterCode.split("/* Test */")[1];
+        }
+
+        // If candidate removed the test block, intelligently re-inject it so the code actually outputs something
+        let executeCode = code;
+        if (testBoilerplate && !executeCode.includes("# Test") && !executeCode.includes("// Test") && !executeCode.includes("/* Test */")) {
+            executeCode += "\n" + testBoilerplate;
+        }
+
+        // Run code against test cases
         const testCaseResults = [];
         let passedCount = 0;
 
-        for (const tc of problem.testCases) {
+        for (const tc of allTestCases) {
             try {
-                // In production, send to sandbox. Here we compare expected output.
-                // For now, we'll do a simple simulation
+                // Actually run the candidate's code in the isolated sandbox securely
+                const result = await dockerService.runInSandbox(executeCode, language, tc.input);
+                
+                let actualOutput = (result.output || '').trim();
+                const cleanedExpected = String(tc.expectedOutput).replace(/\r\n/g, '\n').trim();
+                const cleanedActual = actualOutput.replace(/\r\n/g, '\n').trim();
+                
+                let passed = cleanedActual === cleanedExpected;
+                
+                if (result.timeout || (result.error && result.error.includes("Time Limit Exceeded"))) {
+                    passed = false;
+                    actualOutput = "Time Limit Exceeded (TLE)";
+                } else if (result.error && !result.output) {
+                    passed = false; 
+                    actualOutput = `Runtime Error: ${result.error}`;
+                } else if (actualOutput === "") {
+                    passed = false;
+                    actualOutput = "(No output produced. Check your print/console.log statements)";
+                }
+
                 testCaseResults.push({
                     input: tc.input,
                     expectedOutput: tc.expectedOutput,
-                    actualOutput: tc.expectedOutput, // Will be replaced with actual execution
-                    passed: true // Placeholder — actual execution in /run endpoint
+                    actualOutput: actualOutput,
+                    passed: passed
                 });
-                passedCount++;
-            } catch {
+                
+                if (passed) passedCount++;
+            } catch (err) {
                 testCaseResults.push({
                     input: tc.input,
                     expectedOutput: tc.expectedOutput,
-                    actualOutput: 'Error',
+                    actualOutput: 'Execution Error: ' + err.message,
                     passed: false
                 });
             }
         }
 
-        // Calculate score for this problem
-        const score = Math.round((passedCount / problem.testCases.length) * 100);
+        // Calculate score for this problem against ALL test cases
+        const score = Math.round((passedCount / allTestCases.length) * 100);
 
         // Check if already submitted for this problem (update if so)
         const existingIdx = session.results.findIndex(r => r.problemId === problemId);
@@ -155,6 +231,7 @@ const submitSolution = async (req, res) => {
                 case: i + 1,
                 input: tc.input,
                 expectedOutput: tc.expectedOutput,
+                actualOutput: tc.actualOutput,
                 passed: tc.passed
             })),
             submitted: session.results.length,
@@ -163,6 +240,36 @@ const submitSolution = async (req, res) => {
     } catch (err) {
         console.error('Submit error:', err);
         res.status(500).json({ error: 'Failed to submit solution' });
+    }
+};
+
+// POST /api/interview/record-struggle/:sessionId — Track micro-metrics
+const recordStruggle = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const { problemId, type } = req.body; // type: 'backtrack' or 'execution'
+
+        const session = await InterviewSession.findById(sessionId);
+        if (!session) return res.status(404).json({ error: 'Session not found' });
+
+        const resultIdx = session.results.findIndex(r => r.problemId === problemId);
+        if (resultIdx === -1) {
+            // Create initial result if not exists
+            session.results.push({ problemId, struggleTokens: { backtrackCount: 0, executionFrequency: 0 } });
+        }
+        
+        const result = session.results[resultIdx === -1 ? session.results.length - 1 : resultIdx];
+        
+        if (type === 'backtrack') {
+            result.struggleTokens.backtrackCount += 1;
+        } else if (type === 'execution') {
+            result.struggleTokens.executionFrequency += 1;
+        }
+
+        await session.save();
+        res.json({ success: true, struggleTokens: result.struggleTokens });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to record struggle token' });
     }
 };
 
@@ -196,19 +303,39 @@ const endSession = async (req, res) => {
         session.completedAt = new Date();
         session.totalScore = avgScore;
         session.rating = rating;
+
+        // 🧠 AI INTUITION SCORING (NEW UPGRADE)
+        try {
+            const aiService = require('../services/aiService');
+            for (const resultItem of session.results) {
+                const analysis = await aiService.analyzeIntuition(
+                    resultItem.code, 
+                    resultItem.struggleTokens, 
+                    resultItem.timeTaken,
+                    session.userId.toString() // 🔥 Pass userId for rate limiting
+                );
+                resultItem.intuitionScore = analysis.score;
+                resultItem.aiAnalysis = analysis.feedback;
+            }
+        } catch (aiErr) {
+            console.error('AI Intuition Scoring failed:', aiErr);
+        }
+
         await session.save();
 
         // Calculate time breakdown
         const totalTime = Math.round((session.completedAt - session.startedAt) / 1000 / 60); // minutes
         const categoryBreakdown = {};
         for (const r of results) {
-            const prob = getProblemById(r.problemId);
+            // Look up problem from session's dynamic array instead of static bank
+            const prob = session.problems.find(p => p.id === r.problemId);
             if (prob) {
-                if (!categoryBreakdown[prob.category]) {
-                    categoryBreakdown[prob.category] = { solved: 0, total: 0 };
+                const cat = prob.category || 'unknown';
+                if (!categoryBreakdown[cat]) {
+                    categoryBreakdown[cat] = { solved: 0, total: 0 };
                 }
-                categoryBreakdown[prob.category].total++;
-                if (r.passed) categoryBreakdown[prob.category].solved++;
+                categoryBreakdown[cat].total++;
+                if (r.passed) categoryBreakdown[cat].solved++;
             }
         }
 
@@ -223,12 +350,12 @@ const endSession = async (req, res) => {
             timeLimit: session.timeLimit,
             categoryBreakdown,
             results: results.map(r => {
-                const prob = getProblemById(r.problemId);
+                const prob = session.problems.find(p => p.id === r.problemId);
                 return {
                     problemId: r.problemId,
-                    title: prob?.title,
-                    difficulty: prob?.difficulty,
-                    category: prob?.category,
+                    title: prob?.title || 'Unknown Problem',
+                    difficulty: prob?.difficulty || 'unknown',
+                    category: prob?.category || 'unknown',
                     passed: r.passed,
                     score: r.score,
                     timeTaken: r.timeTaken
@@ -306,21 +433,21 @@ const getStats = async (req, res) => {
         let totalProblems = 0;
         let totalSolved = 0;
 
-        for (const session of sessions) {
-            for (const result of session.results) {
-                const prob = getProblemById(result.problemId);
-                if (prob) {
-                    if (!categoryStats[prob.category]) {
-                        categoryStats[prob.category] = { attempted: 0, solved: 0, avgScore: 0, totalScore: 0 };
-                    }
-                    categoryStats[prob.category].attempted++;
-                    categoryStats[prob.category].totalScore += result.score;
-                    if (result.passed) {
-                        categoryStats[prob.category].solved++;
-                        totalSolved++;
-                    }
-                    totalProblems++;
+        for (const sess of sessions) {
+            for (const result of sess.results) {
+                // Look up problem from session's dynamic array
+                const prob = sess.problems.find(p => p.id === result.problemId);
+                const cat = prob?.category || 'unknown';
+                if (!categoryStats[cat]) {
+                    categoryStats[cat] = { attempted: 0, solved: 0, avgScore: 0, totalScore: 0 };
                 }
+                categoryStats[cat].attempted++;
+                categoryStats[cat].totalScore += result.score || 0;
+                if (result.passed) {
+                    categoryStats[cat].solved++;
+                    totalSolved++;
+                }
+                totalProblems++;
             }
         }
 
@@ -366,4 +493,28 @@ const getStats = async (req, res) => {
     }
 };
 
-module.exports = { startSession, submitSolution, endSession, getHistory, getStats };
+// POST /api/interview/session/:sessionId/replay — Save full Proof-of-Work replay
+const saveSessionReplay = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const { eventLog } = req.body;
+
+        const session = await InterviewSession.findById(sessionId);
+        if (!session) return res.status(404).json({ error: 'Session not found' });
+        
+        // Ensure user is authorized
+        if (session.userId && session.userId.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ error: 'Not your session' });
+        }
+
+        session.eventLog = eventLog;
+        await session.save();
+
+        res.json({ success: true, message: 'Proof-of-Work replay saved.' });
+    } catch (err) {
+        console.error('Save Replay err:', err);
+        res.status(500).json({ error: 'Failed to save replay' });
+    }
+};
+
+module.exports = { startSession, submitSolution, recordStruggle, endSession, getHistory, getStats, saveSessionReplay };

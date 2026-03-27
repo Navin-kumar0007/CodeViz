@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
 import API_BASE from '../utils/api';
+import CodeEditor from '../components/Editor/CodeEditor'; // 🔥 Collaborative Editor
+import Canvas from '../components/Visualizer/Canvas'; // 🔥 Collaborative Visualizer
+
 const Room = () => {
     const navigate = useNavigate();
     const [view, setView] = useState('lobby'); // 'lobby' | 'live'
@@ -27,6 +30,12 @@ const Room = () => {
     const [lastEditor, setLastEditor] = useState('');
     const [showChat, setShowChat] = useState(true);
 
+    // ⚡️ VISUALIZER SYNC STATE
+    const [traceData, setTraceData] = useState([]);
+    const [stepIndex, setStepIndex] = useState(0);
+    const [heatmapData, setHeatmapData] = useState({});
+    const [isExecuting, setIsExecuting] = useState(false);
+
     // Battle state
     const [roomMode, setRoomMode] = useState('collaborate');
     const [battleState, setBattleState] = useState(null); // 'waiting' | 'countdown' | 'active' | 'finished'
@@ -40,6 +49,8 @@ const Room = () => {
     const [isHost, setIsHost] = useState(false);
     const [battleSubmitted, setBattleSubmitted] = useState(false);
     const [battleTestResults, setBattleTestResults] = useState(null); // { passedCount, totalCount, results: [] }
+    const [chaosEnergy, setChaosEnergy] = useState(0);
+    const [activeChaosEffect, setActiveChaosEffect] = useState(null);
 
     const socketRef = useRef(null);
     const chatEndRef = useRef(null);
@@ -60,6 +71,16 @@ const Room = () => {
         return () => disconnectSocket();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // ⚡️ Chaos Energy Generator
+    useEffect(() => {
+        if (roomMode === 'battle' && battleState === 'active') {
+            const interval = setInterval(() => {
+                setChaosEnergy(prev => Math.min(100, prev + 5));
+            }, 1000);
+            return () => clearInterval(interval);
+        }
+    }, [roomMode, battleState]);
 
     // Auto-scroll chat
     useEffect(() => {
@@ -170,6 +191,17 @@ const Room = () => {
             setChatMessages(prev => [...prev, msg]);
         });
 
+        // ⚡️ VISUALIZER SYNC LISTENER
+        socket.on('visualizer-sync', (data) => {
+            if (data.stepIndex !== undefined) {
+                setStepIndex(data.stepIndex);
+            }
+            if (data.traceData) {
+                setTraceData(data.traceData);
+                setHeatmapData(data.heatmapData || {});
+            }
+        });
+
         socket.on('user-joined', (data) => {
             setChatMessages(prev => [...prev, {
                 userName: '🤖 System',
@@ -251,6 +283,20 @@ const Room = () => {
             setOpponentProgress(prev => ({ ...prev, [data.userId]: data }));
         });
 
+        socket.on('incoming-chaos', (data) => {
+            setActiveChaosEffect(data.attackType);
+            setChatMessages(prev => [...prev, {
+                userName: '⚠️ System',
+                message: `${data.attackerName} cast ${data.attackType} on you!`,
+                timestamp: new Date(),
+                isSystem: true
+            }]);
+            
+            setTimeout(() => {
+                setActiveChaosEffect(null);
+            }, data.duration || 5000);
+        });
+
         socketRef.current = socket;
     };
 
@@ -270,6 +316,62 @@ const Room = () => {
         setChatMessages([]);
         setParticipants([]);
         fetchActiveRooms();
+    };
+
+    // ⚡️ SYNC STEP INDEX ACROSS ROOM
+    const handleStepSync = (idx) => {
+        setStepIndex(idx);
+        if (socketRef.current) {
+            socketRef.current.emit('visualizer-sync', { stepIndex: idx });
+        }
+    };
+
+    // ⚡️ EXECUTE CODE AND SYNC TRACE DATA
+    const runCollaborativeCode = async () => {
+        if (!code.trim() || isExecuting) return;
+        setIsExecuting(true);
+        try {
+            const res = await fetch(`${API_BASE}/run`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user?.token}`
+                },
+                body: JSON.stringify({ code, language })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setTraceData(data.trace || []);
+                setHeatmapData(data.heatmap || {});
+                setStepIndex(0);
+                
+                // Broadcast to everyone
+                if (socketRef.current) {
+                    socketRef.current.emit('visualizer-sync', {
+                        traceData: data.trace,
+                        heatmapData: data.heatmap,
+                        stepIndex: 0
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Run code error:', err);
+        } finally {
+            setIsExecuting(false);
+        }
+    };
+
+    const castChaos = (attackType, cost) => {
+        if (chaosEnergy >= cost && socketRef.current) {
+            setChaosEnergy(prev => prev - cost);
+            socketRef.current.emit('cast-chaos', { attackType, duration: 5000 });
+            setChatMessages(prev => [...prev, {
+                userName: '🪄 System',
+                message: `You cast ${attackType} on the opponent!`,
+                timestamp: new Date(),
+                isSystem: true
+            }]);
+        }
     };
 
     // ── Code editing with throttled sync ──
@@ -314,7 +416,7 @@ const Room = () => {
         { value: 'c', label: '🔷 C' }
     ];
 
-    const COLORS = ['#667eea', '#f093fb', '#4fd1c5', '#f6ad55', '#fc8181', '#9f7aea', '#68d391', '#63b3ed', '#fbb6ce', '#b794f4'];
+    const COLORS = ['var(--accent-teal)', '#f093fb', '#4fd1c5', 'var(--accent-yellow)', 'var(--accent-red)', '#9f7aea', '#68d391', '#63b3ed', '#fbb6ce', '#b794f4'];
 
     // ────────────────────────────────────────
     // LOBBY VIEW
@@ -365,7 +467,7 @@ const Room = () => {
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
                             <button
                                 onClick={() => setRoomMode('collaborate')}
-                                style={{ ...S.langBtn, flex: 1, ...(roomMode === 'collaborate' ? { background: '#667eea22', borderColor: '#667eea', color: '#667eea' } : {}) }}
+                                style={{ ...S.langBtn, flex: 1, ...(roomMode === 'collaborate' ? { background: 'var(--accent-teal)22', borderColor: 'var(--accent-teal)', color: 'var(--accent-teal)' } : {}) }}
                             >
                                 🤝 Collaborate
                             </button>
@@ -447,7 +549,7 @@ const Room = () => {
                             ⚔️ Battle Mode
                         </span>
                     )}
-                    <span style={{ ...S.statusDot, background: isConnected ? '#4fd1c5' : '#fc8181' }} />
+                    <span style={{ ...S.statusDot, background: isConnected ? '#4fd1c5' : 'var(--accent-red)' }} />
                     <span style={S.statusText}>{isConnected ? 'Connected' : 'Disconnected'}</span>
                 </div>
                 <div style={S.roomHeaderRight}>
@@ -480,15 +582,15 @@ const Room = () => {
                 <>
                     {/* Countdown Overlay */}
                     {battleState === 'countdown' && (
-                        <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)' }}>
+                        <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)' }}>
                             <div style={{ fontSize: '80px', fontWeight: 'bold', color: '#f56565', textShadow: '0 0 40px rgba(245,101,101,0.5)' }}>{countdown}</div>
                             {battleProblem && (
                                 <div style={{ textAlign: 'center', maxWidth: '500px', marginTop: '20px' }}>
-                                    <h2 style={{ color: '#fff', marginBottom: '8px' }}>⚔️ {battleProblem.title}</h2>
+                                    <h2 style={{ color: 'var(--text-primary)', marginBottom: '8px' }}>⚔️ {battleProblem.title}</h2>
                                     <span style={{
                                         padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold',
                                         background: battleProblem.difficulty === 'easy' ? 'rgba(72,187,120,0.2)' : battleProblem.difficulty === 'hard' ? 'rgba(245,101,101,0.2)' : 'rgba(237,137,54,0.2)',
-                                        color: battleProblem.difficulty === 'easy' ? '#48bb78' : battleProblem.difficulty === 'hard' ? '#f56565' : '#ed8936'
+                                        color: battleProblem.difficulty === 'easy' ? 'var(--accent-green)' : battleProblem.difficulty === 'hard' ? '#f56565' : '#ed8936'
                                     }}>{battleProblem.difficulty?.toUpperCase()}</span>
                                     <p style={{ color: '#aaa', marginTop: '12px', whiteSpace: 'pre-wrap', lineHeight: 1.5, fontSize: '14px' }}>{battleProblem.description}</p>
                                 </div>
@@ -500,14 +602,14 @@ const Room = () => {
                     {battleState === 'active' && (
                         <div style={{ padding: '6px 20px', background: 'rgba(245,101,101,0.1)', borderBottom: '1px solid rgba(245,101,101,0.2)', display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                                <div style={{ width: `${(battleTimer / battleTimeLimit) * 100}%`, height: '100%', background: battleTimer > 60 ? '#48bb78' : battleTimer > 30 ? '#ed8936' : '#f56565', transition: 'width 1s linear', borderRadius: '2px' }} />
+                                <div style={{ width: `${(battleTimer / battleTimeLimit) * 100}%`, height: '100%', background: battleTimer > 60 ? 'var(--accent-green)' : battleTimer > 30 ? '#ed8936' : '#f56565', transition: 'width 1s linear', borderRadius: '2px' }} />
                             </div>
-                            <span style={{ fontSize: '14px', fontWeight: 'bold', color: battleTimer > 60 ? '#48bb78' : '#f56565', fontFamily: 'monospace', minWidth: '60px' }}>
+                            <span style={{ fontSize: '14px', fontWeight: 'bold', color: battleTimer > 60 ? 'var(--accent-green)' : '#f56565', fontFamily: 'monospace', minWidth: '60px' }}>
                                 {Math.floor(battleTimer / 60)}:{String(battleTimer % 60).padStart(2, '0')}
                             </span>
                             {battleProblem && <span style={{ fontSize: '12px', color: '#aaa' }}>⚔️ {battleProblem.title}</span>}
                             {Object.values(opponentProgress).map((op, i) => (
-                                <span key={i} style={{ fontSize: '11px', color: '#888', padding: '2px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+                                <span key={i} style={{ fontSize: '11px', color: 'var(--text-muted)', padding: '2px 8px', background: 'var(--bg-muted)', borderRadius: '4px' }}>
                                     {op.userName}: {op.lineCount} lines
                                 </span>
                             ))}
@@ -549,19 +651,19 @@ const Room = () => {
                                             }
                                         }
                                     }}
-                                    style={{ padding: '6px 16px', background: 'linear-gradient(135deg, #48bb78, #38a169)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}
+                                    style={{ padding: '6px 16px', background: 'linear-gradient(135deg, var(--accent-green), #38a169)', border: 'none', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}
                                 >
                                     🚀 Submit ({battleProblem?.testCases?.length || 1} tests)
                                 </button>
                             )}
-                            {battleSubmitted && !battleTestResults && <span style={{ color: '#48bb78', fontSize: '12px', fontWeight: 'bold' }}>⏳ Running tests...</span>}
+                            {battleSubmitted && !battleTestResults && <span style={{ color: 'var(--accent-green)', fontSize: '12px', fontWeight: 'bold' }}>⏳ Running tests...</span>}
                             {battleTestResults && (
                                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                                     {battleTestResults.results.map((r, i) => (
                                         <span key={i} title={r.passed ? `TC${i + 1}: Passed` : `TC${i + 1}: Expected "${r.expected}" got "${r.actual}"`}
                                             style={{ fontSize: '16px', cursor: 'help' }}>{r.passed ? '✅' : '❌'}</span>
                                     ))}
-                                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: battleTestResults.passedCount === battleTestResults.totalCount ? '#48bb78' : '#f56565', marginLeft: '6px' }}>
+                                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: battleTestResults.passedCount === battleTestResults.totalCount ? 'var(--accent-green)' : '#f56565', marginLeft: '6px' }}>
                                         {battleTestResults.passedCount}/{battleTestResults.totalCount}
                                     </span>
                                 </div>
@@ -573,53 +675,53 @@ const Room = () => {
                     {(!battleState || battleState === 'waiting') && (
                         <div style={{ padding: '12px 20px', background: 'rgba(245,101,101,0.05)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <span style={{ color: '#f56565', fontWeight: 'bold', fontSize: '13px' }}>⚔️ Battle Mode</span>
-                            <span style={{ color: '#888', fontSize: '12px' }}>{participants.length} player(s) ready</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{participants.length} player(s) ready</span>
                             {isHost && (
                                 <>
-                                    <select value={battleDifficulty} onChange={e => setBattleDifficulty(e.target.value)} style={{ padding: '4px 8px', borderRadius: '6px', background: '#333', color: '#fff', border: '1px solid #555', fontSize: '12px' }}>
+                                    <select value={battleDifficulty} onChange={e => setBattleDifficulty(e.target.value)} style={{ padding: '4px 8px', borderRadius: '6px', background: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid #555', fontSize: '12px' }}>
                                         <option value="easy">🟢 Easy</option>
                                         <option value="medium">🟡 Medium</option>
                                         <option value="hard">🔴 Hard</option>
                                     </select>
                                     <button
                                         onClick={() => socketRef.current?.emit('battle-start', { difficulty: battleDifficulty })}
-                                        style={{ marginLeft: 'auto', padding: '8px 20px', background: 'linear-gradient(135deg, #f56565, #e53e3e)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 10px rgba(245,101,101,0.3)' }}
+                                        style={{ marginLeft: 'auto', padding: '8px 20px', background: 'linear-gradient(135deg, #f56565, #e53e3e)', border: 'none', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 10px rgba(245,101,101,0.3)' }}
                                     >
                                         ⚔️ Start Battle!
                                     </button>
                                 </>
                             )}
-                            {!isHost && <span style={{ color: '#888', fontSize: '12px', marginLeft: 'auto' }}>Waiting for host to start...</span>}
+                            {!isHost && <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginLeft: 'auto' }}>Waiting for host to start...</span>}
                         </div>
                     )}
 
                     {/* Battle Results Overlay */}
                     {battleState === 'finished' && battleResult && (
-                        <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)' }}>
+                        <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)' }}>
                             {battleResult.winner ? (
                                 <>
                                     <div style={{ fontSize: '60px', marginBottom: '10px' }}>🏆</div>
-                                    <h2 style={{ color: '#48bb78', fontSize: '28px', margin: '0 0 8px' }}>{battleResult.winner.userName} Wins!</h2>
-                                    <p style={{ color: '#888', fontSize: '14px' }}>+{battleResult.xpAwarded} XP awarded</p>
+                                    <h2 style={{ color: 'var(--accent-green)', fontSize: '28px', margin: '0 0 8px' }}>{battleResult.winner.userName} Wins!</h2>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>+{battleResult.xpAwarded} XP awarded</p>
                                 </>
                             ) : (
                                 <>
                                     <div style={{ fontSize: '60px', marginBottom: '10px' }}>⌛</div>
                                     <h2 style={{ color: '#ed8936', fontSize: '28px', margin: '0 0 8px' }}>Time's Up!</h2>
-                                    <p style={{ color: '#888', fontSize: '14px' }}>No correct solution submitted</p>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>No correct solution submitted</p>
                                 </>
                             )}
                             <div style={{ marginTop: '20px', display: 'flex', gap: '12px' }}>
                                 {battleResult.submissions?.map((s, i) => (
                                     <div key={i} style={{ padding: '12px 20px', background: s.correct ? 'rgba(72,187,120,0.15)' : 'rgba(245,101,101,0.15)', borderRadius: '10px', textAlign: 'center' }}>
-                                        <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>{s.userName}</div>
+                                        <div style={{ fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '4px' }}>{s.userName}</div>
                                         <div style={{ fontSize: '20px' }}>{s.correct ? '✅' : '❌'}</div>
                                     </div>
                                 ))}
                             </div>
                             <button
                                 onClick={() => { setBattleState('waiting'); setBattleResult(null); setBattleProblem(null); setBattleSubmitted(false); }}
-                                style={{ marginTop: '24px', padding: '10px 30px', background: 'linear-gradient(135deg, #667eea, #764ba2)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer' }}
+                                style={{ marginTop: '24px', padding: '10px 30px', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', border: 'none', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer' }}
                             >
                                 🔁 Play Again
                             </button>
@@ -631,7 +733,12 @@ const Room = () => {
             {/* Main Content */}
             <div style={S.liveLayout}>
                 {/* Code Editor */}
-                <div style={S.editorPanel}>
+                <div style={{
+                    ...S.editorPanel,
+                    filter: activeChaosEffect === 'BLIND' ? 'blur(8px)' : activeChaosEffect === 'GLITCH' ? 'hue-rotate(90deg) invert(1) contrast(200%) grayscale(0.2)' : 'none',
+                    transform: activeChaosEffect === 'INVERT' ? 'rotate(180deg)' : 'none',
+                    transition: 'all 0.3s ease-in-out'
+                }}>
                     <div style={S.editorToolbar}>
                         <div style={S.langRow}>
                             {LANGUAGES.map(l => (
@@ -654,14 +761,44 @@ const Room = () => {
                                 </motion.span>
                             )}
                         </AnimatePresence>
+                        
+                        {/* ⚡️ RUN BUTTON */}
+                        <button 
+                            onClick={runCollaborativeCode} 
+                            disabled={isExecuting}
+                            style={{ 
+                                marginLeft: '12px', padding: '6px 16px', background: 'var(--accent-teal)', 
+                                border: 'none', borderRadius: '6px', color: 'var(--text-primary)', 
+                                fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' 
+                            }}
+                        >
+                            {isExecuting ? 'Running...' : '▶ Run Visualizer'}
+                        </button>
                     </div>
-                    <textarea
-                        value={code}
-                        onChange={handleCodeChange}
-                        style={S.codeEditor}
-                        spellCheck={false}
-                        placeholder="Start coding together..."
-                    />
+                    
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        <div style={{ height: '50%', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                            <CodeEditor 
+                                code={code}
+                                setCode={(newVal) => {
+                                    setCode(newVal);
+                                    if (socketRef.current) {
+                                        socketRef.current.emit('code-update', { code: newVal });
+                                    }
+                                }}
+                                language={language}
+                                activeLine={traceData && traceData[stepIndex] ? traceData[stepIndex].line : 0}
+                                heatmapData={heatmapData}
+                            />
+                        </div>
+                        <div style={{ height: '50%', background: 'var(--bg-muted)' }}>
+                            <Canvas 
+                                traceData={traceData}
+                                stepIndex={stepIndex}
+                                setStepIndex={handleStepSync}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Sidebar */}
@@ -733,161 +870,163 @@ const Room = () => {
     );
 };
 
-// ── Styles ──
+// ── Styles — Digital Observatory ──
 const S = {
     container: {
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 100%)',
-        color: '#fff',
+        color: '#E8E8ED',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
     },
     header: {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)'
+        padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.04)',
     },
     backBtn: {
-        background: 'transparent', border: '1px solid rgba(255,255,255,0.15)',
-        color: '#fff', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px'
+        background: 'transparent', border: '1px solid rgba(255,255,255,0.08)',
+        color: '#E8E8ED', padding: '8px 18px', borderRadius: '100px', cursor: 'pointer',
+        fontSize: '13px', fontWeight: 600, fontFamily: "'Inter', sans-serif",
     },
-    pageTitle: { margin: 0, fontSize: '22px', fontWeight: 700 },
+    pageTitle: { margin: 0, fontSize: '22px', fontWeight: 800, letterSpacing: '-0.02em' },
     errorBanner: {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        background: 'rgba(255,100,100,0.15)', border: '1px solid rgba(255,100,100,0.4)',
-        color: '#ff6b6b', padding: '10px 16px', borderRadius: '10px', margin: '12px 24px 0',
-        fontSize: '13px'
+        background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)',
+        color: '#F43F5E', padding: '10px 16px', borderRadius: '14px', margin: '12px 24px 0',
+        fontSize: '13px',
     },
     dismissBtn: { background: 'none', border: 'none', color: 'inherit', fontSize: '18px', cursor: 'pointer' },
 
     // Lobby
     lobbyGrid: {
-        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px',
-        padding: '30px 24px', maxWidth: '1000px', margin: '0 auto', width: '100%'
+        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px',
+        padding: '30px 24px', maxWidth: '1000px', margin: '0 auto', width: '100%',
     },
     lobbyCard: {
-        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '20px', padding: '28px'
+        background: 'rgba(17,17,22,0.6)', backdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '28px',
+        transition: 'all 0.4s cubic-bezier(0.23,1,0.32,1)',
     },
-    cardTitle: { margin: '0 0 6px', fontSize: '20px', fontWeight: 700 },
-    cardDesc: { color: '#888', fontSize: '13px', margin: '0 0 20px' },
+    cardTitle: { margin: '0 0 6px', fontSize: '20px', fontWeight: 800 },
+    cardDesc: { color: '#5A5A6A', fontSize: '13px', margin: '0 0 20px' },
     input: {
-        width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: '10px', padding: '12px 14px', color: '#fff', fontSize: '14px',
-        marginBottom: '14px', boxSizing: 'border-box', outline: 'none'
+        width: '100%', background: 'rgba(8,8,12,0.6)', border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '12px', padding: '12px 14px', color: '#E8E8ED', fontSize: '14px',
+        marginBottom: '14px', boxSizing: 'border-box', outline: 'none',
     },
     langRow: { display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' },
     langBtn: {
-        background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-        color: '#aaa', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer',
-        fontSize: '13px', transition: 'all 0.2s'
+        background: 'rgba(17,17,22,0.5)', border: '1px solid rgba(255,255,255,0.08)',
+        color: '#9898A6', padding: '8px 14px', borderRadius: '10px', cursor: 'pointer',
+        fontSize: '13px', transition: 'all 0.2s',
     },
     langBtnSmall: {
-        background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-        color: '#aaa', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer',
-        fontSize: '12px', transition: 'all 0.2s'
+        background: 'rgba(17,17,22,0.5)', border: '1px solid rgba(255,255,255,0.08)',
+        color: '#9898A6', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer',
+        fontSize: '12px', transition: 'all 0.2s',
     },
     langBtnActive: {
-        background: 'rgba(102,126,234,0.25)', borderColor: 'rgba(102,126,234,0.5)', color: '#a5b4fc'
+        background: 'rgba(0,229,238,0.1)', borderColor: 'rgba(0,229,238,0.3)', color: '#00E5EE',
     },
     toggleLabel: {
-        display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#aaa',
-        marginBottom: '16px', cursor: 'pointer'
+        display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#9898A6',
+        marginBottom: '16px', cursor: 'pointer',
     },
     checkbox: { width: '16px', height: '16px' },
     primaryBtn: {
-        width: '100%', padding: '12px', background: 'linear-gradient(135deg, #667eea, #764ba2)',
-        border: 'none', borderRadius: '10px', color: '#fff', fontSize: '15px', fontWeight: 'bold',
-        cursor: 'pointer', boxShadow: '0 4px 20px rgba(102,126,234,0.3)'
+        width: '100%', padding: '12px', background: 'linear-gradient(135deg, #00E5EE, #7C3AED)',
+        border: 'none', borderRadius: '12px', color: '#fff', fontSize: '14px', fontWeight: 700,
+        cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,229,238,0.2)',
     },
     joinRow: { display: 'flex', flexDirection: 'column', gap: '12px' },
     activeSection: { marginTop: '24px' },
     sectionLabel: {
-        fontSize: '12px', fontWeight: 700, color: '#888', textTransform: 'uppercase',
-        letterSpacing: '1px', margin: '0 0 10px'
+        fontSize: '11px', fontWeight: 700, color: '#5A5A6A', textTransform: 'uppercase',
+        letterSpacing: '1.5px', margin: '0 0 10px',
     },
     roomRow: {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '12px 14px', background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', marginBottom: '8px'
+        padding: '12px 14px', background: 'rgba(17,17,22,0.5)',
+        border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', marginBottom: '8px',
     },
     roomName: { fontWeight: 600, fontSize: '14px', marginBottom: '3px' },
-    roomMeta: { fontSize: '11px', color: '#888' },
+    roomMeta: { fontSize: '11px', color: '#5A5A6A' },
     joinBtn: {
-        background: 'rgba(102,126,234,0.2)', border: '1px solid rgba(102,126,234,0.4)',
-        color: '#667eea', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px'
+        background: 'rgba(0,229,238,0.1)', border: '1px solid rgba(0,229,238,0.2)',
+        color: '#00E5EE', padding: '6px 16px', borderRadius: '100px', cursor: 'pointer',
+        fontSize: '12px', fontWeight: 700,
     },
 
     // Live Room Header
     roomHeader: {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)',
-        background: 'rgba(0,0,0,0.2)'
+        padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)',
+        background: 'rgba(17,17,22,0.5)',
     },
     roomHeaderLeft: { display: 'flex', alignItems: 'center', gap: '12px' },
     roomHeaderRight: { display: 'flex', alignItems: 'center', gap: '16px' },
-    roomTitle: { margin: 0, fontSize: '18px', fontWeight: 700 },
+    roomTitle: { margin: 0, fontSize: '18px', fontWeight: 800 },
     codeBadge: {
-        background: 'rgba(102,126,234,0.2)', border: '1px solid rgba(102,126,234,0.3)',
-        color: '#a5b4fc', padding: '4px 12px', borderRadius: '6px', cursor: 'pointer',
-        fontSize: '13px', fontWeight: 'bold', letterSpacing: '1px'
+        background: 'rgba(0,229,238,0.1)', border: '1px solid rgba(0,229,238,0.2)',
+        color: '#00E5EE', padding: '4px 12px', borderRadius: '100px', cursor: 'pointer',
+        fontSize: '12px', fontWeight: 700, letterSpacing: '1px',
     },
     statusDot: { width: '8px', height: '8px', borderRadius: '50%', display: 'inline-block' },
-    statusText: { fontSize: '12px', color: '#888' },
+    statusText: { fontSize: '12px', color: '#5A5A6A' },
     avatarRow: { display: 'flex', alignItems: 'center', gap: '0px' },
     avatar: {
         width: '30px', height: '30px', borderRadius: '50%', display: 'flex',
         alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold',
-        color: '#fff', border: '2px solid #0a0a1a', marginLeft: '-8px'
+        color: '#fff', border: '2px solid rgba(255,255,255,0.08)', marginLeft: '-8px',
     },
-    participantCount: { fontSize: '12px', color: '#888', marginLeft: '8px' },
+    participantCount: { fontSize: '12px', color: '#5A5A6A', marginLeft: '8px' },
     leaveBtn: {
-        background: 'rgba(255,100,100,0.15)', border: '1px solid rgba(255,100,100,0.3)',
-        color: '#ff6b6b', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer',
-        fontSize: '13px', fontWeight: '600'
+        background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)',
+        color: '#F43F5E', padding: '6px 16px', borderRadius: '100px', cursor: 'pointer',
+        fontSize: '12px', fontWeight: 700,
     },
 
     // Main Layout
     liveLayout: { display: 'flex', flex: 1, overflow: 'hidden' },
-    editorPanel: { flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255,255,255,0.08)' },
+    editorPanel: { flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255,255,255,0.04)' },
     editorToolbar: {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)',
-        background: 'rgba(0,0,0,0.15)'
+        padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)',
+        background: 'rgba(17,17,22,0.5)',
     },
-    editingIndicator: { fontSize: '12px', color: '#f6ad55', fontStyle: 'italic' },
+    editingIndicator: { fontSize: '12px', color: '#F59E0B', fontStyle: 'italic' },
     codeEditor: {
-        flex: 1, width: '100%', background: 'transparent', border: 'none', color: '#e2e8f0',
-        fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', monospace",
+        flex: 1, width: '100%', background: 'transparent', border: 'none', color: '#E8E8ED',
+        fontFamily: "'JetBrains Mono', 'SF Mono', monospace",
         fontSize: '14px', lineHeight: '1.7', padding: '16px', resize: 'none', outline: 'none',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
     },
 
     // Sidebar
-    sidebar: { width: '320px', display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.1)' },
-    sidebarTabs: { display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)' },
+    sidebar: { width: '320px', display: 'flex', flexDirection: 'column', background: 'rgba(17,17,22,0.4)' },
+    sidebarTabs: { display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.04)' },
     sidebarTab: {
-        flex: 1, background: 'transparent', border: 'none', color: '#888',
+        flex: 1, background: 'transparent', border: 'none', color: '#5A5A6A',
         padding: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 600,
-        borderBottom: '2px solid transparent', transition: 'all 0.2s'
+        borderBottom: '2px solid transparent', transition: 'all 0.2s',
     },
-    sidebarTabActive: { color: '#a5b4fc', borderBottomColor: '#667eea' },
+    sidebarTabActive: { color: '#00E5EE', borderBottomColor: '#00E5EE' },
     sidebarContent: { flex: 1, padding: '12px', overflowY: 'auto' },
 
     // Participants
     participantRow: {
         display: 'flex', alignItems: 'center', gap: '10px',
-        padding: '10px', borderRadius: '10px', marginBottom: '6px',
-        background: 'rgba(255,255,255,0.03)'
+        padding: '10px', borderRadius: '12px', marginBottom: '6px',
+        background: 'rgba(17,17,22,0.4)',
     },
     participantAvatar: {
         width: '34px', height: '34px', borderRadius: '50%', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold', color: '#fff'
+        alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold', color: '#fff',
     },
     participantName: { fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' },
-    participantStatus: { fontSize: '11px', color: '#4fd1c5' },
+    participantStatus: { fontSize: '11px', color: '#10B981' },
     hostBadge: {
-        fontSize: '9px', background: 'rgba(246,173,85,0.2)', color: '#f6ad55',
-        padding: '1px 6px', borderRadius: '4px', fontWeight: 700
+        fontSize: '9px', background: 'rgba(245,158,11,0.15)', color: '#F59E0B',
+        padding: '1px 8px', borderRadius: '100px', fontWeight: 700,
     },
 
     // Chat
@@ -896,23 +1035,23 @@ const S = {
     chatMsg: { marginBottom: '8px' },
     systemMsg: { textAlign: 'center', opacity: 0.5 },
     chatUser: {
-        fontSize: '11px', fontWeight: 700, color: '#a5b4fc', display: 'block', marginBottom: '2px'
+        fontSize: '11px', fontWeight: 700, color: '#00E5EE', display: 'block', marginBottom: '2px',
     },
-    chatText: { fontSize: '13px', color: '#ccc', lineHeight: 1.4 },
-    systemText: { fontSize: '11px', color: '#888', fontStyle: 'italic' },
+    chatText: { fontSize: '13px', color: '#9898A6', lineHeight: 1.4 },
+    systemText: { fontSize: '11px', color: '#5A5A6A', fontStyle: 'italic' },
     chatInputRow: {
         display: 'flex', gap: '8px', padding: '10px',
-        borderTop: '1px solid rgba(255,255,255,0.08)'
+        borderTop: '1px solid rgba(255,255,255,0.04)',
     },
     chatInput: {
-        flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: '8px', padding: '8px 12px', color: '#fff', fontSize: '13px', outline: 'none'
+        flex: 1, background: 'rgba(8,8,12,0.6)', border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '10px', padding: '8px 12px', color: '#E8E8ED', fontSize: '13px', outline: 'none',
     },
     sendBtn: {
-        width: '36px', height: '36px', background: 'linear-gradient(135deg, #667eea, #764ba2)',
-        border: 'none', borderRadius: '8px', color: '#fff', fontSize: '16px', cursor: 'pointer',
-        fontWeight: 'bold'
-    }
+        width: '36px', height: '36px', background: 'linear-gradient(135deg, #00E5EE, #7C3AED)',
+        border: 'none', borderRadius: '10px', color: '#fff', fontSize: '16px', cursor: 'pointer',
+        fontWeight: 'bold',
+    },
 };
 
 export default Room;

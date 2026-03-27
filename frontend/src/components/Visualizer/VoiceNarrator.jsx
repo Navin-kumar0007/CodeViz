@@ -149,9 +149,9 @@ const VoiceNarrator = ({
                 style={{
                     ...styles.toggleBtn,
                     background: isEnabled
-                        ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                        ? 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))'
                         : 'transparent',
-                    borderColor: isEnabled ? '#667eea' : 'rgba(255,255,255,0.2)',
+                    borderColor: isEnabled ? 'var(--accent-teal)' : 'rgba(255,255,255,0.2)',
                     color: isEnabled ? '#fff' : '#888'
                 }}
                 title={isEnabled ? 'Disable voice narration' : 'Enable voice narration'}
@@ -242,8 +242,8 @@ const styles = {
     },
     settingsBtn: {
         background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.15)',
-        color: '#888',
+        border: '1px solid var(--border-color)',
+        color: 'var(--text-muted)',
         padding: '4px 8px',
         borderRadius: '4px',
         cursor: 'pointer',
@@ -256,7 +256,7 @@ const styles = {
         right: 0,
         background: 'rgba(30, 30, 45, 0.98)',
         backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(102, 126, 234, 0.3)',
+        border: '1px solid rgba(13, 148, 136, 0.3)',
         borderRadius: '12px',
         padding: '14px',
         zIndex: 100,
@@ -269,23 +269,23 @@ const styles = {
         alignItems: 'center',
         marginBottom: '12px',
         paddingBottom: '8px',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
+        borderBottom: '1px solid var(--border-color)'
     },
     settingsTitle: {
         fontSize: '12px',
         fontWeight: 'bold',
-        color: '#fff'
+        color: 'var(--text-primary)'
     },
     closeBtn: {
         background: 'transparent',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         cursor: 'pointer',
         fontSize: '14px'
     },
     label: {
         fontSize: '10px',
-        color: '#888',
+        color: 'var(--text-muted)',
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
         marginBottom: '4px',
@@ -294,9 +294,9 @@ const styles = {
     select: {
         width: '100%',
         padding: '6px 8px',
-        background: '#1e1e2e',
-        color: '#fff',
-        border: '1px solid rgba(255,255,255,0.15)',
+        background: 'var(--bg-muted)',
+        color: 'var(--text-primary)',
+        border: '1px solid var(--border-color)',
         borderRadius: '6px',
         fontSize: '11px',
         marginBottom: '10px',
@@ -315,15 +315,15 @@ const styles = {
     },
     hint: {
         fontSize: '9px',
-        color: '#666',
+        color: 'var(--text-muted)',
         fontStyle: 'italic',
         marginBottom: '10px'
     },
     testBtn: {
         width: '100%',
         padding: '8px',
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
-        color: '#fff',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
+        color: 'var(--text-primary)',
         border: 'none',
         borderRadius: '6px',
         cursor: 'pointer',

@@ -33,7 +33,7 @@ const styles = {
         left: 0,
         right: 0,
         background: '#ed8936',
-        color: '#fff',
+        color: 'var(--text-primary)',
         textAlign: 'center',
         padding: '8px',
         fontSize: '14px',

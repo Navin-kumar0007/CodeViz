@@ -18,6 +18,7 @@ const Tab = createBottomTabNavigator();
 import { createStackNavigator } from '@react-navigation/stack';
 import PracticeScreen from './screens/PracticeScreen';
 import QuizScreen from './screens/QuizScreen';
+import VisualizerScreen from './screens/VisualizerScreen'; // 🔥 New: Offline Playground
 import CommunityScreen from './screens/CommunityScreen';
 import DiscussionDetailScreen from './screens/DiscussionDetailScreen';
 import CreatePostScreen from './screens/CreatePostScreen';
@@ -29,6 +30,7 @@ function PracticeStack() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="PracticeList" component={PracticeScreen} />
             <Stack.Screen name="Quiz" component={QuizScreen} />
+            <Stack.Screen name="Playground" component={VisualizerScreen} />
         </Stack.Navigator>
     );
 }

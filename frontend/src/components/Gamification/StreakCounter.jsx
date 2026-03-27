@@ -25,18 +25,15 @@ const styles = {
     container: {
         display: 'flex',
         alignItems: 'center',
-        background: 'rgba(255, 81, 47, 0.15)', // Glassy neon background
-        border: '1px solid rgba(255, 81, 47, 0.3)', // Neon edge
-        padding: '8px 16px',
-        borderRadius: '20px',
-        color: '#fff',
-        boxShadow: '0 4px 15px rgba(255, 81, 47, 0.2)', // Intense outer glow
-        backdropFilter: 'blur(10px)',
+        background: 'transparent',
+        padding: '0 8px',
+        color: 'var(--text-primary)',
+        fontFamily: 'var(--font-code)',
     },
     icon: {
-        fontSize: '24px',
+        fontSize: '18px',
         marginRight: '10px',
-        textShadow: '0 0 10px rgba(255, 81, 47, 0.5)',
+        textShadow: '0 0 10px rgba(239, 68, 68, 0.5)',
     },
     textContainer: {
         display: 'flex',
@@ -44,15 +41,14 @@ const styles = {
     },
     count: {
         fontWeight: 'bold',
-        fontSize: '14px',
-        color: 'var(--text-bright)',
+        fontSize: '12px',
+        color: 'var(--text-primary)',
         lineHeight: '1.2',
-        textShadow: '0 0 5px rgba(255, 81, 47, 0.4)',
+        letterSpacing: '0.5px',
     },
     longest: {
         fontSize: '10px',
         color: 'var(--text-secondary)',
-        opacity: 0.9
     }
 };
 

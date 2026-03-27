@@ -39,6 +39,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const logger = require('./utils/logger'); // 🪵 Import Logger
+const cookieParser = require('cookie-parser');
 
 // 1. Connect to Database
 connectDB();
@@ -113,6 +114,7 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 // 5. Routes
 app.use('/run', executionLimiter);
@@ -131,6 +133,7 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/discussions', discussionRoutes);
 app.use('/api/rooms', roomRoutes);
+app.use('/api/certificates', require('./routes/certificateRoutes')); // 🎓 Certificate System
 app.use('/api/challenges', dailyChallengeRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/campus', campusRoutes);

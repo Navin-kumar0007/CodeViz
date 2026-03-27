@@ -343,7 +343,7 @@ const styles = {
     runBtn: {
         padding: '8px 20px', border: 'none', borderRadius: '8px',
         background: 'linear-gradient(135deg, var(--accent-blue), var(--accent-purple))',
-        color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+        color: 'var(--text-primary)', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
     },
     resultsBar: {
         padding: '12px 20px', background: 'var(--bg-primary)', display: 'flex',

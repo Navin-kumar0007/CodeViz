@@ -265,9 +265,9 @@ const Terminal = ({ language = 'python', code = '', onRun, height = '250px', sty
 
     return (
         <div style={{
-            borderRadius: '8px',
+            borderRadius: '0',
             overflow: 'hidden',
-            border: '1px solid rgba(255,255,255,0.08)',
+            border: '1px solid var(--border-color)',
             background: '#0d1117',
             ...style,
         }}>
@@ -275,15 +275,13 @@ const Terminal = ({ language = 'python', code = '', onRun, height = '250px', sty
             <div style={{
                 display: 'flex', alignItems: 'center', gap: '8px',
                 padding: '6px 12px',
-                background: 'rgba(255,255,255,0.03)',
+                background: 'var(--bg-muted)',
                 borderBottom: '1px solid rgba(255,255,255,0.06)',
             }}>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff5f56' }} />
-                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ffbd2e' }} />
-                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#27c93f' }} />
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>❯_</span>
                 </div>
-                <span style={{ fontSize: '11px', color: '#888', fontFamily: 'monospace', flex: 1, textAlign: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace', flex: 1, textAlign: 'center' }}>
                     Terminal — {language}
                 </span>
             </div>

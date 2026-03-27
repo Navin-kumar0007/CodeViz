@@ -127,8 +127,8 @@ const InlineErrorHint = ({ error, code, language = 'python' }) => {
 const styles = {
     container: {
         marginTop: '10px',
-        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.1))',
-        border: '1px solid rgba(102, 126, 234, 0.3)',
+        background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.15), rgba(118, 75, 162, 0.1))',
+        border: '1px solid rgba(13, 148, 136, 0.3)',
         borderRadius: '8px',
         overflow: 'hidden'
     },
@@ -136,8 +136,8 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         padding: '8px 12px',
-        background: 'rgba(102, 126, 234, 0.1)',
-        borderBottom: '1px solid rgba(102, 126, 234, 0.2)'
+        background: 'rgba(13, 148, 136, 0.1)',
+        borderBottom: '1px solid rgba(13, 148, 136, 0.2)'
     },
     icon: {
         fontSize: '16px',
@@ -147,12 +147,12 @@ const styles = {
         flex: 1,
         fontSize: '13px',
         fontWeight: 'bold',
-        color: '#667eea'
+        color: 'var(--accent-teal)'
     },
     dismissBtn: {
         background: 'none',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '18px',
         cursor: 'pointer',
         padding: '0 5px'
@@ -164,15 +164,15 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '13px'
     },
     spinner: {
         display: 'inline-block',
         width: '16px',
         height: '16px',
-        border: '2px solid rgba(102, 126, 234, 0.3)',
-        borderTop: '2px solid #667eea',
+        border: '2px solid rgba(13, 148, 136, 0.3)',
+        borderTop: '2px solid var(--accent-teal)',
         borderRadius: '50%',
         animation: 'inlineHintSpin 1s linear infinite'
     },
@@ -184,9 +184,9 @@ const styles = {
         whiteSpace: 'pre-wrap'
     },
     retryBtn: {
-        background: 'rgba(102, 126, 234, 0.2)',
-        border: '1px solid rgba(102, 126, 234, 0.4)',
-        color: '#667eea',
+        background: 'rgba(13, 148, 136, 0.2)',
+        border: '1px solid rgba(13, 148, 136, 0.4)',
+        color: 'var(--accent-teal)',
         padding: '8px 16px',
         borderRadius: '6px',
         cursor: 'pointer',

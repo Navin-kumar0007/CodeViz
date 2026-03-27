@@ -199,7 +199,7 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
             // Bold text: **text**
             let formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             // Inline code: `code`
-            formatted = formatted.replace(/`([^`]+)`/g, '<code style="background:rgba(102,126,234,0.2);padding:2px 6px;border-radius:4px;font-size:12px;color:#a5b4fc">$1</code>');
+            formatted = formatted.replace(/`([^`]+)`/g, '<code style="background:rgba(13,148,136,0.2);padding:2px 6px;border-radius:4px;font-size:12px;color:#a5b4fc">$1</code>');
             // Bullet points
             if (formatted.startsWith('- ') || formatted.startsWith('* ')) {
                 formatted = '• ' + formatted.slice(2);
@@ -322,7 +322,7 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
     };
 
     const skillLevels = [
-        { value: 'beginner', label: '🌱 Beginner', color: '#48bb78' },
+        { value: 'beginner', label: '🌱 Beginner', color: 'var(--accent-green)' },
         { value: 'intermediate', label: '🔥 Intermediate', color: '#ed8936' },
         { value: 'advanced', label: '⚡ Advanced', color: '#f56565' }
     ];
@@ -333,7 +333,7 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
             <Motion.button
                 onClick={() => setIsOpen(!isOpen)}
                 style={styles.toggleButton}
-                whileHover={{ scale: 1.1, boxShadow: '0 6px 30px rgba(102, 126, 234, 0.7)' }}
+                whileHover={{ scale: 1.1, boxShadow: '0 6px 30px rgba(13, 148, 136, 0.7)' }}
                 whileTap={{ scale: 0.95 }}
                 animate={error ? { scale: [1, 1.2, 1], transition: { repeat: 2, duration: 0.3 } } : {}}
             >
@@ -394,7 +394,7 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
                                 style={{
                                     ...styles.eli5Btn,
                                     background: eli5Mode
-                                        ? 'linear-gradient(135deg, #f6ad55, #ed8936)'
+                                        ? 'linear-gradient(135deg, var(--accent-yellow), #ed8936)'
                                         : 'rgba(255,255,255,0.05)',
                                     color: eli5Mode ? '#fff' : '#888',
                                     boxShadow: eli5Mode ? '0 2px 12px rgba(237, 137, 54, 0.4)' : 'none'
@@ -402,7 +402,7 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
                             >
                                 {eli5Mode ? '🧒' : '🎓'} {eli5Mode ? 'ELI5 Mode ON' : 'Standard Mode'}
                             </button>
-                            <span style={{ fontSize: '11px', color: '#666' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                                 {eli5Mode ? 'Using fun analogies & emojis!' : 'Click to switch to baby mode'}
                             </span>
                         </div>
@@ -411,28 +411,28 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
                         <div style={styles.buttonRow}>
                             <button
                                 onClick={handleHint}
-                                style={{ ...styles.actionBtn, background: activeTab === 'hint' ? '#667eea' : '#2d3748' }}
+                                style={{ ...styles.actionBtn, background: activeTab === 'hint' ? 'var(--accent-teal)' : 'var(--bg-hover)' }}
                                 disabled={loading}
                             >
                                 💡 Hint
                             </button>
                             <button
                                 onClick={handleExplainError}
-                                style={{ ...styles.actionBtn, background: activeTab === 'error' ? '#f56565' : '#2d3748' }}
+                                style={{ ...styles.actionBtn, background: activeTab === 'error' ? '#f56565' : 'var(--bg-hover)' }}
                                 disabled={loading}
                             >
                                 ❓ Explain Error
                             </button>
                             <button
                                 onClick={handleOptimize}
-                                style={{ ...styles.actionBtn, background: activeTab === 'optimize' ? '#48bb78' : '#2d3748' }}
+                                style={{ ...styles.actionBtn, background: activeTab === 'optimize' ? 'var(--accent-green)' : 'var(--bg-hover)' }}
                                 disabled={loading}
                             >
                                 ⚡ Optimize
                             </button>
                             <button
                                 onClick={handleReview}
-                                style={{ ...styles.actionBtn, background: activeTab === 'review' ? '#ed8936' : '#2d3748' }}
+                                style={{ ...styles.actionBtn, background: activeTab === 'review' ? '#ed8936' : 'var(--bg-hover)' }}
                                 disabled={loading}
                             >
                                 📝 Review
@@ -480,11 +480,11 @@ const styles = {
         width: '60px',
         height: '60px',
         borderRadius: '50%',
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
         border: 'none',
         fontSize: '28px',
         cursor: 'pointer',
-        boxShadow: '0 4px 20px rgba(102, 126, 234, 0.5)',
+        boxShadow: '0 4px 20px rgba(13, 148, 136, 0.5)',
         zIndex: 1000
     },
     panel: {
@@ -493,15 +493,15 @@ const styles = {
         right: '20px',
         width: '400px',
         maxHeight: 'calc(100vh - 120px)',
-        background: 'rgba(20, 20, 35, 0.98)',
+        background: 'var(--bg-white)',
         borderRadius: '16px',
-        border: '1px solid rgba(102, 126, 234, 0.3)',
+        border: '1px solid rgba(13, 148, 136, 0.3)',
         boxShadow: '0 8px 40px rgba(0, 0, 0, 0.5)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: 999,
         overflow: 'hidden',
-        backdropFilter: 'blur(20px)'
+        
     },
     header: {
         display: 'flex',
@@ -509,20 +509,20 @@ const styles = {
         alignItems: 'center',
         padding: '16px 20px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        background: 'rgba(102, 126, 234, 0.1)'
+        background: 'rgba(13, 148, 136, 0.1)'
     },
     title: {
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontWeight: 'bold',
         fontSize: '16px'
     },
     closeBtn: {
         background: 'none',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '24px',
         cursor: 'pointer'
     },
@@ -536,7 +536,7 @@ const styles = {
         flex: 1,
         padding: '6px 8px',
         borderRadius: '8px',
-        border: '1px solid rgba(255,255,255,0.1)',
+        border: '1px solid var(--border-color)',
         fontSize: '11px',
         fontWeight: 'bold',
         cursor: 'pointer',
@@ -553,7 +553,7 @@ const styles = {
         padding: '12px 10px',
         borderRadius: '10px',
         border: 'none',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '13px',
         fontWeight: 'bold',
         cursor: 'pointer',
@@ -567,7 +567,7 @@ const styles = {
         maxHeight: '400px'
     },
     placeholder: {
-        color: '#666',
+        color: 'var(--text-muted)',
         textAlign: 'center',
         padding: '40px 20px',
         fontStyle: 'italic'
@@ -578,7 +578,7 @@ const styles = {
         alignItems: 'center',
         gap: '15px',
         padding: '40px',
-        color: '#888'
+        color: 'var(--text-muted)'
     },
     thinkingDots: {
         display: 'flex',
@@ -587,7 +587,7 @@ const styles = {
     },
     dot: {
         animation: 'pulse 1.4s ease-in-out infinite',
-        color: '#667eea'
+        color: 'var(--accent-teal)'
     },
     responseContainer: {
         position: 'relative'
@@ -603,7 +603,7 @@ const styles = {
         wordBreak: 'break-word'
     },
     cursor: {
-        color: '#667eea',
+        color: 'var(--accent-teal)',
         animation: 'blink 0.8s step-end infinite',
         marginLeft: '2px'
     },
@@ -613,8 +613,8 @@ const styles = {
         gap: '4px',
         marginTop: '8px',
         padding: '6px 14px',
-        background: 'rgba(102, 126, 234, 0.15)',
-        border: '1px solid rgba(102, 126, 234, 0.3)',
+        background: 'rgba(13, 148, 136, 0.15)',
+        border: '1px solid rgba(13, 148, 136, 0.3)',
         borderRadius: '8px',
         color: '#a5b4fc',
         fontSize: '12px',
@@ -636,13 +636,13 @@ const styles = {
         padding: '12px 20px',
         borderTop: '1px solid rgba(255, 255, 255, 0.1)',
         fontSize: '11px',
-        color: '#666'
+        color: 'var(--text-muted)'
     },
     rateLimit: {
-        background: 'rgba(102, 126, 234, 0.2)',
+        background: 'rgba(13, 148, 136, 0.2)',
         padding: '2px 8px',
         borderRadius: '10px',
-        color: '#667eea'
+        color: 'var(--accent-teal)'
     },
     eli5Row: {
         display: 'flex',

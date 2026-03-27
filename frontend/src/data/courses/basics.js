@@ -7,6 +7,7 @@ export const BASICS_PATH = {
     id: 'basics',
     title: 'Programming Basics',
     icon: '🔰',
+    category: 'Foundations',
     description: 'Start here! Learn variables, loops, and conditions - the building blocks of programming.',
     prerequisites: [],
     lessons: [

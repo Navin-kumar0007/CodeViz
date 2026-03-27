@@ -1,19 +1,17 @@
 /* eslint-disable react-hooks/purity */
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
-import { motion, useMotionValue, useSpring, useTransform, AnimatePresence, useScroll } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 
 /* ════════════════════════════════════════════
-   HOME PAGE — Highly Interactive & Innovative
-   7 Slides, Unique Transitions, Enhanced Demos
+   HOME PAGE — Digital Observatory Landing
+   Phase 12: Premium 2026 Redesign
    ════════════════════════════════════════════ */
 
 const Home = () => {
     const navigate = useNavigate();
     const isLoggedIn = !!localStorage.getItem('userInfo');
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-    const [ripples, setRipples] = useState([]);
 
     useEffect(() => {
         const handleMouseMove = (e) => setMousePos({ x: e.clientX, y: e.clientY });
@@ -21,174 +19,202 @@ const Home = () => {
         return () => window.removeEventListener('mousemove', handleMouseMove);
     }, []);
 
-    const addRipple = (e) => {
-        // Only add ripples if we click outside buttons/links
-        if (e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'a') return;
-        const drop = { x: e.clientX, y: e.clientY, id: Date.now() };
-        setRipples(prev => [...prev, drop]);
-        setTimeout(() => setRipples(prev => prev.filter(r => r.id !== drop.id)), 1000);
-    };
-
     return (
-        <div style={s.page} onClick={addRipple}>
-            {/* 4. Fluid Ripples */}
-            {ripples.map(r => (
-                <motion.div key={r.id} initial={{ scale: 0, opacity: 0.8 }} animate={{ scale: 4, opacity: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}
-                    style={{ position: 'fixed', left: r.x - 50, top: r.y - 50, width: 100, height: 100, border: '2px solid var(--accent-blue)', borderRadius: '50%', pointerEvents: 'none', zIndex: 9999 }} />
-            ))}
-            
-            {/* Ambient Nebula Glows */}
-            <div style={{ ...s.blurGlow, top: '-20%', left: '-10%', background: '#c678dd' }} />
-            <div style={{ ...s.blurGlow, top: '40%', right: '-20%', background: '#00f2fe' }} />
+        <div style={s.page}>
+            {/* Ambient Background Effects */}
+            <div style={{ ...s.nebula, top: '-30%', left: '-15%', background: 'radial-gradient(ellipse, rgba(124, 58, 237, 0.08) 0%, transparent 70%)' }} />
+            <div style={{ ...s.nebula, top: '30%', right: '-20%', background: 'radial-gradient(ellipse, rgba(0, 229, 238, 0.06) 0%, transparent 70%)' }} />
+            <div style={{ ...s.nebula, bottom: '-10%', left: '30%', background: 'radial-gradient(ellipse, rgba(124, 58, 237, 0.05) 0%, transparent 70%)' }} />
 
-            {/* 1. Dynamic Mouse Spotlight */}
+            {/* Mouse Spotlight */}
             <div style={{
                 ...s.spotlight,
-                background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(97,218,251,0.06), transparent 40%)`
+                background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(0, 229, 238, 0.04), transparent 40%)`
             }} />
 
-            <FloatingBackground mousePos={mousePos} />
+            {/* Floating Grid Pattern */}
+            <FloatingGrid />
+
             <Navbar navigate={navigate} isLoggedIn={isLoggedIn} />
 
-            {/* Slide 1: Hero */}
+            {/* Section 1: Hero */}
             <motion.div
                 initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 1 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.2, delay: 0.2 }}
             >
                 <HeroSection navigate={navigate} />
             </motion.div>
 
-            {/* Slide 2: Sorting (Transition: 3D Depth Zoom) */}
+            {/* Section 2: Features Grid */}
             <motion.section
-                id="demo"
-                initial={{ scale: 0.8, opacity: 0, z: -100 }}
-                whileInView={{ scale: 1, opacity: 1, z: 0 }}
-                viewport={{ once: false, amount: 0.5 }}
-                transition={{ type: "spring", stiffness: 50 }}
+                id="features"
+                initial={{ y: 60, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
                 style={s.section}
             >
                 <div style={s.sectionHeader}>
+                    <span style={s.sectionTag}>CAPABILITIES</span>
+                    <h2 style={s.h2}>Why CodeViz?</h2>
+                    <p style={s.h2Sub}>Professional-grade tools that make algorithms come alive.</p>
+                </div>
+                <FeaturesGrid />
+            </motion.section>
+
+            {/* Section 3: Live Sorting Demo */}
+            <motion.section
+                id="demo"
+                initial={{ y: 60, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+                style={{ ...s.section, background: 'rgba(10, 10, 15, 0.5)' }}
+            >
+                <div style={s.sectionHeader}>
+                    <span style={s.sectionTag}>LIVE DEMO</span>
                     <h2 style={s.h2}>Visualize the Logic</h2>
                     <p style={s.h2Sub}>Pick an algorithm and watch the numbers shift in real-time.</p>
                 </div>
                 <EnhancedSortDemo />
             </motion.section>
 
-            {/* Slide 3: Roadmap (Transition: Side-Swipe Parallax) */}
+            {/* Section 4: Product Showcase */}
+            <motion.section
+                initial={{ y: 60, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+                style={s.section}
+            >
+                <ProductShowcase navigate={navigate} />
+            </motion.section>
+
+            {/* Section 5: Roadmap */}
             <motion.section
                 id="path"
-                initial={{ x: 100, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                viewport={{ once: false, amount: 0.5 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                style={{ ...s.section, background: 'rgba(255,255,255,0.01)' }}
+                initial={{ y: 60, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+                style={{ ...s.section, background: 'rgba(10, 10, 15, 0.5)' }}
             >
                 <div style={s.sectionHeader}>
-                    <h2 style={s.h2}>Master the Curriculum</h2>
-                    <p style={s.h2Sub}>A comprehensive 17+ module roadmap to technical excellence.</p>
+                    <span style={s.sectionTag}>CURRICULUM</span>
+                    <h2 style={s.h2}>Master the Roadmap</h2>
+                    <p style={s.h2Sub}>A comprehensive 17+ module pathway to technical excellence.</p>
                 </div>
                 <DenseSkillTree />
             </motion.section>
 
-            {/* Slide 4: Features (Transition: Grid Reveal / 3D Flip) */}
+            {/* Section 6: Interactive Quiz */}
             <motion.section
-                id="features"
-                initial={{ rotateX: 45, opacity: 0 }}
-                whileInView={{ rotateX: 0, opacity: 1 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 1 }}
+                initial={{ y: 60, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.8 }}
                 style={s.section}
             >
                 <div style={s.sectionHeader}>
-                    <h2 style={s.h2}>Engineered for Mastery</h2>
-                    <p style={s.h2Sub}>Professional-grade tools for modern developers.</p>
-                </div>
-                <div style={s.featureGrid}>
-                    <FeatureCard icon="🔬" title="Memory Inspector" desc="Visualize pointers, stack frames, and heap allocation." color="var(--accent-blue)" />
-                    <FeatureCard icon="🤖" title="AI Code Narrator" desc="Line-by-line audio and text explanation of your logic." color="var(--accent-purple)" />
-                    <FeatureCard icon="🏁" title="Performance Race" desc="Compare time complexities with real-world datasets." color="var(--accent-green)" />
-                    <FeatureCard icon="🧩" title="Concept Mapping" desc="Connect themes between recursion and dynamic programming." color="var(--accent-red)" />
-                    <FeatureCard icon="📱" title="Universal Sync" desc="Code on any device with instant cloud synchronization." color="var(--accent-yellow)" />
-                    <FeatureCard icon="📊" title="Analytics Engine" desc="Identify your weak areas with deep behavioral metrics." color="var(--accent-cyan)" />
-                </div>
-            </motion.section>
-
-            {/* Slide 5: Quiz (Transition: Focus Blur) */}
-            <motion.section
-                initial={{ filter: "blur(20px)", opacity: 0 }}
-                whileInView={{ filter: "blur(0px)", opacity: 1 }}
-                viewport={{ once: false, amount: 0.6 }}
-                transition={{ duration: 0.8 }}
-                style={{ ...s.section, background: 'rgba(255,255,255,0.01)' }}
-            >
-                <div style={s.sectionHeader}>
+                    <span style={s.sectionTag}>ASSESSMENT</span>
                     <h2 style={s.h2}>Instant Assessment</h2>
                     <p style={s.h2Sub}>Test your cross-language proficiency with interactive challenges.</p>
                 </div>
                 <MultiQuizEngine />
             </motion.section>
 
-            {/* Slide 6: Multi-Lang (Transition: Console Slide-Up) */}
+            {/* Section 7: Stats + CTA */}
             <motion.section
-                initial={{ y: 200, opacity: 0 }}
+                initial={{ y: 60, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: false, amount: 0.4 }}
-                transition={{ type: "spring", damping: 15 }}
-                style={s.section}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.8 }}
+                style={s.ctaSection}
             >
-                <div style={s.sectionHeader}>
-                    <h2 style={s.h2}>Polyglot Playground</h2>
-                    <p style={s.h2Sub}>The same visual lesson, available in 7 major languages.</p>
+                <div style={s.statsRow}>
+                    <StatItem num="10K+" label="Active Students" />
+                    <StatItem num="500+" label="Visualizations" />
+                    <StatItem num="50K+" label="Code Executions" />
+                    <StatItem num="12" label="Languages" />
                 </div>
-                <PolyglotEngine />
-            </motion.section>
-
-            {/* Slide 7: CTA (Transition: Radial Expansion) */}
-            <motion.section
-                initial={{ scale: 0.5, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: false, amount: 0.8 }}
-                transition={{ duration: 0.6 }}
-                style={s.finalCta}
-            >
-                <div style={s.statsWrapper}>
-                    <StatItem num="12K+" label="Visual Learners" />
-                    <StatItem num="18+" label="Core Modules" />
-                    <StatItem num="7" label="Languages" />
-                    <StatItem num="98%" label="Satisfaction" />
-                </div>
-                <div style={s.premiumPanel}>
-                    <h2 style={{ ...s.h2, fontSize: '48px', marginBottom: '20px' }}>Ready to Start?</h2>
-                    <p style={{ marginBottom: '40px', color: '#888', maxWidth: '600px', margin: '0 auto 40px' }}>Join the community of thousands who chose to see their code, not just read it.</p>
-                    <button onClick={() => navigate('/signup')} style={s.ultimateBtn}>Join CodeViz Free</button>
+                <div style={s.ctaBanner}>
+                    <h2 style={{ ...s.h2, fontSize: '40px', marginBottom: '16px' }}>Ready to See Your Code?</h2>
+                    <p style={{ color: '#9898A6', maxWidth: '550px', margin: '0 auto 32px', fontSize: '16px', lineHeight: '1.7' }}>
+                        Join thousands of developers who chose to visualize algorithms, not just memorize them.
+                    </p>
+                    <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button onClick={() => navigate('/signup')} style={s.ctaBtn}>Start Visualizing — Free</button>
+                        <button onClick={() => navigate('/about')} style={s.ctaGhostBtn}>Learn About Us</button>
+                    </div>
+                    <p style={{ color: '#5A5A6A', fontSize: '12px', marginTop: '16px' }}>No credit card required. Free forever for basic features.</p>
                 </div>
             </motion.section>
 
-            <footer style={s.footer}>
-                <div style={s.footerLeft}>
-                    <span style={s.logoText}>CodeViz</span>
-                    <p style={{ fontSize: '12px', color: '#444' }}>Beyond the syntax. Into the logic.</p>
-                </div>
-                <div style={s.footerMeta}>
-                    <span>Privacy Policy</span> • <span>Terms of Service</span> • <span>Contact Us</span>
-                </div>
-            </footer>
+            <Footer navigate={navigate} />
         </div>
     );
 };
 
-/* ───────── Slide Components ───────── */
+/* ═══════════════════════════════════════════
+   Sub-Components
+   ═══════════════════════════════════════════ */
+
+const FloatingGrid = () => (
+    <div style={s.gridPattern}>
+        {Array.from({ length: 20 }).map((_, i) => (
+            <motion.div
+                key={i}
+                animate={{ opacity: [0.02, 0.06, 0.02] }}
+                transition={{ duration: 4 + Math.random() * 3, repeat: Infinity, delay: Math.random() * 2 }}
+                style={{
+                    position: 'absolute',
+                    width: '1px', height: '120px',
+                    background: 'linear-gradient(to bottom, transparent, rgba(0,229,238,0.15), transparent)',
+                    left: `${5 + i * 5}%`,
+                    top: `${Math.random() * 80}%`,
+                }}
+            />
+        ))}
+    </div>
+);
+
+const Navbar = ({ navigate, isLoggedIn }) => (
+    <motion.nav
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        style={s.navbar}
+    >
+        <div style={s.navLeft}>
+            <span style={s.logoText}>Code<span style={s.logoAccent}>Viz</span></span>
+        </div>
+        <div style={s.navLinks}>
+            <a href="#features" style={s.navLink}>Features</a>
+            <a href="#demo" style={s.navLink}>Demo</a>
+            <a href="#path" style={s.navLink}>Academy</a>
+            <button onClick={() => navigate('/about')} style={s.navLink}>About</button>
+        </div>
+        <div style={s.navRight}>
+            {isLoggedIn ? (
+                <button onClick={() => navigate('/')} style={s.navCta}>Dashboard →</button>
+            ) : (
+                <>
+                    <button onClick={() => navigate('/login')} style={s.navLogin}>Log In</button>
+                    <button onClick={() => navigate('/signup')} style={s.navCta}>Get Started Free</button>
+                </>
+            )}
+        </div>
+    </motion.nav>
+);
 
 const HeroSection = ({ navigate }) => {
-    // 3. Live Typing Terminal
-    const fullCode = `void dfs(int u) {
-    visited[u] = true;
-    viz.step(u); 
-    for(int v : adj[u]) {
-        if(!visited[v]) dfs(v);
-    }
+    const fullCode = `function mergeSort(arr) {
+  if (arr.length <= 1) return arr;
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSort(arr.slice(0, mid));
+  const right = mergeSort(arr.slice(mid));
+  return merge(left, right);
 }`;
     const [typedCode, setTypedCode] = useState('');
     const [cursorVisible, setCursorVisible] = useState(true);
@@ -201,7 +227,7 @@ const HeroSection = ({ navigate }) => {
             setTypedCode(current);
             i++;
             if (i >= fullCode.length) clearInterval(interval);
-        }, 40);
+        }, 35);
         return () => clearInterval(interval);
     }, [fullCode]);
 
@@ -214,39 +240,213 @@ const HeroSection = ({ navigate }) => {
         <section style={s.hero}>
             <div style={s.heroContent}>
                 <div style={s.heroTextSide}>
-                    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} style={s.ultraBadge}>
-                        <span style={s.pulseDot} /> NEURAL RENDERING ENGINE v3.0
+                    <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        style={s.heroBadge}
+                    >
+                        <span style={s.pulseDot} /> Algorithm Visualization Platform
                     </motion.div>
-                    <KineticText text="Architect the " style={s.h1} spanText="Future." spanStyle={s.gradientText} />
-                    <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} style={s.subText}>
-                        CodeViz transforms dry syntax into immersive, interactive, high-fidelity 3D geometric journeys. Watch every pointer, array shift, and recursion depth come to life in radiant detail.
+
+                    <motion.h1
+                        initial={{ y: 30, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.4, duration: 0.8 }}
+                        style={s.h1}
+                    >
+                        See Your Code{'\n'}
+                        <span style={s.gradientText}>Come Alive</span>
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                        style={s.subText}
+                    >
+                        The algorithm visualization platform that transforms how you learn, practice, and master Data Structures & Algorithms — with cinema-grade visuals and AI-powered guidance.
                     </motion.p>
-                    <div style={s.ctaGroup}>
-                        <MagneticButton onClick={() => navigate('/signup')} style={s.primaryBtn}>Initialize Adventure</MagneticButton>
-                        <MagneticButton onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })} style={s.secondaryBtn}>Explore Demos</MagneticButton>
-                    </div>
+
+                    <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                        style={s.ctaGroup}
+                    >
+                        <button onClick={() => navigate('/signup')} style={s.ctaBtn}>
+                            Start Visualizing — Free
+                        </button>
+                        <button onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })} style={s.ctaGhostBtn}>
+                            ▶ Watch Demo
+                        </button>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1.2 }}
+                        style={s.trustBadges}
+                    >
+                        <span>⭐ 4.9/5 Rating</span>
+                        <span style={s.trustDivider}>|</span>
+                        <span>🎓 Used by 10,000+ students</span>
+                        <span style={s.trustDivider}>|</span>
+                        <span>🌐 12 Languages</span>
+                    </motion.div>
                 </div>
-                <TiltCard>
+
+                <motion.div
+                    initial={{ x: 60, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.6, duration: 1, ease: [0.23, 1, 0.32, 1] }}
+                    style={s.heroVisual}
+                >
                     <div style={s.heroConsole}>
-                        <div style={s.consoleTop}>
-                            <div style={s.consoleDots}><span style={{ ...s.cDot, background: '#ff5f56' }} /><span style={{ ...s.cDot, background: '#ffbd2e' }} /><span style={{ ...s.cDot, background: '#27c93f' }} /></div>
-                            <div style={s.consoleTab}>recursive_dfs.cpp</div>
+                        <div style={s.consoleHeader}>
+                            <div style={s.consoleDots}>
+                                <span style={{ ...s.cDot, background: '#ff5f56' }} />
+                                <span style={{ ...s.cDot, background: '#ffbd2e' }} />
+                                <span style={{ ...s.cDot, background: '#27c93f' }} />
+                            </div>
+                            <span style={s.consoleTitle}>merge_sort.js</span>
+                            <span style={s.consoleLang}>JavaScript</span>
                         </div>
                         <div style={s.consoleBody}>
                             <pre style={s.consoleCode}>
                                 {typedCode}
-                                <span style={{ opacity: cursorVisible ? 1 : 0, color: '#fff' }}>▋</span>
+                                <span style={{ opacity: cursorVisible ? 1 : 0, color: '#00E5EE' }}>▋</span>
                             </pre>
                         </div>
-                        <div style={s.consoleOverlay}>
-                            <div style={s.vizStatus}>3D PERSPECTIVE: ON</div>
+                    </div>
+
+                    {/* Floating visualization preview beside the console */}
+                    <div style={s.vizPreview}>
+                        <div style={s.vizHeader}>Live Visualizer</div>
+                        <div style={s.vizBars}>
+                            {[38, 27, 43, 3, 9, 82, 10, 52, 61, 21].map((v, i) => (
+                                <motion.div
+                                    key={i}
+                                    animate={{ height: [`${v}%`, `${Math.random() * 80 + 10}%`, `${v}%`] }}
+                                    transition={{ duration: 2 + Math.random(), repeat: Infinity, delay: i * 0.15 }}
+                                    style={{
+                                        flex: 1,
+                                        borderRadius: '3px 3px 0 0',
+                                        background: i % 3 === 0
+                                            ? 'linear-gradient(to top, rgba(0,229,238,0.3), rgba(0,229,238,0.7))'
+                                            : i % 3 === 1
+                                            ? 'linear-gradient(to top, rgba(124,58,237,0.3), rgba(124,58,237,0.6))'
+                                            : 'linear-gradient(to top, rgba(255,255,255,0.1), rgba(255,255,255,0.25))',
+                                    }}
+                                />
+                            ))}
                         </div>
                     </div>
-                </TiltCard>
+                </motion.div>
             </div>
         </section>
     );
 };
+
+const FeaturesGrid = () => {
+    const features = [
+        { icon: '🎬', title: 'Cinema Mode', desc: 'See algorithms in a cinematic, pan-and-zoom infinite canvas.', accent: '#00E5EE' },
+        { icon: '🤖', title: 'AI Tutor', desc: 'Socratic AI that teaches you step-by-step, never gives direct answers.', accent: '#7C3AED' },
+        { icon: '⚔️', title: 'Code Battles', desc: 'Real-time multiplayer coding duels with Chaos Mode sabotage.', accent: '#F43F5E' },
+        { icon: '🧬', title: 'Algorithm DNA', desc: 'Your unique coding strengths mapped as a visual DNA profile.', accent: '#10B981' },
+        { icon: '🛤️', title: 'Neural Pathways', desc: 'Adaptive learning roadmap that evolves with your mastery.', accent: '#F59E0B' },
+        { icon: '📊', title: 'Live Visualization', desc: 'Watch arrays sort, trees balance, and graphs traverse in real-time.', accent: '#00E5EE' },
+    ];
+
+    return (
+        <div style={s.featGrid}>
+            {features.map((f, i) => (
+                <motion.div
+                    key={i}
+                    initial={{ y: 30, opacity: 0 }}
+                    whileInView={{ y: 0, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1, duration: 0.5 }}
+                    whileHover={{ y: -6, borderColor: `${f.accent}33` }}
+                    style={s.featCard}
+                >
+                    <div style={{ ...s.featIcon, background: `${f.accent}15`, border: `1px solid ${f.accent}25` }}>
+                        <span style={{ fontSize: '24px' }}>{f.icon}</span>
+                    </div>
+                    <h3 style={s.featTitle}>{f.title}</h3>
+                    <p style={s.featDesc}>{f.desc}</p>
+                </motion.div>
+            ))}
+        </div>
+    );
+};
+
+const ProductShowcase = ({ navigate }) => (
+    <div style={s.showcase}>
+        <div style={s.showcaseText}>
+            <span style={s.sectionTag}>EXPERIENCE THE PLATFORM</span>
+            <h2 style={{ ...s.h2, textAlign: 'left', marginTop: '12px' }}>The Future of Algorithm Practice</h2>
+            <p style={{ color: '#9898A6', marginTop: '16px', lineHeight: '1.8', fontSize: '15px' }}>
+                Stop memorizing solutions. Start understanding patterns. 
+                CodeViz transforms every algorithm into an interactive visual experience — 
+                with AI guidance, real-time execution tracing, and cinema-quality renders.
+            </p>
+            <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {[
+                    { icon: '✦', text: 'Integrated IDE + Live Visualizer', color: '#00E5EE' },
+                    { icon: '✦', text: 'Trace every variable in real-time', color: '#7C3AED' },
+                    { icon: '✦', text: 'Cinema Mode with pan & zoom', color: '#10B981' },
+                ].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ color: item.color, fontSize: '14px' }}>{item.icon}</span>
+                        <span style={{ color: '#E8E8ED', fontSize: '14px' }}>{item.text}</span>
+                    </div>
+                ))}
+            </div>
+            <button onClick={() => navigate('/signup')} style={{ ...s.ctaBtn, marginTop: '32px' }}>
+                Try It Now →
+            </button>
+        </div>
+        <div style={s.showcaseVisual}>
+            <div style={s.showcaseCard}>
+                <div style={s.showcaseIDE}>
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+                        <span style={{ ...s.cDot, background: '#ff5f56' }} />
+                        <span style={{ ...s.cDot, background: '#ffbd2e' }} />
+                        <span style={{ ...s.cDot, background: '#27c93f' }} />
+                    </div>
+                    <pre style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#9898A6', lineHeight: '1.8' }}>
+{`function binarySearch(arr, target) {
+  let lo = 0, hi = arr.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (arr[mid] === target) return mid;
+    arr[mid] < target ? lo = mid+1 : hi = mid-1;
+  }
+  return -1;
+}`}
+                    </pre>
+                </div>
+                <div style={s.showcaseViz}>
+                    <div style={{ fontSize: '10px', color: '#5A5A6A', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Array State</div>
+                    <div style={{ display: 'flex', gap: '3px', alignItems: 'flex-end', height: '80px' }}>
+                        {[15, 25, 35, 42, 55, 63, 72, 88, 91].map((v, i) => (
+                            <div key={i} style={{
+                                flex: 1, height: `${v}%`,
+                                background: i === 4 ? 'linear-gradient(to top, #00E5EE, #00b8c0)' : 'rgba(255,255,255,0.08)',
+                                borderRadius: '3px 3px 0 0',
+                                boxShadow: i === 4 ? '0 0 12px rgba(0,229,238,0.4)' : 'none',
+                            }} />
+                        ))}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px' }}>
+                        <span style={{ fontSize: '10px', color: '#00E5EE', fontFamily: "'JetBrains Mono', monospace" }}>▲ mid = 4 → target found!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
 
 const EnhancedSortDemo = () => {
     const [arr, setArr] = useState([64, 34, 25, 12, 22, 11, 90, 45]);
@@ -256,45 +456,31 @@ const EnhancedSortDemo = () => {
     const max = Math.max(...arr);
 
     const bubbleSort = async (a) => {
-        for (let i = 0; i < a.length; i++) {
+        for (let i = 0; i < a.length; i++)
             for (let j = 0; j < a.length - i - 1; j++) {
                 setActive([j, j + 1]);
                 await new Promise(r => setTimeout(r, 80));
-                if (a[j] > a[j + 1]) {
-                    [a[j], a[j + 1]] = [a[j + 1], a[j]];
-                    setArr([...a]);
-                }
+                if (a[j] > a[j + 1]) { [a[j], a[j + 1]] = [a[j + 1], a[j]]; setArr([...a]); }
             }
-        }
     };
-
     const selectionSort = async (a) => {
         for (let i = 0; i < a.length; i++) {
             let min = i;
             for (let j = i + 1; j < a.length; j++) {
-                setActive([min, j]);
-                await new Promise(r => setTimeout(r, 80));
+                setActive([min, j]); await new Promise(r => setTimeout(r, 80));
                 if (a[j] < a[min]) min = j;
             }
-            [a[i], a[min]] = [a[min], a[i]];
-            setArr([...a]);
+            [a[i], a[min]] = [a[min], a[i]]; setArr([...a]);
         }
     };
-
     const insertionSort = async (a) => {
         for (let i = 1; i < a.length; i++) {
-            let key = a[i];
-            let j = i - 1;
-            setActive([i, j]);
+            let key = a[i], j = i - 1;
             while (j >= 0 && a[j] > key) {
-                a[j + 1] = a[j];
-                j = j - 1;
-                setActive([i, j]);
-                setArr([...a]);
-                await new Promise(r => setTimeout(r, 80));
+                a[j + 1] = a[j]; j--;
+                setActive([i, j]); setArr([...a]); await new Promise(r => setTimeout(r, 80));
             }
-            a[j + 1] = key;
-            setArr([...a]);
+            a[j + 1] = key; setArr([...a]);
         }
     };
 
@@ -303,73 +489,83 @@ const EnhancedSortDemo = () => {
         const a = [...arr];
         if (algo === 'bubble') await bubbleSort(a);
         else if (algo === 'selection') await selectionSort(a);
-        else if (algo === 'insertion') await insertionSort(a);
-        setActive([-1, -1]);
-        setSorting(false);
+        else await insertionSort(a);
+        setActive([-1, -1]); setSorting(false);
     };
 
     return (
         <div style={s.demoContainer}>
             <div style={s.algoTabs}>
                 {['bubble', 'selection', 'insertion'].map(n => (
-                    <button key={n} onClick={() => setAlgo(n)} style={{ ...s.algoTab, background: algo === n ? 'rgba(97,218,251,0.1)' : 'transparent', color: algo === n ? '#61dafb' : '#555' }}>{n.toUpperCase()}</button>
+                    <button key={n} onClick={() => setAlgo(n)} style={{
+                        ...s.algoTab,
+                        background: algo === n ? 'rgba(0,229,238,0.1)' : 'transparent',
+                        color: algo === n ? '#00E5EE' : '#5A5A6A',
+                        borderColor: algo === n ? 'rgba(0,229,238,0.3)' : 'rgba(255,255,255,0.06)',
+                    }}>{n.charAt(0).toUpperCase() + n.slice(1)} Sort</button>
                 ))}
             </div>
             <div style={s.visualizerBox}>
                 {arr.map((v, i) => (
                     <motion.div key={i} layout style={{
-                        width: '45px',
+                        width: '48px',
                         height: `${(v / max) * 160 + 40}px`,
-                        background: active.includes(i) ? 'var(--accent-red)' : 'var(--accent-blue)',
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'center',
-                        color: active.includes(i) ? '#fff' : 'rgba(0,0,0,0.6)',
-                        fontSize: '11px',
-                        fontWeight: 800,
-                        paddingTop: '10px',
-                        boxShadow: active.includes(i) ? '0 0 20px var(--accent-red)' : 'none'
-                    }}>
-                        {v}
-                    </motion.div>
+                        background: active.includes(i)
+                            ? 'linear-gradient(to top, #00E5EE, #00b8c0)'
+                            : 'linear-gradient(to top, rgba(255,255,255,0.06), rgba(255,255,255,0.12))',
+                        borderRadius: '6px 6px 0 0',
+                        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+                        color: active.includes(i) ? '#050508' : '#5A5A6A',
+                        fontSize: '11px', fontWeight: 800, paddingTop: '10px',
+                        boxShadow: active.includes(i) ? '0 0 24px rgba(0,229,238,0.4)' : 'none',
+                        transition: 'all 0.15s ease',
+                    }}>{v}</motion.div>
                 ))}
             </div>
             <div style={s.vizControls}>
-                <button onClick={runSort} disabled={sorting} style={s.runBtn}>{sorting ? 'Sorting...' : `Run ${algo}`}</button>
-                <button onClick={() => setArr(arr.map(() => Math.floor(Math.random() * 80) + 10))} style={s.randBtn}>Randomize</button>
+                <button onClick={runSort} disabled={sorting} style={s.runBtn}>
+                    {sorting ? '⟳ Sorting...' : `▶ Run ${algo.charAt(0).toUpperCase() + algo.slice(1)}`}
+                </button>
+                <button onClick={() => setArr(arr.map(() => Math.floor(Math.random() * 80) + 10))} style={s.randBtn}>
+                    ↻ Randomize
+                </button>
             </div>
         </div>
     );
 };
 
 const DenseSkillTree = () => {
-    // 2. Interactive Physics Roadmap
-    const constraintsRef = useRef(null);
+    const modules = [
+        { icon: '📦', label: 'Basics', color: '#00E5EE' },
+        { icon: '📊', label: 'Arrays', color: '#7C3AED' },
+        { icon: '🔤', label: 'Strings', color: '#00E5EE' },
+        { icon: '🥞', label: 'Stacks', color: '#F59E0B' },
+        { icon: '🚶', label: 'Queues', color: '#10B981' },
+        { icon: '🔗', label: 'Linked Lists', color: '#7C3AED' },
+        { icon: '🔍', label: 'Searching', color: '#00E5EE' },
+        { icon: '🌳', label: 'Trees', color: '#F59E0B' },
+        { icon: '🕸️', label: 'Graphs', color: '#F43F5E' },
+        { icon: '🧠', label: 'DP', color: '#7C3AED' },
+    ];
+
     return (
-        <div style={s.treeView} ref={constraintsRef}>
+        <div style={s.treeView}>
             <div style={s.treeGrid}>
-                <PhysicsNode constraintsRef={constraintsRef} icon="📦" label="Basics" col="var(--accent-blue)" />
-                <PhysicsNode constraintsRef={constraintsRef} icon="📊" label="Arrays" col="var(--accent-green)" />
-                <PhysicsNode constraintsRef={constraintsRef} icon="🔤" label="Strings" col="var(--accent-cyan)" />
-                <PhysicsNode constraintsRef={constraintsRef} icon="🥞" label="Stacks" col="var(--accent-purple)" />
-                <PhysicsNode constraintsRef={constraintsRef} icon="🚶" label="Queues" col="var(--accent-yellow)" />
-                <PhysicsNode constraintsRef={constraintsRef} icon="🔍" label="Searching" col="var(--accent-orange)" />
-                <PhysicsNode constraintsRef={constraintsRef} icon="🕸️" label="Graph" col="var(--accent-red)" />
-                <PhysicsNode constraintsRef={constraintsRef} icon="🧠" label="DP" col="var(--accent-blue)" />
-            </div>
-            <div style={s.treeLines}>
-                <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, opacity: 0.1, pointerEvents: 'none' }}>
-                    <line x1="12.5%" y1="25%" x2="37.5%" y2="25%" stroke="white" strokeWidth="1" />
-                    <line x1="37.5%" y1="25%" x2="62.5%" y2="25%" stroke="white" strokeWidth="1" />
-                    <line x1="62.5%" y1="25%" x2="87.5%" y2="25%" stroke="white" strokeWidth="1" />
-                    <line x1="12.5%" y1="75%" x2="37.5%" y2="75%" stroke="white" strokeWidth="1" />
-                    <line x1="37.5%" y1="75%" x2="62.5%" y2="75%" stroke="white" strokeWidth="1" />
-                    <line x1="62.5%" y1="75%" x2="87.5%" y2="75%" stroke="white" strokeWidth="1" />
-                </svg>
-            </div>
-            <div style={{ textAlign: 'center', marginTop: '40px', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
-                * Yes, you can drag and throw the nodes.
+                {modules.map((m, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        whileInView={{ scale: 1, opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.05 }}
+                        whileHover={{ scale: 1.08, borderColor: `${m.color}50` }}
+                        style={s.treeNode}
+                    >
+                        <span style={{ fontSize: '24px' }}>{m.icon}</span>
+                        <span style={{ fontSize: '11px', color: '#9898A6', fontWeight: 600 }}>{m.label}</span>
+                        {i < modules.length - 1 && <div style={{ ...s.treeLine, background: `linear-gradient(to right, ${m.color}40, transparent)` }} />}
+                    </motion.div>
+                ))}
             </div>
         </div>
     );
@@ -380,341 +576,362 @@ const MultiQuizEngine = () => {
     const [selected, setSelected] = useState(null);
     const quizzes = [
         { lang: 'Python', q: 'Which is used for List Comprehension?', opts: ['( )', '[ ]', '{ }', '< >'], ans: 1, info: '[x for x in list] is Pythonic.' },
-        { lang: 'Java', q: 'How do you create a Pointer?', opts: ['*', '&', 'Object obj', 'new Obj()'], ans: 3, info: 'Java handles memory via references & "new".' },
+        { lang: 'Java', q: 'How do you instantiate an object?', opts: ['*', '&', 'Object obj', 'new Obj()'], ans: 3, info: 'Java handles memory via references & "new".' },
         { lang: 'JS', q: 'What is the type of NaN?', opts: ['NaN', 'number', 'undefined', 'object'], ans: 1, info: 'typeof NaN is actually "number"!' }
     ];
-
     const cur = quizzes[quizIdx];
 
     return (
         <div style={s.quizHost}>
-            <div style={s.quizHeaderBox}>
-                <span style={s.quizLang}>{cur.lang} Challenge</span>
-                <span style={s.quizPg}>{quizIdx + 1} / 3</span>
+            <div style={s.quizHeader}>
+                <span style={s.quizLang}>{cur.lang}</span>
+                <span style={s.quizPg}>{quizIdx + 1} / {quizzes.length}</span>
             </div>
             <p style={s.quizText}>{cur.q}</p>
             <div style={s.quizOptions}>
                 {cur.opts.map((o, i) => (
                     <button key={i} onClick={() => setSelected(i)} style={{
                         ...s.quizBtn,
-                        borderColor: selected === i ? (i === cur.ans ? 'var(--accent-green)' : 'var(--accent-red)') : 'rgba(255,255,255,0.05)',
-                        background: selected === i ? (i === cur.ans ? 'rgba(152,195,121,0.05)' : 'rgba(224,108,117,0.05)') : 'transparent'
-                    }}>
-                        {o} {selected === i && (i === cur.ans ? '✅' : '❌')}
-                    </button>
+                        borderColor: selected === i ? (i === cur.ans ? '#00E5EE' : '#F43F5E') : 'rgba(255,255,255,0.06)',
+                        background: selected === i ? (i === cur.ans ? 'rgba(0,229,238,0.08)' : 'rgba(244,63,94,0.08)') : 'rgba(17,17,22,0.8)',
+                    }}>{o}</button>
                 ))}
             </div>
-            {selected !== null && (
-                <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                    <p style={{ fontSize: '13px', color: '#888', marginBottom: '16px' }}>{cur.info}</p>
-                    <button onClick={() => { setQuizIdx((quizIdx + 1) % 3); setSelected(null); }} style={s.nextBtn}>Next Challenge →</button>
-                </div>
-            )}
-        </div>
-    );
-};
-
-const PolyglotEngine = () => {
-    const [lang, setLang] = useState('cpp');
-    const examples = {
-        cpp: 'struct Node {\n  int val;\n  Node *next;\n};',
-        java: 'class Node {\n  int val;\n  Node next;\n}',
-        python: 'class Node:\n    def __init__(self, x):\n        self.val = x\n        self.next = None',
-        go: 'type Node struct {\n    val  int\n    next *Node\n}',
-        ts: 'interface Node {\n  val: number;\n  next: Node | null;\n}'
-    };
-    return (
-        <div style={s.polyHost}>
-            <div style={s.polySidebar}>
-                {Object.keys(examples).map(l => (
-                    <button key={l} onClick={() => setLang(l)} style={{ ...s.polyTab, color: lang === l ? '#fff' : '#444', borderLeft: lang === l ? '2px solid var(--accent-blue)' : 'none' }}>{l.toUpperCase()}</button>
+            {selected !== null && <p style={s.quizInfo}>{cur.info}</p>}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '20px' }}>
+                {quizzes.map((_, i) => (
+                    <button key={i} onClick={() => { setQuizIdx(i); setSelected(null); }} style={{
+                        ...s.quizDot,
+                        background: quizIdx === i ? '#00E5EE' : 'rgba(255,255,255,0.1)',
+                    }} />
                 ))}
-            </div>
-            <div style={s.polyCode}>
-                {/* 5. Code Execution Scanner */}
-                <motion.div
-                    animate={{ top: ['0%', '100%', '0%'] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                    style={{ position: 'absolute', left: 0, right: 0, height: '2px', background: 'var(--accent-purple)', boxShadow: '0 0 20px 2px var(--accent-purple)', opacity: 0.5, zIndex: 5, pointerEvents: 'none' }}
-                />
-                <pre style={{ margin: 0, fontFamily: 'monospace', color: 'var(--accent-cyan)' }}>{examples[lang]}</pre>
-                <div style={s.polyOverlay}>LIVE COMPILER EMULATION ACTIVE</div>
             </div>
         </div>
     );
 };
-
-/* ───────── Utility Widgets ───────── */
-
-const KineticText = ({ text, style, spanText, spanStyle }) => {
-    const [display, setDisplay] = useState(text.split('').map(() => '!'));
-    const [spanDisplay, setSpanDisplay] = useState(spanText ? spanText.split('').map(() => '!') : []);
-
-    useEffect(() => {
-        let iterations = 0;
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
-        const interval = setInterval(() => {
-            setDisplay(prev => prev.map((char, index) => {
-                if (index < iterations) return text[index];
-                return chars[Math.floor(Math.random() * chars.length)];
-            }));
-            if (spanText) {
-                setSpanDisplay(prev => prev.map((char, index) => {
-                    if (index < iterations) return spanText[index];
-                    return chars[Math.floor(Math.random() * chars.length)];
-                }));
-            }
-            if (iterations >= Math.max(text.length, spanText ? spanText.length : 0)) clearInterval(interval);
-            iterations += 1 / 3;
-        }, 30);
-        return () => clearInterval(interval);
-    }, [text, spanText]);
-
-    return (
-        <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} style={style}>
-            {display.join('')}<br />
-            {spanText && <span style={spanStyle}>{spanDisplay.join('')}</span>}
-        </motion.h1>
-    );
-};
-
-const MagneticButton = ({ children, onClick, style }) => {
-    const ref = useRef(null);
-    const [pos, setPos] = useState({ x: 0, y: 0 });
-
-    const mouseMove = (e) => {
-        const { clientX, clientY } = e;
-        const { height, width, left, top } = ref.current.getBoundingClientRect();
-        const middleX = clientX - (left + width / 2);
-        const middleY = clientY - (top + height / 2);
-        setPos({ x: middleX * 0.45, y: middleY * 0.45 });
-    };
-    const mouseLeave = () => setPos({ x: 0, y: 0 });
-
-    return (
-        <motion.button ref={ref} onMouseMove={mouseMove} onMouseLeave={mouseLeave} onClick={onClick}
-            animate={{ x: pos.x, y: pos.y }}
-            transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
-            style={style}
-        >
-            {children}
-        </motion.button>
-    );
-};
-
-const PhysicsNode = ({ constraintsRef, icon, label, col }) => (
-    <motion.div
-        drag
-        dragConstraints={constraintsRef}
-        dragElastic={0.2}
-        dragSnapToOrigin={true}
-        whileHover={{ scale: 1.1, cursor: 'grab' }}
-        whileDrag={{ scale: 1.2, cursor: 'grabbing', zIndex: 100 }}
-        style={s.treeNode}
-    >
-        <div style={{ ...s.nodeBox, background: col }}>{icon}</div>
-        <span style={s.nodeText}>{label}</span>
-    </motion.div>
-);
 
 const StatItem = ({ num, label }) => (
     <div style={s.statItem}>
-        <div style={s.statVal}>{num}</div>
-        <div style={s.statLabel}>{label}</div>
+        <span style={s.statNum}>{num}</span>
+        <span style={s.statLabel}>{label}</span>
     </div>
 );
 
-const FeatureCard = ({ icon, title, desc, color }) => {
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-    const [isHover, setIsHover] = useState(false);
-    return (
-        <motion.div
-            onMouseMove={e => {
-                const r = e.currentTarget.getBoundingClientRect();
-                setMousePos({ x: e.clientX - r.left, y: e.clientY - r.top });
-            }}
-            onMouseEnter={() => setIsHover(true)}
-            onMouseLeave={() => setIsHover(false)}
-            whileHover={{ y: -8, scale: 1.03 }}
-            style={{ 
-                ...s.fCard, 
-                border: `1px solid rgba(255,255,255,0.08)`, 
-                background: 'rgba(255,255,255,0.01)',
-                backdropFilter: 'blur(10px)',
-                position: 'relative', 
-                overflow: 'hidden',
-                boxShadow: isHover ? `0 15px 40px rgba(0,0,0,0.4)` : 'none'
-            }}
-        >
-            <motion.div style={{
-                position: 'absolute', inset: 0, pointerEvents: 'none',
-                background: `radial-gradient(500px circle at ${mousePos.x}px ${mousePos.y}px, ${color}35 0%, transparent 70%)`,
-                mixBlendMode: 'screen', opacity: isHover ? 1 : 0, transition: 'opacity 0.3s ease'
-            }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontSize: '32px', marginBottom: '16px', filter: `drop-shadow(0 0 10px ${color})` }}>{icon}</div>
-                <h4 style={{ fontSize: '18px', fontWeight: 900, marginBottom: '12px', color: '#fff', letterSpacing: '-0.5px' }}>{title}</h4>
-                <p style={{ fontSize: '13px', color: '#888', lineHeight: 1.7 }}>{desc}</p>
+const Footer = ({ navigate }) => (
+    <footer style={s.footer}>
+        <div style={s.footerTop}>
+            <div>
+                <span style={s.logoText}>Code<span style={s.logoAccent}>Viz</span></span>
+                <p style={{ color: '#5A5A6A', fontSize: '13px', marginTop: '8px', maxWidth: '280px' }}>
+                    The algorithm visualization platform that transforms how you learn to code.
+                </p>
             </div>
-        </motion.div>
-    );
-};
-
-const Navbar = ({ navigate, isLoggedIn }) => (
-    <div style={s.nav}>
-        <div style={{ fontSize: '18px', fontWeight: 900, fontFamily: 'monospace', cursor: 'pointer' }} onClick={() => navigate('/')}>
-            <span style={{ color: 'var(--accent-blue)' }}>{'<'}</span>
-            CodeViz
-            <span style={{ color: 'var(--accent-purple)' }}>{'/>'}</span>
+            <div style={s.footerLinks}>
+                <div style={s.footerCol}>
+                    <span style={s.footerColTitle}>Product</span>
+                    <a href="#features" style={s.footerLink}>Features</a>
+                    <a href="#demo" style={s.footerLink}>Live Demo</a>
+                    <button onClick={() => navigate('/signup')} style={s.footerLink}>Sign Up</button>
+                </div>
+                <div style={s.footerCol}>
+                    <span style={s.footerColTitle}>Company</span>
+                    <button onClick={() => navigate('/about')} style={s.footerLink}>About</button>
+                    <a href="#" style={s.footerLink}>Privacy</a>
+                    <a href="#" style={s.footerLink}>Terms</a>
+                </div>
+                <div style={s.footerCol}>
+                    <span style={s.footerColTitle}>Community</span>
+                    <a href="#" style={s.footerLink}>GitHub</a>
+                    <a href="#" style={s.footerLink}>Discord</a>
+                    <a href="#" style={s.footerLink}>Twitter</a>
+                </div>
+            </div>
         </div>
-        <div style={s.navItems}>
-            <a href="#demo" style={s.navI}>Demo</a>
-            <a href="#path" style={s.navI}>Curriculum</a>
-            <a href="#features" style={s.navI}>Tech</a>
-            {isLoggedIn ? (
-                <button onClick={() => navigate('/')} style={s.loginBtn}>Console</button>
-            ) : (
-                <button onClick={() => navigate('/login')} style={s.loginBtn}>Initialize</button>
-            )}
+        <div style={s.footerBottom}>
+            <span style={{ color: '#4A4A58', fontSize: '12px' }}>© 2026 CodeViz. All rights reserved.</span>
         </div>
-    </div>
+    </footer>
 );
 
-const TiltCard = ({ children }) => {
-    const x = useMotionValue(0);
-    const y = useMotionValue(0);
-    const rx = useTransform(y, [-0.5, 0.5], ["10deg", "-10deg"]);
-    const ry = useTransform(x, [-0.5, 0.5], ["-10deg", "10deg"]);
-    return (
-        <motion.div style={{ perspective: '1200px', rotateX: rx, rotateY: ry, transformStyle: 'preserve-3d' }}
-            onMouseMove={e => {
-                const r = e.currentTarget.getBoundingClientRect();
-                x.set((e.clientX - r.left) / r.width - 0.5);
-                y.set((e.clientY - r.top) / r.height - 0.5);
-            }}
-            onMouseLeave={() => { x.set(0); y.set(0); }}
-        >
-            {children}
-        </motion.div>
-    );
-};
-
-const FloatingBackground = () => (
-    <div style={s.floatBg}>
-        {[...Array(12)].map((_, i) => (
-            <motion.div key={i} animate={{ y: [0, -40, 0], rotate: [0, 15, 0], opacity: [0.05, 0.15, 0.05] }}
-                transition={{ duration: 6 + i, repeat: Infinity, ease: 'linear' }}
-                style={{ position: 'absolute', top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, fontSize: '20px', color: '#fff' }}
-            >
-                {['=>', '{ }', '[ ]', '++', '===', 'async', 'ptr'][i % 7]}
-            </motion.div>
-        ))}
-        <div style={{ ...s.blurGlow, top: '10%', left: '5%', background: 'var(--accent-blue)' }} />
-        <div style={{ ...s.blurGlow, bottom: '20%', right: '5%', background: 'var(--accent-purple)' }} />
-    </div>
-);
-
-/* ───────── Advanced Styles ───────── */
-/* ───────── Advanced Premium Styles (Stitch Inspired) ───────── */
+/* ═══════════════════════════════════════════
+   Styles
+   ═══════════════════════════════════════════ */
 const s = {
-    page: { 
-        background: '#050508', // Deepest charcoal
-        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-        color: '#fff', 
-        minHeight: '100vh', 
-        fontFamily: '"Outfit", "Inter", system-ui, sans-serif', 
-        overflowX: 'hidden' 
+    page: {
+        background: '#050508', minHeight: '100vh', color: '#E8E8ED', position: 'relative', overflow: 'hidden',
     },
-    spotlight: { position: 'fixed', inset: 0, zIndex: 5, pointerEvents: 'none' },
-    floatBg: { position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' },
-    
-    // Nebula Glows
-    blurGlow: { position: 'absolute', width: '800px', height: '800px', borderRadius: '50%', filter: 'blur(200px)', opacity: 0.15 },
+    nebula: {
+        position: 'fixed', width: '800px', height: '800px', borderRadius: '50%', filter: 'blur(100px)', pointerEvents: 'none', zIndex: 0,
+    },
+    spotlight: {
+        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
+    },
+    gridPattern: {
+        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden',
+    },
 
-    // Glassmorphic Nav
-    nav: { position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '1200px', zIndex: 1000, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 40px', background: 'rgba(10, 10, 15, 0.4)', backdropFilter: 'blur(40px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' },
-    navItems: { display: 'flex', alignItems: 'center', gap: '35px' },
-    navI: { color: '#a0a0ab', textDecoration: 'none', fontSize: '14px', fontWeight: 600, transition: 'color 0.2s', letterSpacing: '0.5px' },
-    loginBtn: { background: '#fff', color: '#000', border: 'none', padding: '10px 24px', borderRadius: '12px', fontWeight: 800, letterSpacing: '0.5px', cursor: 'pointer', boxShadow: '0 0 20px rgba(255,255,255,0.2)' },
+    // Navbar
+    navbar: {
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '16px 48px', background: 'rgba(5, 5, 8, 0.8)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+    },
+    navLeft: { display: 'flex', alignItems: 'center' },
+    logoText: { fontSize: '22px', fontWeight: 800, color: '#E8E8ED', letterSpacing: '-0.02em' },
+    logoAccent: { background: 'linear-gradient(135deg, #00E5EE, #7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
+    navLinks: { display: 'flex', gap: '32px', alignItems: 'center' },
+    navLink: {
+        color: '#9898A6', fontSize: '13px', fontWeight: 500, textDecoration: 'none',
+        background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s',
+        fontFamily: "'Inter', sans-serif",
+    },
+    navRight: { display: 'flex', gap: '12px', alignItems: 'center' },
+    navLogin: {
+        background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#E8E8ED',
+        padding: '8px 20px', borderRadius: '100px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+        transition: 'all 0.2s',
+    },
+    navCta: {
+        background: 'linear-gradient(135deg, #00E5EE, #00b8c0)', color: '#050508',
+        border: 'none', padding: '8px 22px', borderRadius: '100px', fontSize: '13px', fontWeight: 700,
+        cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,229,238,0.2)', transition: 'all 0.2s',
+    },
 
-    hero: { position: 'relative', zIndex: 10, minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '140px 50px 100px' },
-    heroContent: { maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '60px', flexWrap: 'wrap', justifyContent: 'center' },
-    heroTextSide: { flex: '1 1 500px', minWidth: '400px', zIndex: 20 },
-    ultraBadge: { display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '8px 18px', background: 'rgba(0, 242, 254, 0.05)', borderRadius: '30px', border: '1px solid rgba(0, 242, 254, 0.2)', fontSize: '12px', fontWeight: 800, color: '#00f2fe', marginBottom: '30px', boxShadow: '0 0 20px rgba(0,242,254,0.1)' },
-    pulseDot: { width: '8px', height: '8px', borderRadius: '50%', background: '#00f2fe', boxShadow: '0 0 15px #00f2fe' },
-    
-    // Premium Typography
-    h1: { fontSize: 'clamp(48px, 6vw, 85px)', fontWeight: 950, lineHeight: 1.05, marginBottom: '25px', letterSpacing: '-2px' },
-    gradientText: { background: 'linear-gradient(135deg, #0df2f2 0%, #a45afe 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textShadow: '0 0 60px rgba(13,242,242,0.4)', paddingRight: '15px' },
-    subText: { fontSize: '18px', color: '#aab', lineHeight: 1.6, marginBottom: '40px', maxWidth: '500px', fontWeight: 300, letterSpacing: '0.5px' },
-    ctaGroup: { display: 'flex', gap: '20px', alignItems: 'center' },
-    
-    // Neon CTA
-    primaryBtn: { background: 'linear-gradient(135deg, #0df2f2 0%, #1771f1 100%)', color: '#000', border: '1px solid #0df2f2', padding: '20px 48px', borderRadius: '12px', fontSize: '18px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 0 40px rgba(13,242,242,0.6), inset 0 0 15px rgba(255,255,255,0.4)', transition: 'transform 0.2s, box-shadow 0.2s', letterSpacing: '1px', textTransform: 'uppercase' },
-    secondaryBtn: { background: 'rgba(255,255,255,0.01)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '20px 48px', borderRadius: '12px', fontSize: '18px', fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(30px)', transition: 'background 0.2s, border-color 0.2s' },
+    // Hero
+    hero: {
+        minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative', zIndex: 1,
+        padding: '120px 48px 80px',
+    },
+    heroContent: {
+        maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '80px', width: '100%',
+    },
+    heroTextSide: { flex: 1, maxWidth: '560px' },
+    heroBadge: {
+        display: 'inline-flex', alignItems: 'center', gap: '8px',
+        padding: '6px 16px', borderRadius: '100px', fontSize: '11px', fontWeight: 700,
+        background: 'rgba(0,229,238,0.06)', border: '1px solid rgba(0,229,238,0.15)',
+        color: '#00E5EE', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '24px',
+    },
+    pulseDot: {
+        width: '6px', height: '6px', borderRadius: '50%', background: '#00E5EE',
+        boxShadow: '0 0 8px #00E5EE', animation: 'telemetryBlink 2s infinite',
+        display: 'inline-block',
+    },
+    h1: {
+        fontSize: '56px', fontWeight: 800, lineHeight: 1.1, color: '#E8E8ED',
+        letterSpacing: '-0.03em', marginBottom: '20px', whiteSpace: 'pre-line',
+    },
+    gradientText: {
+        background: 'linear-gradient(135deg, #00E5EE, #7C3AED)', WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+    },
+    subText: {
+        fontSize: '16px', color: '#9898A6', lineHeight: 1.8, marginBottom: '32px', maxWidth: '480px',
+    },
+    ctaGroup: { display: 'flex', gap: '16px', flexWrap: 'wrap' },
+    ctaBtn: {
+        background: 'linear-gradient(135deg, #00E5EE, #7C3AED)', color: '#fff', border: 'none',
+        padding: '14px 32px', borderRadius: '100px', fontSize: '15px', fontWeight: 700,
+        cursor: 'pointer', boxShadow: '0 4px 24px rgba(0,229,238,0.25), 0 4px 24px rgba(124,58,237,0.15)',
+        transition: 'all 0.2s', letterSpacing: '0.3px',
+    },
+    ctaGhostBtn: {
+        background: 'transparent', color: '#E8E8ED', border: '1px solid rgba(255,255,255,0.12)',
+        padding: '14px 32px', borderRadius: '100px', fontSize: '15px', fontWeight: 600,
+        cursor: 'pointer', transition: 'all 0.2s',
+    },
+    trustBadges: {
+        display: 'flex', alignItems: 'center', gap: '12px', marginTop: '40px',
+        fontSize: '12px', color: '#5A5A6A', flexWrap: 'wrap',
+    },
+    trustDivider: { color: '#2A2A30' },
 
-    // 3D Massive Tilted Console
-    heroConsole: { width: '560px', height: '360px', background: '#0a0a0f', borderRadius: '24px', border: '2px solid rgba(13,242,242,0.2)', overflow: 'hidden', boxShadow: '-30px 45px 90px rgba(0,0,0,0.9), 0 0 60px rgba(164, 90, 254, 0.15)', position: 'relative', transform: 'perspective(2000px) rotateY(-18deg) rotateX(12deg) scale(1.0)', transformStyle: 'preserve-3d', zIndex: 10 },
-    consoleTop: { background: 'rgba(255,255,255,0.01)', padding: '12px 20px', display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' },
-    consoleDots: { display: 'flex', gap: '8px' },
-    cDot: { width: '12px', height: '12px', borderRadius: '50%' },
-    consoleTab: { flex: 1, textAlign: 'center', fontSize: '12px', color: '#666', fontFamily: 'monospace', fontWeight: 700, letterSpacing: '1px' },
-    consoleBody: { padding: '30px', height: '100%', background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,242,254,0.02) 100%)' },
-    consoleCode: { margin: 0, fontFamily: '"JetBrains Mono", monospace', fontSize: '16px', color: '#4facfe', lineHeight: 1.7, textShadow: '0 0 10px rgba(79,172,254,0.3)' },
-    consoleOverlay: { position: 'absolute', bottom: '25px', right: '25px' },
-    vizStatus: { background: 'rgba(164, 90, 254, 0.2)', color: '#a45afe', padding: '8px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 900, border: '1px solid rgba(164, 90, 254, 0.5)', boxShadow: '0 0 30px rgba(164,90,254,0.3)', letterSpacing: '2px', textTransform: 'uppercase' },
+    // Hero Console
+    heroVisual: { flex: 1, position: 'relative', maxWidth: '520px' },
+    heroConsole: {
+        background: 'rgba(10, 10, 15, 0.9)', border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: '16px', overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+    },
+    consoleHeader: {
+        display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
+        background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.04)',
+    },
+    consoleDots: { display: 'flex', gap: '6px' },
+    cDot: { width: '10px', height: '10px', borderRadius: '50%', display: 'block' },
+    consoleTitle: { fontSize: '12px', color: '#5A5A6A', fontFamily: "'JetBrains Mono', monospace" },
+    consoleLang: {
+        marginLeft: 'auto', fontSize: '10px', color: '#00E5EE', padding: '2px 8px',
+        borderRadius: '100px', background: 'rgba(0,229,238,0.08)', fontWeight: 600,
+    },
+    consoleBody: { padding: '20px' },
+    consoleCode: {
+        fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', color: '#9898A6',
+        lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap',
+    },
 
-    section: { position: 'relative', zIndex: 10, padding: '120px 50px', maxWidth: '1400px', margin: '0 auto' },
-    sectionHeader: { textAlign: 'center', marginBottom: '80px' },
-    h2: { fontSize: '56px', fontWeight: 900, marginBottom: '20px', letterSpacing: '-1.5px' },
-    h2Sub: { fontSize: '20px', color: '#666', maxWidth: '600px', margin: '0 auto' },
+    // Viz Preview
+    vizPreview: {
+        position: 'absolute', bottom: '-30px', right: '-30px',
+        background: 'rgba(10, 10, 15, 0.95)', border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '12px', padding: '16px', width: '200px',
+        boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 20px rgba(0,229,238,0.05)',
+    },
+    vizHeader: { fontSize: '10px', color: '#5A5A6A', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' },
+    vizBars: { display: 'flex', gap: '3px', alignItems: 'flex-end', height: '80px' },
 
-    demoContainer: { background: 'rgba(10, 10, 15, 0.6)', backdropFilter: 'blur(50px)', padding: '60px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 40px 100px rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center' },
-    algoTabs: { display: 'flex', gap: '15px', marginBottom: '50px', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.02)' },
-    algoTab: { border: 'none', padding: '14px 28px', borderRadius: '10px', fontSize: '14px', fontWeight: 800, cursor: 'pointer', transition: 'all 0.3s' },
-    visualizerBox: { display: 'flex', alignItems: 'flex-end', gap: '12px', height: '260px', marginBottom: '60px', width: '100%', justifyContent: 'center' },
-    vizControls: { display: 'flex', gap: '20px' },
-    runBtn: { background: '#00f2fe', color: '#000', border: 'none', padding: '16px 36px', borderRadius: '12px', fontSize: '16px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 0 30px rgba(0,242,254,0.4)' },
-    randBtn: { background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,0.1)', padding: '16px 36px', borderRadius: '12px', fontSize: '16px', fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s, color 0.2s' },
+    // Sections
+    section: {
+        padding: '100px 48px', position: 'relative', zIndex: 1,
+    },
+    sectionHeader: { textAlign: 'center', marginBottom: '48px' },
+    sectionTag: {
+        display: 'inline-block', fontSize: '11px', fontWeight: 700, color: '#00E5EE',
+        letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '12px',
+    },
+    h2: {
+        fontSize: '36px', fontWeight: 800, color: '#E8E8ED', letterSpacing: '-0.02em',
+        marginBottom: '12px',
+    },
+    h2Sub: {
+        fontSize: '15px', color: '#9898A6', maxWidth: '500px', margin: '0 auto',
+    },
 
-    treeView: { padding: '60px 0', position: 'relative', width: '100%', maxWidth: '900px', margin: '0 auto' },
-    treeGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '80px', justifyItems: 'center' },
-    treeNode: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', zIndex: 10 },
-    nodeBox: { width: '80px', height: '80px', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.02)', backdropFilter: 'blur(10px)' },
-    nodeText: { fontSize: '14px', fontWeight: 800, color: '#666', letterSpacing: '1px' },
+    // Features Grid
+    featGrid: {
+        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px',
+        maxWidth: '1000px', margin: '0 auto',
+    },
+    featCard: {
+        background: 'rgba(17, 17, 22, 0.6)', backdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '28px',
+        cursor: 'default', transition: 'all 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
+    },
+    featIcon: {
+        width: '48px', height: '48px', borderRadius: '12px', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', marginBottom: '16px',
+    },
+    featTitle: { fontSize: '16px', fontWeight: 700, color: '#E8E8ED', marginBottom: '8px' },
+    featDesc: { fontSize: '13px', color: '#9898A6', lineHeight: 1.6 },
 
-    quizHost: { maxWidth: '850px', margin: '0 auto', background: 'rgba(10, 10, 15, 0.7)', backdropFilter: 'blur(50px)', padding: '60px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 50px 120px rgba(0,0,0,0.8)' },
-    quizHeaderBox: { display: 'flex', justifyContent: 'space-between', marginBottom: '40px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '20px' },
-    quizLang: { fontSize: '14px', fontWeight: 900, color: '#c678dd', letterSpacing: '1.5px', textTransform: 'uppercase' },
-    quizPg: { fontSize: '14px', color: '#555', fontWeight: 700 },
-    quizText: { fontSize: '26px', fontWeight: 800, marginBottom: '40px', textAlign: 'center', lineHeight: 1.5 },
-    quizOptions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
-    quizBtn: { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '24px', borderRadius: '16px', color: '#fff', textAlign: 'left', cursor: 'pointer', transition: 'all 0.3s', fontSize: '16px', fontWeight: 600 },
-    nextBtn: { background: 'linear-gradient(135deg, #c678dd 0%, #9f7aea 100%)', color: '#000', border: 'none', padding: '16px 32px', borderRadius: '12px', fontSize: '15px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 0 30px rgba(198,120,221,0.4)', marginTop: '30px', justifySelf: 'end' },
+    // Demo
+    demoContainer: {
+        maxWidth: '700px', margin: '0 auto', background: 'rgba(17,17,22,0.6)',
+        backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: '16px', padding: '32px', boxShadow: '0 16px 48px rgba(0,0,0,0.3)',
+    },
+    algoTabs: { display: 'flex', gap: '8px', marginBottom: '24px', justifyContent: 'center' },
+    algoTab: {
+        padding: '8px 20px', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '100px',
+        fontSize: '12px', fontWeight: 700, cursor: 'pointer', background: 'transparent',
+        transition: 'all 0.2s', fontFamily: "'Inter', sans-serif",
+    },
+    visualizerBox: {
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '6px',
+        minHeight: '220px', padding: '20px',
+    },
+    vizControls: { display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' },
+    runBtn: {
+        background: 'linear-gradient(135deg, #00E5EE, #00b8c0)', color: '#050508', border: 'none',
+        padding: '10px 24px', borderRadius: '100px', fontSize: '13px', fontWeight: 700,
+        cursor: 'pointer', transition: 'all 0.2s',
+    },
+    randBtn: {
+        background: 'transparent', color: '#9898A6', border: '1px solid rgba(255,255,255,0.1)',
+        padding: '10px 24px', borderRadius: '100px', fontSize: '13px', fontWeight: 600,
+        cursor: 'pointer', transition: 'all 0.2s',
+    },
 
-    polyHost: { display: 'flex', background: '#050508', borderRadius: '32px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', height: '400px', boxShadow: '0 40px 80px rgba(0,0,0,0.5)' },
-    polySidebar: { width: '180px', background: 'rgba(255,255,255,0.01)', padding: '30px 0', borderRight: '1px solid rgba(255,255,255,0.05)' },
-    polyTab: { width: '100%', background: 'transparent', border: 'none', padding: '16px 30px', textAlign: 'left', fontSize: '13px', fontWeight: 800, cursor: 'pointer', fontFamily: 'monospace', color: '#666', transition: 'color 0.2s' },
-    polyCode: { flex: 1, padding: '50px', position: 'relative', background: '#0a0a0f' },
-    polyOverlay: { position: 'absolute', top: '20px', right: '20px', fontSize: '12px', fontWeight: 900, color: '#444', letterSpacing: '1px' },
+    // Product Showcase
+    showcase: {
+        maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '60px',
+    },
+    showcaseText: { flex: 1 },
+    showcaseVisual: { flex: 1 },
+    showcaseCard: {
+        background: 'rgba(10,10,15,0.9)', border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: '16px', overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+        transform: 'perspective(1000px) rotateY(-3deg) rotateX(2deg)',
+    },
+    showcaseIDE: {
+        padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.04)',
+    },
+    showcaseViz: { padding: '16px 20px 20px' },
 
-    featureGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '50px' },
-    fCard: { padding: '50px', background: 'rgba(10, 10, 15, 0.3)', backdropFilter: 'blur(50px)', borderRadius: '32px', border: '1px solid rgba(13,242,242,0.1)', transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s', cursor: 'pointer', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' },
+    // Skill Tree
+    treeView: { maxWidth: '900px', margin: '0 auto' },
+    treeGrid: {
+        display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap',
+    },
+    treeNode: {
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+        padding: '20px 16px', borderRadius: '14px', background: 'rgba(17,17,22,0.6)',
+        border: '1px solid rgba(255,255,255,0.06)', cursor: 'default',
+        transition: 'all 0.3s ease', minWidth: '80px', position: 'relative',
+    },
+    treeLine: {
+        position: 'absolute', right: '-8px', top: '50%', width: '8px', height: '2px',
+    },
 
-    finalCta: { padding: '160px 50px', textAlign: 'center', position: 'relative' },
-    statsWrapper: { display: 'flex', justifyContent: 'center', gap: '100px', marginBottom: '120px', flexWrap: 'wrap' },
-    statItem: { textAlign: 'center' },
-    statVal: { fontSize: '64px', fontWeight: 950, background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '10px', textShadow: '0 0 30px rgba(0,242,254,0.3)' },
-    statLabel: { fontSize: '16px', fontWeight: 800, color: '#555', textTransform: 'uppercase', letterSpacing: '2px' },
-    premiumPanel: { maxWidth: '1000px', margin: '0 auto', padding: '120px 50px', background: 'radial-gradient(ellipse at top, rgba(0, 242, 254, 0.1) 0%, rgba(10,10,15,0.6) 70%)', borderRadius: '48px', border: '1px solid rgba(0,242,254,0.15)', boxShadow: '0 60px 150px rgba(0,0,0,0.8), inset 0 0 50px rgba(0,242,254,0.05)', backdropFilter: 'blur(40px)' },
-    ultimateBtn: { background: '#fff', color: '#000', padding: '24px 60px', borderRadius: '20px', fontSize: '20px', fontWeight: 900, border: 'none', cursor: 'pointer', boxShadow: '0 30px 60px rgba(255,255,255,0.2), inset 0 0 20px rgba(0,0,0,0.1)', transition: 'transform 0.2s', letterSpacing: '1px' },
+    // Quiz
+    quizHost: {
+        maxWidth: '550px', margin: '0 auto', background: 'rgba(17,17,22,0.6)',
+        backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: '16px', padding: '32px',
+    },
+    quizHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '20px' },
+    quizLang: {
+        fontSize: '11px', fontWeight: 700, color: '#00E5EE', padding: '4px 12px',
+        borderRadius: '100px', background: 'rgba(0,229,238,0.08)',
+    },
+    quizPg: { fontSize: '12px', color: '#5A5A6A' },
+    quizText: { fontSize: '16px', color: '#E8E8ED', fontWeight: 600, marginBottom: '20px' },
+    quizOptions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' },
+    quizBtn: {
+        padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(17,17,22,0.8)', color: '#E8E8ED', fontSize: '13px', cursor: 'pointer',
+        transition: 'all 0.2s', fontFamily: "'Inter', sans-serif",
+    },
+    quizInfo: { marginTop: '16px', fontSize: '13px', color: '#10B981', textAlign: 'center', fontStyle: 'italic' },
+    quizDot: {
+        width: '8px', height: '8px', borderRadius: '50%', border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+    },
 
-    footer: { padding: '100px 50px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#050508' },
-    footerLeft: { display: 'flex', flexDirection: 'column', gap: '10px' },
-    footerMeta: { fontSize: '14px', color: '#444', display: 'flex', gap: '30px', fontWeight: 600 },
-    logoText: { fontSize: '32px', fontWeight: 950, marginBottom: '15px', color: '#fff', letterSpacing: '-1px' }
+    // Stats & CTA
+    ctaSection: { padding: '80px 48px 60px', position: 'relative', zIndex: 1 },
+    statsRow: {
+        display: 'flex', justifyContent: 'center', gap: '48px', marginBottom: '60px', flexWrap: 'wrap',
+    },
+    statItem: { textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '4px' },
+    statNum: {
+        fontSize: '36px', fontWeight: 800, letterSpacing: '-0.02em',
+        background: 'linear-gradient(135deg, #00E5EE, #7C3AED)', WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+    },
+    statLabel: { fontSize: '13px', color: '#5A5A6A', fontWeight: 500 },
+    ctaBanner: {
+        textAlign: 'center', padding: '60px 40px', borderRadius: '24px',
+        background: 'rgba(10, 10, 15, 0.8)', border: '1px solid rgba(255,255,255,0.06)',
+        backdropFilter: 'blur(20px)',
+    },
+
+    // Footer
+    footer: {
+        borderTop: '1px solid rgba(255,255,255,0.04)', padding: '48px 48px 24px',
+        position: 'relative', zIndex: 1,
+    },
+    footerTop: { display: 'flex', justifyContent: 'space-between', marginBottom: '40px' },
+    footerLinks: { display: 'flex', gap: '60px' },
+    footerCol: { display: 'flex', flexDirection: 'column', gap: '10px' },
+    footerColTitle: { fontSize: '12px', fontWeight: 700, color: '#5A5A6A', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' },
+    footerLink: {
+        fontSize: '13px', color: '#9898A6', textDecoration: 'none', cursor: 'pointer',
+        background: 'none', border: 'none', textAlign: 'left', fontFamily: "'Inter', sans-serif",
+        padding: 0, transition: 'color 0.2s',
+    },
+    footerBottom: {
+        borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '20px', textAlign: 'center',
+    },
 };
-
 
 export default Home;

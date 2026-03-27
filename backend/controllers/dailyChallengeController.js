@@ -231,8 +231,8 @@ const getTodaysPersonalized = asyncHandler(async (req, res) => {
     const recommendationService = require('../services/recommendationService');
     const { weakAreas } = await recommendationService.getRecommendations(req.user._id);
 
-    // Pick the top weak area, or default to "Arrays"
-    const targetCategory = weakAreas && weakAreas.length > 0 ? weakAreas[0] : "Arrays";
+    // Pick the top weak area, or default to "arrays"
+    const targetCategory = (weakAreas && weakAreas.length > 0) ? weakAreas[0].topic : "arrays";
 
     // Find a challenge in that category that the user hasn't completed
     let challenge = null;

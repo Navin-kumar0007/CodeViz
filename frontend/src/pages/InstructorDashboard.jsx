@@ -320,8 +320,8 @@ const InstructorDashboard = () => {
 const styles = {
     container: {
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-        color: '#fff',
+        background: 'var(--bg-primary)',
+        color: 'var(--text-primary)',
         padding: '20px'
     },
     header: {
@@ -330,12 +330,12 @@ const styles = {
         justifyContent: 'space-between',
         marginBottom: '20px',
         paddingBottom: '15px',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
+        borderBottom: '1px solid var(--border-color)'
     },
     backBtn: {
         background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.2)',
-        color: '#fff',
+        border: '1px solid var(--border-color)',
+        color: 'var(--text-primary)',
         padding: '8px 16px',
         borderRadius: '8px',
         cursor: 'pointer'
@@ -345,7 +345,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        background: 'rgba(102, 126, 234, 0.2)',
+        background: 'rgba(13, 148, 136, 0.2)',
         padding: '8px 16px',
         borderRadius: '20px',
         fontSize: '13px'
@@ -362,7 +362,7 @@ const styles = {
         justifyContent: 'center',
         alignItems: 'center',
         height: '50vh',
-        color: '#888'
+        color: 'var(--text-muted)'
     },
     error: {
         background: 'rgba(255, 100, 100, 0.2)',
@@ -386,8 +386,8 @@ const styles = {
         textAlign: 'center'
     },
     cardIcon: { fontSize: '28px', marginBottom: '10px' },
-    cardValue: { fontSize: '32px', fontWeight: 'bold', color: '#667eea' },
-    cardLabel: { fontSize: '12px', color: '#888', marginTop: '5px' },
+    cardValue: { fontSize: '32px', fontWeight: 'bold', color: 'var(--accent-teal)' },
+    cardLabel: { fontSize: '12px', color: 'var(--text-muted)', marginTop: '5px' },
     mainContent: {
         display: 'grid',
         gridTemplateColumns: '280px 1fr',
@@ -402,11 +402,11 @@ const styles = {
     sidebarTitle: {
         margin: '0 0 15px 0',
         fontSize: '14px',
-        color: '#888',
+        color: 'var(--text-muted)',
         textTransform: 'uppercase',
         letterSpacing: '1px'
     },
-    noData: { color: '#666', fontSize: '13px', textAlign: 'center' },
+    noData: { color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center' },
     classroomList: { display: 'flex', flexDirection: 'column', gap: '8px' },
     classroomItem: {
         padding: '12px',
@@ -416,8 +416,8 @@ const styles = {
         background: 'rgba(255, 255, 255, 0.02)'
     },
     selectedClassroom: {
-        background: 'rgba(102, 126, 234, 0.2)',
-        border: '1px solid rgba(102, 126, 234, 0.4)'
+        background: 'rgba(13, 148, 136, 0.2)',
+        border: '1px solid rgba(13, 148, 136, 0.4)'
     },
     classroomName: {
         fontWeight: '600',
@@ -427,7 +427,7 @@ const styles = {
         gap: '8px'
     },
     liveDot: { color: '#e53935', fontSize: '10px' },
-    classroomMeta: { fontSize: '11px', color: '#888', marginTop: '4px' },
+    classroomMeta: { fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' },
     analyticsPanel: {
         background: 'rgba(255, 255, 255, 0.03)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -443,11 +443,11 @@ const styles = {
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
     },
     classroomTitle: { margin: '0 0 5px 0', fontSize: '20px' },
-    classroomCode: { color: '#888', fontSize: '13px' },
+    classroomCode: { color: 'var(--text-muted)', fontSize: '13px' },
     quickStats: { display: 'flex', gap: '20px' },
     quickStat: { textAlign: 'center' },
     quickStatValue: { display: 'block', fontSize: '24px', fontWeight: 'bold', color: '#4caf50' },
-    quickStatLabel: { fontSize: '11px', color: '#888' },
+    quickStatLabel: { fontSize: '11px', color: 'var(--text-muted)' },
     tableContainer: {
         overflowX: 'auto',
         marginBottom: '20px'
@@ -461,7 +461,7 @@ const styles = {
         textAlign: 'left',
         padding: '12px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontWeight: '600',
         fontSize: '11px',
         textTransform: 'uppercase'
@@ -474,13 +474,13 @@ const styles = {
     evenRow: { background: 'rgba(255, 255, 255, 0.02)' },
     noStudents: {
         textAlign: 'center',
-        color: '#666',
+        color: 'var(--text-muted)',
         padding: '30px'
     },
     studentName: { fontWeight: '500' },
-    studentEmail: { fontSize: '11px', color: '#888' },
+    studentEmail: { fontSize: '11px', color: 'var(--text-muted)' },
     lessonBadge: {
-        background: 'rgba(102, 126, 234, 0.2)',
+        background: 'rgba(13, 148, 136, 0.2)',
         padding: '4px 10px',
         borderRadius: '12px',
         fontSize: '12px'
@@ -517,7 +517,7 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         height: '300px',
-        color: '#666'
+        color: 'var(--text-muted)'
     }
 };
 

@@ -327,7 +327,7 @@ const styles = {
     reviewBtn: {
         padding: '6px 16px', border: 'none', borderRadius: '8px',
         background: 'linear-gradient(135deg, var(--accent-blue), var(--accent-purple))',
-        color: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+        color: 'var(--text-primary)', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
     },
     editorWrap: { flex: 1, minHeight: 0 },
     reviewPanel: {

@@ -7,7 +7,8 @@ export const STACKS_PATH = {
     id: 'stacks',
     title: 'Stacks',
     icon: '📚',
-    description: 'Master the LIFO principle! Learn push, pop, and practical applications of stacks.',
+    category: 'Data Structures',
+    description: 'Master the LIFO principle! Learn push, pop, and top operations.',
     prerequisites: ['hashmaps'],
     lessons: [
         {

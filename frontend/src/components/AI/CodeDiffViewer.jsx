@@ -33,14 +33,14 @@ const CodeDiffViewer = ({ diff, originalCode, onApply, onClose }) => {
                     : 'rgba(72, 187, 120, 0.15)',
                 borderLeft: side === 'left'
                     ? '3px solid #f56565'
-                    : '3px solid #48bb78'
+                    : '3px solid var(--accent-green)'
             };
         }
         if (change.type === 'removed' && side === 'left') {
             return { background: 'rgba(245, 101, 101, 0.2)', borderLeft: '3px solid #f56565', textDecoration: 'line-through', opacity: 0.7 };
         }
         if (change.type === 'added' && side === 'right') {
-            return { background: 'rgba(72, 187, 120, 0.2)', borderLeft: '3px solid #48bb78' };
+            return { background: 'rgba(72, 187, 120, 0.2)', borderLeft: '3px solid var(--accent-green)' };
         }
         return {};
     };
@@ -61,7 +61,7 @@ const CodeDiffViewer = ({ diff, originalCode, onApply, onClose }) => {
                     {diff.complexityBefore && diff.complexityAfter && (
                         <div style={styles.complexityBadge}>
                             <span style={styles.complexityBefore}>{diff.complexityBefore}</span>
-                            <span style={{ color: '#888' }}>→</span>
+                            <span style={{ color: 'var(--text-muted)' }}>→</span>
                             <span style={styles.complexityAfter}>{diff.complexityAfter}</span>
                         </div>
                     )}
@@ -126,7 +126,7 @@ const CodeDiffViewer = ({ diff, originalCode, onApply, onClose }) => {
                 {/* Right: Optimized */}
                 <div style={styles.diffPanel}>
                     <div style={styles.panelHeader}>
-                        <span style={{ ...styles.panelLabel, color: '#48bb78' }}>✨ Optimized</span>
+                        <span style={{ ...styles.panelLabel, color: 'var(--accent-green)' }}>✨ Optimized</span>
                         <span style={styles.lineCount}>{optimizedLines.length} lines</span>
                     </div>
                     <div style={styles.codeBlock}>
@@ -172,7 +172,7 @@ const CodeDiffViewer = ({ diff, originalCode, onApply, onClose }) => {
                             transition={{ delay: i * 0.1 }}
                             style={{
                                 ...styles.reasonItem,
-                                ...(selectedChange === i ? { borderColor: '#667eea', background: 'rgba(102, 126, 234, 0.1)' } : {})
+                                ...(selectedChange === i ? { borderColor: 'var(--accent-teal)', background: 'rgba(13, 148, 136, 0.1)' } : {})
                             }}
                             onClick={() => setSelectedChange(i === selectedChange ? null : i)}
                         >
@@ -183,7 +183,7 @@ const CodeDiffViewer = ({ diff, originalCode, onApply, onClose }) => {
                                         change.type === 'added' ? 'rgba(72, 187, 120, 0.2)' :
                                             'rgba(245, 101, 101, 0.2)',
                                     color: change.type === 'modified' ? '#ed8936' :
-                                        change.type === 'added' ? '#48bb78' : '#f56565'
+                                        change.type === 'added' ? 'var(--accent-green)' : '#f56565'
                                 }}>
                                     {change.type === 'modified' ? '✏️' : change.type === 'added' ? '➕' : '➖'} Line {change.line}
                                 </span>
@@ -213,9 +213,9 @@ const CodeDiffViewer = ({ diff, originalCode, onApply, onClose }) => {
 
 const styles = {
     container: {
-        background: 'rgba(15, 15, 30, 0.98)',
+        background: 'var(--bg-white)',
         borderRadius: '12px',
-        border: '1px solid rgba(102, 126, 234, 0.2)',
+        border: '1px solid rgba(13, 148, 136, 0.2)',
         overflow: 'hidden'
     },
     header: {
@@ -223,7 +223,7 @@ const styles = {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '12px 16px',
-        background: 'rgba(102, 126, 234, 0.08)',
+        background: 'rgba(13, 148, 136, 0.08)',
         borderBottom: '1px solid rgba(255,255,255,0.06)'
     },
     headerLeft: {
@@ -232,7 +232,7 @@ const styles = {
         gap: '8px'
     },
     headerTitle: {
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontWeight: 'bold',
         fontSize: '14px'
     },
@@ -246,7 +246,7 @@ const styles = {
         alignItems: 'center',
         gap: '6px',
         padding: '4px 10px',
-        background: 'rgba(0,0,0,0.3)',
+        background: 'var(--bg-muted)',
         borderRadius: '6px',
         fontSize: '12px',
         fontWeight: 'bold'
@@ -256,11 +256,11 @@ const styles = {
         textDecoration: 'line-through'
     },
     complexityAfter: {
-        color: '#48bb78'
+        color: 'var(--accent-green)'
     },
     patternBadge: {
         padding: '4px 10px',
-        background: 'rgba(102, 126, 234, 0.15)',
+        background: 'rgba(13, 148, 136, 0.15)',
         borderRadius: '6px',
         fontSize: '11px',
         color: '#a5b4fc',
@@ -269,7 +269,7 @@ const styles = {
     closeBtn: {
         background: 'none',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '20px',
         cursor: 'pointer'
     },
@@ -277,7 +277,7 @@ const styles = {
         padding: '10px 16px',
         fontSize: '13px',
         color: '#ccc',
-        background: 'rgba(102, 126, 234, 0.05)',
+        background: 'rgba(13, 148, 136, 0.05)',
         borderBottom: '1px solid rgba(255,255,255,0.04)'
     },
     diffContainer: {
@@ -296,8 +296,8 @@ const styles = {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '6px 12px',
-        background: 'rgba(0,0,0,0.2)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)'
+        background: 'var(--bg-muted)',
+        borderBottom: '1px solid var(--border-color)'
     },
     panelLabel: {
         fontSize: '11px',
@@ -306,7 +306,7 @@ const styles = {
     },
     lineCount: {
         fontSize: '10px',
-        color: '#666'
+        color: 'var(--text-muted)'
     },
     codeBlock: {
         flex: 1,
@@ -325,7 +325,7 @@ const styles = {
     lineNumber: {
         width: '28px',
         textAlign: 'right',
-        color: '#555',
+        color: 'var(--text-muted)',
         fontSize: '10px',
         marginRight: '10px',
         flexShrink: 0,
@@ -344,8 +344,8 @@ const styles = {
         flexShrink: 0
     },
     selectedLine: {
-        background: 'rgba(102, 126, 234, 0.15) !important',
-        borderLeftColor: '#667eea !important'
+        background: 'rgba(13, 148, 136, 0.15) !important',
+        borderLeftColor: 'var(--accent-teal) !important'
     },
     divider: {
         display: 'flex',
@@ -353,7 +353,7 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         width: '24px',
-        background: 'rgba(0,0,0,0.3)',
+        background: 'var(--bg-muted)',
         flexShrink: 0
     },
     dividerLine: {
@@ -362,7 +362,7 @@ const styles = {
         background: 'rgba(255,255,255,0.1)'
     },
     dividerIcon: {
-        color: '#667eea',
+        color: 'var(--accent-teal)',
         fontSize: '14px',
         padding: '4px 0'
     },
@@ -376,7 +376,7 @@ const styles = {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '8px 16px',
-        background: 'rgba(0,0,0,0.2)',
+        background: 'var(--bg-muted)',
         fontSize: '12px',
         fontWeight: 'bold',
         color: '#ccc'
@@ -384,7 +384,7 @@ const styles = {
     toggleReasonsBtn: {
         background: 'none',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '11px',
         cursor: 'pointer'
     },
@@ -422,8 +422,8 @@ const styles = {
     },
     showReasonsBtn: {
         padding: '6px 14px',
-        background: 'rgba(102, 126, 234, 0.15)',
-        border: '1px solid rgba(102, 126, 234, 0.3)',
+        background: 'rgba(13, 148, 136, 0.15)',
+        border: '1px solid rgba(13, 148, 136, 0.3)',
         borderRadius: '8px',
         color: '#a5b4fc',
         fontSize: '11px',
@@ -432,10 +432,10 @@ const styles = {
     },
     applyBtn: {
         padding: '8px 18px',
-        background: 'linear-gradient(135deg, #48bb78, #38a169)',
+        background: 'linear-gradient(135deg, var(--accent-green), #38a169)',
         border: 'none',
         borderRadius: '8px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '12px',
         fontWeight: 'bold',
         cursor: 'pointer',

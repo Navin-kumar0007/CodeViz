@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Layout/Sidebar';
+import Topnav from './components/Layout/Topnav';
 import StatusBar from './components/Layout/StatusBar';
 import OfflineBanner from './components/Network/OfflineBanner';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -40,6 +41,14 @@ const ProblemSolve = lazy(() => import('./pages/ProblemSolve'));
 const GitLearn = lazy(() => import('./pages/GitLearn'));
 const AlgoRace = lazy(() => import('./pages/AlgoRace'));
 const PeerReview = lazy(() => import('./pages/PeerReview'));
+const InterviewDashboard = lazy(() => import('./pages/InterviewDashboard'));
+const LiveInterview = lazy(() => import('./pages/LiveInterview'));
+const CareerPathway = lazy(() => import('./pages/CareerPathway'));
+const NeuralPathway = lazy(() => import('./pages/NeuralPathway'));
+const Profile = lazy(() => import('./pages/Profile'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const About = lazy(() => import('./pages/About'));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -52,7 +61,7 @@ import GlobalBackground from './components/Layout/GlobalBackground';
 // Layout wrapper — adds Sidebar + StatusBar on protected pages
 const AppLayout = ({ children }) => {
   const location = useLocation();
-  const publicPaths = ['/home', '/login', '/signup'];
+  const publicPaths = ['/home', '/login', '/signup', '/about'];
   const isSnippet = location.pathname.startsWith('/snippet/');
   const isPublic = publicPaths.includes(location.pathname) || isSnippet;
 
@@ -63,8 +72,11 @@ const AppLayout = ({ children }) => {
       <GlobalBackground />
       <div className="app-layout" style={{ background: 'transparent' }}>
         <Sidebar />
-        <main className="app-main">
-          {children}
+        <main className="app-main" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+          <Topnav />
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {children}
+          </div>
         </main>
         <StatusBar />
         <MobileTabBar current={location.pathname} />
@@ -106,7 +118,10 @@ const AnimatedRoutes = () => {
         <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/snippet/:id" element={<SnippetViewer />} />
+        <Route path="/about" element={<About />} />
         <Route path="/classroom/join/:code" element={<ClassroomJoinHandler />} />
 
         {/* Protected Routes */}
@@ -129,6 +144,10 @@ const AnimatedRoutes = () => {
         <Route path="/campus" element={<ProtectedRoute><CampusDashboard /></ProtectedRoute>} />
         <Route path="/campus/:id" element={<ProtectedRoute><ClassroomDetails /></ProtectedRoute>} />
         <Route path="/interview-prep" element={<ProtectedRoute><InterviewPrep /></ProtectedRoute>} />
+        <Route path="/interview-dashboard" element={<ProtectedRoute><InterviewDashboard /></ProtectedRoute>} />
+        <Route path="/live-interview/:sessionId" element={<ProtectedRoute><LiveInterview /></ProtectedRoute>} />
+        <Route path="/career-pathway" element={<ProtectedRoute><CareerPathway /></ProtectedRoute>} />
+        <Route path="/neural-pathway" element={<ProtectedRoute><NeuralPathway /></ProtectedRoute>} />
         <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
         <Route path="/video-lessons" element={<ProtectedRoute><VideoLessons /></ProtectedRoute>} />
         <Route path="/progress" element={<ProtectedRoute><ProgressReports /></ProtectedRoute>} />
@@ -136,6 +155,7 @@ const AnimatedRoutes = () => {
         <Route path="/problems/:slug" element={<ProtectedRoute><ProblemSolve /></ProtectedRoute>} />
         <Route path="/git-learn" element={<ProtectedRoute><GitLearn /></ProtectedRoute>} />
         <Route path="/algo-race" element={<ProtectedRoute><AlgoRace /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   );
@@ -151,7 +171,7 @@ const App = () => {
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '15px' }}>
               <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(167, 139, 250, 0.2)', borderTop: '4px solid #A78BFA', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
               <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-              <p style={{ color: '#888' }}>Loading Workspace...</p>
+              <p style={{ color: 'var(--text-muted)' }}>Loading Workspace...</p>
             </div>
           }>
             <AnimatedRoutes />

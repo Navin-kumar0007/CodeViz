@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import axios from 'axios';
 import API_BASE from '../../utils/api';
 
@@ -74,96 +75,76 @@ const SkillTreeWidget = () => {
 };
 
 const getDomainColor = (domain) => {
-    const colors = {
-        'Arrays': '#4facfe',
-        'Logic': '#f6ad55',
-        'DS': '#a855f7',
-        'Algorithms': '#f56565',
-        'Efficiency': '#48bb78',
-        'Systems': '#ed8936'
-    };
-    return colors[domain] || '#718096';
+    return 'var(--accent-cyan)'; // Ion Cyan neon glow
 };
 
 const styles = {
     container: {
-        background: 'linear-gradient(145deg, #1a202c, #2d3748)',
-        borderRadius: '16px',
-        padding: '24px',
-        border: '1px solid #4a5568',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
         width: '100%',
-        boxSizing: 'border-box',
-        minHeight: '400px'
+        boxSizing: 'border-box'
     },
     header: {
-        marginBottom: '20px'
+        marginBottom: '16px'
     },
     title: {
         margin: 0,
-        fontSize: '22px',
-        fontWeight: 'bold',
-        background: 'linear-gradient(90deg, #48bb78, #4fd1c5)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent'
+        fontSize: '15px',
+        fontWeight: 600,
+        color: 'var(--text-primary)'
     },
     subtitle: {
-        margin: '5px 0 0 0',
-        fontSize: '13px',
-        color: '#a0aec0'
+        margin: '2px 0 0 0',
+        fontSize: '12px',
+        color: 'var(--text-secondary)'
     },
     treeWrapper: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '15px'
+        gap: '8px'
     },
     nodeWrapper: {
-        background: 'rgba(0,0,0,0.2)',
-        padding: '12px',
-        borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.05)'
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '4px'
     },
     nodeHeader: {
         display: 'flex',
         justifyContent: 'space-between',
-        marginBottom: '8px',
-        alignItems: 'center'
+        alignItems: 'baseline'
     },
     nodeTitle: {
-        fontSize: '14px',
-        fontWeight: 'bold',
-        color: '#e2e8f0'
+        fontSize: '13px',
+        fontWeight: 500,
+        color: 'var(--text-primary)'
     },
     nodePercent: {
-        fontSize: '12px',
-        color: '#718096'
+        fontSize: '11px',
+        color: 'var(--text-secondary)'
     },
     progressBarBg: {
-        height: '6px',
-        background: '#2d3748',
-        borderRadius: '3px',
+        height: '4px',
+        background: 'var(--border-color)',
+        borderRadius: '0',
         overflow: 'hidden'
     },
     progressBarFill: {
         height: '100%',
-        borderRadius: '3px'
+        borderRadius: '0'
     },
     nodeFooter: {
-        marginTop: '6px',
-        fontSize: '11px',
-        color: '#4a5568',
-        textAlign: 'right'
+        display: 'none' // Hide for density
     },
     loading: {
-        padding: '40px',
+        padding: '20px',
         textAlign: 'center',
-        color: '#a0aec0',
-        background: '#2d3748',
-        borderRadius: '16px'
+        color: 'var(--text-muted)',
+        background: 'var(--bg-surface)',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid var(--border-color)'
     },
     empty: {
-        color: '#a0aec0',
-        padding: '40px',
+        color: 'var(--text-muted)',
+        padding: '20px',
         textAlign: 'center'
     }
 };

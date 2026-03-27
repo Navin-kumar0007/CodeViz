@@ -2,10 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { useTheme } from '../../contexts/ThemeContext';
 
-// ⚡️ NOW ACCEPTS 'activeLine' PROP
-const CodeEditor = ({ code, setCode, language, activeLine }) => {
+// ⚡️ NOW ACCEPTS 'activeLine' AND 'heatmapData' PROPS
+const CodeEditor = ({ code, setCode, language, activeLine, heatmapData }) => {
   const editorRef = useRef(null);
   const decorationsRef = useRef([]);
+  const heatmapDecorationsRef = useRef([]);
   const { colors } = useTheme();
 
   // 1. Capture Editor Instance on Mount
@@ -74,8 +75,45 @@ const CodeEditor = ({ code, setCode, language, activeLine }) => {
     }
   }, [activeLine]);
 
+  // 4. 🔥 VISUAL BIG-O HEATMAP LOGIC
+  useEffect(() => {
+    if (editorRef.current && heatmapData && Object.keys(heatmapData).length > 0) {
+      const editor = editorRef.current;
+      const hitCounts = Object.values(heatmapData);
+      const maxHits = Math.max(...hitCounts);
+
+      const newHeatmapDecorations = Object.entries(heatmapData).map(([line, count]) => {
+        const intensity = count / maxHits;
+        let className = 'heatmap-low';
+        if (intensity > 0.7) className = 'heatmap-high';
+        else if (intensity > 0.3) className = 'heatmap-med';
+
+        return {
+          range: {
+            startLineNumber: parseInt(line),
+            startColumn: 1,
+            endLineNumber: parseInt(line),
+            endColumn: 1
+          },
+          options: {
+            isWholeLine: true,
+            className: className,
+            marginClassName: 'heatmap-margin'
+          }
+        };
+      });
+
+      heatmapDecorationsRef.current = editor.deltaDecorations(
+        heatmapDecorationsRef.current,
+        newHeatmapDecorations
+      );
+    } else if (editorRef.current) {
+      heatmapDecorationsRef.current = editorRef.current.deltaDecorations(heatmapDecorationsRef.current, []);
+    }
+  }, [heatmapData]);
+
   return (
-    <div style={{ height: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #333' }}>
+    <div style={{ height: '100%', borderRadius: '0', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
       <Editor
         height="100%"
         defaultLanguage={language === 'java' || language === 'cpp' ? 'java' : language}

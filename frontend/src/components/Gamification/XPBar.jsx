@@ -28,51 +28,42 @@ const styles = {
     container: {
         display: 'flex',
         alignItems: 'center',
-        gap: '10px',
+        gap: '12px',
         minWidth: '200px'
     },
     levelBadge: {
-        background: 'linear-gradient(135deg, rgba(97,218,251,0.2), rgba(198,120,221,0.2))',
-        border: '1px solid rgba(198,120,221,0.5)',
-        color: 'var(--text-bright)',
-        padding: '4px 10px',
-        borderRadius: '8px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 800,
-        fontSize: '11px',
+        color: 'var(--text-primary)',
+        padding: '0 8px 0 0',
+        borderRight: '1px solid var(--border-color)',
+        fontWeight: 600,
+        fontSize: '12px',
         fontFamily: 'var(--font-code, monospace)',
         whiteSpace: 'nowrap',
-        boxShadow: '0 0 15px rgba(198,120,221,0.4)',
-        letterSpacing: '0.5px'
     },
     barContainer: {
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        gap: '4px'
+        gap: '2px'
     },
     barBackground: {
-        height: '8px',
-        background: 'rgba(255,255,255,0.05)',
-        borderRadius: '4px',
+        height: '4px',
+        background: 'var(--border-color)',
+        borderRadius: '0',
         overflow: 'hidden',
-        boxShadow: 'inset 0 0 5px rgba(0,0,0,0.5)'
     },
     barFill: {
         height: '100%',
-        background: 'linear-gradient(90deg, #4facfe, #00f2fe)',
-        borderRadius: '4px',
+        background: 'var(--accent-cyan)',
+        borderRadius: '0',
         transition: 'width 0.5s ease-out',
-        boxShadow: '0 0 10px #00f2fe'
+        boxShadow: '0 0 10px rgba(0, 245, 255, 0.4)',
     },
     xpText: {
         fontSize: '10px',
-        color: 'var(--text-secondary)',
+        color: 'var(--text-muted)',
         fontFamily: 'var(--font-code)',
         textAlign: 'right',
-        letterSpacing: '1px',
     }
 };
 

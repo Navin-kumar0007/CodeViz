@@ -30,16 +30,16 @@ const LessonList = ({ lessons, progress, onSelectLesson }) => {
                             ...styles.lessonCard,
                             opacity: previousCompleted ? 1 : 0.5,
                             cursor: previousCompleted ? 'pointer' : 'not-allowed',
-                            borderColor: completed ? '#48bb78' : 'rgba(255,255,255,0.1)'
+                            borderColor: completed ? 'var(--accent-green)' : 'rgba(255,255,255,0.1)'
                         }}
                     >
                         {/* Lesson number */}
                         <div style={{
                             ...styles.lessonNumber,
                             background: completed
-                                ? 'linear-gradient(135deg, #48bb78, #38a169)'
+                                ? 'linear-gradient(135deg, var(--accent-green), #38a169)'
                                 : previousCompleted
-                                    ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                                    ? 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))'
                                     : 'rgba(255,255,255,0.1)'
                         }}>
                             {completed ? '✓' : index + 1}
@@ -58,7 +58,7 @@ const LessonList = ({ lessons, progress, onSelectLesson }) => {
                         {score !== undefined && (
                             <div style={{
                                 ...styles.scoreBadge,
-                                background: score >= 70 ? '#48bb78' : '#f6ad55'
+                                background: score >= 70 ? 'var(--accent-green)' : 'var(--accent-yellow)'
                             }}>
                                 {score}%
                             </div>
@@ -100,7 +100,7 @@ const styles = {
         justifyContent: 'center',
         fontSize: '16px',
         fontWeight: 'bold',
-        color: 'white',
+        color: 'var(--text-primary)',
         flexShrink: 0
     },
     lessonInfo: {
@@ -110,21 +110,21 @@ const styles = {
         margin: '0 0 4px 0',
         fontSize: '15px',
         fontWeight: '600',
-        color: '#fff'
+        color: 'var(--text-primary)'
     },
     lessonMeta: {
         fontSize: '12px',
-        color: '#666'
+        color: 'var(--text-muted)'
     },
     scoreBadge: {
         padding: '4px 10px',
         borderRadius: '20px',
         fontSize: '11px',
         fontWeight: 'bold',
-        color: 'white'
+        color: 'var(--text-primary)'
     },
     arrow: {
-        color: '#666',
+        color: 'var(--text-muted)',
         fontSize: '18px'
     }
 };

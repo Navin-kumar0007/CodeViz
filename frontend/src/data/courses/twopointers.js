@@ -5,9 +5,10 @@
 
 export const TWOPOINTERS_PATH = {
     id: 'twopointers',
-    title: 'Two Pointers',
-    icon: '👈👉',
-    description: 'Master the Two Pointers and Sliding Window techniques to solve Array/String problems in O(N) time.',
+    title: 'Two Pointers Technique',
+    icon: '↔️',
+    category: 'Algorithm Mastery',
+    description: 'Optimize your array and string searches using two pointers moving in sync.',
     prerequisites: ['arrays', 'strings'],
     lessons: [
         {

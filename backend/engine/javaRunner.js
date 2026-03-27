@@ -1,13 +1,13 @@
 const fs = require('fs');
-const { execSync } = require('child_process');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 // 1. SETUP PATHS
-const sourcePath = process.argv[2]; 
+const sourcePath = process.argv[2];
 if (!sourcePath) process.exit(1);
 
 const dir = path.dirname(sourcePath);
-const className = "Main_" + Math.random().toString(36).substring(7);
+const className = 'Main_' + Math.random().toString(36).substring(7);
 const javaFilePath = path.join(dir, `${className}.java`);
 
 const userCode = fs.readFileSync(sourcePath, 'utf-8');
@@ -15,163 +15,259 @@ const lines = userCode.split('\n');
 const instrumentedLines = [];
 
 // 2. HEADER
+// Key improvements vs original:
+//   - Redirects System.out to a ByteArrayOutputStream so user print output is captured
+//   - Writes trace JSON to System.err (separate channel)
+//   - Output format matches Python tracer: call_stack + stdout field
+//   - Streams one JSON object per line (not batched at end)
+//   - Handles: int[], double[], ArrayList, LinkedList, HashMap, primitive types
 const header = `
 import java.util.*;
+import java.io.*;
 
 public class ${className} {
+
+    // ── STDOUT CAPTURE ────────────────────────────────────────────────────
+    // Redirect System.out so user println() calls are captured per step
+    static ByteArrayOutputStream _outBuf = new ByteArrayOutputStream();
+    static PrintStream _origOut = System.out;
+
+    static String flushCaptured() {
+        String val = _outBuf.toString();
+        _outBuf.reset();
+        return val;
+    }
+
+    // ── TRACER ────────────────────────────────────────────────────────────
     static class Trace {
-        static List<Map<String, Object>> history = new ArrayList<>();
-        
-        private static String escape(String val) {
+
+        static String escapeJson(String val) {
             if (val == null) return "null";
-            return val.replace("\\\\", "\\\\\\\\").replace("\\"", "\\\\\\"");
+            return val
+                .replace("\\\\", "\\\\\\\\")
+                .replace("\\"",  "\\\\\\"")
+                .replace("\\n",  "\\\\n")
+                .replace("\\r",  "\\\\r")
+                .replace("\\t",  "\\\\t");
         }
 
-        public static void log(int line, Map<String, Object> scope) {
-            Map<String, String> safeVars = new HashMap<>();
-            for (String key : scope.keySet()) {
-                Object val = scope.get(key);
-                
-                if (val == null) safeVars.put(key, "null");
-                else if (val instanceof int[]) safeVars.put(key, Arrays.toString((int[])val));
-                else if (val instanceof double[]) safeVars.put(key, Arrays.toString((double[])val));
-                else if (val instanceof boolean[]) safeVars.put(key, Arrays.toString((boolean[])val));
-                else if (val instanceof char[]) safeVars.put(key, Arrays.toString((char[])val));
-                else if (val instanceof Object[]) safeVars.put(key, Arrays.deepToString((Object[])val));
-                else safeVars.put(key, String.valueOf(val));
-            }
-
-            Map<String, Object> frame = new HashMap<>();
-            frame.put("line", line);
-            
-            Map<String, Object> stackFrame = new HashMap<>();
-            stackFrame.put("name", "main");
-            stackFrame.put("variables", safeVars);
-            
-            List<Map<String, Object>> stack = new ArrayList<>();
-            stack.add(stackFrame);
-            frame.put("stack", stack);
-            
-            history.add(frame);
+        // Serialize any object to a display string
+        static String serialize(Object val) {
+            if (val == null) return "null";
+            if (val instanceof int[])     return Arrays.toString((int[])val);
+            if (val instanceof double[])  return Arrays.toString((double[])val);
+            if (val instanceof float[])   return Arrays.toString((float[])val);
+            if (val instanceof long[])    return Arrays.toString((long[])val);
+            if (val instanceof boolean[]) return Arrays.toString((boolean[])val);
+            if (val instanceof char[])    return Arrays.toString((char[])val);
+            if (val instanceof Object[])  return Arrays.deepToString((Object[])val);
+            if (val instanceof Collection) return val.toString();
+            if (val instanceof Map)        return val.toString();
+            return String.valueOf(val);
         }
-        
-        public static void printJson() {
-            StringBuilder sb = new StringBuilder();
-            sb.append("{ \\"trace\\": [");
-            for (int i = 0; i < history.size(); i++) {
-                Map<String, Object> step = history.get(i);
-                sb.append("{ \\"line\\": ").append(step.get("line")).append(", ");
-                sb.append("\\"stack\\": [ { \\"name\\": \\"main\\", \\"variables\\": {");
-                
-                Object stackObj = step.get("stack");
-                List<Map<String, Object>> stackList = (List<Map<String, Object>>) stackObj;
-                Map<String, Object> frameMap = stackList.get(0);
-                Map<String, String> vars = (Map<String, String>) frameMap.get("variables");
 
-                int v = 0;
-                for (String k : vars.keySet()) {
-                    sb.append("\\"").append(k).append("\\": \\"")
-                      .append(escape(vars.get(k))).append("\\"");
-                    if (v < vars.size() - 1) sb.append(", ");
-                    v++;
-                }
-                sb.append("} } ] }");
-                if (i < history.size() - 1) sb.append(", ");
+        // Build the variables JSON object string
+        static String varsJson(Map<String, Object> scope) {
+            StringBuilder sb = new StringBuilder("{");
+            int i = 0;
+            for (String k : scope.keySet()) {
+                sb.append("\\"").append(k).append("\\":\\"")
+                  .append(escapeJson(serialize(scope.get(k)))).append("\\"");
+                if (i++ < scope.size() - 1) sb.append(",");
             }
-            sb.append("], \\"output\\": \\"\\" }");
-            System.out.println(sb.toString());
+            sb.append("}");
+            return sb.toString();
+        }
+
+        // Emit one trace step as a JSON line to System.err
+        // Format matches Python tracer: {line, variables, call_stack, stdout}
+        static void log(int line, String funcName, Map<String, Object> scope) {
+            String captured = escapeJson(flushCaptured());
+            String vj = varsJson(scope);
+
+            System.err.println(
+                "{\\"line\\":" + line +
+                ",\\"variables\\":" + vj +
+                ",\\"call_stack\\":[{\\"function\\":\\"" + funcName + "\\"" +
+                ",\\"line\\":" + line +
+                ",\\"variables\\":" + vj + "}]" +
+                ",\\"stdout\\":\\"" + captured + "\\"}"
+            );
+            System.err.flush();
         }
     }
 
     public static void main(String[] args) {
-        Map<String, Object> _scope = new HashMap<>();
+        // Redirect System.out to capture user print calls
+        System.setOut(new PrintStream(_outBuf));
+
+        Map<String, Object> _scope = new LinkedHashMap<>();
         try {
 `;
 
-// 3. PARSING LOGIC (Level 17: Break Support)
-const declRegex = /(?:int|double|String|boolean|float|char|long)(?:\[\])*(?:\[\])?\s+([a-zA-Z0-9_]+)\s*=/;
-const assignRegex = /([a-zA-Z0-9_]+)\s*=[^=]/;
+// 3. PARSE & INSTRUMENT USER CODE
+// Detects variable declarations and assignments, injects scope update + log calls
+// Supports: int, double, String, boolean, float, char, long,
+//           int[], double[], ArrayList, LinkedList, HashMap
+const declRegex = /^\s*(?:(?:ArrayList|LinkedList|HashMap|List|Map)\s*<[^>]+>|(?:int|double|String|boolean|float|char|long)(?:\[\])*)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*[=;({]/;
+const assignRegex = /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*(?:\[.*?\]\s*)?=[^=]/;
 
 let pendingVars = [];
 
 lines.forEach((line, idx) => {
     const ln = idx + 1;
     const trimmed = line.trim();
-    
-    // 1. Detect Variables
-    if (!trimmed.startsWith("//")) {
-        const declMatch = trimmed.match(declRegex);
-        if (declMatch) pendingVars.push(declMatch[1]);
-        
-        const assignMatch = trimmed.match(assignRegex);
-        if (assignMatch && !declMatch) pendingVars.push(assignMatch[1]);
-    }
 
-    // 2. ⚡️ SPECIAL CASE: BREAK / CONTINUE
-    // If we see a break, we inject the log BEFORE the line so it gets highlighted
-    if (trimmed.startsWith("break") || trimmed.startsWith("continue")) {
-        instrumentedLines.push(`Trace.log(${ln}, _scope);`);
-        instrumentedLines.push(line); // Original break comes AFTER
+    // Special case: break/continue — log BEFORE the line so the step is visible
+    if (trimmed.startsWith('break') || trimmed.startsWith('continue')) {
+        instrumentedLines.push(`Trace.log(${ln}, "main", _scope);`);
+        instrumentedLines.push(line);
         return;
     }
 
-    // 3. Normal Lines: Add Original Code First
+    // Push original line first
     instrumentedLines.push(line);
 
-    // 4. Inject Tracer for Standard Lines
-    const isStatementEnd = trimmed.endsWith(";");
-    const isBlockStart = trimmed.endsWith("{");
+    if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('*')) return;
 
-    // Safeguards
-    const startsWithControl = 
-        trimmed.startsWith("for") || 
-        trimmed.startsWith("while") || 
-        trimmed.startsWith("if") || 
-        trimmed.startsWith("else") ||
-        trimmed.startsWith("do") ||
-        trimmed.startsWith("try") ||
-        trimmed.startsWith("switch");
-
-    const isDataBlock = trimmed.includes("=") && trimmed.endsWith("{") && !startsWithControl;
-
-    const isIgnoredKeyword = 
-        trimmed.startsWith("return") || 
-        trimmed.startsWith("package") || 
-        trimmed.startsWith("import") || 
-        trimmed.startsWith("class") || 
-        trimmed.startsWith("interface") || 
-        trimmed.startsWith("try") || 
-        trimmed.startsWith("catch") || 
-        trimmed.startsWith("finally") ||
-        trimmed.includes("void main");
-
-    if ((isStatementEnd || (isBlockStart && !isDataBlock)) && !isIgnoredKeyword) {
-        // Flush pending variables
-        while(pendingVars.length > 0) {
-            const v = pendingVars.shift();
-            instrumentedLines.push(`_scope.put("${v}", ${v});`);
+    // Detect variable declarations
+    if (!trimmed.startsWith('//')) {
+        const declMatch = trimmed.match(declRegex);
+        if (declMatch) pendingVars.push(declMatch[1]);
+        else {
+            const asgn = trimmed.match(assignRegex);
+            if (asgn) pendingVars.push(asgn[1]);
         }
-        instrumentedLines.push(`Trace.log(${ln}, _scope);`);
+    }
+
+    const isStatementEnd = trimmed.endsWith(';');
+    const isBlockStart = trimmed.endsWith('{');
+
+    const isControl = /^(for|while|if|else|do|try|switch|catch|finally)\b/.test(trimmed);
+    const isDataBlock = trimmed.includes('=') && trimmed.endsWith('{') && !isControl;
+
+    const isIgnored =
+        trimmed.startsWith('return') ||
+        trimmed.startsWith('package') ||
+        trimmed.startsWith('import') ||
+        trimmed.startsWith('public ') ||
+        trimmed.startsWith('private ') ||
+        trimmed.startsWith('protected ') ||
+        trimmed.startsWith('class ') ||
+        trimmed.startsWith('interface ') ||
+        trimmed.startsWith('try') ||
+        trimmed.startsWith('catch') ||
+        trimmed.startsWith('finally') ||
+        trimmed.includes('void main');
+
+    if ((isStatementEnd || (isBlockStart && !isDataBlock)) && !isIgnored) {
+        // Flush detected variables into _scope
+        while (pendingVars.length > 0) {
+            const v = pendingVars.shift();
+            // Wrap in try-catch in case the variable isn't in scope yet
+            instrumentedLines.push(
+                `try { _scope.put("${v}", ${v}); } catch(Exception _e) {}`
+            );
+        }
+        instrumentedLines.push(`Trace.log(${ln}, "main", _scope);`);
     }
 });
 
 const footer = `
-        } catch (Exception e) { e.printStackTrace(); }
-        Trace.printJson();
+        } catch (Exception e) {
+            String _errMsg = "Runtime Error: " + e.getMessage();
+            System.err.println(
+                "{\\"line\\":0,\\"variables\\":{},\\"call_stack\\":[]" +
+                ",\\"stdout\\":\\"\\",\\"error\\":true,\\"errorMessage\\":\\"" +
+                Trace.escapeJson(_errMsg) + "\\"}"
+            );
+            System.err.flush();
+        } finally {
+            // Flush any remaining captured output
+            String _final = flushCaptured();
+            if (!_final.isEmpty()) {
+                System.err.println(
+                    "{\\"line\\":0,\\"variables\\":{},\\"call_stack\\":[]" +
+                    ",\\"stdout\\":\\"" + Trace.escapeJson(_final) + "\\"}"
+                );
+                System.err.flush();
+            }
+            System.setOut(_origOut);
+        }
     }
 }
 `;
 
-// 4. EXECUTE
+// 4. WRITE, COMPILE, RUN
 fs.writeFileSync(javaFilePath, header + instrumentedLines.join('\n') + footer);
 
+let classFile = null;
+
 try {
-    execSync(`javac -Xlint:unchecked "${javaFilePath}"`); 
-    const output = execSync(`java -cp "${dir}" ${className}`).toString();
-    console.log(output);
+    // Compile
+    const compile = spawnSync('javac', ['-Xlint:none', javaFilePath], {
+        timeout: 15000,
+        encoding: 'utf-8',
+    });
+
+    if (compile.status !== 0) {
+        process.stdout.write(
+            JSON.stringify({
+                line: 0, variables: {}, call_stack: [], stdout: '',
+                error: true,
+                errorMessage: 'Java Compilation Error:\n' + (compile.stderr || '')
+            }) + '\n'
+        );
+        return;
+    }
+
+    classFile = path.join(dir, `${className}.class`);
+
+    // Run with 5-second timeout
+    const run = spawnSync('java', ['-cp', dir, className], {
+        timeout: 5000,
+        encoding: 'utf-8',
+        maxBuffer: 10 * 1024 * 1024,
+    });
+
+    if (run.error && run.error.code === 'ETIMEDOUT') {
+        process.stdout.write(
+            JSON.stringify({
+                line: 0, variables: {}, call_stack: [],
+                stdout: 'Execution timed out (5s limit)', error: true
+            }) + '\n'
+        );
+        return;
+    }
+
+    // Each line of stderr is one trace step — forward to stdout for the controller
+    const traceLines = (run.stderr || '').trim().split('\n').filter(Boolean);
+    traceLines.forEach(l => process.stdout.write(l + '\n'));
+
+    // Runtime crash with no trace output
+    if (run.status !== 0 && traceLines.length === 0) {
+        process.stdout.write(
+            JSON.stringify({
+                line: 0, variables: {}, call_stack: [],
+                stdout: 'Runtime error: ' + (run.stderr || ''), error: true
+            }) + '\n'
+        );
+    }
+
 } catch (e) {
-    const err = e.stderr ? e.stderr.toString() : e.message;
-    console.log(JSON.stringify({ trace: [], error: "Java Compilation Error:\n" + err }));
+    process.stdout.write(
+        JSON.stringify({
+            line: 0, variables: {}, call_stack: [],
+            stdout: '', error: true, errorMessage: e.message
+        }) + '\n'
+    );
 } finally {
-    try { fs.unlinkSync(javaFilePath); fs.unlinkSync(path.join(dir, `${className}.class`)); } catch(e) {}
+    try { if (fs.existsSync(javaFilePath)) fs.unlinkSync(javaFilePath); } catch (_) { }
+    try { if (classFile && fs.existsSync(classFile)) fs.unlinkSync(classFile); } catch (_) { }
+    // Clean up any extra .class files (inner classes etc.)
+    try {
+        fs.readdirSync(dir)
+            .filter(f => f.startsWith(className) && f.endsWith('.class'))
+            .forEach(f => fs.unlinkSync(path.join(dir, f)));
+    } catch (_) { }
 }

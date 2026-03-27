@@ -30,7 +30,7 @@ const Row = ({ index, style, rowProps }) => {
                 {/* Index label */}
                 <div style={{
                     fontSize: '11px',
-                    color: '#888',
+                    color: 'var(--text-muted)',
                     fontWeight: 'bold',
                     fontFamily: 'monospace'
                 }}>
@@ -39,6 +39,7 @@ const Row = ({ index, style, rowProps }) => {
 
                 {/* Value box */}
                 <Motion.div
+                    layoutId={`val-${value}`} // 🔥 Shared ID for cross-structure animation
                     whileHover={{ scale: 1.05, rotate: 2 }}
                     style={{
                         minWidth: '50px',
@@ -47,7 +48,7 @@ const Row = ({ index, style, rowProps }) => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: 'white',
+                        color: 'var(--text-primary)',
                         borderRadius: '12px',
                         fontWeight: 'bold',
                         fontSize: '16px',
@@ -78,7 +79,7 @@ const VirtualizedArray = ({ name, items, state, getVariableColor }) => {
             style={{
                 background: 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: 'blur(10px)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                boxShadow: 'var(--shadow-sm)',
                 border: '2px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '16px',
                 padding: '15px',
@@ -113,7 +114,7 @@ const VirtualizedArray = ({ name, items, state, getVariableColor }) => {
                         </div>
                         <div style={{
                             fontSize: '11px',
-                            color: '#888'
+                            color: 'var(--text-muted)'
                         }}>
                             {items.length} elements (virtualized)
                         </div>
@@ -149,7 +150,7 @@ const VirtualizedArray = ({ name, items, state, getVariableColor }) => {
             <div style={{
                 marginTop: '10px',
                 fontSize: '10px',
-                color: '#666',
+                color: 'var(--text-muted)',
                 textAlign: 'center'
             }}>
                 ⚡ Virtual scrolling enabled - rendering {Math.min(maxVisibleItems, items.length)} of {items.length} items

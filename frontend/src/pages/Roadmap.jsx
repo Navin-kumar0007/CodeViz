@@ -131,8 +131,8 @@ const Roadmap = () => {
     const handleMouseUp = () => setIsPanning(false);
 
     const stateColors = {
-        completed: '#48bb78',
-        'in-progress': '#667eea',
+        completed: 'var(--accent-green)',
+        'in-progress': 'var(--accent-teal)',
         available: '#a0aec0',
         locked: '#4a5568'
     };
@@ -158,7 +158,7 @@ const Roadmap = () => {
                     {/* Zoom */}
                     <div style={styles.zoomControls}>
                         <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} style={styles.zoomBtn}>−</button>
-                        <span style={{ fontSize: '11px', color: '#888' }}>{Math.round(zoom * 100)}%</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{Math.round(zoom * 100)}%</span>
                         <button onClick={() => setZoom(z => Math.min(1.5, z + 0.1))} style={styles.zoomBtn}>+</button>
                     </div>
                 </div>
@@ -186,10 +186,10 @@ const Roadmap = () => {
 
             {/* Stats Row */}
             <div style={styles.statsRow}>
-                <span style={{ ...styles.statBadge, background: 'rgba(72, 187, 120, 0.15)', color: '#48bb78' }}>✅ {progressStats.completed} completed</span>
-                <span style={{ ...styles.statBadge, background: 'rgba(102, 126, 234, 0.15)', color: '#667eea' }}>🔵 {progressStats.inProgress} in progress</span>
-                <span style={{ ...styles.statBadge, background: 'rgba(160, 174, 192, 0.15)', color: '#a0aec0' }}>⚪ {progressStats.available} available</span>
-                <span style={{ ...styles.statBadge, background: 'rgba(74, 85, 104, 0.15)', color: '#4a5568' }}>🔒 {progressStats.locked} locked</span>
+                <span style={{ ...styles.statBadge, background: 'rgba(72, 187, 120, 0.15)', color: 'var(--accent-green)' }}>✅ {progressStats.completed} completed</span>
+                <span style={{ ...styles.statBadge, background: 'rgba(13, 148, 136, 0.15)', color: 'var(--accent-teal)' }}>🔵 {progressStats.inProgress} in progress</span>
+                <span style={{ ...styles.statBadge, background: 'rgba(160, 174, 192, 0.15)', color: 'var(--text-muted)' }}>⚪ {progressStats.available} available</span>
+                <span style={{ ...styles.statBadge, background: 'rgba(74, 85, 104, 0.15)', color: 'var(--text-secondary)' }}>🔒 {progressStats.locked} locked</span>
             </div>
 
             {/* SVG Skill Tree */}
@@ -221,7 +221,7 @@ const Roadmap = () => {
                                 y1={from.y + NODE_SIZE / 2}
                                 x2={to.x + NODE_SIZE / 2}
                                 y2={to.y + NODE_SIZE / 2}
-                                stroke={isCompleted ? '#48bb78' : 'rgba(255,255,255,0.08)'}
+                                stroke={isCompleted ? 'var(--accent-green)' : 'rgba(255,255,255,0.08)'}
                                 strokeWidth={isCompleted ? 2.5 : 1.5}
                                 strokeDasharray={isCompleted ? '' : '6 4'}
                                 style={{ transition: 'all 0.5s ease' }}
@@ -310,8 +310,8 @@ const Roadmap = () => {
                                         cx={pos.x + NODE_SIZE - 5}
                                         cy={pos.y + 10}
                                         r={10}
-                                        fill="#48bb78"
-                                        stroke="#1a1a2e"
+                                        fill="var(--accent-green)"
+                                        stroke="var(--border-color)"
                                         strokeWidth="2"
                                     />
                                 )}
@@ -361,7 +361,7 @@ const Roadmap = () => {
                                             width={NODE_SIZE + 40}
                                             height={22}
                                             rx={6}
-                                            fill="rgba(0,0,0,0.85)"
+                                            fill="var(--bg-primary)"
                                             stroke="#555"
                                         />
                                         <text
@@ -413,7 +413,7 @@ const Roadmap = () => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <span style={{ fontSize: '28px' }}>{selectedNode.icon}</span>
                                 <div>
-                                    <h3 style={{ margin: 0, color: '#fff' }}>{selectedNode.label}</h3>
+                                    <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{selectedNode.label}</h3>
                                     <span style={{ fontSize: '11px', color: CATEGORY_COLORS[selectedNode.category] || '#888' }}>
                                         {selectedNode.category}
                                     </span>
@@ -445,7 +445,7 @@ const Roadmap = () => {
                             {selectedNode.lessons?.map(lesson => (
                                 <div key={lesson} style={styles.lessonItem}>
                                     <span>{completedNodes.has(lesson) ? '✅' : '○'}</span>
-                                    <span style={{ color: completedNodes.has(lesson) ? '#48bb78' : '#ccc' }}>{lesson}</span>
+                                    <span style={{ color: completedNodes.has(lesson) ? 'var(--accent-green)' : '#ccc' }}>{lesson}</span>
                                 </div>
                             ))}
                         </div>
@@ -460,7 +460,7 @@ const Roadmap = () => {
                                     return (
                                         <div key={prereq} style={{ ...styles.lessonItem, cursor: 'pointer' }} onClick={() => prereqNode && setSelectedNode(prereqNode)}>
                                             <span>{prereqState === 'completed' ? '✅' : '⚪'}</span>
-                                            <span style={{ color: prereqState === 'completed' ? '#48bb78' : '#ccc' }}>{prereqNode?.label || prereq}</span>
+                                            <span style={{ color: prereqState === 'completed' ? 'var(--accent-green)' : '#ccc' }}>{prereqNode?.label || prereq}</span>
                                         </div>
                                     );
                                 })}
@@ -488,8 +488,8 @@ const Roadmap = () => {
 const styles = {
     container: {
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 100%)',
-        color: '#fff',
+        background: 'var(--bg-white)',
+        color: 'var(--text-primary)',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative'
@@ -500,7 +500,7 @@ const styles = {
         alignItems: 'center',
         padding: '16px 24px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
-        background: 'rgba(0,0,0,0.2)'
+        background: 'var(--bg-muted)'
     },
     headerLeft: {
         display: 'flex',
@@ -513,8 +513,8 @@ const styles = {
         gap: '20px'
     },
     backBtn: {
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.1)',
+        background: 'var(--bg-muted)',
+        border: '1px solid var(--border-color)',
         color: '#aaa',
         padding: '6px 14px',
         borderRadius: '8px',
@@ -540,20 +540,20 @@ const styles = {
     },
     progressFill: {
         height: '100%',
-        background: 'linear-gradient(90deg, #48bb78, #38a169)',
+        background: 'linear-gradient(90deg, var(--accent-green), #38a169)',
         borderRadius: '3px',
         transition: 'width 0.5s ease'
     },
     progressText: {
         fontSize: '12px',
-        color: '#888'
+        color: 'var(--text-muted)'
     },
     zoomControls: {
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
         padding: '4px 8px',
-        background: 'rgba(255,255,255,0.05)',
+        background: 'var(--bg-muted)',
         borderRadius: '8px'
     },
     zoomBtn: {
@@ -578,7 +578,7 @@ const styles = {
         gap: '4px',
         padding: '14px 24px',
         borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.08)',
+        border: '1px solid var(--border-color)',
         cursor: 'pointer',
         minWidth: '180px',
         transition: 'all 0.3s ease'
@@ -606,13 +606,13 @@ const styles = {
         right: '20px',
         width: '320px',
         maxHeight: 'calc(100vh - 120px)',
-        background: 'rgba(20, 20, 35, 0.98)',
+        background: 'var(--bg-white)',
         borderRadius: '16px',
-        border: '1px solid rgba(102, 126, 234, 0.3)',
+        border: '1px solid rgba(13, 148, 136, 0.3)',
         boxShadow: '0 8px 40px rgba(0, 0, 0, 0.5)',
         zIndex: 100,
         overflow: 'auto',
-        backdropFilter: 'blur(20px)'
+        
     },
     detailHeader: {
         display: 'flex',
@@ -620,12 +620,12 @@ const styles = {
         alignItems: 'center',
         padding: '16px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
-        background: 'rgba(102, 126, 234, 0.05)'
+        background: 'rgba(13, 148, 136, 0.05)'
     },
     closeDetailBtn: {
         background: 'none',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '24px',
         cursor: 'pointer'
     },
@@ -639,14 +639,14 @@ const styles = {
     startBtn: {
         width: '100%',
         padding: '12px',
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
         border: 'none',
         borderRadius: '10px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '14px',
         fontWeight: 'bold',
         cursor: 'pointer',
-        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+        boxShadow: '0 4px 15px rgba(13, 148, 136, 0.4)'
     }
 };
 

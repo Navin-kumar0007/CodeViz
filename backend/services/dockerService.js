@@ -60,10 +60,16 @@ async function runInSandbox(code, language, input = '', onStream = null) {
             '--memory', MEMORY_LIMIT,
             '-v', `${tempDir}:/home/runner/code`,
             DOCKER_IMAGE,
-            'bash', '-c', `echo ${JSON.stringify(input)} | ${runCommand}`
+            'bash', '-c', runCommand
         ];
 
         const container = spawn('docker', dockerArgs);
+
+        // Feed standard input securely via STDIN, bypassing bash echoing which breaks newlines
+        if (input !== undefined && input !== null) {
+            container.stdin.write(input + '\n');
+        }
+        container.stdin.end();
 
         let stdout = '';
         let stderr = '';
@@ -91,7 +97,16 @@ async function runInSandbox(code, language, input = '', onStream = null) {
         });
 
         container.stderr.on('data', (data) => {
-            stderr += data.toString();
+            const chunk = data.toString();
+            stderr += chunk;
+
+            if (onStream) {
+                // Also stream stderr lines for tracers that use it (e.g. Java/C++ current impls)
+                const lines = chunk.split('\n');
+                lines.forEach(line => {
+                    if (line.trim()) onStream(line.trim());
+                });
+            }
         });
 
         container.on('close', (code) => {
@@ -105,7 +120,6 @@ async function runInSandbox(code, language, input = '', onStream = null) {
             if (onStream && lineBuffer.trim()) {
                 onStream(lineBuffer.trim());
             }
-
             resolve({
                 output: stdout.trim(),
                 error: stderr.trim(),

@@ -112,21 +112,21 @@ const PeerReview = () => {
     };
 
     if (loading && viewMode === 'list' && reviews.length === 0) {
-        return <div style={{ color: 'white', padding: '20px' }}>Loading...</div>;
+        return <div style={{ color: 'var(--text-primary)', padding: '20px' }}>Loading...</div>;
     }
 
     return (
-        <div style={{ padding: '20px', color: '#fff', maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ padding: '20px', color: 'var(--text-primary)', maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                 <div>
-                    <h1 style={{ margin: '0 0 10px 0', fontSize: '28px', color: '#667eea' }}>👀 Peer Code Review</h1>
+                    <h1 style={{ margin: '0 0 10px 0', fontSize: '28px', color: 'var(--accent-teal)' }}>👀 Peer Code Review</h1>
                     <p style={{ margin: 0, color: '#aaa' }}>Get feedback from fellow students or help others debug their code.</p>
                 </div>
                 <div>
                     {viewMode !== 'list' && (
                         <button
                             onClick={() => { setViewMode('list'); fetchReviews(); }}
-                            style={{ background: '#4a5568', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer', marginRight: '10px' }}
+                            style={{ background: '#4a5568', color: 'var(--text-primary)', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer', marginRight: '10px' }}
                         >
                             ← Back to List
                         </button>
@@ -134,7 +134,7 @@ const PeerReview = () => {
                     {viewMode === 'list' && (
                         <button
                             onClick={() => setViewMode('create')}
-                            style={{ background: '#48bb78', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
+                            style={{ background: 'var(--accent-green)', color: 'var(--text-primary)', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
                         >
                             + Request Review
                         </button>
@@ -145,30 +145,30 @@ const PeerReview = () => {
             {viewMode === 'list' && (
                 <div>
                     {reviews.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '40px', background: '#2d3748', borderRadius: '8px' }}>
+                        <div style={{ textAlign: 'center', padding: '40px', background: 'var(--bg-white)', borderRadius: '8px' }}>
                             <h3 style={{ margin: '0 0 10px 0' }}>No pending review requests!</h3>
                             <p style={{ color: '#aaa', margin: 0 }}>Be the first to ask the community for help.</p>
                         </div>
                     ) : (
                         <div style={{ display: 'grid', gap: '15px' }}>
                             {reviews.map(review => (
-                                <div key={review._id} style={{ background: '#2d3748', padding: '20px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div key={review._id} style={{ background: 'var(--bg-white)', padding: '20px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
                                         <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>
                                             {review.title}
-                                            {review.status === 'resolved' && <span style={{ marginLeft: '10px', fontSize: '12px', background: '#48bb78', padding: '3px 8px', borderRadius: '12px' }}>Resolved</span>}
+                                            {review.status === 'resolved' && <span style={{ marginLeft: '10px', fontSize: '12px', background: 'var(--accent-green)', padding: '3px 8px', borderRadius: '12px' }}>Resolved</span>}
                                         </h3>
                                         <p style={{ margin: '0 0 10px 0', color: '#cbd5e0', fontSize: '14px' }}>
-                                            Asked by <strong style={{ color: '#667eea' }}>{review.userId.name}</strong> • {new Date(review.createdAt).toLocaleDateString()}
+                                            Asked by <strong style={{ color: 'var(--accent-teal)' }}>{review.userId.name}</strong> • {new Date(review.createdAt).toLocaleDateString()}
                                         </p>
                                         <div style={{ display: 'flex', gap: '10px' }}>
-                                            <span style={{ fontSize: '12px', background: '#1a202c', padding: '4px 8px', borderRadius: '4px' }}>{review.language}</span>
-                                            <span style={{ fontSize: '12px', color: '#a0aec0' }}>💬 {review.comments.length} comments</span>
+                                            <span style={{ fontSize: '12px', background: 'var(--bg-muted)', padding: '4px 8px', borderRadius: '4px' }}>{review.language}</span>
+                                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>💬 {review.comments.length} comments</span>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => fetchSingleReview(review._id)}
-                                        style={{ background: '#667eea', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer' }}
+                                        style={{ background: 'var(--accent-teal)', color: 'var(--text-on-teal)', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer' }}
                                     >
                                         View Code
                                     </button>
@@ -180,7 +180,7 @@ const PeerReview = () => {
             )}
 
             {viewMode === 'create' && (
-                <div style={{ background: '#2d3748', padding: '25px', borderRadius: '8px' }}>
+                <div style={{ background: 'var(--bg-white)', padding: '25px', borderRadius: '8px' }}>
                     <h2 style={{ top: 0, margin: '0 0 20px 0' }}>Submit Code for Review</h2>
                     <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         <div>
@@ -191,7 +191,7 @@ const PeerReview = () => {
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="e.g. Help optimizing my QuickSort algorithm"
-                                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #4a5568', background: '#1a202c', color: 'white' }}
+                                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-muted)', color: 'var(--text-primary)' }}
                             />
                         </div>
                         <div>
@@ -201,7 +201,7 @@ const PeerReview = () => {
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 rows="3"
-                                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #4a5568', background: '#1a202c', color: 'white' }}
+                                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-muted)', color: 'var(--text-primary)' }}
                             />
                         </div>
                         <div>
@@ -209,7 +209,7 @@ const PeerReview = () => {
                             <select
                                 value={language}
                                 onChange={(e) => setLanguage(e.target.value)}
-                                style={{ padding: '10px', borderRadius: '4px', border: '1px solid #4a5568', background: '#1a202c', color: 'white' }}
+                                style={{ padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-muted)', color: 'var(--text-primary)' }}
                             >
                                 <option value="python">Python</option>
                                 <option value="javascript">JavaScript</option>
@@ -219,7 +219,7 @@ const PeerReview = () => {
                         </div>
                         <div>
                             <label style={{ display: 'block', marginBottom: '5px', color: '#cbd5e0' }}>Code</label>
-                            <div style={{ height: '300px', border: '1px solid #4a5568', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ height: '300px', border: '1px solid var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
                                 <Editor
                                     height="100%"
                                     language={language}
@@ -230,7 +230,7 @@ const PeerReview = () => {
                                 />
                             </div>
                         </div>
-                        <button type="submit" style={{ background: '#48bb78', padding: '12px', color: 'white', border: 'none', borderRadius: '5px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px' }}>
+                        <button type="submit" style={{ background: 'var(--accent-green)', padding: '12px', color: 'var(--text-primary)', border: 'none', borderRadius: '5px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px' }}>
                             Submit Request
                         </button>
                     </form>
@@ -240,26 +240,26 @@ const PeerReview = () => {
             {viewMode === 'detail' && selectedReview && (
                 <div style={{ display: 'flex', gap: '20px', flexDirection: window.innerWidth < 768 ? 'column' : 'row' }}>
                     <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div style={{ background: '#2d3748', padding: '20px', borderRadius: '8px' }}>
+                        <div style={{ background: 'var(--bg-white)', padding: '20px', borderRadius: '8px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 <div>
                                     <h2 style={{ margin: '0 0 10px 0' }}>{selectedReview.title}</h2>
                                     <p style={{ margin: '0 0 15px 0', color: '#cbd5e0' }}>{selectedReview.description}</p>
-                                    <div style={{ fontSize: '14px', color: '#a0aec0', marginBottom: '15px' }}>
-                                        By <strong style={{ color: '#667eea' }}>{selectedReview.userId.name}</strong> • Language: {selectedReview.language}
+                                    <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '15px' }}>
+                                        By <strong style={{ color: 'var(--accent-teal)' }}>{selectedReview.userId.name}</strong> • Language: {selectedReview.language}
                                     </div>
                                 </div>
                                 {selectedReview.status === 'open' && (user._id === selectedReview.userId._id || user.role === 'admin') && (
-                                    <button onClick={handleResolve} style={{ background: '#48bb78', border: 'none', padding: '8px 15px', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>
+                                    <button onClick={handleResolve} style={{ background: 'var(--accent-green)', border: 'none', padding: '8px 15px', color: 'var(--text-primary)', borderRadius: '4px', cursor: 'pointer' }}>
                                         Mark Resolved
                                     </button>
                                 )}
                                 {selectedReview.status === 'resolved' && (
-                                    <span style={{ background: '#48bb78', padding: '8px 15px', color: 'white', borderRadius: '4px', fontWeight: 'bold' }}>Resolved</span>
+                                    <span style={{ background: 'var(--accent-green)', padding: '8px 15px', color: 'var(--text-primary)', borderRadius: '4px', fontWeight: 'bold' }}>Resolved</span>
                                 )}
                             </div>
 
-                            <div style={{ height: '500px', border: '1px solid #4a5568', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ height: '500px', border: '1px solid var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
                                 <Editor
                                     height="100%"
                                     language={selectedReview.language}
@@ -272,17 +272,17 @@ const PeerReview = () => {
                     </div>
 
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div style={{ background: '#2d3748', padding: '20px', borderRadius: '8px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ background: 'var(--bg-white)', padding: '20px', borderRadius: '8px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <h3 style={{ margin: '0 0 15px 0', borderBottom: '1px solid #4a5568', paddingBottom: '10px' }}>Discussion</h3>
 
                             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '15px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                 {selectedReview.comments.length === 0 ? (
-                                    <p style={{ color: '#a0aec0', fontStyle: 'italic', textAlign: 'center', marginTop: '20px' }}>No comments yet.</p>
+                                    <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center', marginTop: '20px' }}>No comments yet.</p>
                                 ) : (
                                     selectedReview.comments.map(c => (
-                                        <div key={c._id} style={{ background: '#1a202c', padding: '12px', borderRadius: '6px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', color: '#a0aec0' }}>
-                                                <strong style={{ color: '#667eea' }}>{c.userId.name}</strong>
+                                        <div key={c._id} style={{ background: 'var(--bg-muted)', padding: '12px', borderRadius: '6px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                                                <strong style={{ color: 'var(--accent-teal)' }}>{c.userId.name}</strong>
                                                 <span>{new Date(c.createdAt).toLocaleTimeString()}</span>
                                             </div>
                                             {c.line && (
@@ -297,14 +297,14 @@ const PeerReview = () => {
                             </div>
 
                             {selectedReview.status === 'open' && (
-                                <form onSubmit={handleCommentSubmit} style={{ marginTop: 'auto', background: '#1a202c', padding: '15px', borderRadius: '6px' }}>
+                                <form onSubmit={handleCommentSubmit} style={{ marginTop: 'auto', background: 'var(--bg-muted)', padding: '15px', borderRadius: '6px' }}>
                                     <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                                         <input
                                             type="number"
                                             placeholder="Line # (opt)"
                                             value={commentLine}
                                             onChange={(e) => setCommentLine(e.target.value)}
-                                            style={{ width: '80px', padding: '8px', borderRadius: '4px', border: '1px solid #4a5568', background: '#2d3748', color: 'white' }}
+                                            style={{ width: '80px', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-primary)' }}
                                         />
                                         <input
                                             type="text"
@@ -312,10 +312,10 @@ const PeerReview = () => {
                                             placeholder="Write a comment..."
                                             value={commentText}
                                             onChange={(e) => setCommentText(e.target.value)}
-                                            style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #4a5568', background: '#2d3748', color: 'white' }}
+                                            style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-primary)' }}
                                         />
                                     </div>
-                                    <button type="submit" style={{ width: '100%', background: '#667eea', color: 'white', border: 'none', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}>
+                                    <button type="submit" style={{ width: '100%', background: 'var(--accent-teal)', color: 'var(--text-on-teal)', border: 'none', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}>
                                         Post Comment
                                     </button>
                                 </form>

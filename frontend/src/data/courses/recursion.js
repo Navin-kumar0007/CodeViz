@@ -5,9 +5,10 @@
 
 export const RECURSION_PATH = {
     id: 'recursion',
-    title: 'Recursion',
-    icon: '🔄',
-    description: 'Master the art of functions that call themselves — the gateway to trees, graphs, and dynamic programming.',
+    title: 'Recursion Masterclass',
+    icon: '🔁',
+    category: 'Algorithm Mastery',
+    description: 'Master the art of functions that call themselves to solve complex problems, graphs, and dynamic programming.',
     prerequisites: ['sorting'],
     lessons: [
         {

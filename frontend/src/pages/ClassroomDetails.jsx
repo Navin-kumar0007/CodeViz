@@ -172,7 +172,7 @@ const ClassroomDetails = () => {
                                     {a.submissions?.some(s => s.student === user._id) ? 'Re-Submit Assignment' : 'Solve Assignment'}
                                 </button>
                                 {a.submissions?.some(s => s.student === user._id) && (
-                                    <div style={{ marginTop: '10px', padding: '10px', background: 'rgba(72,187,120,0.1)', color: '#48bb78', borderRadius: '4px', textAlign: 'center', fontWeight: 'bold' }}>
+                                    <div style={{ marginTop: '10px', padding: '10px', background: 'rgba(72,187,120,0.1)', color: 'var(--accent-green)', borderRadius: '4px', textAlign: 'center', fontWeight: 'bold' }}>
                                         Score: {a.submissions.find(s => s.student === user._id).grade} / {a.maxPoints}
                                     </div>
                                 )}
@@ -235,11 +235,11 @@ const ClassroomDetails = () => {
                     <div style={{ ...styles.modal, maxWidth: '800px', width: '90vw', height: '80vh', display: 'flex', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                             <h2 style={{ margin: 0 }}>Solve: {activeAssignment.title}</h2>
-                            <button onClick={() => setShowSolveModal(false)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer' }}>&times;</button>
+                            <button onClick={() => setShowSolveModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '24px', cursor: 'pointer' }}>&times;</button>
                         </div>
                         <p style={{ color: '#cbd5e0', marginBottom: '15px' }}>{activeAssignment.description}</p>
 
-                        <div style={{ flex: 1, border: '1px solid #4a5568', borderRadius: '8px', overflow: 'hidden', marginBottom: '15px' }}>
+                        <div style={{ flex: 1, border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden', marginBottom: '15px' }}>
                             <Editor
                                 height="100%"
                                 language={activeAssignment.language}
@@ -254,15 +254,15 @@ const ClassroomDetails = () => {
                             <div style={{
                                 padding: '15px',
                                 background: solveResult.isCorrect ? 'rgba(72,187,120,0.1)' : 'rgba(252,129,129,0.1)',
-                                border: `1px solid ${solveResult.isCorrect ? '#48bb78' : '#fc8181'}`,
+                                border: `1px solid ${solveResult.isCorrect ? 'var(--accent-green)' : 'var(--accent-red)'}`,
                                 borderRadius: '8px',
                                 marginBottom: '15px'
                             }}>
-                                <h3 style={{ margin: '0 0 10px 0', color: solveResult.isCorrect ? '#48bb78' : '#fc8181' }}>
+                                <h3 style={{ margin: '0 0 10px 0', color: solveResult.isCorrect ? 'var(--accent-green)' : 'var(--accent-red)' }}>
                                     {solveResult.isCorrect ? '✅ Autograder Passed!' : '❌ Autograder Failed'}
                                     <span style={{ float: 'right' }}>{solveResult.grade} / {activeAssignment.maxPoints} pts</span>
                                 </h3>
-                                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '13px', color: '#e2e8f0' }}>
+                                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '13px', color: 'var(--text-primary)' }}>
                                     {solveResult.feedback}
                                 </pre>
                             </div>
@@ -282,39 +282,39 @@ const ClassroomDetails = () => {
 };
 
 const styles = {
-    center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#fff' },
-    page: { padding: '40px', maxWidth: '1200px', margin: '0 auto', color: '#fff' },
+    center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-primary)' },
+    page: { padding: '40px', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-primary)' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' },
     backBtn: { background: 'transparent', color: '#aaa', border: 'none', cursor: 'pointer', padding: 0, marginBottom: '10px' },
-    title: { fontSize: '32px', margin: '0 0 10px 0', color: '#fff' },
-    subtitle: { color: '#a0aec0', margin: 0 },
+    title: { fontSize: '32px', margin: '0 0 10px 0', color: 'var(--text-primary)' },
+    subtitle: { color: 'var(--text-muted)', margin: 0 },
     instructorPanel: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' },
-    codeBadge: { background: 'rgba(72, 187, 120, 0.2)', color: '#48bb78', padding: '8px 16px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', letterSpacing: '2px' },
-    primaryBtn: { background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+    codeBadge: { background: 'rgba(72, 187, 120, 0.2)', color: 'var(--accent-green)', padding: '8px 16px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', letterSpacing: '2px' },
+    primaryBtn: { background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
     content: { display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '30px' },
-    rosterPanel: { background: '#1a202c', padding: '20px', borderRadius: '12px', border: '1px solid #2d3748', height: 'fit-content' },
+    rosterPanel: { background: 'var(--bg-muted)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: 'fit-content' },
     memberList: { display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '15px' },
-    memberItem: { display: 'flex', justifyContent: 'space-between', padding: '10px', background: '#2d3748', borderRadius: '8px' },
-    roleTag: { background: '#764ba2', padding: '2px 8px', borderRadius: '4px', fontSize: '12px' },
-    xpText: { color: '#f6ad55', fontWeight: 'bold' },
+    memberItem: { display: 'flex', justifyContent: 'space-between', padding: '10px', background: 'var(--bg-white)', borderRadius: '8px' },
+    roleTag: { background: 'var(--accent-purple)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px' },
+    xpText: { color: 'var(--accent-yellow)', fontWeight: 'bold' },
     assignmentPanel: { display: 'flex', flexDirection: 'column', gap: '20px' },
-    emptyState: { padding: '40px', textAlign: 'center', background: '#1a202c', borderRadius: '12px', color: '#718096', border: '1px dashed #4a5568' },
-    assignmentCard: { background: '#2d3748', padding: '20px', borderRadius: '12px', border: '1px solid #4a5568' },
+    emptyState: { padding: '40px', textAlign: 'center', background: 'var(--bg-muted)', borderRadius: '12px', color: 'var(--text-secondary)', border: '1px dashed var(--border-color)' },
+    assignmentCard: { background: 'var(--bg-white)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' },
     assignmentHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    pointsBadge: { background: 'rgba(246, 173, 85, 0.2)', color: '#f6ad55', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' },
-    assignmentDesc: { color: '#e2e8f0', marginTop: '10px', marginBottom: '15px' },
+    pointsBadge: { background: 'rgba(246, 173, 85, 0.2)', color: 'var(--accent-yellow)', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' },
+    assignmentDesc: { color: 'var(--text-primary)', marginTop: '10px', marginBottom: '15px' },
     assignmentMeta: { display: 'flex', gap: '10px', marginBottom: '15px' },
     langTag: { background: '#4a5568', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' },
-    dueTag: { background: 'rgba(252, 129, 129, 0.2)', color: '#fc8181', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' },
-    solveBtn: { width: '100%', background: '#48bb78', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
-    secondaryBtnFull: { width: '100%', background: 'transparent', color: '#fff', border: '1px solid #48bb78', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
-    modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
-    modal: { background: '#1a202c', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '600px', border: '1px solid #4a5568' },
+    dueTag: { background: 'rgba(252, 129, 129, 0.2)', color: 'var(--accent-red)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' },
+    solveBtn: { width: '100%', background: 'var(--accent-green)', color: 'var(--text-primary)', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+    secondaryBtnFull: { width: '100%', background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--accent-green)', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+    modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
+    modal: { background: 'var(--bg-muted)', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '600px', border: '1px solid var(--border-color)' },
     form: { display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' },
     row: { display: 'flex', gap: '15px' },
-    input: { flex: 1, padding: '12px', borderRadius: '8px', background: '#2d3748', border: '1px solid #4a5568', color: '#fff', fontSize: '16px' },
-    textarea: { padding: '12px', borderRadius: '8px', background: '#2d3748', border: '1px solid #4a5568', color: '#fff', fontSize: '16px', minHeight: '100px' },
-    secondaryBtn: { background: 'transparent', color: '#fff', border: '1px solid #555', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' },
+    input: { flex: 1, padding: '12px', borderRadius: '8px', background: 'var(--bg-white)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '16px' },
+    textarea: { padding: '12px', borderRadius: '8px', background: 'var(--bg-white)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '16px', minHeight: '100px' },
+    secondaryBtn: { background: 'transparent', color: 'var(--text-primary)', border: '1px solid #555', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' },
     modalActions: { display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }
 };
 

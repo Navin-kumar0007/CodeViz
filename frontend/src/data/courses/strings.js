@@ -7,6 +7,7 @@ export const STRINGS_PATH = {
     id: 'strings',
     title: 'String Manipulation',
     icon: '📝',
+    category: 'Data Structures',
     description: 'Master string operations — palindromes, anagrams, pattern matching, and common interview tricks.',
     prerequisites: ['arrays'],
     lessons: [

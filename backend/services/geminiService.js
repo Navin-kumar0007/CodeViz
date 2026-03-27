@@ -64,7 +64,7 @@ const generateResponse = async (prompt, userId, cacheKey = null) => {
 
     // 3. Prepare Keys and Models for rotation
     const keys = (process.env.GEMINI_API_KEY || '').split(',').map(k => k.trim()).filter(Boolean);
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
 
     let lastError = null;
 
@@ -215,6 +215,81 @@ const ghostHint = async (code, language, errors, timeSpent, userId, skillLevel, 
     return generateResponse(prompt, userId);
 };
 
+/**
+ * @desc    Analyze algorithmic intuition based on struggle tokens
+ */
+const analyzeIntuition = async (code, struggleTokens, timeTaken, userId) => {
+    const prompt = `
+    Analyze this candidate's algorithmic intuition based on their problem-solving journey.
+    
+    Code:
+    ${code}
+    
+    Struggle Tokens:
+    - Backtracks (Timeline Reverses): ${struggleTokens.backtrackCount}
+    - Execution Frequency: ${struggleTokens.executionFrequency}
+    - Time Taken: ${timeTaken} seconds
+    
+    Provide a JSON response with:
+    {
+      "score": 0-100,
+      "feedback": "Qualitative analysis of their journey. Did they struggle with specific logic? Did they self-correct effectively?"
+    }
+    `;
+
+    try {
+        const text = await generateResponse(prompt, userId);
+        const cleaned = text.replace(/```json|```/g, '').trim();
+        return JSON.parse(cleaned);
+    } catch (e) {
+        console.error("Gemini Intuition Analysis Error:", e);
+        return { score: 50, feedback: "Analysis unavailable due to high demand." };
+    }
+};
+
+/**
+ * @desc    Socratic Tutor: Asks questions instead of giving answers
+ */
+const socraticTutor = async (code, language, error, executionState, userId, skillLevel, teachingStyle, isRetry, requestCount) => {
+    const prompt = PROMPTS.socraticTutor(code, language, error, executionState, skillLevel, teachingStyle, isRetry, requestCount);
+
+    try {
+        const text = await generateResponse(prompt, userId);
+        const cleaned = text.replace(/```json|```/g, '').trim();
+        return JSON.parse(cleaned);
+    } catch (e) {
+        console.error("Gemini Socratic Tutor Error:", e);
+        throw e; // 🔥 Let Orchestrator handle fallbacks instead of hardcoded strings
+    }
+};
+
+const generateInterviewTestCases = async (problemDescription, userId) => {
+    const prompt = PROMPTS.generateInterviewTestCases(problemDescription);
+
+    try {
+        const text = await generateResponse(prompt, userId);
+        const cleaned = text.replace(/```json|```/g, '').trim();
+        return JSON.parse(cleaned);
+    } catch (e) {
+        console.error("Gemini Generate Test Cases Error:", e);
+        // Fallback to empty if AI fails, controller will use static defaults
+        return [];
+    }
+};
+
+const generateInterviewProblems = async (mode, problemCount, userId) => {
+    const prompt = PROMPTS.generateInterviewProblems(mode, problemCount);
+
+    try {
+        const text = await generateResponse(prompt, userId);
+        const cleaned = text.replace(/```json|```/g, '').trim();
+        return JSON.parse(cleaned);
+    } catch (e) {
+        console.error("Gemini Generate Interview Problems Error:", e);
+        throw e;
+    }
+};
+
 module.exports = {
     getHint,
     explainError,
@@ -227,5 +302,9 @@ module.exports = {
     translateCode,
     narrateCode,
     detectAI,
-    ghostHint
+    ghostHint,
+    analyzeIntuition,
+    socraticTutor,
+    generateInterviewTestCases,
+    generateInterviewProblems
 };

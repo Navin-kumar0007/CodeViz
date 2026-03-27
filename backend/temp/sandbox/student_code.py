@@ -1,7 +1,6 @@
-def is_palindrome(s):
-    # Your code here
-    pass
+# Reverse the array without using .reverse()
+arr = [1, 2, 3, 4, 5]
 
-import sys
-s = sys.stdin.readline().strip()
-print(is_palindrome(s)
+# Your code here
+
+print(arr)
