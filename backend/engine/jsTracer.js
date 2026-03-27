@@ -42,9 +42,13 @@ const snapshotString = `{` + varList.map(v =>
 const TRACER_LIB = `
 const _trace = [];
 const _start = Date.now();
+const _lineHits = {}; // 🔥 Track execution frequency for Heatmap
 
 function _recordStep(lineNum, state) {
     if (Date.now() - _start > 2000) return; 
+
+    // 📈 Increment hit count for this line
+    _lineHits[lineNum] = (_lineHits[lineNum] || 0) + 1;
 
     const frozenState = {};
     for (const key in state) {
@@ -60,7 +64,8 @@ function _recordStep(lineNum, state) {
     const step = {
         line: lineNum,
         variables: frozenState,
-        stdout: ""
+        stdout: "",
+        hits: _lineHits[lineNum] // 🎯 Pass current hits for this line
     };
     process.stdout.write(JSON.stringify(step) + '\\n');
 }

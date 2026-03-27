@@ -6,8 +6,9 @@
 export const HEAPS_PATH = {
     id: 'heaps',
     title: 'Heaps & Priority Queues',
-    icon: '⛰️',
-    description: 'Learn how to always keep the biggest or smallest element instantly accessible using Heaps.',
+    icon: '🏔️',
+    category: 'Data Structures',
+    description: 'Efficiently find the minimum or maximum element in constant time using binary heaps.',
     prerequisites: ['trees', 'arrays'],
     lessons: [
         {

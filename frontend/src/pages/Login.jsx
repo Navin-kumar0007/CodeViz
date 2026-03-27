@@ -1,70 +1,18 @@
-/* eslint-disable react-hooks/purity */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import API_BASE from '../utils/api';
 
-const NeuralBackground = ({ mousePos }) => {
-  // Generate static particles
-  const [particles] = useState(() => Array.from({ length: 60 }, () => ({
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 3 + 1,
-    speed: Math.random() * 2 + 0.5,
-    delay: Math.random() * 5
-  })));
-
-  return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0, background: '#050505' }}>
-      <motion.div style={{
-        position: 'absolute', inset: -500,
-        background: `radial-gradient(800px circle at ${mousePos.x}px ${mousePos.y}px, rgba(97,218,251,0.08), transparent 40%)`,
-        transition: '0.1s ease-out'
-      }} />
-      {particles.map((p, i) => (
-        <motion.div
-          key={i}
-          animate={{
-            y: ["0vh", "100vh"],
-            x: [0, Math.sin(p.delay) * 50, 0]
-          }}
-          transition={{ duration: 15 / p.speed, repeat: Infinity, ease: "linear", delay: p.delay }}
-          style={{
-            position: 'absolute',
-            left: `${p.x}%`,
-            top: `-10%`,
-            width: p.size,
-            height: p.size,
-            borderRadius: '50%',
-            background: 'rgba(97,218,251,0.3)',
-            boxShadow: '0 0 10px rgba(97,218,251,0.5)',
-            opacity: Math.random() * 0.5 + 0.2
-          }}
-        />
-      ))}
-      {/* Subtle Grid */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-        pointerEvents: 'none'
-      }} />
-    </div>
-  );
-};
+const NeuralBackground = () => (
+  <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0, background: 'var(--bg-primary)' }} />
+);
 
 const LiquidInput = ({ type, placeholder, value, onChange, icon, disabled }) => {
   const [isFocused, setIsFocused] = useState(false);
   return (
-    <div style={{ position: 'relative', marginBottom: '25px' }}>
-      <motion.div
-        animate={{ width: isFocused ? '100%' : '0%' }}
-        transition={{ duration: 0.3 }}
-        style={{ position: 'absolute', bottom: 0, left: 0, height: '2px', background: 'var(--accent-blue)', boxShadow: '0 0 10px var(--accent-blue)', borderRadius: '2px' }}
-      />
-      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.3s' }}>
-        <span style={{ marginRight: '15px', fontSize: '20px', color: isFocused ? 'var(--accent-blue)' : '#555', transition: '0.3s' }}>
+    <div style={{ position: 'relative', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-muted)', borderRadius: '10px', padding: '14px 16px', border: `1px solid ${isFocused ? 'var(--accent-teal)' : 'var(--border-color)'}`, transition: 'border-color 0.2s', boxShadow: isFocused ? '0 0 0 3px rgba(13,148,136,0.1)' : 'none' }}>
+        <span style={{ marginRight: '12px', fontSize: '18px', color: isFocused ? 'var(--accent-teal)' : 'var(--text-muted)', transition: '0.2s' }}>
           {icon}
         </span>
         <input
@@ -78,11 +26,11 @@ const LiquidInput = ({ type, placeholder, value, onChange, icon, disabled }) => 
           style={{
             background: 'transparent',
             border: 'none',
-            color: '#fff',
-            fontSize: '15px',
+            color: 'var(--text-primary)',
+            fontSize: '14px',
             width: '100%',
             outline: 'none',
-            fontFamily: 'monospace',
+            fontFamily: 'var(--font-body)',
             opacity: disabled ? 0.5 : 1
           }}
           required
@@ -117,21 +65,21 @@ const MagneticButton = ({ children, isLoading }) => {
       disabled={isLoading}
       style={{
         width: '100%',
-        padding: '18px',
-        borderRadius: '12px',
+        padding: '14px',
+        borderRadius: '10px',
         border: 'none',
-        background: isLoading ? 'transparent' : 'linear-gradient(45deg, var(--accent-blue), var(--accent-purple))',
-        color: 'white',
-        fontWeight: 900,
-        fontSize: '15px',
+        background: isLoading ? 'rgba(17,17,22,0.5)' : 'linear-gradient(135deg, #00E5EE, #7C3AED)',
+        color: isLoading ? '#5A5A6A' : 'white',
+        fontWeight: 600,
+        fontSize: '14px',
         cursor: isLoading ? 'default' : 'pointer',
-        boxShadow: isLoading ? 'none' : '0 10px 30px rgba(97,218,251,0.2)',
         position: 'relative',
         overflow: 'hidden',
-        letterSpacing: '1px',
+        fontFamily: 'var(--font-body)',
+        transition: 'all 0.2s',
       }}
     >
-      {isLoading ? <span style={{ color: 'var(--accent-cyan)' }}>ESTABLISHING SECURE LINK...</span> : children}
+      {isLoading ? <span>Signing in...</span> : children}
       {!isLoading && (
         <motion.div
           animate={{ x: ['-100%', '200%'] }}
@@ -151,7 +99,6 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [status, setStatus] = useState('idle'); // idle, scanning, success
-  const [mousePos, setMousePos] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const navigate = useNavigate();
 
   // If already logged in, redirect to Dashboard
@@ -208,33 +155,28 @@ const Login = () => {
       animate={{ opacity: 1, rotateY: 0, scale: 1, x: 0, filter: 'blur(0px)' }}
       exit={{ opacity: 0, rotateY: 60, scale: 0.7, x: '-50vw', filter: 'blur(30px)', transition: { duration: 0.4, ease: "easeIn" } }}
       transition={{ duration: 0.8, type: "spring", bounce: 0.3, damping: 20 }}
-      style={{ perspective: '2000px', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050505', position: 'relative', overflow: 'hidden', fontFamily: 'Inter, sans-serif' }}
-      onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}>
+      style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#08080C', position: 'relative', overflow: 'hidden', fontFamily: "'Inter', sans-serif" }}>
 
-      <NeuralBackground mousePos={mousePos} />
+      <NeuralBackground />
 
       <AnimatePresence>
         {status !== 'success' && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 2, filter: 'blur(30px)', transition: { duration: 1.2, ease: 'easeIn' } }}
-            style={{ position: 'relative', zIndex: 10, perspective: '1000px' }}
-          >
             <motion.div
-              whileHover={{ rotateX: (mousePos.y - window.innerHeight / 2) * -0.02, rotateY: (mousePos.x - window.innerWidth / 2) * 0.02 }}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              style={{ position: 'relative', zIndex: 10, perspective: '1000px' }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
               style={{
-                background: 'rgba(15, 15, 20, 0.65)',
-                backdropFilter: 'blur(25px)',
-                WebkitBackdropFilter: 'blur(25px)',
-                padding: '50px',
-                borderRadius: '24px',
+                background: 'rgba(17,17,22,0.7)',
+                padding: '48px',
+                borderRadius: '20px',
                 width: '420px',
-                border: '1px solid rgba(255,255,255,0.05)',
-                boxShadow: '0 30px 60px -15px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                backdropFilter: 'blur(20px)',
               }}
             >
               {/* Biometric Scanner Laser */}
@@ -256,19 +198,13 @@ const Login = () => {
                 )}
               </AnimatePresence>
 
-              <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                  style={{ fontSize: '40px', marginBottom: '15px', color: 'var(--accent-blue)' }}
-                >
-                  ✧
-                </motion.div>
-                <h2 style={{ color: '#fff', fontSize: '30px', fontWeight: 900, letterSpacing: '-1px', margin: 0 }}>
-                  Neural <span style={{ color: 'var(--accent-cyan)' }}>Gateway</span>
+              <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+                <div style={{ fontSize: '36px', marginBottom: '12px', color: 'var(--accent-teal)' }}>⬡</div>
+                <h2 style={{ color: 'var(--text-primary)', fontSize: '24px', fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
+                  Welcome back
                 </h2>
-                <p style={{ color: '#888', fontSize: '13px', marginTop: '10px', textTransform: 'uppercase', letterSpacing: '2px' }}>
-                  Authenticate Bio-Signature
+                <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '8px' }}>
+                  Sign in to your CodeViz account
                 </p>
               </div>
 
@@ -286,18 +222,22 @@ const Login = () => {
               </AnimatePresence>
 
               <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>
-                <LiquidInput type="email" placeholder="Identity Marker (Email)" value={email} onChange={(e) => setEmail(e.target.value)} icon="👤" disabled={status !== 'idle'} />
-                <LiquidInput type="password" placeholder="Pass-phrase" value={password} onChange={(e) => setPassword(e.target.value)} icon="🔑" disabled={status !== 'idle'} />
+                <LiquidInput type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} icon="✉" disabled={status !== 'idle'} />
+                <LiquidInput type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} icon="🔒" disabled={status !== 'idle'} />
+                
+                <Link to="/forgot-password" style={{ color: 'var(--text-muted)', fontSize: '12px', textDecoration: 'none', alignSelf: 'flex-end', marginTop: '-12px', marginBottom: '16px', fontWeight: 600, fontFamily: 'var(--font-code)' }}>
+                  Forgot Password?
+                </Link>
 
                 <div style={{ marginTop: '15px' }}>
                   <MagneticButton isLoading={status === 'scanning'}>
-                    ACCESS MAINFRAME
+                    Sign In →
                   </MagneticButton>
                 </div>
               </form>
 
-              <div style={{ textAlign: 'center', marginTop: '30px', fontSize: '13px', color: '#666' }}>
-                Unregistered entity? <Link to="/signup" style={{ color: 'var(--accent-purple)', textDecoration: 'none', fontWeight: 700 }}>Initialize sequence</Link>
+              <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                Don&apos;t have an account? <Link to="/signup" style={{ color: 'var(--accent-teal)', textDecoration: 'none', fontWeight: 600 }}>Create one</Link>
               </div>
             </motion.div>
           </motion.div>
@@ -312,13 +252,13 @@ const Login = () => {
             animate={{ opacity: 1, scale: 1, rotate: 0 }}
             exit={{ opacity: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            style={{ position: 'absolute', zIndex: 100, textAlign: 'center', color: 'var(--accent-cyan)', background: 'rgba(0,0,0,0.8)', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}
+            style={{ position: 'absolute', zIndex: 100, textAlign: 'center', color: '#00E5EE', background: 'rgba(8,8,12,0.95)', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(20px)' }}
           >
             <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity }} style={{ fontSize: '80px', marginBottom: '20px' }}>
               ✓
             </motion.div>
-            <h2 style={{ fontSize: '32px', letterSpacing: '4px', fontWeight: 900, textTransform: 'uppercase' }}>LINK ESTABLISHED</h2>
-            <p style={{ color: '#aaa', marginTop: '10px', fontFamily: 'monospace' }}>Routing to Code Domain...</p>
+            <h2 style={{ fontSize: '28px', letterSpacing: '2px', fontWeight: 800, textTransform: 'uppercase', fontFamily: "'Inter', sans-serif" }}>Session Established</h2>
+            <p style={{ color: '#5A5A6A', marginTop: '10px', fontFamily: "'JetBrains Mono', monospace", fontSize: '13px' }}>Routing to workspace...</p>
           </motion.div>
         )}
       </AnimatePresence>

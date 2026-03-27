@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/purity */
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
@@ -11,10 +10,6 @@ import { motion } from 'framer-motion';
 
 const GlobalBackground = () => {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-    const particles = React.useMemo(() => [...Array(12)].map(() => ({
-        top: `${Math.random() * 100}%`,
-        left: `${Math.random() * 100}%`
-    })), []);
 
     useEffect(() => {
         const handleMouseMove = (e) => setMousePos({ x: e.clientX, y: e.clientY });
@@ -33,19 +28,11 @@ const GlobalBackground = () => {
                 background: `radial-gradient(800px circle at ${mousePos.x}px ${mousePos.y}px, rgba(13,242,242,0.04), transparent 40%)`
             }} />
 
-            {/* 2. Floating Cybernetic Particles */}
-            {particles.map((p, i) => (
-                <motion.div key={i} animate={{ y: [0, -40, 0], rotate: [0, 15, 0], opacity: [0.03, 0.1, 0.03] }}
-                    transition={{ duration: 8 + i, repeat: Infinity, ease: 'linear' }}
-                    style={{ position: 'absolute', top: p.top, left: p.left, fontSize: '18px', color: '#fff', pointerEvents: 'none' }}
-                >
-                    {['=>', '{ }', '[ ]', '++', '===', 'async', 'ptr'][i % 7]}
-                </motion.div>
-            ))}
+            {/* 2. Floating Cybernetic Particles Removed for Clean Aesthetic */}
 
             {/* 3. Deep Ambient Glows */}
-            <div style={{ ...s.blurGlow, top: '10%', left: '5%', background: 'var(--accent-blue)' }} />
-            <div style={{ ...s.blurGlow, bottom: '20%', right: '5%', background: 'var(--accent-purple)' }} />
+            <div style={{ ...s.blurGlow, top: '10%', left: '5%', background: 'var(--accent-cyan)' }} />
+            <div style={{ ...s.blurGlow, bottom: '20%', right: '5%', background: 'var(--accent-violet)' }} />
         </div>
     );
 };
@@ -57,7 +44,7 @@ const s = {
         zIndex: -1,
         pointerEvents: 'none',
         overflow: 'hidden',
-        background: '#050508'
+        background: 'var(--bg-primary)'
     },
     gridOverlay: {
         position: 'absolute',
@@ -79,8 +66,8 @@ const s = {
         width: '800px',
         height: '800px',
         borderRadius: '50%',
-        filter: 'blur(200px)',
-        opacity: 0.08,
+        filter: 'blur(300px)',
+        opacity: 0.03,
         pointerEvents: 'none'
     }
 };

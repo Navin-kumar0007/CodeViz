@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import { motion, AnimatePresence } from 'framer-motion';
 import LearningPath from '../components/Learning/LearningPath';
 import LessonList from '../components/Learning/LessonList';
 import LessonView from '../components/Learning/LessonView';
@@ -10,12 +10,31 @@ import QuizBrowser from '../components/Learning/QuizBrowser';
 import Recommendations from '../components/Learning/Recommendations';
 import { COURSES, getPathProgress, getTotalProgress } from '../data/courses';
 import { ACHIEVEMENTS, checkAchievements, getAchievement } from '../data/achievements';
-import API_BASE from '../utils/api';
+import API from '../utils/api';
 
 /**
- * Learn.jsx - Main Structured Learning Page
- * Displays learning paths, lessons, and handles navigation
+ * Learn.jsx - Premium Structured Learning Page
+ * Features global curriculum controls, language selection, and categorized paths.
  */
+
+const LANGUAGES = [
+    { id: 'javascript', name: 'JavaScript', icon: '📜' },
+    { id: 'python', name: 'Python', icon: '🐍' },
+    { id: 'java', name: 'Java', icon: '☕' },
+    { id: 'cpp', name: 'C++', icon: '⚙️' },
+    { id: 'c', name: 'C', icon: '🔷' },
+    { id: 'go', name: 'Go', icon: '🔵' },
+    { id: 'typescript', name: 'TypeScript', icon: '📘' }
+];
+
+const CATEGORIES = [
+    'Foundations',
+    'Data Structures',
+    'Algorithm Mastery',
+    'Backend Engineering',
+    'Artificial Intelligence',
+    'Cloud & DevOps'
+];
 
 const Learn = () => {
     const navigate = useNavigate();
@@ -23,191 +42,123 @@ const Learn = () => {
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [progress, setProgress] = useState({});
     const [achievements, setAchievements] = useState([]);
-    const [showAchievements, setShowAchievements] = useState(false);
-    const [syncInProgress, setSyncInProgress] = useState(false);
-    const [showLeaderboard, setShowLeaderboard] = useState(false);
-    const [showQuizBrowser, setShowQuizBrowser] = useState(false);
     const [newAchievement, setNewAchievement] = useState(null);
+    
+    // Global Curriculum State
+    const [selectedLang, setSelectedLang] = useState(() => {
+        return localStorage.getItem('preferredLanguage') || 'javascript';
+    });
+    const [activeCategory, setActiveCategory] = useState('All');
 
-    // Get user info for backend sync
-    const getUserInfo = () => {
-        try {
-            const userInfo = localStorage.getItem('userInfo');
-            return userInfo ? JSON.parse(userInfo) : null;
-        } catch {
-            return null;
-        }
-    };
-
-    // Sync progress with backend
-    const syncWithServer = async (localProgress, localAchievements) => {
-        const user = getUserInfo();
-        if (!user || !user.token) return null;
-
-        try {
-            const res = await fetch(`${API_BASE}/api/progress/sync`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${user.token}`
-                },
-                body: JSON.stringify({
-                    localProgress,
-                    localAchievements
-                })
-            });
-            if (res.ok) {
-                return await res.json();
+    // Group courses by category
+    const categorizedCourses = useMemo(() => {
+        const groups = {};
+        CATEGORIES.forEach(cat => groups[cat] = []);
+        
+        COURSES.forEach(course => {
+            const cat = course.category || 'Foundations';
+            if (groups[cat]) {
+                groups[cat].push(course);
+            } else {
+                groups[cat] = [course];
             }
-        } catch (error) {
-            console.error('Sync error:', error);
-        }
-        return null;
-    };
+        });
+        return groups;
+    }, []);
 
-    // Load progress and achievements from localStorage, then sync with server
+    // Get user info and handle auth
     useEffect(() => {
         const loadAndSync = async () => {
-            // Load from localStorage first
+            const userInfo = localStorage.getItem('userInfo');
+            if (!userInfo) {
+                navigate('/login');
+                return;
+            }
+
             const savedProgress = localStorage.getItem('learningProgress');
             const savedAchievements = localStorage.getItem('achievements');
+            if (savedProgress) setProgress(JSON.parse(savedProgress));
+            if (savedAchievements) setAchievements(JSON.parse(savedAchievements));
 
-            let localProgress = savedProgress ? JSON.parse(savedProgress) : {};
-            let localAchievements = savedAchievements ? JSON.parse(savedAchievements) : [];
-
-            setProgress(localProgress);
-            setAchievements(localAchievements);
-
-            // If user is logged in, sync with server
-            const user = getUserInfo();
-            if (user && user.token) {
-                if (syncInProgress) return;
-                setSyncInProgress(true);
-                const serverData = await syncWithServer(localProgress, localAchievements);
-                if (serverData && serverData.synced) {
-                    // Merge server data back to local
-                    setProgress(serverData.pathProgress || {});
-                    setAchievements(serverData.achievements || []);
-                    localStorage.setItem('learningProgress', JSON.stringify(serverData.pathProgress || {}));
-                    localStorage.setItem('achievements', JSON.stringify(serverData.achievements || []));
+            try {
+                const res = await API.post('/api/progress/sync', {
+                    localProgress: savedProgress ? JSON.parse(savedProgress) : {},
+                    localAchievements: savedAchievements ? JSON.parse(savedAchievements) : []
+                });
+                if (res.data?.synced) {
+                    setProgress(res.data.pathProgress || {});
+                    setAchievements(res.data.achievements || []);
+                    localStorage.setItem('learningProgress', JSON.stringify(res.data.pathProgress));
+                    localStorage.setItem('achievements', JSON.stringify(res.data.achievements));
                 }
-                setSyncInProgress(false);
+            } catch (err) {
+                console.error('Sync failed:', err.message);
             }
         };
 
         loadAndSync();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Save progress to localStorage
-    const saveProgress = (newProgress) => {
-        setProgress(newProgress);
-        localStorage.setItem('learningProgress', JSON.stringify(newProgress));
-    };
+    // Save language preference
+    useEffect(() => {
+        localStorage.setItem('preferredLanguage', selectedLang);
+    }, [selectedLang]);
 
-    // Save achievements to localStorage
-    const saveAchievements = (newAchievements) => {
-        setAchievements(newAchievements);
-        localStorage.setItem('achievements', JSON.stringify(newAchievements));
-    };
-
-    // Unlock achievement and show notification
-    const unlockAchievement = (achievementId) => {
-        if (achievements.includes(achievementId)) return;
-
-        const newAchievements = [...achievements, achievementId];
-        saveAchievements(newAchievements);
-
-        // Show achievement popup
-        const achievement = getAchievement(achievementId);
-        if (achievement) {
-            setNewAchievement(achievement);
-            setTimeout(() => setNewAchievement(null), 3000);
-        }
-    };
-
-    // Check for new achievements
-    const checkForAchievements = (newProgress) => {
-        const newlyUnlocked = checkAchievements(newProgress, achievements);
-        newlyUnlocked.forEach(id => unlockAchievement(id));
-    };
-
-    // Mark lesson as complete
     const completeLesson = (pathId, lessonId, quizScore) => {
         const newProgress = { ...progress };
-        if (!newProgress[pathId]) {
-            newProgress[pathId] = { completed: [], quizScores: {} };
-        }
+        if (!newProgress[pathId]) newProgress[pathId] = { completed: [], quizScores: {} };
         if (!newProgress[pathId].completed.includes(lessonId)) {
             newProgress[pathId].completed.push(lessonId);
         }
         newProgress[pathId].quizScores[lessonId] = quizScore;
-        saveProgress(newProgress);
+        
+        setProgress(newProgress);
+        localStorage.setItem('learningProgress', JSON.stringify(newProgress));
 
-        // Check for milestone achievements
-        checkForAchievements(newProgress);
-
-        // Check for course completion achievement
-        const path = COURSES.find(c => c.id === pathId);
-        if (path && newProgress[pathId].completed.length === path.lessons.length) {
-            // Course completed - find matching achievement
-            const courseAchievement = ACHIEVEMENTS.find(
-                a => a.category === 'course' && a.courseId === pathId
-            );
-            if (courseAchievement) {
-                unlockAchievement(courseAchievement.id);
+        // Achievements check
+        const newlyUnlocked = checkAchievements(newProgress, achievements);
+        newlyUnlocked.forEach(id => {
+            if (!achievements.includes(id)) {
+                const newA = [...achievements, id];
+                setAchievements(newA);
+                localStorage.setItem('achievements', JSON.stringify(newA));
+                const ach = getAchievement(id);
+                if (ach) {
+                    setNewAchievement(ach);
+                    setTimeout(() => setNewAchievement(null), 3000);
+                }
             }
-        }
-
-        // Check for perfect quiz achievement
-        if (quizScore === 100 && !achievements.includes('perfect_quiz')) {
-            unlockAchievement('perfect_quiz');
-        }
-    };
-
-    // Check if a path is unlocked (prerequisites met)
-    const isPathUnlocked = (path) => {
-        if (!path.prerequisites || path.prerequisites.length === 0) return true;
-        return path.prerequisites.every(prereq => {
-            const prereqPath = COURSES.find(c => c.id === prereq);
-            if (!prereqPath) return true;
-            const pathProgress = getPathProgress(prereq, progress);
-            return pathProgress >= 100;
         });
     };
 
-    // Handle back navigation
-    const handleBack = () => {
-        if (selectedLesson) {
-            setSelectedLesson(null);
-        } else if (selectedPath) {
-            setSelectedPath(null);
-        } else {
-            navigate('/');
-        }
+    const isPathUnlocked = (path) => {
+        if (!path.prerequisites || path.prerequisites.length === 0) return true;
+        return path.prerequisites.every(prereq => {
+            const p = COURSES.find(c => c.id === prereq);
+            if (!p) return true;
+            return getPathProgress(prereq, progress) >= 100;
+        });
     };
 
-    useEffect(() => {
-        const userInfo = getUserInfo();
-        if (!userInfo) {
-            navigate('/login');
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    const handleBack = () => {
+        if (selectedLesson) setSelectedLesson(null);
+        else if (selectedPath) setSelectedPath(null);
+        else navigate('/');
+    };
 
-    // Render lesson view
     if (selectedLesson && selectedPath) {
         return (
             <LessonView
                 path={selectedPath}
                 lesson={selectedLesson}
+                preferredLanguage={selectedLang}
                 onBack={handleBack}
-                onComplete={(quizScore) => {
-                    completeLesson(selectedPath.id, selectedLesson.id, quizScore);
-                    // Move to next lesson or back to list
-                    const lessonIndex = selectedPath.lessons.findIndex(l => l.id === selectedLesson.id);
-                    if (lessonIndex < selectedPath.lessons.length - 1) {
-                        setSelectedLesson(selectedPath.lessons[lessonIndex + 1]);
+                onComplete={(score) => {
+                    completeLesson(selectedPath.id, selectedLesson.id, score);
+                    const idx = selectedPath.lessons.findIndex(l => l.id === selectedLesson.id);
+                    if (idx < selectedPath.lessons.length - 1) {
+                        setSelectedLesson(selectedPath.lessons[idx + 1]);
                     } else {
                         setSelectedLesson(null);
                     }
@@ -217,110 +168,119 @@ const Learn = () => {
         );
     }
 
-    // Render lesson list for selected path
     if (selectedPath) {
         return (
             <div style={styles.container}>
                 <header style={styles.header}>
-                    <button onClick={handleBack} style={styles.backBtn}>← Back</button>
+                    <button onClick={handleBack} style={styles.backBtn}>← Back to Curriculum</button>
                     <h2 style={styles.title}>{selectedPath.icon} {selectedPath.title}</h2>
                     <div style={styles.progressBadge}>
                         {getPathProgress(selectedPath.id, progress)}% Complete
                     </div>
                 </header>
-
-                <p style={styles.pathDescription}>{selectedPath.description}</p>
-
+                <div style={styles.pathHero}>
+                    <p style={styles.pathDescription}>{selectedPath.description}</p>
+                </div>
                 <LessonList
                     lessons={selectedPath.lessons}
                     progress={progress[selectedPath.id] || { completed: [], quizScores: {} }}
-                    onSelectLesson={(lesson) => setSelectedLesson(lesson)}
+                    onSelectLesson={setSelectedLesson}
                 />
             </div>
         );
     }
 
-    // Render path grid (main view)
     return (
         <div style={styles.container}>
-            <header style={styles.header}>
-                <button onClick={() => navigate('/')} style={styles.backBtn}>← Dashboard</button>
-                <h2 style={styles.title}>📚 Structured Learning</h2>
-                <div style={styles.headerActions}>
-                    <button
-                        onClick={() => setShowLeaderboard(true)}
-                        style={styles.leaderboardBtn}
-                        title="View Leaderboard"
-                    >
-                        📊
-                    </button>
-                    <button
-                        onClick={() => setShowQuizBrowser(true)}
-                        style={styles.quizBrowserBtn}
-                        title="Community Quizzes"
-                    >
-                        📝
-                    </button>
-                    <button
-                        onClick={() => setShowAchievements(true)}
-                        style={styles.achievementsBtn}
-                        title="View Achievements"
-                    >
-                        🏆 {achievements.length}/{ACHIEVEMENTS.length}
-                    </button>
-                    <div style={styles.progressBadge}>
-                        Overall: {getTotalProgress(progress)}%
+            {/* Premium Curriculum Header */}
+            <div style={styles.curriculumControls}>
+                <div style={styles.controlsLeft}>
+                    <h1 style={styles.mainHeading}>
+                        <span style={styles.headingIcon}>📚</span> Structured Learning
+                    </h1>
+                    <p style={styles.subHeading}>Master computer science and backend engineering from zero to hero.</p>
+                </div>
+
+                <div style={styles.controlsRight}>
+                    {/* Language Dropdown */}
+                    <div style={styles.controlGroup}>
+                        <label style={styles.controlLabel}>Target Language</label>
+                        <select 
+                            value={selectedLang} 
+                            onChange={(e) => setSelectedLang(e.target.value)}
+                            style={styles.dropdown}
+                        >
+                            {LANGUAGES.map(lang => (
+                                <option key={lang.id} value={lang.id}>
+                                    {lang.icon} {lang.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Topic/Category Dropdown */}
+                    <div style={styles.controlGroup}>
+                        <label style={styles.controlLabel}>Curriculum Section</label>
+                        <select 
+                            value={activeCategory} 
+                            onChange={(e) => setActiveCategory(e.target.value)}
+                            style={styles.dropdown}
+                        >
+                            <option value="All">🌐 All Topics</option>
+                            {CATEGORIES.map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div style={styles.globalStats}>
+                        <span style={styles.statLabel}>Overall Mastery</span>
+                        <div style={styles.statValue}>{getTotalProgress(progress)}%</div>
                     </div>
                 </div>
-            </header>
-
-            <p style={styles.subtitle}>
-                Learn programming concepts step-by-step with visual explanations
-            </p>
-
-            <div style={styles.pathGrid}>
-                <AnimatePresence>
-                    {COURSES.map((path, index) => (
-                        <motion.div
-                            key={path.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                        >
-                            <LearningPath
-                                path={path}
-                                progress={getPathProgress(path.id, progress)}
-                                isLocked={!isPathUnlocked(path)}
-                                onClick={() => isPathUnlocked(path) && setSelectedPath(path)}
-                            />
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
             </div>
 
-            {/* Personalized Recommendations */}
-            <div style={{ maxWidth: '600px', margin: '30px auto' }}>
-                <Recommendations
-                    onNavigate={(topic) => {
-                        const path = COURSES.find(c => c.id === topic);
-                        if (path && isPathUnlocked(path)) setSelectedPath(path);
-                    }}
-                />
+            {/* Categorized Course Sections */}
+            <div style={styles.sectionsContainer}>
+                {CATEGORIES.filter(cat => activeCategory === 'All' || activeCategory === cat).map(category => (
+                    <section key={category} style={styles.categorySection}>
+                        <div style={styles.sectionHeader}>
+                            <h2 style={styles.sectionTitle}>{category}</h2>
+                            <div style={styles.sectionLine} />
+                        </div>
+                        
+                        <div style={styles.pathGrid}>
+                            <AnimatePresence>
+                                {categorizedCourses[category].map((path, index) => (
+                                    <motion.div
+                                        key={path.id}
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: index * 0.05 }}
+                                    >
+                                        <LearningPath
+                                            path={path}
+                                            progress={getPathProgress(path.id, progress)}
+                                            isLocked={!isPathUnlocked(path)}
+                                            onClick={() => isPathUnlocked(path) && setSelectedPath(path)}
+                                        />
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </div>
+                    </section>
+                ))}
             </div>
 
-            {/* Onboarding tip for new users */}
-            {getTotalProgress(progress) === 0 && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    style={styles.onboardingTip}
-                >
-                    💡 <strong>New here?</strong> Start with "Programming Basics" - it's unlocked and ready!
-                </motion.div>
-            )}
+            {/* Achievements & Recommendations */}
+            <div style={styles.lowerContent}>
+                <Recommendations onNavigate={(topic) => {
+                    const path = COURSES.find(c => c.id === topic);
+                    if (path && isPathUnlocked(path)) setSelectedPath(path);
+                }} />
+            </div>
 
-            {/* Achievement unlock notification */}
+            {/* Floating Achievement Notification */}
             <AnimatePresence>
                 {newAchievement && (
                     <motion.div
@@ -337,35 +297,6 @@ const Learn = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {/* Achievements Panel */}
-            <AnimatePresence>
-                {showAchievements && (
-                    <AchievementsPanel
-                        unlockedAchievements={achievements}
-                        onClose={() => setShowAchievements(false)}
-                    />
-                )}
-            </AnimatePresence>
-
-            {/* Leaderboard Panel */}
-            <AnimatePresence>
-                {showLeaderboard && (
-                    <Leaderboard
-                        onClose={() => setShowLeaderboard(false)}
-                        currentUserId={getUserInfo()?._id}
-                    />
-                )}
-            </AnimatePresence>
-
-            {/* Quiz Browser Panel */}
-            <AnimatePresence>
-                {showQuizBrowser && (
-                    <QuizBrowser
-                        onClose={() => setShowQuizBrowser(false)}
-                    />
-                )}
-            </AnimatePresence>
         </div>
     );
 };
@@ -373,136 +304,179 @@ const Learn = () => {
 const styles = {
     container: {
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+        color: '#E8E8ED',
+        padding: '30px 40px',
+        background: 'transparent',
+    },
+    curriculumControls: {
+        background: 'rgba(10, 10, 15, 0.7)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: '24px',
+        padding: '30px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '40px',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+    },
+    mainHeading: {
+        fontSize: '32px',
+        fontWeight: 900,
+        margin: '0 0 10px 0',
+        letterSpacing: '-0.03em',
+        background: 'linear-gradient(to right, #fff, #A5A5B2)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+    },
+    headingIcon: {
+        marginRight: '12px',
+    },
+    subHeading: {
+        color: '#9898A6',
+        fontSize: '15px',
+        margin: 0,
+    },
+    controlsRight: {
+        display: 'flex',
+        gap: '24px',
+        alignItems: 'center',
+    },
+    controlGroup: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+    },
+    controlLabel: {
+        fontSize: '10px',
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em',
+        color: 'var(--accent-cyan)',
+        opacity: 0.8,
+    },
+    dropdown: {
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: '12px',
+        padding: '10px 16px',
         color: '#fff',
-        padding: '20px'
+        fontSize: '13px',
+        fontWeight: 600,
+        minWidth: '180px',
+        cursor: 'pointer',
+        outline: 'none',
+        transition: 'all 0.2s',
+    },
+    globalStats: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        background: 'linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))',
+        padding: '10px 20px',
+        borderRadius: '16px',
+        minWidth: '100px',
+    },
+    statLabel: {
+        fontSize: '9px',
+        fontWeight: 800,
+        textTransform: 'uppercase',
+        color: 'rgba(255,255,255,0.8)',
+    },
+    statValue: {
+        fontSize: '20px',
+        fontWeight: 900,
+        color: '#fff',
+    },
+    sectionsContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '60px',
+    },
+    categorySection: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px',
+    },
+    sectionHeader: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '20px',
+    },
+    sectionTitle: {
+        fontSize: '14px',
+        fontWeight: 800,
+        textTransform: 'uppercase',
+        letterSpacing: '0.15em',
+        color: '#5A5A6A',
+        whiteSpace: 'nowrap',
+    },
+    sectionLine: {
+        flex: 1,
+        height: '1px',
+        background: 'rgba(255,255,255,0.05)',
+    },
+    pathGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+        gap: '20px',
     },
     header: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: '20px',
-        paddingBottom: '15px',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
-    },
-    headerActions: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px'
+        marginBottom: '30px',
     },
     backBtn: {
         background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.2)',
-        color: '#fff',
-        padding: '8px 16px',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        fontSize: '14px',
-        transition: 'all 0.2s'
-    },
-    achievementsBtn: {
-        background: 'rgba(255, 215, 0, 0.15)',
-        border: '1px solid rgba(255, 215, 0, 0.3)',
-        color: '#ffd700',
-        padding: '8px 14px',
-        borderRadius: '20px',
-        cursor: 'pointer',
+        border: '1px solid rgba(255,255,255,0.1)',
+        padding: '10px 20px',
+        borderRadius: '100px',
+        color: '#E8E8ED',
         fontSize: '13px',
-        fontWeight: 'bold',
-        transition: 'all 0.2s'
-    },
-    leaderboardBtn: {
-        background: 'rgba(102, 126, 234, 0.15)',
-        border: '1px solid rgba(102, 126, 234, 0.3)',
-        color: '#667eea',
-        padding: '8px 12px',
-        borderRadius: '20px',
+        fontWeight: 600,
         cursor: 'pointer',
-        fontSize: '16px',
-        transition: 'all 0.2s'
-    },
-    quizBrowserBtn: {
-        background: 'rgba(76, 175, 80, 0.15)',
-        border: '1px solid rgba(76, 175, 80, 0.3)',
-        color: '#4caf50',
-        padding: '8px 12px',
-        borderRadius: '20px',
-        cursor: 'pointer',
-        fontSize: '16px',
-        transition: 'all 0.2s'
     },
     title: {
-        margin: 0,
         fontSize: '24px',
-        fontWeight: 'bold'
+        fontWeight: 800,
     },
     progressBadge: {
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+        background: 'var(--accent-cyan)',
         padding: '8px 16px',
-        borderRadius: '20px',
+        borderRadius: '100px',
         fontSize: '12px',
-        fontWeight: 'bold'
+        fontWeight: 700,
     },
-    subtitle: {
-        color: '#888',
+    pathHero: {
         textAlign: 'center',
-        marginBottom: '30px'
-    },
-    pathGrid: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '20px',
-        maxWidth: '1200px',
-        margin: '0 auto'
+        marginBottom: '40px',
     },
     pathDescription: {
-        color: '#aaa',
-        textAlign: 'center',
-        marginBottom: '30px',
-        fontSize: '14px'
-    },
-    onboardingTip: {
-        textAlign: 'center',
-        marginTop: '40px',
-        padding: '15px 25px',
-        background: 'rgba(102, 126, 234, 0.15)',
-        border: '1px solid rgba(102, 126, 234, 0.3)',
-        borderRadius: '10px',
-        maxWidth: '500px',
-        margin: '40px auto 0'
+        fontSize: '16px',
+        color: '#9898A6',
+        maxWidth: '700px',
+        margin: '0 auto',
     },
     achievementPopup: {
         position: 'fixed',
         bottom: '30px',
-        right: '30px',
-        background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
-        border: '2px solid #ffd700',
+        right: '40px',
+        background: 'rgba(15,15,20,0.95)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid var(--accent-cyan)',
         borderRadius: '16px',
-        padding: '15px 25px',
+        padding: '20px',
         display: 'flex',
-        alignItems: 'center',
         gap: '15px',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-        zIndex: 999
+        zIndex: 1000,
+        boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
     },
-    achievementIcon: {
-        fontSize: '40px'
-    },
-    achievementText: {
-        display: 'flex',
-        flexDirection: 'column'
-    },
-    achievementUnlocked: {
-        fontSize: '12px',
-        color: '#ffd700',
-        marginBottom: '3px'
-    },
-    achievementTitle: {
-        fontSize: '16px',
-        fontWeight: 'bold',
-        color: '#fff'
-    }
+    achievementIcon: { fontSize: '40px' },
+    achievementText: { display: 'flex', flexDirection: 'column', justifyContent: 'center' },
+    achievementUnlocked: { fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: 800 },
+    achievementTitle: { fontSize: '18px', fontWeight: 800 },
+    lowerContent: { marginTop: '80px', maxWidth: '600px', margin: '80px auto 0' }
 };
 
 export default Learn;
-

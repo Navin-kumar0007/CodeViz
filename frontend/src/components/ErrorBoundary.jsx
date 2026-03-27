@@ -88,7 +88,7 @@ const styles = {
         margin: '0 0 10px 0'
     },
     message: {
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '14px',
         margin: '0 0 15px 0'
     },
@@ -99,13 +99,13 @@ const styles = {
         marginBottom: '15px'
     },
     summary: {
-        color: '#666',
+        color: 'var(--text-muted)',
         fontSize: '12px',
         cursor: 'pointer',
         marginBottom: '10px'
     },
     errorText: {
-        background: 'rgba(0, 0, 0, 0.3)',
+        background: 'var(--bg-muted)',
         color: '#ff6b6b',
         padding: '10px',
         borderRadius: '6px',
@@ -114,8 +114,8 @@ const styles = {
         maxHeight: '100px'
     },
     retryButton: {
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
-        color: 'white',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
+        color: 'var(--text-primary)',
         border: 'none',
         padding: '10px 24px',
         borderRadius: '8px',

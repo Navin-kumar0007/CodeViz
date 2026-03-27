@@ -103,7 +103,7 @@ const styles = {
         padding: '20px'
     },
     panel: {
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+        background: 'var(--bg-primary)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '20px',
         width: '100%',
@@ -122,18 +122,18 @@ const styles = {
     title: {
         margin: 0,
         fontSize: '20px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         flex: 1
     },
     progress: {
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '14px',
         marginRight: '15px'
     },
     closeBtn: {
         background: 'transparent',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '20px',
         cursor: 'pointer',
         padding: '5px',
@@ -145,7 +145,7 @@ const styles = {
     },
     progressFill: {
         height: '100%',
-        background: 'linear-gradient(90deg, #667eea, #764ba2)',
+        background: 'linear-gradient(90deg, var(--accent-teal), var(--accent-purple))',
         borderRadius: '2px'
     },
     content: {
@@ -164,17 +164,17 @@ const styles = {
     categoryTitle: {
         margin: 0,
         fontSize: '16px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         flex: 1
     },
     categoryProgress: {
         fontSize: '12px',
-        color: '#888'
+        color: 'var(--text-muted)'
     },
     categoryDesc: {
         margin: '0 0 15px 0',
         fontSize: '12px',
-        color: '#666'
+        color: 'var(--text-muted)'
     },
     grid: {
         display: 'grid',

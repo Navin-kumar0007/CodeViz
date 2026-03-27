@@ -5,9 +5,10 @@
 
 export const TREES_PATH = {
     id: 'trees',
-    title: 'Trees & BSTs',
-    icon: '🌳',
-    description: 'Master hierarchical data structures, binary search trees, and all the ways to traverse them.',
+    title: 'Trees & Hierarchies',
+    icon: '🌲',
+    category: 'Data Structures',
+    description: 'Master binary trees, traversal methods, and hierarchical data modeling.',
     prerequisites: ['linkedlists', 'recursion'],
     lessons: [
         {

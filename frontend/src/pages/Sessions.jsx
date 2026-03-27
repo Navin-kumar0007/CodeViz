@@ -409,7 +409,7 @@ const styles = {
     },
     playActionBtn: {
         background: 'linear-gradient(135deg, var(--accent-blue), var(--accent-purple))',
-        color: '#fff',
+        color: 'var(--text-primary)',
         border: 'none',
         fontWeight: 600,
     },

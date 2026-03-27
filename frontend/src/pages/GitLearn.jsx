@@ -166,14 +166,14 @@ const BranchVisual = () => (
         <div style={V.branchLine}>
             <span style={V.branchLabel}>main</span>
             {['C1', 'C2', 'C3', 'C4', 'C5'].map(c => (
-                <span key={c} style={{ ...V.commit, background: '#48bb78' }}>{c}</span>
+                <span key={c} style={{ ...V.commit, background: 'var(--accent-green)' }}>{c}</span>
             ))}
         </div>
         <div style={{ ...V.branchLine, marginLeft: '60px' }}>
             <span style={V.branchLabel}>feature</span>
             <span style={V.branchFork}>↗</span>
             {['F1', 'F2', 'F3'].map(c => (
-                <span key={c} style={{ ...V.commit, background: '#667eea' }}>{c}</span>
+                <span key={c} style={{ ...V.commit, background: 'var(--accent-teal)' }}>{c}</span>
             ))}
         </div>
         <div style={{ ...V.branchLine, marginLeft: '100px' }}>
@@ -190,17 +190,17 @@ const MergeVisual = () => (
     <div style={V.mergeContainer}>
         <div style={V.mergeRow}>
             <span style={V.branchLabel}>main</span>
-            {['C1', 'C2', 'C3'].map(c => <span key={c} style={{ ...V.commit, background: '#48bb78' }}>{c}</span>)}
+            {['C1', 'C2', 'C3'].map(c => <span key={c} style={{ ...V.commit, background: 'var(--accent-green)' }}>{c}</span>)}
             <span style={{ ...V.commit, background: '#d69e2e', border: '2px solid #ffd700' }}>M</span>
-            <span style={{ ...V.commit, background: '#48bb78' }}>C4</span>
+            <span style={{ ...V.commit, background: 'var(--accent-green)' }}>C4</span>
         </div>
         <div style={{ ...V.mergeRow, marginLeft: '60px' }}>
             <span style={V.branchLabel}>feature</span>
             <span style={V.branchFork}>↗</span>
-            {['F1', 'F2'].map(c => <span key={c} style={{ ...V.commit, background: '#667eea' }}>{c}</span>)}
+            {['F1', 'F2'].map(c => <span key={c} style={{ ...V.commit, background: 'var(--accent-teal)' }}>{c}</span>)}
             <span style={{ ...V.branchFork, transform: 'scaleY(-1)' }}>↗</span>
         </div>
-        <div style={{ textAlign: 'center', color: '#888', fontSize: '11px', marginTop: '8px' }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', marginTop: '8px' }}>
             Merge creates commit M that combines both histories
         </div>
     </div>
@@ -208,23 +208,23 @@ const MergeVisual = () => (
 
 const RebaseVisual = () => (
     <div style={V.mergeContainer}>
-        <div style={{ color: '#888', fontSize: '11px', marginBottom: '8px', fontWeight: 600 }}>Before rebase:</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: '8px', fontWeight: 600 }}>Before rebase:</div>
         <div style={V.mergeRow}>
             <span style={V.branchLabel}>main</span>
-            {['C1', 'C2', 'C3'].map(c => <span key={c} style={{ ...V.commit, background: '#48bb78' }}>{c}</span>)}
+            {['C1', 'C2', 'C3'].map(c => <span key={c} style={{ ...V.commit, background: 'var(--accent-green)' }}>{c}</span>)}
         </div>
         <div style={{ ...V.mergeRow, marginLeft: '40px' }}>
             <span style={V.branchLabel}>feature</span>
             <span style={V.branchFork}>↗</span>
-            {['F1', 'F2'].map(c => <span key={c} style={{ ...V.commit, background: '#667eea' }}>{c}</span>)}
+            {['F1', 'F2'].map(c => <span key={c} style={{ ...V.commit, background: 'var(--accent-teal)' }}>{c}</span>)}
         </div>
-        <div style={{ color: '#888', fontSize: '11px', margin: '12px 0 8px', fontWeight: 600 }}>After rebase:</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '12px 0 8px', fontWeight: 600 }}>After rebase:</div>
         <div style={V.mergeRow}>
             <span style={V.branchLabel}>main</span>
-            {['C1', 'C2', 'C3'].map(c => <span key={c} style={{ ...V.commit, background: '#48bb78' }}>{c}</span>)}
-            {["F1'", "F2'"].map(c => <span key={c} style={{ ...V.commit, background: '#667eea', borderStyle: 'dashed' }}>{c}</span>)}
+            {['C1', 'C2', 'C3'].map(c => <span key={c} style={{ ...V.commit, background: 'var(--accent-green)' }}>{c}</span>)}
+            {["F1'", "F2'"].map(c => <span key={c} style={{ ...V.commit, background: 'var(--accent-teal)', borderStyle: 'dashed' }}>{c}</span>)}
         </div>
-        <div style={{ textAlign: 'center', color: '#888', fontSize: '11px', marginTop: '8px' }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', marginTop: '8px' }}>
             Rebase moves feature commits on top of main — linear history!
         </div>
     </div>
@@ -233,9 +233,9 @@ const RebaseVisual = () => (
 const CommitsVisual = () => (
     <div style={V.commitsContainer}>
         {[
-            { hash: 'a1b2c3d', msg: 'feat: add user auth', time: '2 hours ago', color: '#48bb78' },
+            { hash: 'a1b2c3d', msg: 'feat: add user auth', time: '2 hours ago', color: 'var(--accent-green)' },
             { hash: 'e4f5g6h', msg: 'fix: resolve login bug', time: '5 hours ago', color: '#f56565' },
-            { hash: 'i7j8k9l', msg: 'refactor: clean up API', time: '1 day ago', color: '#667eea' },
+            { hash: 'i7j8k9l', msg: 'refactor: clean up API', time: '1 day ago', color: 'var(--accent-teal)' },
             { hash: 'm0n1o2p', msg: 'docs: update README', time: '2 days ago', color: '#d69e2e' },
         ].map((c, i) => (
             <div key={i} style={V.commitRow}>
@@ -278,8 +278,7 @@ const GitLearn = () => {
         if (activeLessonIdx < GIT_LESSONS.length - 1) {
             setActiveLessonIdx(i => i + 1);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/preserve-manual-memoization
-    }, [lesson?.id, activeLessonIdx]);
+    }, [lesson, activeLessonIdx]);
 
     return (
         <div style={S.page}>
@@ -392,111 +391,111 @@ const V = {
     flowContainer: { display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', padding: '16px' },
     flowNode: {
         padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
-        background: 'rgba(102,126,234,0.15)', color: '#a5b4fc', border: '1px solid rgba(102,126,234,0.3)',
+        background: 'rgba(13,148,136,0.15)', color: '#a5b4fc', border: '1px solid rgba(13,148,136,0.3)',
     },
-    flowArrow: { color: '#555', fontSize: '16px', fontWeight: 'bold' },
+    flowArrow: { color: 'var(--text-muted)', fontSize: '16px', fontWeight: 'bold' },
     branchContainer: { padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' },
     branchLine: { display: 'flex', alignItems: 'center', gap: '8px' },
-    branchLabel: { fontSize: '11px', fontWeight: 700, color: '#888', minWidth: '50px', fontFamily: 'monospace' },
+    branchLabel: { fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', minWidth: '50px', fontFamily: 'monospace' },
     commit: {
         width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: '#fff', border: '2px solid transparent',
+        justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: 'var(--text-primary)', border: '2px solid transparent',
     },
-    branchFork: { color: '#555', fontSize: '14px' },
+    branchFork: { color: 'var(--text-muted)', fontSize: '14px' },
     mergeContainer: { padding: '16px' },
     mergeRow: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' },
     commitsContainer: { padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' },
     commitRow: { display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 0' },
     commitDot: { width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0 },
-    commitHash: { fontSize: '11px', fontFamily: 'monospace', color: '#667eea', background: 'rgba(102,126,234,0.1)', padding: '2px 6px', borderRadius: '4px' },
+    commitHash: { fontSize: '11px', fontFamily: 'monospace', color: 'var(--accent-teal)', background: 'rgba(13,148,136,0.1)', padding: '2px 6px', borderRadius: '4px' },
     commitMsg: { fontSize: '13px', color: '#d1d5db', flex: 1 },
-    commitTime: { fontSize: '11px', color: '#666', whiteSpace: 'nowrap' },
+    commitTime: { fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' },
 };
 
 // ── Page Styles ──
 const S = {
-    page: { padding: '24px 32px', maxWidth: '1200px', margin: '0 auto', color: '#e4e4e7' },
+    page: { padding: '24px 32px', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-primary)' },
     header: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px', flexWrap: 'wrap' },
-    backBtn: { background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#888', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' },
+    backBtn: { background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' },
     title: { margin: 0, fontSize: '24px', fontWeight: 800, flex: 1 },
-    progress: { fontSize: '12px', color: '#888', display: 'flex', alignItems: 'center', gap: '10px' },
+    progress: { fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '10px' },
     progressBar: { width: '120px', height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' },
-    progressFill: { height: '100%', background: 'linear-gradient(90deg, #48bb78, #38a169)', borderRadius: '3px', transition: 'width 0.3s' },
+    progressFill: { height: '100%', background: 'linear-gradient(90deg, var(--accent-green), #38a169)', borderRadius: '3px', transition: 'width 0.3s' },
 
     sectionTabs: { display: 'flex', gap: '8px', marginBottom: '20px' },
     sectionTab: {
         padding: '10px 20px', border: 'none', borderRadius: '10px',
-        background: 'rgba(255,255,255,0.04)', color: '#888', fontSize: '13px', fontWeight: 600,
+        background: 'var(--bg-muted)', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600,
         cursor: 'pointer', transition: 'all 0.2s',
     },
-    sectionTabActive: { background: 'rgba(102,126,234,0.15)', color: '#a5b4fc', border: '1px solid rgba(102,126,234,0.3)' },
+    sectionTabActive: { background: 'rgba(13,148,136,0.15)', color: '#a5b4fc', border: '1px solid rgba(13,148,136,0.3)' },
 
     tutorialLayout: { display: 'grid', gridTemplateColumns: '220px 1fr', gap: '20px' },
     lessonSidebar: { display: 'flex', flexDirection: 'column', gap: '4px' },
     lessonItem: {
         display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px',
-        border: 'none', borderRadius: '10px', background: 'rgba(255,255,255,0.03)',
-        color: '#888', fontSize: '13px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+        border: 'none', borderRadius: '10px', background: 'var(--bg-muted)',
+        color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
     },
-    lessonItemActive: { background: 'rgba(102,126,234,0.15)', color: '#a5b4fc' },
+    lessonItemActive: { background: 'rgba(13,148,136,0.15)', color: '#a5b4fc' },
     lessonItemDone: { opacity: 0.7 },
     lessonIcon: { fontSize: '16px' },
     lessonTitle: { fontWeight: 600 },
 
     lessonContent: {
-        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+        background: 'var(--bg-muted)', border: '1px solid rgba(255,255,255,0.06)',
         borderRadius: '16px', padding: '24px',
     },
     lessonHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' },
-    lessonName: { margin: 0, fontSize: '20px', fontWeight: 700, color: '#e4e4e7' },
-    lessonStep: { fontSize: '12px', color: '#666' },
-    lessonText: { fontSize: '14px', lineHeight: 1.8, color: '#a0aec0', marginBottom: '20px' },
+    lessonName: { margin: 0, fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)' },
+    lessonStep: { fontSize: '12px', color: 'var(--text-muted)' },
+    lessonText: { fontSize: '14px', lineHeight: 1.8, color: 'var(--text-muted)', marginBottom: '20px' },
 
     visualBox: {
-        background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '16px',
-        border: '1px solid rgba(255,255,255,0.05)', marginBottom: '20px',
+        background: 'var(--bg-muted)', borderRadius: '12px', padding: '16px',
+        border: '1px solid var(--border-color)', marginBottom: '20px',
     },
-    visualTitle: { margin: '0 0 12px', fontSize: '13px', fontWeight: 700, color: '#888' },
+    visualTitle: { margin: '0 0 12px', fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)' },
 
     commandsSection: { marginBottom: '20px' },
-    commandsTitle: { margin: '0 0 12px', fontSize: '13px', fontWeight: 700, color: '#888' },
+    commandsTitle: { margin: '0 0 12px', fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)' },
     commandRow: {
         display: 'flex', gap: '12px', alignItems: 'center', padding: '8px 12px',
-        borderRadius: '8px', marginBottom: '4px', background: 'rgba(255,255,255,0.02)',
+        borderRadius: '8px', marginBottom: '4px', background: 'var(--bg-muted)',
     },
     commandCode: {
-        fontFamily: 'monospace', fontSize: '12px', fontWeight: 600, color: '#48bb78',
+        fontFamily: 'monospace', fontSize: '12px', fontWeight: 600, color: 'var(--accent-green)',
         background: 'rgba(72,187,120,0.1)', padding: '4px 10px', borderRadius: '6px', minWidth: '220px',
     },
-    commandDesc: { fontSize: '12px', color: '#888' },
+    commandDesc: { fontSize: '12px', color: 'var(--text-muted)' },
 
     navRow: { display: 'flex', justifyContent: 'space-between', gap: '12px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' },
     navBtn: {
-        padding: '10px 20px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px',
-        background: 'rgba(255,255,255,0.04)', color: '#888', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+        padding: '10px 20px', border: '1px solid var(--border-color)', borderRadius: '10px',
+        background: 'var(--bg-muted)', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
     },
     navBtnPrimary: {
-        background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none',
-        boxShadow: '0 4px 20px rgba(102,126,234,0.3)',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none',
+        boxShadow: '0 4px 20px rgba(13,148,136,0.3)',
     },
 
     cheatSheet: {
         display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px',
     },
     cheatCategory: {
-        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+        background: 'var(--bg-muted)', border: '1px solid rgba(255,255,255,0.06)',
         borderRadius: '14px', padding: '20px',
     },
-    cheatCategoryTitle: { margin: '0 0 14px', fontSize: '16px', fontWeight: 700, color: '#e4e4e7' },
+    cheatCategoryTitle: { margin: '0 0 14px', fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' },
     cheatRow: {
         display: 'flex', gap: '10px', alignItems: 'center', padding: '8px 0',
         borderBottom: '1px solid rgba(255,255,255,0.04)',
     },
     cheatCmd: {
-        fontFamily: 'monospace', fontSize: '12px', color: '#48bb78',
+        fontFamily: 'monospace', fontSize: '12px', color: 'var(--accent-green)',
         background: 'rgba(72,187,120,0.08)', padding: '3px 10px', borderRadius: '6px', minWidth: '180px',
     },
-    cheatDesc: { fontSize: '12px', color: '#888' },
+    cheatDesc: { fontSize: '12px', color: 'var(--text-muted)' },
 };
 
 export default GitLearn;

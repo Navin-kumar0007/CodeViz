@@ -5,9 +5,10 @@
 
 export const TRIES_PATH = {
     id: 'tries',
-    title: 'Tries (Prefix Trees)',
-    icon: '🔤',
-    description: 'Learn how Autocomplete and Spellcheck work under the hood using Tries.',
+    title: 'Tries & Prefix Trees',
+    icon: '🔡',
+    category: 'Data Structures',
+    description: 'Power up your string searching! Learn how autocomplete systems work using tries.',
     prerequisites: ['trees', 'strings'],
     lessons: [
         {

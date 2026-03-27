@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion as Motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion as Motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
 import VirtualizedArray from './VirtualizedArray';
 import SortingVisualizer from './SortingVisualizer';
@@ -11,6 +11,7 @@ import VoiceNarrator from './VoiceNarrator';
 
 const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isReversed, setIsReversed] = useState(false); // 🔥 Reverse Playback
   const [showRaw, setShowRaw] = useState(false);
   const [previousVariables, setPreviousVariables] = useState({});
   const [collapsedSections, setCollapsedSections] = useState({});
@@ -18,6 +19,77 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
   const [dismissedConcepts, setDismissedConcepts] = useState({}); // Track dismissed concept cards
   const [showVariableTracker, setShowVariableTracker] = useState(true);
   const [showWatchPanel, setShowWatchPanel] = useState(false); // Variable watch panel
+  const [isCinemaMode, setIsCinemaMode] = useState(false); // 🔥 Cinematic Wide-Angle Mode
+  
+  // 🎮 CANVAS TRANSFORMS (Infinite Whiteboard)
+  const canvasRef = useRef(null);
+  const scale = useMotionValue(1);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  
+  // Handle Zoom with Mouse Wheel
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = Math.min(Math.max(scale.get() * delta, 0.2), 3);
+        scale.set(newScale);
+      }
+    };
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.addEventListener('wheel', handleWheel, { passive: false });
+    }
+    return () => {
+      if (canvas) canvas.removeEventListener('wheel', handleWheel);
+    };
+  }, [scale]);
+
+  // Reset View shortcut
+  const resetView = () => {
+    x.set(0);
+    y.set(0);
+    scale.set(1);
+  };
+
+  // ⌨️ Keyboard Shortcuts for Time-Travel
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't capture when typing in inputs/textareas
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+      
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          setIsPlaying(false);
+          setStepIndex(prev => Math.max(0, prev - 1));
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          setIsPlaying(false);
+          setStepIndex(prev => Math.min(traceData.length - 1, prev + 1));
+          break;
+        case ' ':
+          e.preventDefault();
+          setIsReversed(false);
+          setIsPlaying(prev => !prev);
+          break;
+        case 'Home':
+          e.preventDefault();
+          setIsPlaying(false);
+          setStepIndex(0);
+          break;
+        case 'End':
+          e.preventDefault();
+          setIsPlaying(false);
+          setStepIndex(traceData.length - 1);
+          break;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [traceData.length, setStepIndex]);
 
   // 🎨 Theme integration
   useTheme();
@@ -133,24 +205,34 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepIndex]);
 
-  // ⏯️ Auto-Play with dynamic speed
+  // ⏯️ Auto-Play with dynamic speed & Reverse
   useEffect(() => {
     let interval;
-    if (isPlaying && stepIndex < traceData.length - 1) {
-      interval = setInterval(() => { setStepIndex(prev => prev + 1); }, playSpeed);
-    } else {
-      setIsPlaying(false);
+    if (isPlaying) {
+      if (isReversed) {
+        if (stepIndex > 0) {
+          interval = setInterval(() => { setStepIndex(prev => prev - 1); }, playSpeed);
+        } else {
+          setIsPlaying(false);
+        }
+      } else {
+        if (stepIndex < traceData.length - 1) {
+          interval = setInterval(() => { setStepIndex(prev => prev + 1); }, playSpeed);
+        } else {
+          setIsPlaying(false);
+        }
+      }
     }
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying, stepIndex, traceData.length, playSpeed]);
+  }, [isPlaying, isReversed, stepIndex, traceData.length, playSpeed]);
 
   // 🛡️ CRASH GUARD
   if (!traceData || !Array.isArray(traceData) || traceData.length === 0) {
     return (
       <div style={styles.emptyState}>
-        <h3 style={{ color: '#888' }}>Waiting for Execution...</h3>
-        <p style={{ color: '#666' }}>Run your code to see the visualization here.</p>
+        <h3 style={{ color: 'var(--text-muted)' }}>Waiting for Execution...</h3>
+        <p style={{ color: 'var(--text-muted)' }}>Run your code to see the visualization here.</p>
       </div>
     );
   }
@@ -170,8 +252,8 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
 
   const getVariableColor = (state) => {
     switch (state) {
-      case 'new': return '#48bb78';
-      case 'changed': return '#f6ad55';
+      case 'new': return 'var(--accent-green)';
+      case 'changed': return 'var(--accent-yellow)';
       default: return '#4299e1';
     }
   };
@@ -228,11 +310,11 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         {Object.keys(graph).map(node => (
           <div key={node} style={styles.graphRow}>
             <div style={styles.graphNode}>{node}</div>
-            <div style={{ color: '#666' }}>➔</div>
+            <div style={{ color: 'var(--text-muted)' }}>➔</div>
             <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
               {graph[node] && Array.isArray(graph[node]) ? (
                 graph[node].map((neighbor, i) => <div key={i} style={styles.graphNeighbor}>{String(neighbor)}</div>)
-              ) : <span style={{ color: '#444', fontSize: '11px' }}>No links</span>}
+              ) : <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>No links</span>}
             </div>
           </div>
         ))}
@@ -245,7 +327,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
     if (!currentStep || !currentStep.call_stack || currentStep.call_stack.length === 0) return null;
 
     return (
-      <div style={{ marginBottom: '20px', background: 'rgba(20,20,30,0.6)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+      <div style={{ marginBottom: '20px', background: 'var(--bg-muted)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
         <h3 style={{ margin: '0 0 15px 0', color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px' }}>
           <span>🥞</span> Execution Call Stack
         </h3>
@@ -289,7 +371,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
                   {Object.keys(frame.variables || {}).length > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
                       {Object.entries(frame.variables).map(([k, v]) => (
-                        <div key={k} style={{ fontSize: '11px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>
+                        <div key={k} style={{ fontSize: '11px', background: 'var(--bg-muted)', padding: '2px 6px', borderRadius: '4px' }}>
                           <span style={{ color: '#9cdcfe' }}>{k}</span>: <span style={{ color: '#ce9178' }}>
                             {Array.isArray(v) ? '[...]' : typeof v === 'object' ? '{...}' : String(v)}
                           </span>
@@ -372,7 +454,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       if (minIdx !== null) currentIndices.min = minIdx;
 
       // Detect comparing indices (i and j if both present)
-      const comparingIndices = (i !== null && j !== null) ? [j, j + 1] : [];
+      const comparingIndices = [];
 
       // Detect sorted section (elements after n-i-1 in bubble sort)
       const n = arr.length;
@@ -413,11 +495,11 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
             <span style={styles.arrayIcon}>📊</span>
             <div>
               <div style={styles.varName}>{name}</div>
-              <div style={{ fontSize: '10px', color: '#888' }}>Length: {arr.length}</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Length: {arr.length}</div>
             </div>
           </div>
           {state === 'new' && <div style={styles.badge}>NEW</div>}
-          {state === 'changed' && <div style={{ ...styles.badge, background: '#f6ad55' }}>CHANGED</div>}
+          {state === 'changed' && <div style={{ ...styles.badge, background: 'var(--accent-yellow)' }}>CHANGED</div>}
         </div>
 
         {/* Array Elements */}
@@ -458,7 +540,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       animate={{ scale: 1, opacity: 1 }}
       style={{
         ...styles.enhancedArrayWrapper,
-        borderColor: '#f6ad55',
+        borderColor: 'var(--accent-yellow)',
         minWidth: '200px',
         maxWidth: '250px'
       }}
@@ -469,10 +551,10 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           <span style={{ fontSize: '20px' }}>📚</span>
           <div>
             <div style={styles.varName}>{name}</div>
-            <div style={{ fontSize: '10px', color: '#888' }}>Stack (Size: {stack.length})</div>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Stack (Size: {stack.length})</div>
           </div>
         </div>
-        {state === 'changed' && <div style={{ ...styles.badge, background: '#f6ad55' }}>CHANGED</div>}
+        {state === 'changed' && <div style={{ ...styles.badge, background: 'var(--accent-yellow)' }}>CHANGED</div>}
       </div>
 
       {/* Stack items - vertical, bottom to top */}
@@ -488,8 +570,8 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
               style={{
                 ...styles.stackItem,
                 background: idx === stack.length - 1
-                  ? 'linear-gradient(135deg, #f6ad55, #f59042)'
-                  : 'linear-gradient(135deg, #667eea, #764ba2)',
+                  ? 'linear-gradient(135deg, var(--accent-yellow), #f59042)'
+                  : 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
@@ -500,7 +582,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
                 <Motion.span
                   initial={{ x: -10, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
-                  style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold' }}
+                  style={{ fontSize: '11px', color: 'var(--text-primary)', fontWeight: 'bold' }}
                 >
                   ← TOP
                 </Motion.span>
@@ -509,7 +591,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           ))}
         </AnimatePresence>
         {stack.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#666', padding: '20px', fontStyle: 'italic' }}>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', fontStyle: 'italic' }}>
             Empty Stack
           </div>
         )}
@@ -535,7 +617,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           <span style={{ fontSize: '20px' }}>🎫</span>
           <div>
             <div style={styles.varName}>{name}</div>
-            <div style={{ fontSize: '10px', color: '#888' }}>Queue (Size: {queue.length})</div>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Queue (Size: {queue.length})</div>
           </div>
         </div>
         {state === 'changed' && <div style={{ ...styles.badge, background: '#4299e1' }}>CHANGED</div>}
@@ -543,7 +625,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
 
       {/* Queue items - horizontal */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', padding: '6px 0' }}>
-        <span style={{ fontSize: '11px', color: '#888', fontWeight: 'bold', minWidth: '50px' }}>FRONT →</span>
+        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'bold', minWidth: '50px' }}>FRONT →</span>
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <AnimatePresence mode="popLayout">
@@ -568,11 +650,11 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           </AnimatePresence>
         </div>
 
-        <span style={{ fontSize: '11px', color: '#888', fontWeight: 'bold', minWidth: '50px' }}>← REAR</span>
+        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'bold', minWidth: '50px' }}>← REAR</span>
       </div>
 
       {queue.length === 0 && (
-        <div style={{ textAlign: 'center', color: '#666', padding: '20px', fontStyle: 'italic' }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', fontStyle: 'italic' }}>
           Empty Queue
         </div>
       )}
@@ -625,7 +707,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
             <span style={{ fontSize: '20px' }}>🔗</span>
             <div>
               <div style={styles.varName}>{name}</div>
-              <div style={{ fontSize: '10px', color: '#888' }}>Linked List ({nodes.length} nodes)</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Linked List ({nodes.length} nodes)</div>
             </div>
           </div>
           {state === 'changed' && <div style={{ ...styles.badge, background: '#4fc3f7' }}>CHANGED</div>}
@@ -735,7 +817,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         </svg>
 
         {nodes.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#666', padding: '20px', fontStyle: 'italic' }}>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', fontStyle: 'italic' }}>
             Empty List
           </div>
         )}
@@ -763,7 +845,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         <span style={styles.varType}>Object</span>
       </div>
       {Object.keys(value).length === 0 ? (
-        <div style={{ color: '#666', fontStyle: 'italic' }}>Empty</div>
+        <div style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Empty</div>
       ) : (
         Object.keys(value).map(key => (
           <div key={key} style={styles.objectRow}>
@@ -800,7 +882,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ ...styles.varName, color: getVariableColor(state) }}>{name}</div>
         {state === 'new' && <div style={styles.badge}>NEW</div>}
-        {state === 'changed' && <div style={{ ...styles.badge, background: '#f6ad55' }}>CHANGED</div>}
+        {state === 'changed' && <div style={{ ...styles.badge, background: 'var(--accent-yellow)' }}>CHANGED</div>}
       </div>
       <Motion.div
         animate={{ scale: state === 'changed' ? [1, 1.1, 1] : 1 }}
@@ -814,7 +896,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       >
         {typeof value === 'string' ? `"${value}"` : String(value)}
       </Motion.div>
-      <div style={{ fontSize: '8px', color: '#666', marginTop: '2px', textTransform: 'uppercase' }}>
+      <div style={{ fontSize: '8px', color: 'var(--text-muted)', marginTop: '2px', textTransform: 'uppercase' }}>
         {typeof value}
       </div>
     </Motion.div>
@@ -844,7 +926,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           <Motion.div
             animate={{ rotate: isCollapsed ? 0 : 90 }}
             transition={{ duration: 0.3 }}
-            style={{ fontSize: '16px', color: '#666', cursor: 'pointer' }}
+            style={{ fontSize: '16px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             ▶
           </Motion.div>
@@ -859,7 +941,12 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
               transition={{ duration: 0.3 }}
               style={{ overflow: 'hidden' }}
             >
-              <div style={styles.sectionContent}>
+              <div style={{ 
+                ...styles.sectionContent, 
+                maxHeight: isCinemaMode ? 'none' : '400px',
+                flexWrap: isCinemaMode ? 'nowrap' : 'wrap',
+                flexDirection: isCinemaMode ? 'row' : 'row'
+              }}>
                 {Object.keys(variables).map(key => renderFn(key, variables[key], variableStates[key] || 'unchanged'))}
               </div>
             </Motion.div>
@@ -872,43 +959,67 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
   return (
     <div style={styles.container}>
       {/* CONTROLS */}
+      {/* ⏪ TIME-TRAVEL SCRUBBING TIMELINE */}
+      <div style={{ background: 'var(--bg-white)', padding: '14px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--accent-blue, #0df2f2)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+            ⏪ Algorithm Cinema
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ color: 'var(--text-muted, #4a5070)', fontSize: '10px', fontFamily: 'var(--font-code)', letterSpacing: '0.5px' }}>
+              ← → step &nbsp;·&nbsp; space play &nbsp;·&nbsp; home/end jump
+            </span>
+            <span style={{ color: 'var(--text-bright, #fff)', fontSize: '13px', fontWeight: 900, fontFamily: 'var(--font-code, monospace)', letterSpacing: '2px' }}>
+              {String(stepIndex + 1).padStart(String(traceData.length).length, '0')}<span style={{ color: 'var(--text-muted, #666)' }}> / {traceData.length}</span>
+            </span>
+          </div>
+        </div>
+        {/* Progress bar with glow */}
+        <div style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '4px', transform: 'translateY(-50%)', background: 'var(--bg-muted)', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${(stepIndex / Math.max(1, traceData.length - 1)) * 100}%`, background: 'linear-gradient(90deg, var(--accent-blue, #0df2f2), var(--accent-purple, #a45afe))', borderRadius: '2px', boxShadow: '0 0 12px rgba(13,242,242,0.4)', transition: 'width 0.1s ease' }} />
+          </div>
+          <input
+            type="range"
+            min="0"
+            max={traceData.length - 1}
+            value={stepIndex}
+            onChange={(e) => { setIsPlaying(false); setStepIndex(Number(e.target.value)); }}
+            style={{ ...styles.slider, width: '100%', height: '20px', cursor: 'ew-resize', position: 'relative', zIndex: 1, opacity: 0 }}
+            title="Drag to Time-Travel (or use ← → keys)"
+          />
+        </div>
+      </div>
+
+      {/* CONTROLS */}
       <div style={styles.controlBar}>
-        {/* Row 1: Play, Step, Speed, Voice */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
-          <button onClick={() => setIsPlaying(!isPlaying)} style={styles.playButton}>
-            {isPlaying ? '⏸ Pause' : '▶ Play'}
-          </button>
-          <div style={{ color: '#aaa', fontSize: '12px', whiteSpace: 'nowrap' }}>
-            Step {stepIndex + 1} / {traceData.length}
+          <div style={{ display: 'flex', gap: '2px', background: 'var(--bg-muted)', padding: '2px', borderRadius: '8px' }}>
+            <button 
+              onClick={() => { setIsReversed(true); setIsPlaying(!isPlaying); }} 
+              style={{ ...styles.playButton, background: isReversed && isPlaying ? 'linear-gradient(135deg, #ff3366, #cc2952)' : 'transparent', boxShadow: isReversed && isPlaying ? styles.playButton.boxShadow : 'none' }}
+              title="Reverse Play"
+            >
+              {isPlaying && isReversed ? '⏸' : '◀◀'}
+            </button>
+            <button onClick={() => { setIsPlaying(false); setStepIndex(Math.max(0, stepIndex - 1)) }} style={styles.navBtn} title="Step Back">◀</button>
+            <button 
+              onClick={() => { setIsReversed(false); setIsPlaying(!isPlaying); }} 
+              style={{ ...styles.playButton, background: !isReversed && isPlaying ? 'linear-gradient(135deg, var(--accent-teal), var(--accent-teal-hover))' : 'transparent', boxShadow: !isReversed && isPlaying ? styles.playButton.boxShadow : 'none' }}
+              title="Forward Play"
+            >
+              {isPlaying && !isReversed ? '⏸' : '▶'}
+            </button>
+            <button onClick={() => { setIsPlaying(false); setStepIndex(Math.min(traceData.length - 1, stepIndex + 1)) }} style={styles.navBtn} title="Step Forward">▶</button>
           </div>
 
           {/* Speed Control */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '6px' }}>
-            <span style={{ fontSize: '11px', color: '#888' }}>Speed:</span>
-            <button
-              onClick={() => setPlaySpeed(1500)}
-              style={{ ...styles.speedBtn, background: playSpeed === 1500 ? '#667eea' : 'transparent' }}
-            >
-              🐢
-            </button>
-            <button
-              onClick={() => setPlaySpeed(800)}
-              style={{ ...styles.speedBtn, background: playSpeed === 800 ? '#667eea' : 'transparent' }}
-            >
-              🚶
-            </button>
-            <button
-              onClick={() => setPlaySpeed(300)}
-              style={{ ...styles.speedBtn, background: playSpeed === 300 ? '#667eea' : 'transparent' }}
-            >
-              🏃
-            </button>
-            <button
-              onClick={() => setPlaySpeed(100)}
-              style={{ ...styles.speedBtn, background: playSpeed === 100 ? '#667eea' : 'transparent' }}
-            >
-              ⚡
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-muted)', padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color, rgba(255,255,255,0.05))' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted, #888)' }}>Speed:</span>
+            <button onClick={() => setPlaySpeed(1500)} style={{ ...styles.speedBtn, background: playSpeed === 1500 ? 'var(--accent-blue, #0df2f2)' : 'transparent', color: playSpeed === 1500 ? '#000' : 'inherit' }}>🐢</button>
+            <button onClick={() => setPlaySpeed(800)} style={{ ...styles.speedBtn, background: playSpeed === 800 ? 'var(--accent-blue, #0df2f2)' : 'transparent', color: playSpeed === 800 ? '#000' : 'inherit' }}>🚶</button>
+            <button onClick={() => setPlaySpeed(300)} style={{ ...styles.speedBtn, background: playSpeed === 300 ? 'var(--accent-blue, #0df2f2)' : 'transparent', color: playSpeed === 300 ? '#000' : 'inherit' }}>🏃</button>
+            <button onClick={() => setPlaySpeed(100)} style={{ ...styles.speedBtn, background: playSpeed === 100 ? 'var(--accent-blue, #0df2f2)' : 'transparent', color: playSpeed === 100 ? '#000' : 'inherit' }}>⚡</button>
           </div>
 
           {/* Voice Narration */}
@@ -922,21 +1033,25 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           />
         </div>
 
-        {/* Row 2: First | Prev | Slider | Next | Last + Watch toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-          <button onClick={() => { setIsPlaying(false); setStepIndex(0); }} style={styles.navBtn} title="First step">⏮</button>
-          <button onClick={() => { setIsPlaying(false); setStepIndex(Math.max(0, stepIndex - 1)) }} style={styles.navBtn}>◀</button>
-          <input
-            type="range"
-            min="0"
-            max={traceData.length - 1}
-            value={stepIndex}
-            onChange={(e) => { setIsPlaying(false); setStepIndex(Number(e.target.value)); }}
-            style={{ ...styles.slider, width: '80px', flex: 'none' }}
-          />
-          <button onClick={() => { setIsPlaying(false); setStepIndex(Math.min(traceData.length - 1, stepIndex + 1)) }} style={styles.navBtn}>▶</button>
-          <button onClick={() => { setIsPlaying(false); setStepIndex(traceData.length - 1); }} style={styles.navBtn} title="Last step">⏭</button>
-          <button onClick={() => setShowWatchPanel(!showWatchPanel)} style={{ ...styles.debugBtn, background: showWatchPanel ? 'rgba(102,126,234,0.3)' : 'transparent', fontSize: '12px' }} title="Variable Watch">
+          <button 
+            onClick={() => setIsCinemaMode(!isCinemaMode)} 
+            style={{ 
+              ...styles.debugBtn, 
+              background: isCinemaMode ? 'linear-gradient(135deg, #7000ff, #00f2ff)' : 'transparent',
+              borderColor: isCinemaMode ? '#00f2ff' : 'rgba(255,255,255,0.2)',
+              color: isCinemaMode ? '#fff' : 'var(--text-muted)',
+              fontWeight: isCinemaMode ? 'bold' : 'normal',
+              boxShadow: isCinemaMode ? '0 0 15px rgba(0, 242, 255, 0.4)' : 'none'
+            }} 
+            title="Toggle Cinematic Wide-Angle Mode"
+          >
+            {isCinemaMode ? '🎬 Cinema ON' : '🎬 Cinema'}
+          </button>
+          <button onClick={resetView} style={styles.debugBtn} title="Reset Canvas View">
+            🎯 Reset
+          </button>
+          <button onClick={() => setShowWatchPanel(!showWatchPanel)} style={{ ...styles.debugBtn, background: showWatchPanel ? 'rgba(13,148,136,0.3)' : 'transparent', fontSize: '12px' }} title="Variable Watch">
             🔍 Watch
           </button>
         </div>
@@ -954,26 +1069,26 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
           <span style={{ color: '#4ec9b0' }}>🖨 {currentStep.stdout}</span> :
           <span style={{ color: '#ce9178' }}>⚡ Line {currentStep.line}: Executing...</span>
         }
-        <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#555', fontFamily: 'monospace' }}>L{currentStep.line || '?'}</span>
+        <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>L{currentStep.line || '?'}</span>
       </Motion.div>
 
       {/* VARIABLE WATCH PANEL */}
       {showWatchPanel && Object.keys(currentVariables).length > 0 && (
-        <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.06)', maxHeight: '150px', overflowY: 'auto' }}>
-          <div style={{ fontSize: '11px', color: '#888', fontWeight: 'bold', marginBottom: '6px' }}>🔍 VARIABLE WATCH — Step {stepIndex + 1}</div>
+        <div style={{ padding: '8px 12px', background: 'var(--bg-muted)', borderBottom: '1px solid rgba(255,255,255,0.06)', maxHeight: '150px', overflowY: 'auto' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'bold', marginBottom: '6px' }}>🔍 VARIABLE WATCH — Step {stepIndex + 1}</div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
             <thead>
-              <tr style={{ color: '#666', textAlign: 'left' }}>
-                <th style={{ padding: '2px 6px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Name</th>
-                <th style={{ padding: '2px 6px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Type</th>
-                <th style={{ padding: '2px 6px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Value</th>
-                <th style={{ padding: '2px 6px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>State</th>
+              <tr style={{ color: 'var(--text-muted)', textAlign: 'left' }}>
+                <th style={{ padding: '2px 6px', borderBottom: '1px solid var(--border-color)' }}>Name</th>
+                <th style={{ padding: '2px 6px', borderBottom: '1px solid var(--border-color)' }}>Type</th>
+                <th style={{ padding: '2px 6px', borderBottom: '1px solid var(--border-color)' }}>Value</th>
+                <th style={{ padding: '2px 6px', borderBottom: '1px solid var(--border-color)' }}>State</th>
               </tr>
             </thead>
             <tbody>
               {Object.entries(currentVariables).map(([name, value]) => {
                 const state = variableStates[name] || 'unchanged';
-                const stateColor = state === 'new' ? '#48bb78' : state === 'changed' ? '#f6ad55' : '#555';
+                const stateColor = state === 'new' ? 'var(--accent-green)' : state === 'changed' ? 'var(--accent-yellow)' : '#555';
                 return (
                   <tr key={name} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                     <td style={{ padding: '3px 6px', color: '#9cdcfe', fontFamily: 'monospace' }}>{name}</td>
@@ -991,14 +1106,54 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       )}
 
       {/* CANVAS - CATEGORIZED */}
-      <div style={styles.canvasArea}>
-        <div style={styles.scopeContainer}>
+      <div 
+        ref={canvasRef}
+        style={{
+          ...styles.canvasArea,
+          overflow: isCinemaMode ? 'hidden' : 'auto',
+          cursor: isCinemaMode ? 'grab' : 'default',
+          position: 'relative'
+        }}
+      >
+        {/* Infinite Grid Background for Cinema Mode */}
+        {isCinemaMode && (
+          <div style={{
+            position: 'absolute',
+            inset: -5000,
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)`,
+            backgroundSize: `${40 * scale.get()}px ${40 * scale.get()}px`,
+            pointerEvents: 'none',
+            zIndex: 0
+          }} />
+        )}
+
+        <Motion.div 
+          drag={isCinemaMode}
+          dragMomentum={false}
+          style={{ 
+            x, y, scale,
+            transformOrigin: 'top left',
+            width: isCinemaMode ? 'max-content' : '100%',
+            height: isCinemaMode ? 'max-content' : 'auto',
+            padding: '20px',
+            position: 'relative',
+            zIndex: 1
+          }}
+        >
+          <div style={{
+            ...styles.scopeContainer,
+            display: isCinemaMode ? 'flex' : 'block',
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: isCinemaMode ? '30px' : '0',
+            alignItems: 'flex-start'
+          }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div style={styles.scopeTitle}>VARIABLES & MEMORY</div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 onClick={() => setShowVariableTracker(!showVariableTracker)}
-                style={{ ...styles.debugBtn, background: showVariableTracker ? 'rgba(102, 126, 234, 0.3)' : 'transparent' }}
+                style={{ ...styles.debugBtn, background: showVariableTracker ? 'rgba(13, 148, 136, 0.3)' : 'transparent' }}
               >
                 {showVariableTracker ? '📈 Tracker' : '📈'}
               </button>
@@ -1104,7 +1259,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
             <Motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              style={{ color: '#666', fontStyle: 'italic', padding: '20px', lineHeight: '1.8', textAlign: 'center' }}
+              style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '20px', lineHeight: '1.8', textAlign: 'center' }}
             >
               No variables captured yet.<br />
               <span style={{ color: '#d4d4d4', fontSize: '12px' }}>
@@ -1128,7 +1283,8 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
               </pre>
             </Motion.div>
           )}
-        </div>
+          </div>
+        </Motion.div>
       </div>
     </div>
   );
@@ -1140,9 +1296,9 @@ const styles = {
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-    color: '#fff',
-    fontFamily: 'Inter, sans-serif'
+    background: 'var(--bg-primary)',
+    color: 'var(--text-primary)',
+    fontFamily: 'var(--font-body)'
   },
   emptyState: {
     display: 'flex',
@@ -1150,7 +1306,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
-    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
+    background: 'var(--bg-primary)'
   },
   controlBar: {
     padding: '8px 12px',
@@ -1164,8 +1320,8 @@ const styles = {
     overflow: 'hidden'
   },
   playButton: {
-    background: 'linear-gradient(135deg, #2ea043, #26843b)',
-    color: 'white',
+    background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-teal-hover))',
+    color: 'var(--text-primary)',
     border: 'none',
     padding: '8px 18px',
     borderRadius: '6px',
@@ -1178,7 +1334,7 @@ const styles = {
   navBtn: {
     background: 'rgba(51, 51, 51, 0.6)',
     backdropFilter: 'blur(5px)',
-    color: 'white',
+    color: 'var(--text-primary)',
     border: '1px solid rgba(255, 255, 255, 0.2)',
     padding: '6px 12px',
     borderRadius: '6px',
@@ -1196,7 +1352,7 @@ const styles = {
   debugBtn: {
     background: 'transparent',
     border: '1px solid rgba(255, 255, 255, 0.2)',
-    color: '#888',
+    color: 'var(--text-muted)',
     padding: '5px 12px',
     borderRadius: '6px',
     fontSize: '11px',
@@ -1204,12 +1360,14 @@ const styles = {
     transition: 'all 0.3s ease'
   },
   slider: {
-    width: '200px',
-    height: '6px',
-    borderRadius: '3px',
+    width: '100%',
+    height: '4px',
+    borderRadius: '2px',
     outline: 'none',
-    background: 'rgba(255, 255, 255, 0.1)',
-    cursor: 'pointer'
+    background: 'linear-gradient(to right, var(--accent-teal), #0df2f2)',
+    cursor: 'pointer',
+    appearance: 'none',
+    boxShadow: '0 0 10px rgba(13, 242, 242, 0.2)'
   },
   narrative: {
     padding: '10px 20px',
@@ -1229,7 +1387,7 @@ const styles = {
   scopeContainer: { marginBottom: '20px' },
   scopeTitle: {
     fontSize: '11px',
-    color: '#888',
+    color: 'var(--text-muted)',
     fontWeight: 'bold',
     letterSpacing: '1.5px',
     textTransform: 'uppercase'
@@ -1314,8 +1472,8 @@ const styles = {
   },
   badge: {
     padding: '2px 8px',
-    background: '#48bb78',
-    color: 'white',
+    background: 'var(--accent-green)',
+    color: 'var(--text-primary)',
     fontSize: '9px',
     borderRadius: '10px',
     fontWeight: 'bold',
@@ -1361,7 +1519,7 @@ const styles = {
   },
   arrayIndexTop: {
     fontSize: '9px',
-    color: '#888',
+    color: 'var(--text-muted)',
     fontWeight: 'bold',
     fontFamily: 'monospace'
   },
@@ -1372,7 +1530,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: 'white',
+    color: 'var(--text-primary)',
     borderRadius: '8px',
     fontWeight: 'bold',
     fontSize: '12px',
@@ -1395,19 +1553,19 @@ const styles = {
     width: '28px',
     height: '28px',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: '#fff',
+    background: 'linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-purple) 100%)',
+    color: 'var(--text-primary)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 'bold',
     fontSize: '12px',
-    boxShadow: '0 4px 10px rgba(102, 126, 234, 0.4)'
+    boxShadow: '0 4px 10px rgba(13, 148, 136, 0.4)'
   },
   graphNeighbor: {
     padding: '4px 10px',
-    background: 'linear-gradient(135deg, #0e639c, #1e7bb3)',
-    color: 'white',
+    background: 'var(--accent-blue)',
+    color: 'var(--text-primary)',
     borderRadius: '4px',
     fontSize: '12px',
     boxShadow: '0 2px 8px rgba(14, 99, 156, 0.3)'
@@ -1417,7 +1575,7 @@ const styles = {
     height: '28px',
     borderRadius: '50%',
     background: 'linear-gradient(135deg, #007acc, #0098ff)',
-    color: 'white',
+    color: 'var(--text-primary)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1427,7 +1585,7 @@ const styles = {
     border: '1px solid rgba(0, 122, 204, 0.3)',
     boxShadow: '0 2px 8px rgba(0, 122, 204, 0.4)'
   },
-  nullNode: { fontSize: '10px', color: '#555', marginTop: '5px' },
+  nullNode: { fontSize: '10px', color: 'var(--text-muted)', marginTop: '5px' },
   objectRow: {
     display: 'flex',
     alignItems: 'center',
@@ -1467,7 +1625,7 @@ const styles = {
   stackItem: {
     padding: '6px 10px',
     borderRadius: '6px',
-    color: 'white',
+    color: 'var(--text-primary)',
     fontWeight: 'bold',
     fontSize: '12px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
@@ -1477,7 +1635,7 @@ const styles = {
   queueItem: {
     padding: '6px 10px',
     borderRadius: '6px',
-    color: 'white',
+    color: 'var(--text-primary)',
     fontWeight: 'bold',
     fontSize: '12px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',

@@ -102,7 +102,7 @@ const CampusDashboard = () => {
             <div style={styles.grid}>
                 {classrooms.length === 0 ? (
                     <div style={styles.emptyState}>
-                        <p>You don't have any classrooms yet.</p>
+                        <p>You don&apos;t have any classrooms yet.</p>
                     </div>
                 ) : (
                     classrooms.map(c => (
@@ -182,26 +182,26 @@ const CampusDashboard = () => {
 };
 
 const styles = {
-    center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#fff' },
-    page: { padding: '40px', maxWidth: '1200px', margin: '0 auto', color: '#fff' },
+    center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-primary)' },
+    page: { padding: '40px', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-primary)' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px' },
-    title: { fontSize: '32px', margin: '0 0 10px 0', background: 'linear-gradient(135deg, #667eea, #764ba2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
+    title: { fontSize: '32px', margin: '0 0 10px 0', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
     subtitle: { color: '#aaa', margin: 0 },
-    primaryBtn: { background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
-    secondaryBtn: { background: 'transparent', color: '#fff', border: '1px solid #555', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' },
+    primaryBtn: { background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+    secondaryBtn: { background: 'transparent', color: 'var(--text-primary)', border: '1px solid #555', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' },
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' },
-    card: { background: '#2d3748', borderRadius: '12px', padding: '20px', cursor: 'pointer', border: '1px solid #4a5568', transition: 'transform 0.2s', ':hover': { transform: 'translateY(-5px)' } },
+    card: { background: 'var(--bg-white)', borderRadius: '12px', padding: '20px', cursor: 'pointer', border: '1px solid var(--border-color)', transition: 'transform 0.2s', ':hover': { transform: 'translateY(-5px)' } },
     cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' },
     cardTitle: { margin: 0, fontSize: '20px' },
-    codeBadge: { background: 'rgba(72, 187, 120, 0.2)', color: '#48bb78', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' },
-    cardDesc: { color: '#a0aec0', fontSize: '14px', marginBottom: '15px' },
+    codeBadge: { background: 'rgba(72, 187, 120, 0.2)', color: 'var(--accent-green)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' },
+    cardDesc: { color: 'var(--text-muted)', fontSize: '14px', marginBottom: '15px' },
     cardMeta: { display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#cbd5e0' },
-    emptyState: { gridColumn: '1 / -1', textAlign: 'center', padding: '40px', background: '#2d3748', borderRadius: '12px', color: '#a0aec0' },
-    modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
-    modal: { background: '#1a202c', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '400px', border: '1px solid #4a5568' },
+    emptyState: { gridColumn: '1 / -1', textAlign: 'center', padding: '40px', background: 'var(--bg-white)', borderRadius: '12px', color: 'var(--text-muted)' },
+    modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
+    modal: { background: 'var(--bg-muted)', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '400px', border: '1px solid var(--border-color)' },
     form: { display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' },
-    input: { padding: '12px', borderRadius: '8px', background: '#2d3748', border: '1px solid #4a5568', color: '#fff', fontSize: '16px' },
-    textarea: { padding: '12px', borderRadius: '8px', background: '#2d3748', border: '1px solid #4a5568', color: '#fff', fontSize: '16px', minHeight: '100px' },
+    input: { padding: '12px', borderRadius: '8px', background: 'var(--bg-white)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '16px' },
+    textarea: { padding: '12px', borderRadius: '8px', background: 'var(--bg-white)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '16px', minHeight: '100px' },
     modalActions: { display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }
 };
 

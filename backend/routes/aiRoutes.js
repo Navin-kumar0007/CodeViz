@@ -13,7 +13,9 @@ const {
     generateTestCases,
     translateCode,
     narrateCode,
-    detectAI
+    detectAI,
+    ghostHint,
+    socraticTutor
 } = require('../controllers/aiController');
 
 // All routes require authentication
@@ -28,6 +30,8 @@ router.post('/complexity', analyzeComplexity);
 router.post('/optimize-diff', optimizeWithDiff);
 router.post('/narrate', narrateCode);
 router.post('/detect', detectAI); // 🕵️ AI Detection Route
+router.post('/tutor', socraticTutor); // 🤖 Socratic Tutor
+router.post('/ghost-hint', ghostHint); // 👻 Ghost Hint
 
 // 🤖 Rubric-based code review
 router.post('/rubric-review', rubricReview);

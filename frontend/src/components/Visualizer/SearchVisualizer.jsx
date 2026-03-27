@@ -17,12 +17,12 @@ const SearchVisualizer = ({
     visitedIndices = []
 }) => {
     const colors = {
-        default: 'rgba(102, 126, 234, 0.4)',
-        inRange: 'linear-gradient(135deg, #667eea, #764ba2)',
+        default: 'rgba(13, 148, 136, 0.4)',
+        inRange: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
         outOfRange: 'rgba(50, 50, 60, 0.5)',
-        current: 'linear-gradient(135deg, #f6ad55, #ed8936)',
-        found: 'linear-gradient(135deg, #68d391, #48bb78)',
-        visited: 'linear-gradient(135deg, #4a5568, #2d3748)'
+        current: 'linear-gradient(135deg, var(--accent-yellow), #ed8936)',
+        found: 'linear-gradient(135deg, #68d391, var(--accent-green))',
+        visited: 'linear-gradient(135deg, #D1D5DB, #E5E7EB)'
     };
 
     const getElementStyle = (idx) => {
@@ -39,7 +39,7 @@ const SearchVisualizer = ({
         if (mid === idx) {
             return {
                 background: colors.current,
-                border: '3px solid #f6ad55',
+                border: '3px solid var(--accent-yellow)',
                 transform: 'scale(1.1)'
             };
         }
@@ -48,7 +48,7 @@ const SearchVisualizer = ({
         if (low !== null && high !== null && idx >= low && idx <= high) {
             return {
                 background: colors.inRange,
-                border: '2px solid rgba(102, 126, 234, 0.6)'
+                border: '2px solid rgba(13, 148, 136, 0.6)'
             };
         }
 
@@ -72,7 +72,7 @@ const SearchVisualizer = ({
 
         return {
             background: colors.default,
-            border: '2px solid rgba(102, 126, 234, 0.3)'
+            border: '2px solid rgba(13, 148, 136, 0.3)'
         };
     };
 
@@ -102,7 +102,7 @@ const SearchVisualizer = ({
             {/* Search Info */}
             <div style={styles.infoBar}>
                 {low !== null && <span style={styles.infoItem}>low: {low}</span>}
-                {mid !== null && <span style={{ ...styles.infoItem, background: '#f6ad55', color: '#1a1a2e' }}>mid: {mid}</span>}
+                {mid !== null && <span style={{ ...styles.infoItem, background: 'var(--accent-yellow)', color: 'var(--text-primary)' }}>mid: {mid}</span>}
                 {high !== null && <span style={styles.infoItem}>high: {high}</span>}
             </div>
 
@@ -123,7 +123,7 @@ const SearchVisualizer = ({
                             {isPointer && (
                                 <div style={styles.pointerContainer}>
                                     {idx === low && <span style={{ ...styles.pointer, background: '#4299e1' }}>low</span>}
-                                    {idx === mid && <span style={{ ...styles.pointer, background: '#f6ad55' }}>mid</span>}
+                                    {idx === mid && <span style={{ ...styles.pointer, background: 'var(--accent-yellow)' }}>mid</span>}
                                     {idx === high && <span style={{ ...styles.pointer, background: '#4299e1' }}>high</span>}
                                     <div style={styles.pointerArrow}>▼</div>
                                 </div>
@@ -185,7 +185,7 @@ const SearchVisualizer = ({
 
 const styles = {
     wrapper: {
-        background: 'rgba(20, 20, 35, 0.9)',
+        background: 'var(--bg-white)',
         backdropFilter: 'blur(10px)',
         borderRadius: '16px',
         padding: '12px',
@@ -198,16 +198,16 @@ const styles = {
         alignItems: 'center',
         marginBottom: '8px',
         paddingBottom: '8px',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
+        borderBottom: '1px solid var(--border-color)'
     },
     name: {
         fontSize: '13px',
         fontWeight: 'bold',
-        color: '#fff'
+        color: 'var(--text-primary)'
     },
     subtitle: {
         fontSize: '11px',
-        color: '#888'
+        color: 'var(--text-muted)'
     },
     targetBadge: {
         background: 'rgba(104, 211, 145, 0.2)',
@@ -224,7 +224,7 @@ const styles = {
     },
     infoItem: {
         background: 'rgba(66, 153, 225, 0.3)',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '5px 12px',
         borderRadius: '12px',
         fontSize: '12px',
@@ -256,7 +256,7 @@ const styles = {
         borderRadius: '8px',
         fontSize: '10px',
         fontWeight: 'bold',
-        color: '#1a1a2e'
+        color: 'var(--text-primary)'
     },
     pointerArrow: {
         color: '#4299e1',
@@ -269,21 +269,21 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontWeight: 'bold',
         fontSize: '11px',
         transition: 'all 0.3s ease'
     },
     indexLabel: {
         fontSize: '9px',
-        color: '#666',
+        color: 'var(--text-muted)',
         fontFamily: 'monospace'
     },
     foundBadge: {
         position: 'absolute',
         bottom: '-25px',
         background: '#68d391',
-        color: '#1a1a2e',
+        color: 'var(--text-primary)',
         padding: '3px 8px',
         borderRadius: '10px',
         fontSize: '10px',
@@ -292,7 +292,7 @@ const styles = {
     statusBar: {
         marginTop: '15px',
         padding: '8px 12px',
-        background: 'rgba(0, 0, 0, 0.3)',
+        background: 'var(--bg-muted)',
         borderRadius: '6px',
         textAlign: 'center',
         fontSize: '11px',

@@ -6,8 +6,9 @@
 export const BACKTRACKING_PATH = {
     id: 'backtracking',
     title: 'Backtracking',
-    icon: '🔙',
-    description: 'Master recursive choice generators for permutations, combinations, and puzzle-solving.',
+    icon: '↩️',
+    category: 'Algorithm Mastery',
+    description: 'Solve problems by exploring all possible configurations and pruning invalid ones.',
     prerequisites: ['recursion', 'trees'],
     lessons: [
         {

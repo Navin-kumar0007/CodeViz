@@ -30,9 +30,16 @@ const LANGUAGE_MAP = {
     c: 'c'
 };
 
-const LessonView = ({ lesson, onBack, onComplete }) => {
-    const [selectedLang, setSelectedLang] = useState('python');
-    const [compareLang, setCompareLang] = useState('javascript');
+const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascript' }) => {
+    const availableLanguages = Object.keys(lesson.code || {});
+    
+    // Initialize with preferred language if available, else first available
+    const initialLang = availableLanguages.includes(preferredLanguage) 
+        ? preferredLanguage 
+        : (availableLanguages[0] || 'javascript');
+
+    const [selectedLang, setSelectedLang] = useState(initialLang);
+    const [compareLang, setCompareLang] = useState(availableLanguages.find(l => l !== initialLang) || 'javascript');
     const [compareMode, setCompareMode] = useState(false);
     const [currentStep] = useState(0); // Removed unused setCurrentStep
     const [showQuiz, setShowQuiz] = useState(false);
@@ -44,7 +51,6 @@ const LessonView = ({ lesson, onBack, onComplete }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const availableLanguages = Object.keys(lesson.code || {});
     const explanationSteps = lesson.explanation || [];
 
     // Run code through tracer
@@ -128,7 +134,7 @@ const LessonView = ({ lesson, onBack, onComplete }) => {
                             }}
                             style={{
                                 ...styles.langBtn,
-                                background: selectedLang === lang ? '#667eea' : 'transparent'
+                                background: selectedLang === lang ? 'var(--accent-teal)' : 'transparent'
                             }}
                         >
                             {LANGUAGE_ICONS[lang]} {lang}
@@ -222,7 +228,7 @@ const LessonView = ({ lesson, onBack, onComplete }) => {
                             onClick={() => setShowVisualizer(false)}
                             style={{
                                 ...styles.tabBtn,
-                                background: !showVisualizer ? '#667eea' : 'transparent'
+                                background: !showVisualizer ? 'var(--accent-teal)' : 'transparent'
                             }}
                         >
                             🖥️ Code
@@ -232,7 +238,7 @@ const LessonView = ({ lesson, onBack, onComplete }) => {
                             disabled={!traceData}
                             style={{
                                 ...styles.tabBtn,
-                                background: showVisualizer ? '#667eea' : 'transparent',
+                                background: showVisualizer ? 'var(--accent-teal)' : 'transparent',
                                 opacity: traceData ? 1 : 0.5
                             }}
                         >
@@ -326,7 +332,7 @@ const LessonView = ({ lesson, onBack, onComplete }) => {
                             key={i}
                             style={{
                                 ...styles.dot,
-                                background: i <= currentStep ? '#667eea' : '#444'
+                                background: i <= currentStep ? 'var(--accent-teal)' : '#444'
                             }}
                         />
                     ))}
@@ -346,44 +352,52 @@ const LessonView = ({ lesson, onBack, onComplete }) => {
 const styles = {
     container: {
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-        color: '#fff',
-        padding: '20px',
+        background: 'transparent',
+        color: '#E8E8ED',
+        padding: '30px 40px',
         display: 'flex',
         flexDirection: 'column'
     },
     header: {
         display: 'flex',
         alignItems: 'center',
-        gap: '20px',
-        marginBottom: '15px',
-        paddingBottom: '15px',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
+        gap: '24px',
+        marginBottom: '30px',
+        paddingBottom: '20px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
     },
     backBtn: {
-        background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.2)',
-        color: '#fff',
-        padding: '8px 16px',
-        borderRadius: '8px',
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        color: '#E8E8ED',
+        padding: '10px 20px',
+        borderRadius: '100px',
         cursor: 'pointer',
-        fontSize: '14px'
+        fontSize: '13px',
+        fontWeight: 600,
+        transition: 'all 0.2s'
     },
     title: {
         margin: 0,
-        fontSize: '20px',
-        flex: 1
+        fontSize: '28px',
+        fontWeight: 800,
+        flex: 1,
+        letterSpacing: '-0.02em',
     },
     duration: {
-        color: '#888',
-        fontSize: '14px'
+        color: 'var(--accent-cyan)',
+        fontSize: '13px',
+        fontWeight: 700,
+        background: 'rgba(0, 229, 238, 0.1)',
+        padding: '6px 14px',
+        borderRadius: '100px',
     },
     languageBar: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '10px 15px',
-        background: 'rgba(255,255,255,0.03)',
+        background: 'var(--bg-muted)',
         borderRadius: '10px',
         marginBottom: '20px'
     },
@@ -393,12 +407,12 @@ const styles = {
         gap: '10px'
     },
     languageLabel: {
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '13px'
     },
     langBtn: {
-        border: '1px solid rgba(255,255,255,0.2)',
-        color: '#fff',
+        border: '1px solid var(--border-color)',
+        color: 'var(--text-primary)',
         padding: '6px 12px',
         borderRadius: '6px',
         cursor: 'pointer',
@@ -412,8 +426,8 @@ const styles = {
         gap: '15px'
     },
     visualizeBtn: {
-        background: 'linear-gradient(135deg, #48bb78, #38a169)',
-        color: 'white',
+        background: 'linear-gradient(135deg, var(--accent-green), #38a169)',
+        color: 'var(--text-primary)',
         border: 'none',
         padding: '8px 16px',
         borderRadius: '6px',
@@ -426,12 +440,12 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '13px',
         cursor: 'pointer'
     },
     checkbox: {
-        accentColor: '#667eea'
+        accentColor: 'var(--accent-teal)'
     },
     errorBox: {
         background: 'rgba(245, 101, 101, 0.15)',
@@ -450,16 +464,16 @@ const styles = {
         minHeight: 0
     },
     explanationPanel: {
-        background: 'rgba(255,255,255,0.02)',
+        background: 'var(--bg-muted)',
         borderRadius: '12px',
         padding: '20px',
-        border: '1px solid rgba(255,255,255,0.05)',
+        border: '1px solid var(--border-color)',
         overflow: 'auto'
     },
     sectionTitle: {
         margin: '0 0 15px 0',
         fontSize: '14px',
-        color: '#888',
+        color: 'var(--text-muted)',
         textTransform: 'uppercase',
         letterSpacing: '1px'
     },
@@ -480,7 +494,7 @@ const styles = {
         borderRadius: '8px',
         padding: '12px',
         fontSize: '13px',
-        color: '#48bb78'
+        color: 'var(--accent-green)'
     },
     warningBox: {
         background: 'rgba(246, 173, 85, 0.1)',
@@ -488,12 +502,12 @@ const styles = {
         borderRadius: '8px',
         padding: '12px',
         fontSize: '13px',
-        color: '#f6ad55'
+        color: 'var(--accent-yellow)'
     },
     keyConceptsBox: {
         marginTop: '20px',
-        background: 'rgba(102, 126, 234, 0.1)',
-        border: '1px solid rgba(102, 126, 234, 0.3)',
+        background: 'rgba(13, 148, 136, 0.1)',
+        border: '1px solid rgba(13, 148, 136, 0.3)',
         borderRadius: '10px',
         padding: '15px'
     },
@@ -509,10 +523,10 @@ const styles = {
         fontSize: '13px'
     },
     codePanel: {
-        background: 'rgba(255,255,255,0.02)',
+        background: 'var(--bg-muted)',
         borderRadius: '12px',
         padding: '20px',
-        border: '1px solid rgba(255,255,255,0.05)',
+        border: '1px solid var(--border-color)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden'
@@ -523,8 +537,8 @@ const styles = {
         marginBottom: '15px'
     },
     tabBtn: {
-        border: '1px solid rgba(255,255,255,0.2)',
-        color: '#fff',
+        border: '1px solid var(--border-color)',
+        color: 'var(--text-primary)',
         padding: '6px 14px',
         borderRadius: '6px',
         cursor: 'pointer',
@@ -534,7 +548,7 @@ const styles = {
     visualizerWrapper: {
         flex: 1,
         overflow: 'auto',
-        background: '#1e1e1e',
+        background: 'var(--bg-white)',
         borderRadius: '8px'
     },
     codeBox: {
@@ -543,11 +557,11 @@ const styles = {
         overflow: 'hidden'
     },
     codeHeader: {
-        background: 'rgba(255,255,255,0.05)',
+        background: 'var(--bg-muted)',
         padding: '8px 12px',
         fontSize: '12px',
-        color: '#888',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        color: 'var(--text-muted)',
+        borderBottom: '1px solid var(--border-color)',
         textTransform: 'capitalize'
     },
     code: {
@@ -576,13 +590,13 @@ const styles = {
     compareSelect: {
         background: 'transparent',
         border: 'none',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '12px',
         cursor: 'pointer'
     },
     syntaxDiffBox: {
         marginTop: '15px',
-        background: 'rgba(102, 126, 234, 0.1)',
+        background: 'rgba(13, 148, 136, 0.1)',
         padding: '12px',
         borderRadius: '8px',
         fontSize: '12px',
@@ -606,8 +620,8 @@ const styles = {
         borderRadius: '50%'
     },
     continueBtn: {
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
-        color: 'white',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
+        color: 'var(--text-primary)',
         border: 'none',
         padding: '12px 30px',
         borderRadius: '8px',

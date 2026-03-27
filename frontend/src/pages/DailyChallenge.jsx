@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import API_BASE from '../utils/api';
+import API from '../utils/api';
 
 /**
  * 🏆 DAILY CHALLENGE PAGE
@@ -9,7 +8,6 @@ import API_BASE from '../utils/api';
  */
 const DailyChallenge = () => {
     const navigate = useNavigate();
-    const user = useMemo(() => JSON.parse(localStorage.getItem('userInfo')), []);
 
     const [challenge, setChallenge] = useState(null);
     const [code, setCode] = useState('');
@@ -29,14 +27,16 @@ const DailyChallenge = () => {
         const fetchChallenge = async () => {
             try {
                 const stored = JSON.parse(localStorage.getItem('userInfo'));
-                if (!stored?.token) return;
+                if (!stored?._id) {
+                    setError('Please log in to participate in the Daily Challenge');
+                    setLoading(false);
+                    return;
+                }
                 const endpoint = challengeMode === 'ai-coach'
-                    ? `${API_BASE}/api/challenges/personalized`
-                    : `${API_BASE}/api/challenges/today`;
+                    ? `/api/challenges/personalized`
+                    : `/api/challenges/today`;
 
-                const res = await axios.get(endpoint, {
-                    headers: { Authorization: `Bearer ${stored.token}` }
-                });
+                const res = await API.get(endpoint);
 
                 setChallenge(res.data);
                 setCode(res.data.starterCode);
@@ -78,11 +78,9 @@ const DailyChallenge = () => {
         setIsRunning(true);
         setOutput('');
         try {
-            const res = await axios.post(`${API_BASE}/run`, {
+            const res = await API.post(`/run`, {
                 language: challenge.language || 'python',
                 code
-            }, {
-                headers: { Authorization: `Bearer ${user?.token}` }
             });
             if (res.data.error) {
                 setOutput(`❌ Error: ${res.data.error}`);
@@ -115,11 +113,9 @@ const DailyChallenge = () => {
         }
         setIsRunning(true);
         try {
-            const res = await axios.post(`${API_BASE}/api/challenges/submit`, {
+            const res = await API.post(`/api/challenges/submit`, {
                 challengeId: challenge._id,
                 output
-            }, {
-                headers: { Authorization: `Bearer ${user.token}` }
             });
             setResult(res.data);
         } catch {
@@ -138,9 +134,9 @@ const DailyChallenge = () => {
     };
 
     const difficultyColors = {
-        easy: { bg: 'rgba(72, 187, 120, 0.15)', text: '#48bb78', border: 'rgba(72, 187, 120, 0.3)' },
-        medium: { bg: 'rgba(246, 173, 85, 0.15)', text: '#f6ad55', border: 'rgba(246, 173, 85, 0.3)' },
-        hard: { bg: 'rgba(252, 129, 129, 0.15)', text: '#fc8181', border: 'rgba(252, 129, 129, 0.3)' }
+        easy: { bg: 'rgba(72, 187, 120, 0.15)', text: 'var(--accent-green)', border: 'rgba(72, 187, 120, 0.3)' },
+        medium: { bg: 'rgba(246, 173, 85, 0.15)', text: 'var(--accent-yellow)', border: 'rgba(246, 173, 85, 0.3)' },
+        hard: { bg: 'rgba(252, 129, 129, 0.15)', text: 'var(--accent-red)', border: 'rgba(252, 129, 129, 0.3)' }
     };
 
     if (loading) {
@@ -148,7 +144,7 @@ const DailyChallenge = () => {
             <div style={styles.container}>
                 <div style={styles.loadingState}>
                     <div style={styles.spinner}></div>
-                    <p style={{ color: '#888', marginTop: '16px' }}>Loading today's challenge...</p>
+                    <p style={{ color: 'var(--text-muted)', marginTop: '16px' }}>Loading today&apos;s challenge...</p>
                 </div>
             </div>
         );
@@ -158,8 +154,28 @@ const DailyChallenge = () => {
         return (
             <div style={styles.container}>
                 <div style={styles.loadingState}>
-                    <p style={{ color: '#fc8181', fontSize: '18px' }}>⚠️ {error}</p>
-                    <button onClick={() => navigate('/')} style={styles.backBtn}>← Back to Dashboard</button>
+                    <div style={{
+                        background: 'rgba(252, 129, 129, 0.1)',
+                        padding: '32px',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(252, 129, 129, 0.2)',
+                        textAlign: 'center',
+                        maxWidth: '400px'
+                    }}>
+                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔑</div>
+                        <h2 style={{ color: 'var(--text-primary)', margin: '0 0 12px 0' }}>Access Restricted</h2>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+                            {error}
+                        </p>
+                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                            <button onClick={() => navigate('/login')} style={styles.runBtn}>
+                                Login Now
+                            </button>
+                            <button onClick={() => navigate('/')} style={styles.backBtn}>
+                                Dashboard
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -176,7 +192,7 @@ const DailyChallenge = () => {
                     <h1 style={styles.title}>🏆 Daily Challenge</h1>
                 </div>
 
-                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '4px' }}>
+                <div style={{ display: 'flex', background: 'var(--bg-muted)', borderRadius: '8px', padding: '4px' }}>
                     <button
                         onClick={() => setChallengeMode('daily')}
                         style={{ ...styles.toggleBtn, ...(challengeMode === 'daily' ? styles.toggleActive : {}) }}
@@ -228,7 +244,7 @@ const DailyChallenge = () => {
                 <div style={styles.editorPane}>
                     <div style={styles.editorHeader}>
                         <span style={{ color: '#9cdcfe', fontWeight: 'bold', fontSize: '12px' }}>📝 Solution</span>
-                        <span style={{ color: '#888', fontSize: '11px' }}>{challenge.language}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{challenge.language}</span>
                     </div>
                     <textarea
                         ref={editorRef}
@@ -275,13 +291,13 @@ const DailyChallenge = () => {
                             background: result.success
                                 ? 'rgba(72, 187, 120, 0.1)'
                                 : 'rgba(252, 129, 129, 0.1)',
-                            borderColor: result.success ? '#48bb78' : '#fc8181'
+                            borderColor: result.success ? 'var(--accent-green)' : 'var(--accent-red)'
                         }}>
                             <div style={{ fontSize: '24px', marginBottom: '8px' }}>
                                 {result.success ? '🎉' : '❌'}
                             </div>
                             <div style={{
-                                color: result.success ? '#48bb78' : '#fc8181',
+                                color: result.success ? 'var(--accent-green)' : 'var(--accent-red)',
                                 fontWeight: 'bold',
                                 fontSize: '14px',
                                 marginBottom: '4px'
@@ -289,10 +305,10 @@ const DailyChallenge = () => {
                                 {result.message}
                             </div>
                             {result.xpAwarded > 0 && (
-                                <div style={{ color: '#f6ad55', fontSize: '13px' }}>
+                                <div style={{ color: 'var(--accent-yellow)', fontSize: '13px' }}>
                                     +{result.xpAwarded} XP earned!
                                     {result.streakMultiplier > 1 && (
-                                        <span style={{ color: '#fc8181', marginLeft: '8px' }}>
+                                        <span style={{ color: 'var(--accent-red)', marginLeft: '8px' }}>
                                             🔥 {result.streakMultiplier.toFixed(1)}x streak bonus!
                                         </span>
                                     )}
@@ -318,7 +334,7 @@ const DailyChallenge = () => {
                         </div>
                         {showHint && challenge.hints?.slice(0, hintsUsed).map((hint, i) => (
                             <div key={i} style={styles.hintItem}>
-                                <span style={{ color: '#f6ad55', fontWeight: 'bold' }}>#{i + 1}</span> {hint}
+                                <span style={{ color: 'var(--accent-yellow)', fontWeight: 'bold' }}>#{i + 1}</span> {hint}
                             </div>
                         ))}
                     </div>
@@ -331,9 +347,9 @@ const DailyChallenge = () => {
 const styles = {
     container: {
         minHeight: '100vh',
-        background: 'var(--bg-primary, #1a1a2e)',
-        color: '#fff',
-        fontFamily: 'Inter, sans-serif',
+        background: 'var(--bg-primary)',
+        color: 'var(--text-primary)',
+        fontFamily: 'var(--font-body)',
         padding: '20px 24px'
     },
     loadingState: {
@@ -347,7 +363,7 @@ const styles = {
         width: '40px',
         height: '40px',
         border: '3px solid rgba(255,255,255,0.1)',
-        borderTop: '3px solid #667eea',
+        borderTop: '3px solid var(--accent-teal)',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite'
     },
@@ -357,14 +373,14 @@ const styles = {
         alignItems: 'center',
         marginBottom: '20px',
         paddingBottom: '16px',
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        borderBottom: '1px solid var(--border-color)',
         flexWrap: 'wrap',
         gap: '12px'
     },
     backBtn: {
         background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.2)',
-        color: '#888',
+        border: '1px solid var(--border-color)',
+        color: 'var(--text-muted)',
         padding: '6px 14px',
         borderRadius: '6px',
         cursor: 'pointer',
@@ -375,7 +391,7 @@ const styles = {
         margin: 0,
         fontSize: '22px',
         fontWeight: 'bold',
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent'
     },
@@ -386,7 +402,7 @@ const styles = {
     },
     timerLabel: {
         fontSize: '10px',
-        color: '#888',
+        color: 'var(--text-muted)',
         textTransform: 'uppercase',
         letterSpacing: '0.5px'
     },
@@ -394,13 +410,13 @@ const styles = {
         fontSize: '20px',
         fontWeight: 'bold',
         fontFamily: 'var(--font-code, monospace)',
-        color: '#f6ad55',
+        color: 'var(--accent-yellow)',
         letterSpacing: '2px'
     },
     toggleBtn: {
         background: 'transparent',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         padding: '8px 16px',
         borderRadius: '6px',
         cursor: 'pointer',
@@ -409,12 +425,12 @@ const styles = {
         transition: 'all 0.2s'
     },
     toggleActive: {
-        background: '#667eea',
-        color: '#fff',
+        background: 'var(--accent-teal)',
+        color: 'var(--text-primary)',
     },
     challengeCard: {
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--bg-muted)',
+        border: '1px solid var(--border-color)',
         borderRadius: '12px',
         padding: '20px',
         marginBottom: '20px'
@@ -428,7 +444,7 @@ const styles = {
     challengeTitle: {
         margin: '0 0 8px 0',
         fontSize: '20px',
-        color: '#fff'
+        color: 'var(--text-primary)'
     },
     metaRow: {
         display: 'flex',
@@ -444,9 +460,9 @@ const styles = {
     },
     categoryBadge: {
         padding: '3px 10px',
-        background: 'rgba(102, 126, 234, 0.15)',
-        color: '#667eea',
-        border: '1px solid rgba(102, 126, 234, 0.3)',
+        background: 'rgba(13, 148, 136, 0.15)',
+        color: 'var(--accent-teal)',
+        border: '1px solid rgba(13, 148, 136, 0.3)',
         borderRadius: '12px',
         fontSize: '10px',
         fontWeight: 'bold',
@@ -455,7 +471,7 @@ const styles = {
     xpBadge: {
         padding: '3px 10px',
         background: 'rgba(246, 173, 85, 0.15)',
-        color: '#f6ad55',
+        color: 'var(--accent-yellow)',
         border: '1px solid rgba(246, 173, 85, 0.3)',
         borderRadius: '12px',
         fontSize: '10px',
@@ -464,7 +480,7 @@ const styles = {
     completedBadge: {
         padding: '6px 14px',
         background: 'rgba(72, 187, 120, 0.15)',
-        color: '#48bb78',
+        color: 'var(--accent-green)',
         borderRadius: '8px',
         fontSize: '12px',
         fontWeight: 'bold'
@@ -484,14 +500,14 @@ const styles = {
     editorPane: {
         display: 'flex',
         flexDirection: 'column',
-        background: 'rgba(0,0,0,0.2)',
+        background: 'var(--bg-muted)',
         borderRadius: '12px',
         overflow: 'hidden',
-        border: '1px solid rgba(255,255,255,0.08)'
+        border: '1px solid var(--border-color)'
     },
     editorHeader: {
         padding: '8px 14px',
-        background: 'rgba(255,255,255,0.03)',
+        background: 'var(--bg-muted)',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
         display: 'flex',
         justifyContent: 'space-between',
@@ -500,7 +516,7 @@ const styles = {
     codeEditor: {
         flex: 1,
         background: 'transparent',
-        color: '#e4e4e7',
+        color: 'var(--text-primary)',
         border: 'none',
         padding: '14px',
         fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
@@ -512,7 +528,7 @@ const styles = {
     },
     editorActions: {
         padding: '10px 14px',
-        background: 'rgba(255,255,255,0.03)',
+        background: 'var(--bg-muted)',
         borderTop: '1px solid rgba(255,255,255,0.08)',
         display: 'flex',
         gap: '10px'
@@ -520,8 +536,8 @@ const styles = {
     runBtn: {
         flex: 1,
         padding: '10px',
-        background: 'linear-gradient(135deg, #2ea043, #26843b)',
-        color: '#fff',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-teal-hover))',
+        color: 'var(--text-primary)',
         border: 'none',
         borderRadius: '6px',
         cursor: 'pointer',
@@ -531,8 +547,8 @@ const styles = {
     submitBtn: {
         flex: 1,
         padding: '10px',
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
-        color: '#fff',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
+        color: 'var(--text-primary)',
         border: 'none',
         borderRadius: '6px',
         cursor: 'pointer',
@@ -545,15 +561,15 @@ const styles = {
         gap: '12px'
     },
     outputBox: {
-        background: 'rgba(0,0,0,0.3)',
+        background: 'var(--bg-muted)',
         borderRadius: '12px',
         overflow: 'hidden',
-        border: '1px solid rgba(255,255,255,0.08)',
+        border: '1px solid var(--border-color)',
         flex: 1
     },
     outputHeader: {
         padding: '8px 14px',
-        background: 'rgba(255,255,255,0.03)',
+        background: 'var(--bg-muted)',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
         fontSize: '12px',
         fontWeight: 'bold',
@@ -586,12 +602,12 @@ const styles = {
         alignItems: 'center',
         marginBottom: '8px',
         fontSize: '12px',
-        color: '#f6ad55',
+        color: 'var(--accent-yellow)',
         fontWeight: 'bold'
     },
     hintBtn: {
         background: 'rgba(246, 173, 85, 0.2)',
-        color: '#f6ad55',
+        color: 'var(--accent-yellow)',
         border: '1px solid rgba(246, 173, 85, 0.3)',
         padding: '4px 12px',
         borderRadius: '6px',
@@ -605,7 +621,7 @@ const styles = {
         borderRadius: '6px',
         marginTop: '6px',
         fontSize: '12px',
-        color: '#e4e4e7',
+        color: 'var(--text-primary)',
         lineHeight: '1.5'
     }
 };

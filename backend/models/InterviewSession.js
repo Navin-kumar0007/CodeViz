@@ -17,7 +17,24 @@ const problemResultSchema = mongoose.Schema({
         actualOutput: String,
         passed: { type: Boolean, default: false }
     }],
-    score: { type: Number, default: 0 } // 0-100
+    score: { type: Number, default: 0 }, // 0-100
+    
+    // 🔥 "PROOF-OF-WORK" REPLAY & STRUGGLE DATA
+    fullTraceReplay: [{
+        timestamp: { type: Date, default: Date.now },
+        trace: Array,
+        heatmap: Object,
+        code: String
+    }],
+    struggleTokens: {
+        backtrackCount: { type: Number, default: 0 },
+        pauseDurations: [Number], // Store durations of significant idle periods
+        executionFrequency: { type: Number, default: 0 }
+    },
+    
+    // 🧠 AI INTUITION SCORING
+    intuitionScore: { type: Number, default: 0 },
+    aiAnalysis: { type: String, default: '' }
 });
 
 const interviewSessionSchema = mongoose.Schema(
@@ -25,14 +42,26 @@ const interviewSessionSchema = mongoose.Schema(
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            required: true
+            required: false // Optional for anonymous candidates
         },
+        recruiterId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: false
+        },
+        candidateEmail: { type: String },
+        inviteToken: { type: String, unique: true, sparse: true },
         mode: {
             type: String,
             enum: ['easy', 'medium', 'hard', 'mixed'],
             required: true
         },
-        problems: [{ type: String }], // array of problemIds
+        problems: [{ type: mongoose.Schema.Types.Mixed }], // Array of full dynamic problem objects
+        eventLog: [{
+            timestamp: { type: Number },
+            type: { type: String }, // 'code_change', 'timeline_scrub', 'run_execution'
+            data: { type: mongoose.Schema.Types.Mixed }
+        }],
         results: [problemResultSchema],
         timeLimit: {
             type: Number,

@@ -6,8 +6,9 @@
 export const HASHMAPS_PATH = {
     id: 'hashmaps',
     title: 'Hash Maps & Dictionaries',
-    icon: '🗂️',
-    description: 'Learn key-value storage — the most practical data structure used in almost every real-world application.',
+    icon: '🗝️',
+    category: 'Data Structures',
+    description: 'Learn key-value storage — the most essential data structure for speed!',
     prerequisites: ['recursion'],
     lessons: [
         {

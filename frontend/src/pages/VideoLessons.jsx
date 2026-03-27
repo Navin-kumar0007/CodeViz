@@ -112,7 +112,7 @@ const VideoLessons = () => {
     }, {});
 
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--bg-primary, #1a1a2e)', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: 'var(--font-body)' }}>
             <div style={S.container}>
                 {/* Header */}
                 <div style={S.header}>
@@ -146,7 +146,7 @@ const VideoLessons = () => {
                 <div style={S.catTabs}>
                     {categories.map(c => (
                         <button key={c.id} onClick={() => setFilterCat(c.id)}
-                            style={{ ...S.catTab, background: filterCat === c.id ? 'rgba(102,126,234,0.15)' : 'transparent', color: filterCat === c.id ? '#667eea' : '#888', borderColor: filterCat === c.id ? '#667eea' : 'transparent' }}>
+                            style={{ ...S.catTab, background: filterCat === c.id ? 'rgba(13,148,136,0.15)' : 'transparent', color: filterCat === c.id ? 'var(--accent-teal)' : '#888', borderColor: filterCat === c.id ? 'var(--accent-teal)' : 'transparent' }}>
                             {c.label}
                         </button>
                     ))}
@@ -157,7 +157,7 @@ const VideoLessons = () => {
                     <div style={S.playerCard}>
                         <div style={S.playerHeader}>
                             <button onClick={() => setSelectedVideo(null)} style={S.backBtn}>✕ Close</button>
-                            <h2 style={{ margin: 0, fontSize: '18px', color: '#e4e4e7', flex: 1, textAlign: 'center' }}>{selectedVideo.title}</h2>
+                            <h2 style={{ margin: 0, fontSize: '18px', color: 'var(--text-primary)', flex: 1, textAlign: 'center' }}>{selectedVideo.title}</h2>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button onClick={() => handleLike(selectedVideo._id)} style={S.likeBtn}>
                                     ❤️ {selectedVideo.likes?.length || 0}
@@ -188,9 +188,9 @@ const VideoLessons = () => {
 
                 {/* Video Grid */}
                 {loading ? (
-                    <p style={{ color: '#888', textAlign: 'center', padding: '40px' }}>Loading videos...</p>
+                    <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '40px' }}>Loading videos...</p>
                 ) : videos.length === 0 ? (
-                    <p style={{ color: '#888', textAlign: 'center', padding: '40px' }}>
+                    <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '40px' }}>
                         No videos yet. {isInstructor ? 'Add some using the + button above!' : 'Check back later!'}
                     </p>
                 ) : (
@@ -201,7 +201,7 @@ const VideoLessons = () => {
                                 {vids.map(v => (
                                     <div key={v._id} onClick={() => openVideo(v._id)} style={{
                                         ...S.videoCard,
-                                        borderColor: selectedVideo?._id === v._id ? '#667eea' : 'rgba(255,255,255,0.06)'
+                                        borderColor: selectedVideo?._id === v._id ? 'var(--accent-teal)' : 'rgba(255,255,255,0.06)'
                                     }}>
                                         <div style={S.thumbnail}>
                                             {getYouTubeId(v.videoUrl) ? (
@@ -234,37 +234,37 @@ const VideoLessons = () => {
 const S = {
     container: { padding: '24px', maxWidth: '1000px', margin: '0 auto' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-    pageTitle: { margin: 0, fontSize: '22px', background: 'linear-gradient(135deg, #667eea, #764ba2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-    backBtn: { background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#888', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' },
-    addBtn: { background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' },
+    pageTitle: { margin: 0, fontSize: '22px', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
+    backBtn: { background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' },
+    addBtn: { background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' },
 
-    formCard: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px', marginBottom: '20px' },
-    input: { width: '100%', padding: '8px 12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#e4e4e7', fontSize: '13px', outline: 'none', marginBottom: '8px', boxSizing: 'border-box' },
-    select: { padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#e4e4e7', fontSize: '12px', outline: 'none' },
-    textarea: { width: '100%', padding: '8px 12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#e4e4e7', fontSize: '13px', outline: 'none', resize: 'vertical', marginBottom: '8px', boxSizing: 'border-box' },
-    submitBtn: { padding: '8px 20px', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+    formCard: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', marginBottom: '20px' },
+    input: { width: '100%', padding: '8px 12px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none', marginBottom: '8px', boxSizing: 'border-box' },
+    select: { padding: '8px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '12px', outline: 'none' },
+    textarea: { width: '100%', padding: '8px 12px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none', resize: 'vertical', marginBottom: '8px', boxSizing: 'border-box' },
+    submitBtn: { padding: '8px 20px', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
 
     catTabs: { display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '20px' },
     catTab: { padding: '4px 10px', borderRadius: '14px', border: '1px solid', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', background: 'none' },
 
-    playerCard: { background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden', marginBottom: '24px' },
-    playerHeader: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'rgba(255,255,255,0.03)' },
+    playerCard: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', marginBottom: '24px' },
+    playerHeader: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'var(--bg-muted)' },
     iframe: { width: '100%', aspectRatio: '16/9', border: 'none', display: 'block' },
-    likeBtn: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fc8181', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px' },
-    completeBtn: { border: '1px solid rgba(255,255,255,0.1)', color: '#48bb78', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px' },
+    likeBtn: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', color: 'var(--accent-red)', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px' },
+    completeBtn: { border: '1px solid var(--border-color)', color: 'var(--accent-green)', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px' },
 
     topicGroup: { marginBottom: '24px' },
-    topicTitle: { color: '#667eea', fontSize: '14px', margin: '0 0 12px 0', textTransform: 'capitalize', borderBottom: '1px solid rgba(102,126,234,0.2)', paddingBottom: '6px' },
+    topicTitle: { color: 'var(--accent-teal)', fontSize: '14px', margin: '0 0 12px 0', textTransform: 'capitalize', borderBottom: '1px solid rgba(13,148,136,0.2)', paddingBottom: '6px' },
     videoGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' },
-    videoCard: { background: 'rgba(255,255,255,0.03)', border: '1px solid', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.2s' },
+    videoCard: { background: 'var(--bg-muted)', border: '1px solid', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.2s' },
     thumbnail: { position: 'relative', aspectRatio: '16/9', background: '#000', overflow: 'hidden' },
     thumbImg: { width: '100%', height: '100%', objectFit: 'cover' },
-    thumbPlaceholder: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', background: 'rgba(102,126,234,0.1)' },
-    durationBadge: { position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' },
+    thumbPlaceholder: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', background: 'rgba(13,148,136,0.1)' },
+    durationBadge: { position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(255,255,255,0.95)', color: 'var(--text-primary)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' },
     completedBadge: { position: 'absolute', top: '6px', right: '6px', fontSize: '16px' },
     videoInfo: { padding: '10px' },
-    videoTitle: { margin: 0, fontSize: '13px', color: '#e4e4e7', fontWeight: 'bold', lineHeight: '1.3' },
-    videoMeta: { display: 'flex', gap: '10px', marginTop: '6px', color: '#888', fontSize: '11px' }
+    videoTitle: { margin: 0, fontSize: '13px', color: 'var(--text-primary)', fontWeight: 'bold', lineHeight: '1.3' },
+    videoMeta: { display: 'flex', gap: '10px', marginTop: '6px', color: 'var(--text-muted)', fontSize: '11px' }
 };
 
 export default VideoLessons;

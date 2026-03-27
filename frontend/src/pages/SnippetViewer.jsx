@@ -35,20 +35,20 @@ const SnippetViewer = () => {
         fetchSnippet();
     }, [id]);
 
-    if (loading) return <div style={{ color: '#fff', padding: '50px', textAlign: 'center' }}>Loading snippet...</div>;
+    if (loading) return <div style={{ color: 'var(--text-primary)', padding: '50px', textAlign: 'center' }}>Loading snippet...</div>;
     if (error) return <div style={{ color: '#e53935', padding: '50px', textAlign: 'center' }}>{error} <br /> <button onClick={() => navigate('/')} style={{ marginTop: '20px', padding: '8px 16px' }}>Go Home</button></div>;
 
     return (
-        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#1e1e1e', color: '#fff' }}>
-            <header style={{ padding: '15px 20px', background: '#252526', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-white)', color: 'var(--text-primary)' }}>
+            <header style={{ padding: '15px 20px', background: 'var(--bg-muted)', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                     <h2 style={{ margin: 0, fontSize: '18px' }}>{snippet.title}</h2>
                     <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
-                        Shared by <span style={{ color: '#fff' }}>{snippet.userId?.name || 'Unknown'}</span> • {new Date(snippet.sharedAt).toLocaleDateString()}
+                        Shared by <span style={{ color: 'var(--text-primary)' }}>{snippet.userId?.name || 'Unknown'}</span> • {new Date(snippet.sharedAt).toLocaleDateString()}
                     </div>
                 </div>
                 <div>
-                    <button onClick={() => navigate('/practice')} style={{ background: '#007acc', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>Open in Editor</button>
+                    <button onClick={() => navigate('/practice')} style={{ background: '#007acc', color: 'var(--text-primary)', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>Open in Editor</button>
                 </div>
             </header>
 

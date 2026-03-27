@@ -1,328 +1,401 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
-/* ═══════════════════════════════════════════
-   Sidebar — Grouped Navigation
-   5 categories: Core, Collaborate, Tools, Grow, Admin
-   ═══════════════════════════════════════════ */
 
 const navGroups = [
     {
-        label: 'Core',
+        label: 'MAIN',
         items: [
-            { path: '/', icon: '⌂', label: 'Dashboard' },
-            { path: '/practice', icon: '⟩_', label: 'Practice' },
-            { path: '/problems', icon: '📋', label: 'Problems' },
-            { path: '/learn', icon: '📖', label: 'Learn' },
-            { path: '/roadmap', icon: '🗺️', label: 'Roadmap' },
-            { path: '/concept-map', icon: '🕸️', label: 'Concept Map' },
-            { path: '/git-learn', icon: '🐙', label: 'Git Learn' },
+            { path: '/', icon: '⬡', label: 'Dashboard', color: '#00E5EE' },
+            { path: '/practice', icon: '⟐', label: 'Workspace', color: '#7C3AED' },
+            { path: '/problems', icon: '⊞', label: 'Problems', color: '#F97316' },
+            { path: '/learn', icon: '◈', label: 'Learn Hub', color: '#10B981' },
         ]
     },
     {
-        label: 'Collaborate',
+        label: 'EXPLORE',
         items: [
-            { path: '/room', icon: '👥', label: 'Collab Room' },
-            { path: '/classroom', icon: '🏫', label: 'Classroom' },
-            { path: '/campus', icon: '🎓', label: 'Campus' },
-            { path: '/forum', icon: '💬', label: 'Forum' },
-            { path: '/peer-review', icon: '👀', label: 'Peer Review' },
+            { path: '/neural-pathway', icon: '◎', label: 'Neural Pathway', color: '#EC4899' },
+            { path: '/concept-map', icon: '⬢', label: 'Concept Map', color: '#8B5CF6' },
+            { path: '/git-learn', icon: '⎇', label: 'Git Learn', color: '#F59E0B' },
+            { path: '/sessions', icon: '◉', label: 'Sessions', color: '#06B6D4' },
         ]
     },
     {
-        label: 'Tools',
+        label: 'COLLABORATE',
         items: [
-            { path: '/code-review', icon: '🤖', label: 'Code Review' },
-            { path: '/test-lab', icon: '🧪', label: 'Test Lab' },
-            { path: '/translator', icon: '🌐', label: 'Translate' },
-            { path: '/quiz-creator', icon: '✏️', label: 'Quiz Creator' },
-            { path: '/algo-race', icon: '🏎️', label: 'Algo Race' },
+            { path: '/room', icon: '⊡', label: 'Battle Room', color: '#EF4444' },
+            { path: '/classroom', icon: '▦', label: 'Classroom', color: '#6366F1' },
+            { path: '/campus', icon: '⬡', label: 'Campus', color: '#14B8A6' },
+            { path: '/forum', icon: '◯', label: 'Forum', color: '#A855F7' },
+            { path: '/peer-review', icon: '◑', label: 'Peer Review', color: '#F472B6' },
         ]
     },
     {
-        label: 'Grow',
+        label: 'TOOLS',
         items: [
-            { path: '/interview-prep', icon: '🎯', label: 'Interview Prep' },
-            { path: '/video-lessons', icon: '🎬', label: 'Video Lessons' },
-            { path: '/progress', icon: '📊', label: 'Progress Reports' },
-            { path: '/sessions', icon: '🎥', label: 'Sessions' },
+            { path: '/code-review', icon: '⟐', label: 'Code Review', color: '#38BDF8' },
+            { path: '/test-lab', icon: '⬢', label: 'Test Lab', color: '#4ADE80' },
+            { path: '/translator', icon: '⇄', label: 'Translate', color: '#FB923C' },
+            { path: '/quiz-creator', icon: '✎', label: 'Quiz Studio', color: '#C084FC' },
+            { path: '/algo-race', icon: '▷', label: 'Algo Race', color: '#F43F5E' },
+        ]
+    },
+    {
+        label: 'GROW',
+        items: [
+            { path: '/interview-prep', icon: '◉', label: 'Interview Prep', color: '#22D3EE' },
+            { path: '/video-lessons', icon: '▶', label: 'Video Lessons', color: '#A78BFA' },
+            { path: '/progress', icon: '◧', label: 'Progress', color: '#34D399' },
+            { path: '/daily-challenge', icon: '★', label: 'Daily Challenge', color: '#FBBF24' },
         ]
     },
 ];
 
-const bottomItems = [
-    { path: '/instructor', icon: '📈', label: 'Analytics', role: 'instructor' },
-    { path: '/admin', icon: '⚙', label: 'Admin Panel', role: 'admin' },
-];
+const NavItem = ({ item, isActive, isExpanded, onClick }) => {
+    const [hovered, setHovered] = useState(false);
+
+    return (
+        <button
+            onClick={onClick}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{
+                position: 'relative',
+                width: '100%',
+                border: 'none',
+                background: isActive
+                    ? `linear-gradient(135deg, ${item.color}18, ${item.color}08)`
+                    : hovered
+                        ? 'rgba(255,255,255,0.04)'
+                        : 'transparent',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                transition: 'all 200ms cubic-bezier(0.23,1,0.32,1)',
+                textAlign: 'left',
+                justifyContent: isExpanded ? 'flex-start' : 'center',
+                padding: isExpanded ? '9px 14px' : '10px 0',
+                overflow: 'hidden',
+            }}
+        >
+            {/* Active indicator bar */}
+            {isActive && (
+                <div style={{
+                    position: 'absolute',
+                    left: '0px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    height: '20px',
+                    width: '3px',
+                    background: item.color,
+                    borderRadius: '0 100px 100px 0',
+                    boxShadow: `0 0 12px ${item.color}80`,
+                }} />
+            )}
+
+            {/* Icon with colored glow */}
+            <div style={{
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '10px',
+                background: isActive
+                    ? `${item.color}20`
+                    : hovered
+                        ? 'rgba(255,255,255,0.06)'
+                        : 'transparent',
+                border: isActive
+                    ? `1px solid ${item.color}30`
+                    : '1px solid transparent',
+                transition: 'all 200ms ease',
+                flexShrink: 0,
+                boxShadow: isActive ? `0 0 16px ${item.color}15` : 'none',
+            }}>
+                <span style={{
+                    fontSize: '14px',
+                    color: isActive ? item.color : hovered ? '#E8E8ED' : '#5A5A6A',
+                    transition: 'color 200ms ease',
+                    filter: isActive ? `drop-shadow(0 0 4px ${item.color}60)` : 'none',
+                }}>{item.icon}</span>
+            </div>
+
+            {/* Label */}
+            {isExpanded && (
+                <span style={{
+                    fontSize: '13px',
+                    color: isActive ? '#F0F0F5' : hovered ? '#C8C8D0' : '#6A6A78',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: isActive ? 600 : 400,
+                    letterSpacing: '-0.01em',
+                    transition: 'color 200ms ease',
+                }}>{item.label}</span>
+            )}
+
+            {/* Active right dot indicator */}
+            {isActive && isExpanded && (
+                <div style={{
+                    marginLeft: 'auto',
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: item.color,
+                    boxShadow: `0 0 8px ${item.color}60`,
+                    flexShrink: 0,
+                }} />
+            )}
+        </button>
+    );
+};
 
 const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [user, setUser] = useState(null);
-    const [hoveredPath, setHoveredPath] = useState(null);
-
-    useEffect(() => {
+    const [user] = useState(() => {
         try {
             const info = localStorage.getItem('userInfo');
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            if (info) setUser(JSON.parse(info));
-        } catch { /* ignore */ }
-    }, []);
+            return info ? JSON.parse(info) : null;
+        } catch { return null; }
+    });
+    const [isHovered, setIsHovered] = useState(false);
+    const [brandHovered, setBrandHovered] = useState(false);
+
+    // user is static in Sidebar once loaded; sync removed to satisfy React hook rules.
 
     const isActive = (path) => location.pathname === path;
 
     return (
-        <nav style={S.sidebar}>
-            {/* Brand */}
-            <div style={S.brand} onClick={() => navigate('/')}>
-                <span style={S.brandIcon}>{'{ }'}</span>
-            </div>
-
-            {/* Grouped Nav */}
-            <div style={S.navScroll}>
-                {navGroups.map((group, gi) => (
-                    <div key={group.label}>
-                        {gi > 0 && <div style={S.separator} />}
-                        <div style={S.group}>
-                            {group.items.map(item => (
-                                <div key={item.path} style={{ position: 'relative' }}
-                                    onMouseEnter={() => setHoveredPath(item.path)}
-                                    onMouseLeave={() => setHoveredPath(null)}>
-                                    <button
-                                        onClick={() => navigate(item.path)}
-                                        style={{
-                                            ...S.navBtn,
-                                            ...(isActive(item.path) ? S.navBtnActive : {}),
-                                        }}
-                                    >
-                                        <span style={S.navIcon}>{item.icon}</span>
-                                        {isActive(item.path) && <div style={S.activeBar} />}
-                                    </button>
-                                    {/* Tooltip */}
-                                    {hoveredPath === item.path && (
-                                        <div style={S.tooltip}>
-                                            {item.label}
-                                            <div style={S.tooltipArrow} />
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Bottom: Role-based + Home + Avatar */}
-            <div style={S.bottomGroup}>
-                {bottomItems
-                    .filter(item => user?.role === item.role || user?.role === 'admin')
-                    .map(item => (
-                        <div key={item.path} style={{ position: 'relative' }}
-                            onMouseEnter={() => setHoveredPath(item.path)}
-                            onMouseLeave={() => setHoveredPath(null)}>
-                            <button
-                                onClick={() => navigate(item.path)}
-                                style={{
-                                    ...S.navBtn,
-                                    ...(isActive(item.path) ? S.navBtnActive : {}),
-                                }}
-                            >
-                                <span style={S.navIcon}>{item.icon}</span>
-                            </button>
-                            {hoveredPath === item.path && (
-                                <div style={S.tooltip}>
-                                    {item.label}
-                                    <div style={S.tooltipArrow} />
-                                </div>
-                            )}
-                        </div>
-                    ))
+        <>
+            {/* Inject keyframe animation */}
+            <style>{`
+                @keyframes sidebarPulse {
+                    0%, 100% { opacity: 0.4; }
+                    50% { opacity: 0.7; }
                 }
-                <button
-                    onClick={() => window.location.href = '/home'}
-                    style={S.navBtn}
-                    onMouseEnter={() => setHoveredPath('home')}
-                    onMouseLeave={() => setHoveredPath(null)}
-                >
-                    <span style={S.navIcon}>🏠</span>
-                </button>
-                {hoveredPath === 'home' && (
-                    <div style={{ ...S.tooltip, bottom: '48px' }}>
-                        Home Page
-                        <div style={S.tooltipArrow} />
-                    </div>
-                )}
-                {user && (
-                    <div style={S.avatar} title={user.name}>
-                        {user.name?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                )}
-            </div>
-        </nav>
-    );
-};
+                .sidebar-scroll::-webkit-scrollbar { display: none; }
+            `}</style>
 
-const S = {
-    sidebar: {
-        position: 'fixed',
-        left: '20px', // Floating off the edge
-        top: '20px',
-        bottom: '20px',
-        width: '64px',
-        background: 'var(--bg-secondary)', // Glassy dark
-        backdropFilter: 'blur(20px)',
-        border: '1px solid var(--border-color)',
-        borderRadius: '16px', // Rounded floating dock
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        paddingTop: '16px',
-        paddingBottom: '20px',
-        zIndex: 100,
-        boxShadow: '0 20px 40px rgba(0,0,0,0.5)', // Deep shadow
-    },
-    brand: {
-        width: '42px',
-        height: '42px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        marginBottom: '16px',
-        borderRadius: '12px',
-        background: 'linear-gradient(135deg, rgba(97,218,251,0.2), rgba(198,120,221,0.2))',
-        border: '1px solid rgba(255,255,255,0.1)',
-        transition: 'var(--transition-fast)',
-        flexShrink: 0,
-        boxShadow: '0 0 15px rgba(97,218,251,0.2)',
-    },
-    brandIcon: {
-        fontFamily: 'var(--font-code)',
-        fontSize: '16px',
-        fontWeight: 800,
-        color: 'var(--accent-blue)',
-        textShadow: '0 0 10px rgba(97,218,251,0.8)',
-    },
-    navScroll: {
-        flex: 1,
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: '100%',
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none',
-    },
-    group: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '6px',
-        padding: '6px 0',
-    },
-    separator: {
-        width: '32px',
-        height: '1px',
-        background: 'rgba(255,255,255,0.05)',
-        margin: '6px auto',
-    },
-    bottomGroup: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '6px',
-        flexShrink: 0,
-        paddingTop: '12px',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
-        marginTop: 'auto',
-        width: '100%',
-    },
-    navBtn: {
-        position: 'relative',
-        width: '44px',
-        height: '44px',
-        border: '1px solid transparent',
-        background: 'transparent',
-        borderRadius: '12px',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
-        color: 'var(--text-muted)',
-    },
-    navBtnActive: {
-        background: 'rgba(97,218,251,0.15)',
-        color: 'var(--accent-cyan)',
-        border: '1px solid rgba(97,218,251,0.3)',
-        boxShadow: '0 0 20px rgba(97,218,251,0.2)',
-    },
-    navIcon: {
-        fontSize: '20px',
-        fontFamily: 'var(--font-code)',
-        lineHeight: 1,
-    },
-    activeBar: {
-        position: 'absolute',
-        left: '-10px',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        height: '24px',
-        width: '4px',
-        background: 'var(--accent-blue)',
-        borderRadius: '0 4px 4px 0',
-        boxShadow: '0 0 10px var(--accent-blue)',
-    },
-    tooltip: {
-        position: 'absolute',
-        left: '60px',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        background: 'var(--bg-elevated)',
-        backdropFilter: 'blur(10px)',
-        color: 'var(--text-bright)',
-        padding: '8px 14px',
-        borderRadius: '8px',
-        fontSize: '13px',
-        fontFamily: 'var(--font-code)',
-        fontWeight: 600,
-        whiteSpace: 'nowrap',
-        zIndex: 200,
-        boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-        border: '1px solid var(--border-color)',
-        pointerEvents: 'none',
-        letterSpacing: '0.5px',
-    },
-    tooltipArrow: {
-        position: 'absolute',
-        left: '-5px',
-        top: '50%',
-        transform: 'translateY(-50%) rotate(45deg)',
-        width: '10px',
-        height: '10px',
-        background: 'var(--bg-elevated)',
-        borderLeft: '1px solid var(--border-color)',
-        borderBottom: '1px solid var(--border-color)',
-    },
-    avatar: {
-        width: '40px',
-        height: '40px',
-        borderRadius: '12px',
-        background: 'linear-gradient(135deg, var(--accent-purple), var(--accent-blue))',
-        color: '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '15px',
-        fontWeight: 800,
-        fontFamily: 'var(--font-code)',
-        marginTop: '12px',
-        cursor: 'default',
-        flexShrink: 0,
-        boxShadow: '0 5px 15px rgba(198,120,221,0.3)',
-        border: '1px solid rgba(255,255,255,0.2)',
-    },
+            <nav
+                style={{
+                    position: 'fixed',
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: isHovered ? '250px' : '62px',
+                    background: 'rgba(10,10,14,0.85)',
+                    backdropFilter: 'blur(24px) saturate(1.6)',
+                    WebkitBackdropFilter: 'blur(24px) saturate(1.6)',
+                    borderRight: '1px solid rgba(255,255,255,0.04)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    zIndex: 100,
+                    overflowY: 'hidden',
+                    overflowX: 'hidden',
+                    transition: 'width 280ms cubic-bezier(0.22, 1, 0.36, 1)',
+                    boxShadow: isHovered ? '4px 0 32px rgba(0,0,0,0.4)' : 'none',
+                }}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
+                {/* Brand Header */}
+                <div
+                    onClick={() => navigate('/')}
+                    onMouseEnter={() => setBrandHovered(true)}
+                    onMouseLeave={() => setBrandHovered(false)}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        justifyContent: isHovered ? 'flex-start' : 'center',
+                        padding: isHovered ? '18px 20px' : '18px 0',
+                        transition: 'all 250ms ease',
+                    }}
+                >
+                    {/* Animated brand icon */}
+                    <div style={{
+                        width: '34px',
+                        height: '34px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: brandHovered
+                            ? 'linear-gradient(135deg, rgba(0,229,238,0.15), rgba(124,58,237,0.15))'
+                            : 'rgba(0,229,238,0.08)',
+                        borderRadius: '12px',
+                        border: `1px solid ${brandHovered ? 'rgba(0,229,238,0.3)' : 'rgba(0,229,238,0.1)'}`,
+                        transition: 'all 300ms ease',
+                        boxShadow: brandHovered
+                            ? '0 0 20px rgba(0,229,238,0.2), inset 0 0 12px rgba(0,229,238,0.05)'
+                            : '0 0 8px rgba(0,229,238,0.05)',
+                        flexShrink: 0,
+                    }}>
+                        <span style={{
+                            fontSize: '18px',
+                            color: '#00E5EE',
+                            fontWeight: 900,
+                            filter: 'drop-shadow(0 0 6px rgba(0,229,238,0.5))',
+                            transition: 'transform 300ms ease',
+                            transform: brandHovered ? 'scale(1.1) rotate(30deg)' : 'scale(1)',
+                        }}>⬡</span>
+                    </div>
+                    {isHovered && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{
+                                fontSize: '16px',
+                                fontWeight: 800,
+                                background: 'linear-gradient(135deg, #00E5EE, #7C3AED)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                letterSpacing: '-0.02em',
+                                fontFamily: "'Inter', sans-serif",
+                            }}>CodeViz</span>
+                            <span style={{
+                                fontSize: '9px',
+                                color: '#3A3A48',
+                                fontFamily: "'JetBrains Mono', monospace",
+                                letterSpacing: '2px',
+                                textTransform: 'uppercase',
+                            }}>OBSERVATORY</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Navigation Groups */}
+                <div className="sidebar-scroll" style={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    padding: isHovered ? '10px 10px' : '10px 6px',
+                    scrollbarWidth: 'none',
+                    transition: 'padding 250ms ease',
+                }}>
+                    {navGroups.map((group) => (
+                        <div key={group.label} style={{ marginBottom: '6px' }}>
+                            {/* Group Label */}
+                            <div style={{
+                                fontSize: '9px',
+                                fontWeight: 700,
+                                letterSpacing: '2px',
+                                color: '#3A3A48',
+                                fontFamily: "'JetBrains Mono', monospace",
+                                textTransform: 'uppercase',
+                                transition: 'all 200ms ease',
+                                opacity: isHovered ? 1 : 0,
+                                height: isHovered ? 'auto' : 0,
+                                padding: isHovered ? '10px 14px 4px' : 0,
+                                overflow: 'hidden',
+                            }}>
+                                {group.label}
+                            </div>
+
+                            {/* Nav Items */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                {group.items.map(item => (
+                                    <NavItem
+                                        key={item.path}
+                                        item={item}
+                                        isActive={isActive(item.path)}
+                                        isExpanded={isHovered}
+                                        onClick={() => navigate(item.path)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Bottom Section — User + Home */}
+                <div style={{
+                    flexShrink: 0,
+                    borderTop: '1px solid rgba(255,255,255,0.04)',
+                    padding: isHovered ? '12px 10px' : '12px 6px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    transition: 'padding 250ms ease',
+                }}>
+                    {/* Home button */}
+                    <NavItem
+                        item={{ path: '/home', icon: '⌂', label: 'Home Page', color: '#F59E0B' }}
+                        isActive={false}
+                        isExpanded={isHovered}
+                        onClick={() => window.location.href = '/home'}
+                    />
+
+                    {/* User mini-card (only when expanded) */}
+                    {isHovered && user && (
+                        <div
+                            onClick={() => navigate('/profile')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                padding: '10px 12px',
+                                borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.03)',
+                                border: '1px solid rgba(255,255,255,0.04)',
+                                cursor: 'pointer',
+                                marginTop: '4px',
+                                transition: 'all 200ms ease',
+                            }}
+                        >
+                            <div style={{
+                                width: '30px',
+                                height: '30px',
+                                borderRadius: '10px',
+                                background: 'linear-gradient(135deg, #00E5EE, #7C3AED)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '12px',
+                                fontWeight: 800,
+                                color: '#fff',
+                                fontFamily: "'Inter', sans-serif",
+                                flexShrink: 0,
+                            }}>
+                                {user.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{
+                                    fontSize: '12px',
+                                    fontWeight: 600,
+                                    color: '#E8E8ED',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    fontFamily: "'Inter', sans-serif",
+                                }}>{user.name || 'User'}</div>
+                                <div style={{
+                                    fontSize: '10px',
+                                    color: '#4A4A58',
+                                    fontFamily: "'JetBrains Mono', monospace",
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
+                                }}>{user.role || 'student'}</div>
+                            </div>
+                            <div style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                background: '#10B981',
+                                boxShadow: '0 0 8px rgba(16,185,129,0.5)',
+                                flexShrink: 0,
+                            }} />
+                        </div>
+                    )}
+                </div>
+            </nav>
+        </>
+    );
 };
 
 export default Sidebar;

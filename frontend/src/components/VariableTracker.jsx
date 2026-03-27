@@ -83,13 +83,13 @@ const VariableTracker = ({ traceData, stepIndex, maxHistory = 10 }) => {
                                         style={{
                                             ...styles.valueBox,
                                             background: entry.changed
-                                                ? 'linear-gradient(135deg, #f6ad55, #ed8936)'
-                                                : 'linear-gradient(135deg, #48bb78, #38a169)',
+                                                ? 'linear-gradient(135deg, var(--accent-yellow), #ed8936)'
+                                                : 'linear-gradient(135deg, var(--accent-green), #38a169)',
                                             boxShadow: entry.step === stepIndex
-                                                ? '0 0 10px rgba(102, 126, 234, 0.6)'
+                                                ? '0 0 10px rgba(13, 148, 136, 0.6)'
                                                 : 'none',
                                             border: entry.step === stepIndex
-                                                ? '2px solid #667eea'
+                                                ? '2px solid var(--accent-teal)'
                                                 : '2px solid transparent'
                                         }}
                                     >
@@ -131,12 +131,12 @@ const styles = {
         fontSize: '18px'
     },
     title: {
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontWeight: 'bold',
         fontSize: '13px'
     },
     subtitle: {
-        color: '#666',
+        color: 'var(--text-muted)',
         fontSize: '10px',
         marginLeft: 'auto'
     },
@@ -169,7 +169,7 @@ const styles = {
         borderRadius: '6px',
         fontSize: '11px',
         fontWeight: 'bold',
-        color: 'white',
+        color: 'var(--text-primary)',
         fontFamily: 'monospace',
         whiteSpace: 'nowrap',
         minWidth: '30px',
@@ -177,7 +177,7 @@ const styles = {
     },
     moreIndicator: {
         textAlign: 'center',
-        color: '#666',
+        color: 'var(--text-muted)',
         fontSize: '10px',
         marginTop: '8px'
     }

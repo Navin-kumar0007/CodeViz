@@ -110,7 +110,7 @@ const ComplexityAnalyzer = ({ code, language = 'python', isVisible, onClose }) =
         // Reference lines
         const colors = {
             'O(1)': '#666',
-            'O(log n)': '#48bb78',
+            'O(log n)': 'var(--accent-green)',
             'O(n)': '#4299e1',
             'O(n log n)': '#ed8936',
             'O(n²)': '#f56565'
@@ -221,7 +221,7 @@ const ComplexityAnalyzer = ({ code, language = 'python', isVisible, onClose }) =
                 {loading ? (
                     <div style={styles.loadingContainer}>
                         <div style={styles.spinner} />
-                        <span style={{ color: '#888', fontSize: '13px' }}>Analyzing complexity...</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Analyzing complexity...</span>
                     </div>
                 ) : error ? (
                     <div style={styles.errorContainer}>
@@ -287,7 +287,7 @@ const ComplexityAnalyzer = ({ code, language = 'python', isVisible, onClose }) =
 
 const styles = {
     container: {
-        background: 'rgba(15, 15, 30, 0.98)',
+        background: 'var(--bg-white)',
         borderRadius: '12px',
         border: '1px solid rgba(168, 85, 247, 0.2)',
         overflow: 'hidden',
@@ -303,14 +303,14 @@ const styles = {
         borderBottom: '1px solid rgba(255,255,255,0.06)'
     },
     title: {
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontWeight: 'bold',
         fontSize: '14px'
     },
     closeBtn: {
         background: 'none',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '20px',
         cursor: 'pointer'
     },
@@ -374,12 +374,12 @@ const styles = {
     badgeSmall: {
         padding: '6px 12px',
         minWidth: '60px',
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.08)'
+        background: 'var(--bg-muted)',
+        border: '1px solid var(--border-color)'
     },
     badgeLabel: {
         fontSize: '10px',
-        color: '#888',
+        color: 'var(--text-muted)',
         marginBottom: '4px',
         fontWeight: 'bold'
     },
@@ -391,7 +391,7 @@ const styles = {
     },
     badgeLabelSmall: {
         fontSize: '9px',
-        color: '#666',
+        color: 'var(--text-muted)',
         marginBottom: '2px'
     },
     badgeValueSmall: {
@@ -412,7 +412,7 @@ const styles = {
         display: 'block',
         marginTop: '6px',
         fontSize: '11px',
-        color: '#888'
+        color: 'var(--text-muted)'
     },
     chartContainer: {
         padding: '12px 16px'

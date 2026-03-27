@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 
 const concepts = [
@@ -34,7 +33,7 @@ const ConceptMap = () => {
     const [zoom, setZoom] = useState(1);
 
     const getCategoryColor = (category, mastered) => {
-        if (mastered) return '#48bb78'; // Green
+        if (mastered) return 'var(--accent-green)'; // Green
         switch (category) {
             case 'core': return '#4299e1'; // Blue
             case 'data': return '#ed8936'; // Orange
@@ -70,7 +69,7 @@ const ConceptMap = () => {
 
                             const isSourceMastered = source.mastered;
                             const isTargetMastered = target.mastered;
-                            const pathColor = isSourceMastered && isTargetMastered ? '#48bb78' : '#4a5568';
+                            const pathColor = isSourceMastered && isTargetMastered ? 'var(--accent-green)' : '#4a5568';
                             const strokeWidth = isSourceMastered && isTargetMastered ? 3 : 2;
 
                             return (
@@ -95,7 +94,7 @@ const ConceptMap = () => {
                             >
                                 <motion.circle
                                     r="40"
-                                    fill="#1a202c"
+                                    fill="var(--bg-white)"
                                     stroke={getCategoryColor(node.category, node.mastered)}
                                     strokeWidth={selectedNode?.id === node.id ? "5" : "3"}
                                     whileHover={{ scale: 1.1 }}
@@ -144,7 +143,7 @@ const ConceptMap = () => {
                                 {selectedNode.mastered ? 'Mastered' : 'In Progress'}
                             </div>
 
-                            <p style={{ color: '#a0aec0', marginTop: '15px', lineHeight: '1.6' }}>
+                            <p style={{ color: 'var(--text-muted)', marginTop: '15px', lineHeight: '1.6' }}>
                                 Master {selectedNode.label} by completing more core challenges. Connect it with other concepts to unlock advanced algorithmic strategies!
                             </p>
 
@@ -160,19 +159,19 @@ const ConceptMap = () => {
 };
 
 const styles = {
-    page: { padding: '40px', maxWidth: '1200px', margin: '0 auto', color: '#fff', minHeight: '100vh' },
+    page: { padding: '40px', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-primary)', minHeight: '100vh' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' },
-    title: { fontSize: '32px', margin: '0 0 10px 0', color: '#fff' },
-    subtitle: { color: '#a0aec0', margin: 0, fontSize: '16px' },
-    controls: { display: 'flex', alignItems: 'center', gap: '15px', background: '#1a202c', padding: '10px 20px', borderRadius: '8px', border: '1px solid #2d3748' },
-    btn: { background: '#2d3748', border: 'none', color: '#fff', width: '30px', height: '30px', borderRadius: '4px', cursor: 'pointer', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-    zoomText: { color: '#e2e8f0', fontWeight: 'bold', minWidth: '40px', textAlign: 'center' },
+    title: { fontSize: '32px', margin: '0 0 10px 0', color: 'var(--text-primary)' },
+    subtitle: { color: 'var(--text-muted)', margin: 0, fontSize: '16px' },
+    controls: { display: 'flex', alignItems: 'center', gap: '15px', background: 'var(--bg-muted)', padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--border-color)' },
+    btn: { background: 'var(--bg-white)', border: 'none', color: 'var(--text-primary)', width: '30px', height: '30px', borderRadius: '4px', cursor: 'pointer', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    zoomText: { color: 'var(--text-primary)', fontWeight: 'bold', minWidth: '40px', textAlign: 'center' },
     container: { display: 'flex', gap: '20px', position: 'relative' },
-    canvasArea: { flex: 1, background: '#1a202c', borderRadius: '12px', border: '1px solid #2d3748', overflow: 'hidden', position: 'relative' },
-    infoPanel: { position: 'absolute', right: '20px', top: '20px', background: '#2d3748', padding: '25px', borderRadius: '12px', width: '320px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', border: '1px solid #4a5568' },
-    closeBtn: { background: 'transparent', border: 'none', color: '#a0aec0', fontSize: '24px', cursor: 'pointer' },
+    canvasArea: { flex: 1, background: 'var(--bg-muted)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden', position: 'relative' },
+    infoPanel: { position: 'absolute', right: '20px', top: '20px', background: 'var(--bg-white)', padding: '25px', borderRadius: '12px', width: '320px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border-color)' },
+    closeBtn: { background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '24px', cursor: 'pointer' },
     badge: { display: 'inline-block', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' },
-    primaryBtn: { background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: 'transform 0.2s', ':hover': { transform: 'translateY(-2px)' } }
+    primaryBtn: { background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: 'transform 0.2s', ':hover': { transform: 'translateY(-2px)' } }
 };
 
 export default ConceptMap;

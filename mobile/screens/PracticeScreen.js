@@ -95,6 +95,14 @@ export default function PracticeScreen({ navigation }) {
                     }
                 />
             )}
+
+            {/* ⚡ OFFLINE PLAYGROUND FAB */}
+            <TouchableOpacity 
+                style={styles.fab} 
+                onPress={() => navigation.navigate('Playground')}
+            >
+                <Ionicons name="flash" size={30} color="#000" />
+            </TouchableOpacity>
         </SafeAreaView>
     );
 }
@@ -103,6 +111,19 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#1a1a2e',
+    },
+    fab: {
+        position: 'absolute',
+        bottom: 25,
+        right: 25,
+        backgroundColor: '#0df2f2',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        boxShadow: '0 0 20px rgba(13, 242, 242, 0.4)',
+        elevation: 10,
     },
     header: {
         padding: 20,

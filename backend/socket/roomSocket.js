@@ -123,6 +123,31 @@ const setupRoomSocket = (io) => {
         });
 
         /**
+         * Yjs Binary Sync — CRDT-based conflict-free editing
+         */
+        socket.on('yjs-sync', (update) => {
+            if (!socket.roomCode) return;
+            // Broadcast binary update to others in room
+            socket.to(socket.roomCode).emit('yjs-sync', update);
+        });
+
+        /**
+         * Yjs Awareness — Cursor & Presence sharing
+         */
+        socket.on('yjs-awareness', (awareness) => {
+            if (!socket.roomCode) return;
+            socket.to(socket.roomCode).emit('yjs-awareness', awareness);
+        });
+
+        /**
+         * Shared Visualizer Sync — Scrubbing the timeline for everyone
+         */
+        socket.on('visualizer-sync', (data) => {
+            if (!socket.roomCode) return;
+            socket.to(socket.roomCode).emit('visualizer-sync', data);
+        });
+
+        /**
          * Code update — broadcast to all peers (last-write-wins)
          */
         socket.on('code-update', async (data) => {
@@ -400,6 +425,21 @@ const setupRoomSocket = (io) => {
                 lineCount: data.lineCount || 0,
                 charCount: data.charCount || 0
             });
+        });
+
+        /**
+         * Chaos Mode - Multiplayer Sabotage Attacks
+         */
+        socket.on('cast-chaos', (data) => {
+            if (!socket.roomCode) return;
+            // Broadcast the chaos attack to the opponent (everyone else in the room)
+            socket.to(socket.roomCode).emit('incoming-chaos', {
+                attackType: data.attackType, // 'BLIND', 'INVERT', 'GLITCH'
+                attackerId: socket.userId,
+                attackerName: socket.userName,
+                duration: data.duration || 5000 // default 5 seconds
+            });
+            console.log(`⚔️ CHAOS: ${socket.userName} cast ${data.attackType} in room ${socket.roomCode}`);
         });
 
         /**

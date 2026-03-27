@@ -405,6 +405,39 @@ const ghostHint = async (req, res) => {
     }
 };
 
+/**
+ * @route   POST /api/ai/tutor
+ * @desc    Get a Socratic-style hint (question)
+ * @access  Private
+ */
+const socraticTutor = async (req, res) => {
+    try {
+        const { code, language, error, executionState, skillLevel, teachingStyle, isRetry, requestCount } = req.body;
+        const userId = req.user._id.toString();
+
+        if (!code) {
+            return res.status(400).json({ message: 'Code is required' });
+        }
+
+        const data = await aiService.socraticTutor(
+            code,
+            language || 'python',
+            error || '',
+            executionState || {},
+            userId,
+            skillLevel || 'beginner',
+            teachingStyle || 'standard',
+            isRetry || false,
+            requestCount || 0
+        );
+
+        res.json({ question: data.question });
+    } catch (error) {
+        res.status(error.message.includes('Rate limit') ? 429 : 500)
+            .json({ message: error.message });
+    }
+};
+
 module.exports = {
     getHint,
     explainError,
@@ -418,5 +451,6 @@ module.exports = {
     translateCode,
     narrateCode,
     detectAI,
-    ghostHint
+    ghostHint,
+    socraticTutor
 };

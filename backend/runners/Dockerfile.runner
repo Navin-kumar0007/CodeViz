@@ -9,7 +9,7 @@ RUN apk add --no-cache \
     nodejs \
     npm \
     g++ \
-    openjdk17-jre \
+    openjdk17 \
     gcc \
     bash
 

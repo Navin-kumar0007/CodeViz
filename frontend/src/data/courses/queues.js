@@ -6,8 +6,9 @@
 export const QUEUES_PATH = {
     id: 'queues',
     title: 'Queues',
-    icon: '🚶‍♂️',
-    description: 'First In, First Out — learn the queue pattern used in BFS, task scheduling, and real-world systems.',
+    icon: '👥',
+    category: 'Data Structures',
+    description: 'First-in, First-out! Learn the principle that powers task scheduling, and real-world systems.',
     prerequisites: ['linkedlists'],
     lessons: [
         {

@@ -5,6 +5,7 @@ import CodeEditor from "../components/Editor/CodeEditor";
 import Canvas from "../components/Visualizer/Canvas";
 import AIAssistant from "../components/AI/AIAssistant";
 import InlineErrorHint from "../components/AI/InlineErrorHint";
+import SocraticTutor from "../components/AI/SocraticTutor"; // 🔥 New Socratic Tutor
 
 // 👇 IMPORT FROM YOUR EXAMPLES FILE
 import { EXAMPLES } from "../examples";
@@ -16,6 +17,7 @@ import ComplexityAnalyzer from "../components/Visualizer/ComplexityAnalyzer";
 import SessionRecorder from "../components/Session/SessionRecorder";
 import Terminal from "../components/Terminal/Terminal";
 import API_BASE from '../utils/api';
+import { unpackTrace } from '../utils/binaryTrace'; // ⚡ Binary Performance
 
 // 📋 CODE TEMPLATES LIBRARY
 const CODE_TEMPLATES = {
@@ -80,6 +82,7 @@ const Practice = () => {
 
   // 🛡️ STATE INITIALIZATION: Always start as an empty array []
   const [traceData, setTraceData] = useState([]);
+  const [heatmapData, setHeatmapData] = useState({}); // 🔥 New Heatmap State
   const [output, setOutput] = useState("");
   const [stepIndex, setStepIndex] = useState(0);
   const [error, setError] = useState(null);
@@ -93,6 +96,8 @@ const Practice = () => {
   const [showSnapshot, setShowSnapshot] = useState(false); // Code snapshot modal
   const [showComplexity, setShowComplexity] = useState(false); // Complexity analyzer
   const [showNarrator, setShowNarrator] = useState(false); // AI Code Narrator
+  const [showTutor, setShowTutor] = useState(false); // 🔥 Socratic Tutor Visibility
+  const [aiHighlightLine, setAiHighlightLine] = useState(null); // 🤖 Jarvis Protocol Highlights
   const [narratorData, setNarratorData] = useState(null);
   const [isNarrating, setIsNarrating] = useState(false);
 
@@ -104,6 +109,7 @@ const Practice = () => {
   const [executionHistory, setExecutionHistory] = useState([]); // 📜 Execution history
   const [showTemplates, setShowTemplates] = useState(false); // 📋 Templates dropdown
   const [showHistory, setShowHistory] = useState(false); // 📜 History dropdown
+  const [isMaximized, setIsMaximized] = useState(false); // 📺 Maximize Visualizer Mode
 
   // 1. Existing Handlers...
   // 📏 RESIZABLE SPLIT PANE STATE
@@ -178,6 +184,7 @@ const Practice = () => {
     setIsLoading(true);
     setError(null);
     setTraceData([]); // Reset to empty array
+    setHeatmapData({}); // 🔥 Reset Heatmap
     setOutput("");
     setStepIndex(0);
 
@@ -220,44 +227,60 @@ const Practice = () => {
         return;
       }
       console.log = originalLog; // Restore
+      // ✨ DO NOT return early here so the server can generate the Visualizer AST Trace!
     }
 
-    // 📡 SERVER-SIDE VISUALIZATION (Still needed for Graph/AST)
+    // 📡 SERVER-SIDE VISUALIZATION (Needed for Visualizer Trace / AST)
     try {
       const stored = JSON.parse(localStorage.getItem('userInfo'));
-      const res = await axios.post(`${API_BASE}/run`, { language, code }, {
-        headers: { Authorization: `Bearer ${stored?.token}` }
+      const res = await axios.post(`${API_BASE}/run?binary=true`, { language, code }, {
+        headers: { Authorization: `Bearer ${stored?.token}` },
+        responseType: 'arraybuffer' // ⚡ Request binary data
       });
 
-      // 1. Handle Server-Side Errors
-      if (res.data.error) {
-        setError(res.data.error);
-        setActiveTab("console");
-      }
-
-      // 2. Handle C++ / Java / TS / Go / C (Text Only)
-      else if (['cpp', 'java', 'typescript', 'go', 'c'].includes(language)) {
-        setOutput(res.data.output || "No output");
-        setTraceData([]);
-        setActiveTab("console");
-      }
-
-      // 3. Handle Python & JavaScript (Visualization)
-      else {
-        // 🛡️ Default to [] if trace is missing
-        const safeTrace = res.data.trace || [];
+      // Check if response is binary or JSON
+      const contentType = res.headers['content-type'];
+      
+      if (contentType === 'application/octet-stream') {
+        const safeTrace = unpackTrace(res.data);
+        const heatmapHeader = res.headers['x-heatmap'];
+        const heatmap = heatmapHeader ? JSON.parse(heatmapHeader) : {};
+        
         setTraceData(safeTrace);
-        setOutput(res.data.output || "");
-
-        if (safeTrace.length > 0) {
-          setActiveTab("visualizer");
-        } else {
+        setHeatmapData(heatmap);
+        
+        // Only overwrite output if it's not JS, or if we actually got execution output from the server
+        const serverOutput = safeTrace.map(t => t.stdout || '').join('');
+        if (language !== 'javascript' || serverOutput.trim().length > 0) {
+           setOutput(serverOutput);
+        }
+        
+        if (safeTrace.length > 0) setActiveTab("visualizer");
+        else setActiveTab("console");
+      } else {
+        // Fallback for JSON
+        const jsonData = JSON.parse(new TextDecoder().decode(res.data));
+        if (jsonData.error) {
+          setError(jsonData.error);
           setActiveTab("console");
+        } else {
+          setTraceData(jsonData.trace || []);
+          setHeatmapData(jsonData.heatmap || {});
+          
+          if (language !== 'javascript' || (jsonData.output && jsonData.output.trim().length > 0)) {
+            setOutput(jsonData.output || "");
+          }
+          if ((jsonData.trace || []).length > 0) setActiveTab("visualizer");
+          else setActiveTab("console");
         }
       }
 
-    } catch {
-      setError('Server error. Is the backend running?');
+    } catch (err) {
+      console.error(err);
+      // For JS, local execution already succeeded. If the visualizer backend fails, just quietly ignore it.
+      if (language !== 'javascript') {
+          setError('Server error. Is the backend running?');
+      }
     } finally {
       setIsLoading(false);
       setIsExecuting(false); // Clear loading indicator
@@ -446,36 +469,37 @@ const Practice = () => {
   }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#1e1e1e', color: '#fff' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#08080C', color: '#E8E8ED', overflow: 'hidden' }}>
 
       {/* HEADER */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 20px', background: '#252526', borderBottom: '1px solid #333', alignItems: 'center' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 24px', background: 'rgba(17,17,22,0.6)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <h2 style={{ margin: 0, fontSize: '18px' }}>CodeViz <span style={{ fontSize: '12px', color: '#aaa' }}>Practice</span></h2>
-          <button onClick={() => navigate('/')} style={{ background: '#333', color: '#aaa', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>← Dashboard</button>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', fontFamily: "'Inter', sans-serif", background: 'linear-gradient(135deg, #00E5EE, #7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CODE_VIZ <span style={{ fontSize: '12px', color: '#5A5A6A', fontWeight: 400, fontFamily: "'JetBrains Mono', monospace", WebkitTextFillColor: '#5A5A6A' }}>{`// WORKSPACE`}</span></h2>
+          <button onClick={() => navigate('/')} className="btn-secondary" style={{ padding: '6px 16px', fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", borderRadius: '100px', border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#9898A6', cursor: 'pointer' }}>[ ESC ] Dashboard</button>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
 
           {/* 🕵️ THE NEW AI DETECTIVE TOOL */}
-          <button onClick={showDetective ? () => setShowDetective(false) : verifyAuthorship} style={{ background: showDetective ? '#dc2626' : '#991b1b', color: '#fff', border: '1px solid #f87171', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 0 10px rgba(220,38,38,0.3)' }}>🕵️‍♀️ {isDetecting ? 'Scanning...' : showDetective ? 'Hide Analysis' : 'Detect AI Code'}</button>
+          <button onClick={showDetective ? () => setShowDetective(false) : verifyAuthorship} className="btn-secondary">🕵️‍♀️ {isDetecting ? 'Scanning...' : showDetective ? 'Hide Analysis' : 'Detect AI Code'}</button>
 
-          <button onClick={() => setShowSnippetList(!showSnippetList)} style={{ background: '#444', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer' }}>📂 My Snippets</button>
+          <button onClick={() => setShowSnippetList(!showSnippetList)} className="btn-secondary">📂 My Snippets</button>
 
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
             style={{
-              background: 'transparent',
-              border: '1px solid #555',
-              color: '#fff',
-              padding: '8px 12px',
-              borderRadius: '4px',
+              background: 'rgba(17,17,22,0.5)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: '#E8E8ED',
+              padding: '8px 14px',
+              borderRadius: '100px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '5px',
-              fontSize: '14px',
-              transition: 'all 0.2s ease'
+              gap: '6px',
+              fontSize: '13px',
+              fontWeight: 600,
+              transition: 'all 0.3s cubic-bezier(0.23,1,0.32,1)'
             }}
             title="Toggle theme"
           >
@@ -484,29 +508,30 @@ const Practice = () => {
 
           {/* Snippet Dropdown */}
           {showSnippetList && (
-            <div style={{ position: 'absolute', top: '50px', right: '120px', background: '#333', padding: '10px', zIndex: 100, border: '1px solid #555', borderRadius: '5px', width: '250px', maxHeight: '300px', overflowY: 'auto' }}>
-              {snippets.length === 0 && <div style={{ padding: '5px', color: '#aaa', fontSize: '12px' }}>No saved codes yet.</div>}
+            <div className="glass-card" style={{ position: 'absolute', top: '50px', right: '120px', padding: '10px', zIndex: 100, width: '280px', maxHeight: '300px', overflowY: 'auto' }}>
+              {snippets.length === 0 && <div style={{ padding: '5px', color: 'var(--text-muted)', fontSize: '12px' }}>No saved codes yet.</div>}
               {snippets.map(s => (
-                <div key={s._id} style={{ padding: '8px', borderBottom: '1px solid #444', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={s._id} style={{ padding: '8px', borderBottom: '1px solid var(--border-color)', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div onClick={() => { setCode(s.code); setLanguage(s.language); setShowSnippetList(false) }} style={{ cursor: 'pointer', flex: 1 }}>
                     <div style={{ fontWeight: 'bold' }}>{s.title}</div>
-                    <div style={{ fontSize: '10px', color: '#aaa' }}>{s.language} • {s.isShared ? '🌍 Shared' : '🔒 Private'}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{s.language} • {s.isShared ? '🌍 Shared' : '🔒 Private'}</div>
                   </div>
                   {!s.isShared && (
-                    <button onClick={() => handleShareClick(s)} style={{ background: 'transparent', border: '1px solid #667eea', color: '#667eea', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer' }}>share</button>
+                    <button onClick={() => handleShareClick(s)} style={{ background: 'transparent', border: '1px solid var(--accent-purple)', color: 'var(--accent-purple)', fontSize: '10px', padding: '2px 6px', borderRadius: '8px', cursor: 'pointer' }}>share</button>
                   )}
                   {s.isShared && (
-                    <span style={{ fontSize: '10px', color: '#48bb78' }}>active</span>
+                    <span style={{ fontSize: '10px', color: 'var(--accent-green)' }}>active</span>
                   )}
                 </div>
               ))}
             </div>
           )}
 
-          <button onClick={showNarrator ? () => setShowNarrator(false) : fetchNarration} style={{ background: showNarrator ? '#eab308' : '#ca8a04', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>🎙️ {isNarrating ? 'Thinking...' : showNarrator ? 'Hide Narrator' : 'AI Narrator'}</button>
-          <button onClick={() => setShowSnapshot(true)} style={{ background: '#764ba2', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>📸 Snapshot</button>
-          <button onClick={() => setShowComplexity(!showComplexity)} style={{ background: showComplexity ? '#a855f7' : '#553c9a', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>📊 {showComplexity ? 'Hide Complexity' : 'Complexity'}</button>
-          <button onClick={handleSave} style={{ background: '#2ea043', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>💾 Save Code</button>
+          <button onClick={() => setShowTutor(!showTutor)} className="btn-secondary" style={{ borderColor: showTutor ? 'var(--accent-purple)' : 'var(--border-color)', color: showTutor ? 'var(--accent-purple)' : 'var(--text-primary)' }}>🤖 {showTutor ? 'Hide Tutor' : 'AI Tutor'}</button>
+          <button onClick={showNarrator ? () => setShowNarrator(false) : fetchNarration} className="btn-secondary" style={{ borderColor: showNarrator ? 'var(--accent-yellow)' : 'var(--border-color)', color: showNarrator ? 'var(--accent-yellow)' : 'var(--text-primary)' }}>🎙️ {isNarrating ? 'Thinking...' : showNarrator ? 'Hide Narrator' : 'AI Narrator'}</button>
+          <button onClick={() => setShowSnapshot(true)} className="btn-secondary">📸 Snapshot</button>
+          <button onClick={() => setShowComplexity(!showComplexity)} className="btn-secondary" style={{ borderColor: showComplexity ? 'var(--accent-purple)' : 'var(--border-color)', color: showComplexity ? 'var(--accent-purple)' : 'var(--text-primary)' }}>📊 {showComplexity ? 'Hide Complexity' : 'Complexity'}</button>
+          <button onClick={handleSave} className="btn-primary">💾 Save Code</button>
         </div>
       </header>
 
@@ -528,13 +553,13 @@ const Practice = () => {
       />
 
       {/* TOOLBAR */}
-      <div style={{ padding: '10px 20px', background: '#1e1e1e', borderBottom: '1px solid #333', display: 'flex', gap: '15px', alignItems: 'center' }}>
+      <div style={{ padding: '8px 24px', background: 'rgba(17,17,22,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', gap: '15px', alignItems: 'center' }}>
 
         {/* RUN BUTTON */}
-        <button onClick={runCode} disabled={isLoading || isExecuting} style={{ background: 'linear-gradient(135deg, #2ea043, #26843b)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(46, 160, 67, 0.3)' }}>    {isLoading ? 'Running...' : '▶ Run Code'}
+        <button onClick={runCode} disabled={isLoading || isExecuting} style={{ padding: '8px 22px', background: 'linear-gradient(135deg, #00E5EE, #7C3AED)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: isLoading || isExecuting ? 'default' : 'pointer', boxShadow: '0 4px 20px rgba(0,229,238,0.2)', opacity: isLoading || isExecuting ? 0.6 : 1 }}>{isLoading ? '⏳ Running...' : '▶ RUN CODE'}
         </button>
 
-        <select value={language} onChange={handleLanguageChange} style={{ padding: '8px', borderRadius: '4px', background: '#333', color: 'white', border: '1px solid #555' }}>
+        <select value={language} onChange={handleLanguageChange}>
           <option value="python">Python</option>
           <option value="javascript">JavaScript</option>
           <option value="cpp">C++</option>
@@ -544,7 +569,7 @@ const Practice = () => {
           <option value="c">C</option>
         </select>
 
-        <select onChange={handleAlgoChange} style={{ padding: '8px', borderRadius: '4px', background: '#333', color: 'white', border: '1px solid #555', minWidth: '200px' }}>
+        <select onChange={handleAlgoChange} style={{ minWidth: '200px' }}>
           <option value="">Select an Example...</option>
           {EXAMPLES[language] ? (
             Object.keys(EXAMPLES[language]).map(algo => (
@@ -557,42 +582,42 @@ const Practice = () => {
 
         {/* 📋 TEMPLATES DROPDOWN */}
         <div style={{ position: 'relative' }}>
-          <button onClick={() => setShowTemplates(!showTemplates)} style={{ background: '#553c9a', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+          <button onClick={() => setShowTemplates(!showTemplates)} className="btn-secondary">
             📋 Templates
           </button>
           {showTemplates && (
-            <div style={{ position: 'absolute', top: '40px', left: 0, background: '#2d2d2d', border: '1px solid #555', borderRadius: '8px', width: '220px', maxHeight: '300px', overflowY: 'auto', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
-              <div style={{ padding: '8px 12px', borderBottom: '1px solid #444', color: '#aaa', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Templates — {language}</div>
+            <div className="glass-card" style={{ position: 'absolute', top: '40px', left: 0, width: '240px', maxHeight: '300px', overflowY: 'auto', zIndex: 100 }}>
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Templates — {language}</div>
               {CODE_TEMPLATES[language] ? Object.entries(CODE_TEMPLATES[language]).map(([name, tmplCode]) => (
-                <div key={name} onClick={() => { setCode(tmplCode); setShowTemplates(false); }} style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #3a3a3a', fontSize: '13px', color: '#e0e0e0', transition: 'background 0.15s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#3a3a3a'}
+                <div key={name} onClick={() => { setCode(tmplCode); setShowTemplates(false); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)', fontSize: '13px', color: 'var(--text-primary)', transition: 'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >{name}</div>
-              )) : <div style={{ padding: '10px 12px', color: '#666', fontSize: '12px' }}>No templates for {language}</div>}
+              )) : <div style={{ padding: '10px 14px', color: 'var(--text-muted)', fontSize: '12px' }}>No templates for {language}</div>}
             </div>
           )}
         </div>
 
         {/* 📜 EXECUTION HISTORY */}
         <div style={{ position: 'relative' }}>
-          <button onClick={() => setShowHistory(!showHistory)} style={{ background: '#2d5a88', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+          <button onClick={() => setShowHistory(!showHistory)} className="btn-secondary">
             📜 History {executionHistory.length > 0 && `(${executionHistory.length})`}
           </button>
           {showHistory && (
-            <div style={{ position: 'absolute', top: '40px', left: 0, background: '#2d2d2d', border: '1px solid #555', borderRadius: '8px', width: '300px', maxHeight: '350px', overflowY: 'auto', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
-              <div style={{ padding: '8px 12px', borderBottom: '1px solid #444', color: '#aaa', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Execution History</div>
+            <div className="glass-card" style={{ position: 'absolute', top: '40px', left: 0, width: '320px', maxHeight: '350px', overflowY: 'auto', zIndex: 100 }}>
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Execution History</div>
               {executionHistory.length === 0 ? (
-                <div style={{ padding: '15px 12px', color: '#666', fontSize: '12px', textAlign: 'center' }}>No runs yet. Hit ▶ Run Code!</div>
+                <div style={{ padding: '15px 14px', color: 'var(--text-muted)', fontSize: '12px', textAlign: 'center' }}>No runs yet. Hit ▶ Run Code!</div>
               ) : executionHistory.map(h => (
-                <div key={h.id} onClick={() => { setCode(h.codePreview.length < 80 ? h.codePreview : code); setShowHistory(false); }} style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #3a3a3a', fontSize: '12px' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#3a3a3a'}
+                <div key={h.id} onClick={() => { setCode(h.codePreview.length < 80 ? h.codePreview : code); setShowHistory(false); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)', fontSize: '12px' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                    <span style={{ color: h.success ? '#48bb78' : '#f56565' }}>{h.success ? '✅' : '❌'} {h.language}</span>
-                    <span style={{ color: '#888' }}>{h.timestamp}</span>
+                    <span style={{ color: h.success ? 'var(--accent-green)' : 'var(--accent-red)' }}>{h.success ? '✅' : '❌'} {h.language}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{h.timestamp}</span>
                   </div>
-                  <div style={{ color: '#aaa', fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.codePreview}…</div>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.codePreview}…</div>
                 </div>
               ))}
             </div>
@@ -603,53 +628,53 @@ const Practice = () => {
       {/* MAIN CONTENT SPLIT */}
       <div
         style={{
-          display: 'flex',
           flex: 1,
-          overflow: 'hidden',
-          position: 'relative',
-          userSelect: isDragging ? 'none' : 'auto',
-          flexDirection: isMobile ? 'column' : 'row' // 📱 Stack on mobile
-        }}
-        onMouseMove={!isMobile ? handleMouseMove : undefined}
-      >
-
-        {/* LEFT: EDITOR */}
-        <div style={{
-          width: isMobile ? '100%' : `${editorWidth}%`, // 📱 Full width on mobile
-          height: isMobile ? '50%' : '100%',
           display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: '0px',
+          minHeight: 0,
+          background: '#08080C',
+        }}
+      >
+        {/* LEFT: EDITOR PANE */}
+        <div style={{
+          width: isMaximized ? '0%' : (isMobile ? '100%' : `${editorWidth}%`),
+          height: isMaximized ? '0%' : (isMobile ? '50%' : '100%'),
+          display: isMaximized ? 'none' : 'flex',
           flexDirection: 'column',
-          overflow: 'hidden',
-          borderBottom: isMobile ? '1px solid #333' : 'none',
-          position: 'relative' // For absolute positioning the narrator
+          background: '#0A0A10', // Deep OLED nesting
+          borderRight: (isMobile || isMaximized) ? 'none' : '1px solid var(--border-ghost)',
+          borderBottom: isMobile ? '1px solid var(--border-ghost)' : 'none',
+          position: 'relative',
+          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         }}>
 
           {/* 🎙️ AI NARRATOR FLOATING PANEL */}
           {showNarrator && (
-            <div style={{ position: 'absolute', top: '10px', right: '10px', width: '320px', maxHeight: '80%', background: 'rgba(20, 20, 30, 0.95)', border: '1px solid #ca8a04', borderRadius: '8px', zIndex: 10, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', overflow: 'hidden' }}>
-              <div style={{ padding: '10px', background: '#ca8a04', color: '#fff', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
+            <div style={{ position: 'absolute', top: '10px', right: '10px', width: '320px', maxHeight: '80%', background: 'rgba(17,17,22,0.9)', border: '1px solid rgba(202,138,4,0.3)', borderRadius: '16px', zIndex: 10, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', overflow: 'hidden' }}>
+              <div style={{ padding: '12px 14px', background: 'rgba(202,138,4,0.15)', color: '#FBBF24', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', borderBottom: '1px solid rgba(202,138,4,0.2)' }}>
                 <span>🎙️ AI Code Narrator</span>
-                <button onClick={() => setShowNarrator(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+                <button onClick={() => setShowNarrator(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
               </div>
-              <div style={{ padding: '15px', overflowY: 'auto', flex: 1, fontSize: '13px', lineHeight: '1.5', color: '#e2e8f0' }}>
+              <div style={{ padding: '15px', overflowY: 'auto', flex: 1, fontSize: '13px', lineHeight: '1.5', color: 'var(--text-primary)' }}>
                 {isNarrating ? (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px', fontStyle: 'italic', color: '#aaa' }}>
                     Generating narrative... ⏳
                   </div>
                 ) : narratorData ? (
                   <div>
-                    <div style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px solid var(--border-color)' }}>
                       <strong style={{ color: '#fbbf24' }}>Summary:</strong> {narratorData.summary}
                     </div>
                     {narratorData.narration && narratorData.narration.map((n, i) => (
-                      <div key={i} style={{ marginBottom: '12px', padding: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', borderLeft: '3px solid #fbbf24' }}>
+                      <div key={i} style={{ marginBottom: '12px', padding: '8px', background: 'var(--bg-muted)', borderRadius: '6px', borderLeft: '3px solid #fbbf24' }}>
                         <span style={{ fontWeight: 'bold', color: '#60a5fa', marginRight: '6px' }}>{n.line ? `Line ${n.line}:` : n.block ? `${n.block}:` : 'Note:'}</span>
                         <span>{n.explanation}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div style={{ color: '#fc8181' }}>Failed to load narration.</div>
+                  <div style={{ color: 'var(--accent-red)' }}>Failed to load narration.</div>
                 )}
               </div>
             </div>
@@ -657,8 +682,8 @@ const Practice = () => {
 
           {/* 🕵️ AI DETECTIVE FLOATING PANEL */}
           {showDetective && (
-            <div style={{ position: 'absolute', top: '10px', right: showNarrator ? '340px' : '10px', width: '350px', maxHeight: '90%', background: 'rgba(15, 23, 42, 0.98)', border: '1px solid #ef4444', borderRadius: '8px', zIndex: 11, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2)', backdropFilter: 'blur(10px)', overflow: 'hidden' }}>
-              <div style={{ padding: '12px', background: 'linear-gradient(90deg, #991b1b, #dc2626)', color: '#fff', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', borderBottom: '1px solid #7f1d1d' }}>
+            <div style={{ position: 'absolute', top: '10px', right: showNarrator ? '340px' : '10px', width: '350px', maxHeight: '90%', background: 'rgba(17,17,22,0.9)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '16px', zIndex: 11, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', overflow: 'hidden' }}>
+              <div style={{ padding: '12px 14px', background: 'rgba(239,68,68,0.12)', color: '#F87171', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', borderBottom: '1px solid rgba(239,68,68,0.15)' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   🕵️‍♀️ AI Authorship Analysis
                 </span>
@@ -676,10 +701,10 @@ const Practice = () => {
                     {/* Probability Score Header */}
                     <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '15px', borderRadius: '8px', border: '1px solid #334155', textAlign: 'center' }}>
                       <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#94a3b8', marginBottom: '5px' }}>Probability of AI Generation</div>
-                      <div style={{ fontSize: '36px', fontWeight: '900', color: detectionData.aiProbability > 70 ? '#ef4444' : detectionData.aiProbability > 40 ? '#f59e0b' : '#22c55e', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                      <div style={{ fontSize: '36px', fontWeight: '900', color: detectionData.aiProbability > 70 ? '#ef4444' : detectionData.aiProbability > 40 ? '#f59e0b' : '#22c55e',  }}>
                         {detectionData.aiProbability}%
                       </div>
-                      <div style={{ marginTop: '5px', fontSize: '14px', fontWeight: 'bold', color: '#e2e8f0' }}>
+                      <div style={{ marginTop: '5px', fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                         Verdict: <span style={{ color: detectionData.aiProbability > 70 ? '#ef4444' : detectionData.aiProbability > 40 ? '#f59e0b' : '#22c55e' }}>{detectionData.verdict}</span>
                       </div>
                     </div>
@@ -724,7 +749,8 @@ const Practice = () => {
             language={language}
             setLanguage={setLanguage}
             isLoading={isLoading}
-            activeLine={traceData && traceData.length > 0 && traceData[stepIndex] ? traceData[stepIndex].line : 0}
+            activeLine={aiHighlightLine || (traceData && traceData.length > 0 && traceData[stepIndex] ? traceData[stepIndex].line : 0)}
+            heatmapData={heatmapData} // 🔥 Pass Heatmap Data
           />
         </div>
 
@@ -733,15 +759,12 @@ const Practice = () => {
           <div
             onMouseDown={handleMouseDown}
             style={{
-              width: '6px',
-              background: isDragging ? '#007acc' : '#444',
+              width: '4px',
+              background: isDragging ? 'var(--accent-cyan)' : 'var(--bg-app)',
               cursor: 'col-resize',
               position: 'relative',
               flexShrink: 0,
               transition: isDragging ? 'none' : 'background 0.2s ease',
-              ':hover': {
-                background: '#007acc'
-              }
             }}
           >
             {/* Visual indicator */}
@@ -750,52 +773,89 @@ const Practice = () => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: '3px',
-              height: '40px',
-              background: 'rgba(255, 255, 255, 0.3)',
-              borderRadius: '2px'
+              width: '2px',
+              height: '32px',
+              background: 'var(--border-ghost)',
+              borderRadius: '4px'
             }} />
           </div>
         )}
 
         {/* RIGHT: TABS PANE */}
         <div style={{
-          width: isMobile ? '100%' : `${100 - editorWidth}%`, // 📱 Full width on mobile
+          width: isMaximized ? '100%' : (isMobile ? '100%' : `${100 - editorWidth}%`), // 📱 Full width on mobile or when maximized
           height: isMobile ? '50%' : '100%',
-          background: '#1e1e1e',
+          background: '#0A0A10', // Deep OLED terminal base
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         }}>
 
-          <div style={{ display: 'flex', borderBottom: '1px solid #333', background: '#252526' }}>
+          <div style={{ display: 'flex', padding: 0, borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(17,17,22,0.5)' }}>
             <button
               onClick={() => setActiveTab('visualizer')}
               style={{
-                flex: 1, padding: '10px', background: activeTab === 'visualizer' ? '#1e1e1e' : 'transparent',
-                color: activeTab === 'visualizer' ? '#fff' : '#aaa', border: 'none', cursor: 'pointer', borderTop: activeTab === 'visualizer' ? '2px solid #007acc' : 'none'
+                background: activeTab === 'visualizer' ? 'var(--bg-panel)' : 'transparent',
+                color: activeTab === 'visualizer' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                borderBottom: activeTab === 'visualizer' ? '2px solid var(--accent-cyan)' : '2px solid transparent',
+                padding: '12px 24px', borderTop: 'none', borderLeft: 'none', borderRight: 'none',
+                fontFamily: 'var(--font-label)', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer',
+                transition: 'all 0.2s', letterSpacing: '1px'
               }}
             >
-              📊 Visualizer
+              📊 VISUALIZER
             </button>
             <button
               onClick={() => setActiveTab('console')}
               style={{
-                flex: 1, padding: '10px', background: activeTab === 'console' ? '#1e1e1e' : 'transparent',
-                color: activeTab === 'console' ? '#fff' : '#aaa', border: 'none', cursor: 'pointer', borderTop: activeTab === 'console' ? '2px solid #007acc' : 'none'
+                background: activeTab === 'console' ? 'var(--bg-panel)' : 'transparent',
+                color: activeTab === 'console' ? 'var(--accent-violet)' : 'var(--text-secondary)',
+                borderBottom: activeTab === 'console' ? '2px solid var(--accent-violet)' : '2px solid transparent',
+                padding: '12px 24px', borderTop: 'none', borderLeft: 'none', borderRight: 'none',
+                fontFamily: 'var(--font-label)', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer',
+                transition: 'all 0.2s', letterSpacing: '1px'
               }}
             >
-              💻 Console Output
+              💻 CONSOLE
             </button>
             <button
               onClick={() => setActiveTab('terminal')}
               style={{
-                flex: 1, padding: '10px', background: activeTab === 'terminal' ? '#1e1e1e' : 'transparent',
-                color: activeTab === 'terminal' ? '#fff' : '#aaa', border: 'none', cursor: 'pointer', borderTop: activeTab === 'terminal' ? '2px solid #007acc' : 'none'
+                background: activeTab === 'terminal' ? 'var(--bg-panel)' : 'transparent',
+                color: activeTab === 'terminal' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                borderBottom: activeTab === 'terminal' ? '2px solid var(--text-primary)' : '2px solid transparent',
+                padding: '12px 24px', borderTop: 'none', borderLeft: 'none', borderRight: 'none',
+                fontFamily: 'var(--font-label)', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer',
+                transition: 'all 0.2s', letterSpacing: '1px'
               }}
             >
-              🖥️ Terminal
+              🖥️ TERMINAL
             </button>
+
+            {/* 🔥 MAXIMIZE / RESTORE BUTTON */}
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingRight: '15px' }}>
+              <button
+                onClick={() => setIsMaximized(!isMaximized)}
+                style={{
+                  background: isMaximized ? 'rgba(0,229,238,0.1)' : 'transparent',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: isMaximized ? '#00E5EE' : '#5A5A6A',
+                  padding: '5px 14px',
+                  borderRadius: '100px',
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.3s cubic-bezier(0.23,1,0.32,1)',
+                  boxShadow: isMaximized ? '0 0 16px rgba(0,229,238,0.15)' : 'none'
+                }}
+              >
+                {isMaximized ? '📉 RESTORE' : '📈 MAXIMIZE'}
+              </button>
+            </div>
           </div>
 
           <div style={{ flex: 1, padding: '10px', overflow: 'auto' }}>
@@ -814,10 +874,10 @@ const Practice = () => {
                   />
                 </>
               ) : (
-                <div style={{ color: '#666', textAlign: 'center', marginTop: '50px', lineHeight: '1.6' }}>
-                  {language === 'python' || language === 'javascript' ?
+                <div style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: '50px', lineHeight: '1.6' }}>
+                  {['python', 'javascript', 'java', 'cpp'].includes(language) ?
                     "Run code to see the visualization." :
-                    "Visualization is only available for Python and JavaScript.\nCheck the Console tab for output."}
+                    `Visualization is not yet available for ${language}.\nCheck the Console tab for output.`}
                 </div>
               )
             )}
@@ -825,13 +885,14 @@ const Practice = () => {
             {/* CONSOLE TAB */}
             {activeTab === 'console' && (
               <div style={{
-                background: '#000',
-                color: '#0f0',
-                padding: '15px',
-                fontFamily: 'monospace',
+                background: 'var(--bg-surface)',
+                color: 'var(--accent-cyan)',
+                padding: '24px',
+                fontFamily: 'var(--font-code)',
                 minHeight: '100%',
                 whiteSpace: 'pre-wrap',
-                borderRadius: '5px'
+                borderRadius: '10px',
+                border: '1px solid var(--border-ghost)'
               }}>
                 {error ? (
                   <>
@@ -866,6 +927,17 @@ const Practice = () => {
         code={code}
         language={language}
         error={error}
+      />
+
+      {/* 🤖 Socratic Tutor - Floating Bubble */}
+      <SocraticTutor
+        code={code}
+        language={language}
+        error={error}
+        executionState={traceData && traceData[stepIndex] ? traceData[stepIndex] : {}}
+        isVisible={showTutor}
+        onDismiss={() => { setShowTutor(false); setAiHighlightLine(null); }}
+        onAiHighlight={setAiHighlightLine}
       />
 
       {/* 🎥 Session Recorder Integration */}

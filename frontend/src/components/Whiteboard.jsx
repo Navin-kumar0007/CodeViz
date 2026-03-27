@@ -184,13 +184,13 @@ const Whiteboard = React.memo(({ socket, isEditor }) => {
     return (
         <div style={{ flex: 1, position: 'relative', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '12px', overflow: 'hidden' }}>
             {/* Status Badge */}
-            <div style={{ position: 'absolute', top: 15, left: 15, background: 'rgba(255,255,255,0.05)', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', color: '#ccc', zIndex: 10, border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ position: 'absolute', top: 15, left: 15, background: 'var(--bg-muted)', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', color: '#ccc', zIndex: 10, border: '1px solid var(--border-color)' }}>
                 {isEditor ? '🖌️ You have the Chalk' : '👁️ View Only Mode'}
             </div>
 
             {/* Toolbar — Tools + Colors + Undo/Redo */}
             {isEditor && (
-                <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '6px', alignItems: 'center', background: 'rgba(30,30,30,0.9)', padding: '6px 12px', borderRadius: '12px', zIndex: 20, border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)' }}>
+                <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '6px', alignItems: 'center', background: 'rgba(30,30,30,0.9)', padding: '6px 12px', borderRadius: '12px', zIndex: 20, border: '1px solid var(--border-color)', backdropFilter: 'blur(8px)' }}>
                     {/* Tool Buttons */}
                     {TOOLS.map(t => (
                         <button key={t.id} onClick={() => setActiveTool(t.id)} style={toolbarBtnStyle(activeTool === t.id)} title={t.label}>{t.icon}</button>
@@ -243,7 +243,7 @@ const Whiteboard = React.memo(({ socket, isEditor }) => {
                     <input
                         autoFocus
                         placeholder="Type text..."
-                        style={{ background: 'rgba(0,0,0,0.8)', border: `2px solid ${activeColor}`, color: '#fff', padding: '6px 10px', borderRadius: '6px', fontSize: '14px', fontFamily: 'var(--font-code)', outline: 'none', minWidth: '120px' }}
+                        style={{ background: 'rgba(255,255,255,0.95)', border: `2px solid ${activeColor}`, color: 'var(--text-primary)', padding: '6px 10px', borderRadius: '6px', fontSize: '14px', fontFamily: 'var(--font-code)', outline: 'none', minWidth: '120px' }}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') handleTextSubmit(e.target.value);
                             if (e.key === 'Escape') setTextInput(null);
@@ -255,5 +255,7 @@ const Whiteboard = React.memo(({ socket, isEditor }) => {
         </div>
     );
 });
+
+Whiteboard.displayName = 'Whiteboard';
 
 export default Whiteboard;

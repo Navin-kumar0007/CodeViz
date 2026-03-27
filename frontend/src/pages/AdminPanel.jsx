@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import { motion, AnimatePresence } from 'framer-motion';
 import API_BASE from '../utils/api';
 
 /**
@@ -199,9 +199,9 @@ const AdminPanel = () => {
 
     const getRoleBadgeStyle = (role) => {
         switch (role) {
-            case 'admin': return { background: '#e53935', color: '#fff' };
-            case 'instructor': return { background: '#4caf50', color: '#fff' };
-            default: return { background: '#667eea', color: '#fff' };
+            case 'admin': return { background: '#e53935', color: 'var(--text-primary)' };
+            case 'instructor': return { background: '#4caf50', color: 'var(--text-primary)' };
+            default: return { background: 'var(--accent-teal)', color: 'var(--text-on-teal)' };
         }
     };
 
@@ -281,7 +281,7 @@ const AdminPanel = () => {
                     </div>
                     <div style={styles.statCard}>
                         <div style={styles.statIcon}>🚫</div>
-                        <div style={{ ...styles.statValue, color: stats.suspendedUsers > 0 ? '#e53935' : '#667eea' }}>
+                        <div style={{ ...styles.statValue, color: stats.suspendedUsers > 0 ? '#e53935' : 'var(--accent-teal)' }}>
                             {stats.suspendedUsers}
                         </div>
                         <div style={styles.statLabel}>Suspended</div>
@@ -399,7 +399,7 @@ const AdminPanel = () => {
                                                 🗑️
                                             </button>
                                         ) : (
-                                            <span style={{ color: '#666' }}>You</span>
+                                            <span style={{ color: 'var(--text-muted)' }}>You</span>
                                         )}
                                     </td>
                                 </tr>
@@ -449,7 +449,7 @@ const AdminPanel = () => {
                         >
                             <h3 style={styles.modalTitle}>🔄 Confirm Role Change</h3>
                             <p style={styles.modalText}>
-                                Change <strong>{roleModal.userName}</strong>'s role from{' '}
+                                Change <strong>{roleModal.userName}</strong>&apos;s role from{' '}
                                 <span style={{ ...styles.rolePill, ...getRoleBadgeStyle(roleModal.currentRole) }}>
                                     {roleModal.currentRole}
                                 </span>{' '}
@@ -515,8 +515,8 @@ const AdminPanel = () => {
 const styles = {
     container: {
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-        color: '#fff',
+        background: 'var(--bg-primary)',
+        color: 'var(--text-primary)',
         padding: '20px'
     },
     header: {
@@ -525,12 +525,12 @@ const styles = {
         justifyContent: 'space-between',
         marginBottom: '25px',
         paddingBottom: '15px',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
+        borderBottom: '1px solid var(--border-color)'
     },
     backBtn: {
         background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.2)',
-        color: '#fff',
+        border: '1px solid var(--border-color)',
+        color: 'var(--text-primary)',
         padding: '8px 16px',
         borderRadius: '8px',
         cursor: 'pointer'
@@ -557,7 +557,7 @@ const styles = {
         justifyContent: 'center',
         alignItems: 'center',
         height: '50vh',
-        color: '#888'
+        color: 'var(--text-muted)'
     },
     error: {
         background: 'rgba(255, 100, 100, 0.2)',
@@ -591,8 +591,8 @@ const styles = {
         textAlign: 'center'
     },
     statIcon: { fontSize: '24px', marginBottom: '8px' },
-    statValue: { fontSize: '28px', fontWeight: 'bold', color: '#667eea' },
-    statLabel: { fontSize: '11px', color: '#888', marginTop: '5px', textTransform: 'uppercase' },
+    statValue: { fontSize: '28px', fontWeight: 'bold', color: 'var(--accent-teal)' },
+    statLabel: { fontSize: '11px', color: 'var(--text-muted)', marginTop: '5px', textTransform: 'uppercase' },
     filters: {
         display: 'flex',
         gap: '15px',
@@ -604,7 +604,7 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '8px',
         padding: '12px 16px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '14px'
     },
     filterSelect: {
@@ -612,7 +612,7 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '8px',
         padding: '12px 20px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '14px',
         cursor: 'pointer'
     },
@@ -630,7 +630,7 @@ const styles = {
         textAlign: 'left',
         padding: '15px 20px',
         background: 'rgba(255, 255, 255, 0.05)',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '11px',
         textTransform: 'uppercase',
         letterSpacing: '1px'
@@ -644,11 +644,11 @@ const styles = {
     },
     noData: {
         textAlign: 'center',
-        color: '#666',
+        color: 'var(--text-muted)',
         padding: '40px'
     },
     userName: { fontWeight: '500', marginBottom: '2px' },
-    userEmail: { fontSize: '12px', color: '#888' },
+    userEmail: { fontSize: '12px', color: 'var(--text-muted)' },
     statusBadge: {
         padding: '5px 10px',
         borderRadius: '12px',
@@ -683,16 +683,16 @@ const styles = {
         padding: '15px'
     },
     pageBtn: {
-        background: 'rgba(102, 126, 234, 0.2)',
-        border: '1px solid rgba(102, 126, 234, 0.4)',
-        color: '#667eea',
+        background: 'rgba(13, 148, 136, 0.2)',
+        border: '1px solid rgba(13, 148, 136, 0.4)',
+        color: 'var(--accent-teal)',
         padding: '8px 16px',
         borderRadius: '8px',
         cursor: 'pointer',
         fontSize: '13px'
     },
     pageInfo: {
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '13px'
     },
     modalOverlay: {
@@ -708,7 +708,7 @@ const styles = {
         zIndex: 1000
     },
     modal: {
-        background: '#1e1e2e',
+        background: 'var(--bg-muted)',
         borderRadius: '16px',
         padding: '30px',
         maxWidth: '450px',
@@ -722,15 +722,15 @@ const styles = {
     cancelBtn: {
         background: 'rgba(255, 255, 255, 0.1)',
         border: 'none',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '10px 20px',
         borderRadius: '8px',
         cursor: 'pointer'
     },
     confirmBtn: {
-        background: '#667eea',
+        background: 'var(--accent-teal)',
         border: 'none',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '10px 20px',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -739,7 +739,7 @@ const styles = {
     confirmDeleteBtn: {
         background: '#e53935',
         border: 'none',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '10px 20px',
         borderRadius: '8px',
         cursor: 'pointer',

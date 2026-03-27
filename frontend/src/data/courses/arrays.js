@@ -7,6 +7,7 @@ export const ARRAYS_PATH = {
     id: 'arrays',
     title: 'Arrays & Lists',
     icon: '📊',
+    category: 'Data Structures',
     description: 'Learn how to store and manipulate collections of data - essential for any programmer!',
     prerequisites: ['basics'],
     lessons: [

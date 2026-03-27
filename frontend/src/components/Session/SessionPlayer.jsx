@@ -206,7 +206,7 @@ const styles = {
     overlay: {
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.8)',
+        background: 'rgba(255,255,255,0.95)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -341,7 +341,7 @@ const styles = {
         width: '44px',
         height: '44px',
         borderRadius: '50%',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '18px',
     },
     speedGroup: {

@@ -209,7 +209,7 @@ const AlgoRace = () => {
         const finished = trace.length > 0 && step >= trace.length - 1;
 
         return (
-            <div style={{ ...S.racerPanel, borderColor: isWinner && finished ? '#48bb78' : isLoser && finished ? '#f56565' : '#333' }}>
+            <div style={{ ...S.racerPanel, borderColor: isWinner && finished ? 'var(--accent-green)' : isLoser && finished ? '#f56565' : '#333' }}>
                 <div style={S.racerHeader}>
                     <div style={S.racerTitleLabel}>Racer {num}</div>
                     <select
@@ -238,9 +238,9 @@ const AlgoRace = () => {
 
                 <div style={S.statsBar}>
                     <span>Steps: {trace.length > 0 ? step + ' / ' + (trace.length - 1) : '0 / 0'}</span>
-                    {status === 'loaded' && trace.length > 0 && <span style={{ color: '#48bb78' }}>✅ Ready</span>}
-                    {status === 'error' && <span style={{ color: '#fc8181' }}>❌ Error</span>}
-                    {finished && isWinner && <Motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ color: '#48bb78', fontWeight: 'bold' }}>🏆 WINNER!</Motion.span>}
+                    {status === 'loaded' && trace.length > 0 && <span style={{ color: 'var(--accent-green)' }}>✅ Ready</span>}
+                    {status === 'error' && <span style={{ color: 'var(--accent-red)' }}>❌ Error</span>}
+                    {finished && isWinner && <Motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ color: 'var(--accent-green)', fontWeight: 'bold' }}>🏆 WINNER!</Motion.span>}
                 </div>
 
                 <div style={S.canvasContainer}>
@@ -268,7 +268,7 @@ const AlgoRace = () => {
 
                 <div style={S.controls}>
                     <div style={S.speedControl}>
-                        <span style={{ fontSize: '12px', color: '#888' }}>Speed:</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Speed:</span>
                         <select value={speed} onChange={e => setSpeed(Number(e.target.value))} style={S.select}>
                             <option value={800}>🐢 Slow</option>
                             <option value={300}>🚶 Normal</option>
@@ -308,9 +308,9 @@ const AlgoRace = () => {
 };
 
 const S = {
-    page: { height: '100vh', display: 'flex', flexDirection: 'column', background: '#0d1117', color: '#e4e4e7', fontFamily: 'Inter, sans-serif' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', background: '#161b22', borderBottom: '1px solid #30363d' },
-    backBtn: { background: 'transparent', border: '1px solid #30363d', color: '#8b949e', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' },
+    page: { height: '100vh', display: 'flex', flexDirection: 'column', background: '#0d1117', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' },
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', background: 'var(--bg-white)', borderBottom: '1px solid var(--border-color)' },
+    backBtn: { background: 'transparent', border: '1px solid var(--border-color)', color: '#8b949e', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' },
     titleContainer: { textAlign: 'center' },
     title: { margin: 0, fontSize: '24px', fontWeight: 800, color: '#c9d1d9' },
     subtitle: { margin: '4px 0 0', fontSize: '13px', color: '#8b949e' },
@@ -319,21 +319,21 @@ const S = {
     speedControl: { display: 'flex', alignItems: 'center', gap: '8px', background: '#21262d', padding: '4px 12px', borderRadius: '6px' },
     select: { background: 'transparent', border: 'none', color: '#c9d1d9', outline: 'none', cursor: 'pointer' },
 
-    prepBtn: { background: '#238636', color: '#fff', border: 'none', padding: '8px 24px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '14px' },
-    startBtn: { background: 'linear-gradient(135deg, #1f6feb, #3b82f6)', color: '#fff', border: 'none', padding: '8px 24px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '14px', boxShadow: '0 0 15px rgba(59,130,246,0.3)' },
-    stopBtn: { background: '#da3633', color: '#fff', border: 'none', padding: '8px 24px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '14px' },
-    resetBtn: { background: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', padding: '8px 24px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '14px' },
+    prepBtn: { background: '#238636', color: 'var(--text-primary)', border: 'none', padding: '8px 24px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '14px' },
+    startBtn: { background: 'linear-gradient(135deg, #1f6feb, #3b82f6)', color: 'var(--text-primary)', border: 'none', padding: '8px 24px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '14px', boxShadow: '0 0 15px rgba(59,130,246,0.3)' },
+    stopBtn: { background: '#da3633', color: 'var(--text-primary)', border: 'none', padding: '8px 24px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '14px' },
+    resetBtn: { background: '#21262d', color: '#c9d1d9', border: '1px solid var(--border-color)', padding: '8px 24px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '14px' },
 
     track: { display: 'flex', flex: 1, overflow: 'hidden', padding: '16px', gap: '16px', position: 'relative' },
-    vsDivider: { position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', background: '#161b22', color: '#ff7b72', padding: '12px 16px', borderRadius: '50%', border: '2px solid #30363d', fontWeight: 900, fontSize: '18px', zIndex: 10, fontStyle: 'italic' },
+    vsDivider: { position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', background: 'var(--bg-white)', color: '#ff7b72', padding: '12px 16px', borderRadius: '50%', border: '2px solid var(--border-color)', fontWeight: 900, fontSize: '18px', zIndex: 10, fontStyle: 'italic' },
 
-    racerPanel: { flex: 1, display: 'flex', flexDirection: 'column', background: '#161b22', borderRadius: '12px', border: '2px solid #30363d', overflow: 'hidden', transition: 'border-color 0.3s' },
-    racerHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: '#21262d', borderBottom: '1px solid #30363d' },
+    racerPanel: { flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-white)', borderRadius: '12px', border: '2px solid var(--border-color)', overflow: 'hidden', transition: 'border-color 0.3s' },
+    racerHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: '#21262d', borderBottom: '1px solid var(--border-color)' },
     racerTitleLabel: { fontWeight: 800, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '12px' },
-    algoSelect: { background: '#0d1117', color: '#c9d1d9', border: '1px solid #30363d', padding: '4px 8px', borderRadius: '4px', fontSize: '13px', outline: 'none' },
+    algoSelect: { background: '#0d1117', color: '#c9d1d9', border: '1px solid var(--border-color)', padding: '4px 8px', borderRadius: '4px', fontSize: '13px', outline: 'none' },
 
-    editorContainer: { height: '180px', borderBottom: '1px solid #30363d' },
-    statsBar: { display: 'flex', justifyContent: 'space-between', padding: '8px 16px', background: '#0d1117', borderBottom: '1px solid #30363d', fontSize: '13px', fontFamily: 'monospace', color: '#8b949e' },
+    editorContainer: { height: '180px', borderBottom: '1px solid var(--border-color)' },
+    statsBar: { display: 'flex', justifyContent: 'space-between', padding: '8px 16px', background: '#0d1117', borderBottom: '1px solid var(--border-color)', fontSize: '13px', fontFamily: 'monospace', color: '#8b949e' },
 
     canvasContainer: { flex: 1, position: 'relative', overflow: 'hidden', background: '#0d1117' },
     emptyCanvas: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#8b949e', fontStyle: 'italic', fontSize: '14px' }

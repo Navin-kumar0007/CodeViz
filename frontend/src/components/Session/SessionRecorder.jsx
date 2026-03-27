@@ -216,7 +216,7 @@ const styles = {
     },
     btnStart: {
         background: 'linear-gradient(135deg, #E06C75, #C678DD)',
-        color: '#fff',
+        color: 'var(--text-primary)',
     },
     btnPause: {
         background: 'var(--bg-elevated)',
@@ -228,7 +228,7 @@ const styles = {
     },
     btnStop: {
         background: 'var(--accent-red)',
-        color: '#fff',
+        color: 'var(--text-primary)',
     },
     stats: {
         display: 'flex',

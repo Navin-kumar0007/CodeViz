@@ -7,7 +7,8 @@ export const SEARCHING_PATH = {
     id: 'searching',
     title: 'Searching Algorithms',
     icon: '🔍',
-    description: 'Master the art of finding elements - from simple linear search to efficient binary search!',
+    category: 'Algorithm Mastery',
+    description: 'Master the art of finding elements - from simple linear searches to efficient binary search!',
     prerequisites: ['strings'],
     lessons: [
         {

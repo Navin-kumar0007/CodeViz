@@ -285,6 +285,83 @@ Don't give the answer. Just point out one thing they might want to look at, or o
 Keep it to 2 sentences max. Use 👻.
 
 Nudge:`,
+
+    socraticTutor: (code, language, error, executionState, skillLevel = 'beginner', teachingStyle = 'standard', isRetry = false, requestCount = 0) => `
+You are a Socratic Tutor for a student learning coding in CodeViz.
+The student is stuck. 
+${getTeachingContext(skillLevel, teachingStyle)}
+
+Current Code:
+\`\`\`${language}
+${code}
+\`\`\`
+
+Current Error/Execution Result:
+${error}
+
+Execution State (Trace/Variables):
+${JSON.stringify(executionState)}
+
+${isRetry ? `NOTE: This is retry #${requestCount}. The student found the previous question(s) unhelpful. TRY A COMPLETELY DIFFERENT ANGLE. (e.g., if you asked about a loop, now ask about a specific variable value, or an edge case like 0 or null).` : ''}
+
+YOUR GOAL: Do NOT provide the corrected code. Do NOT give the direct answer.
+INSTEAD: Ask ONE short, punchy question that leads the student to realize their mistake.
+Focus on logic, indices, or data structure behavior.
+
+STRICT VARIETY: Every response must be structurally different from a typical generic hint. Use the current execution state to be highly specific.
+Return ONLY a valid JSON object with no markdown formatting, no code fences:
+{
+  "question": "Your Socratic question here",
+  "lineNumber": <optional line number where the bug is likely located, else null>
+}
+`,
+
+    generateInterviewTestCases: (problemDescription) => `
+You are an expert technical interviewer. I will provide you with a problem description.
+You must generate 5 rigorous, extreme test cases to validate a candidate's code. Include edge cases.
+
+Problem Description:
+${problemDescription}
+
+You MUST return ONLY a valid JSON array of objects. No markdown formatting, no backticks, no text. Just the array.
+Format exactly like this:
+[
+  { "input": "input_string_here\\nanother_input", "expectedOutput": "output_string_here" },
+  ...
+]
+`,
+
+    generateInterviewProblems: (mode, problemCount) => `
+You are an expert technical interviewer at a FAANG company. 
+I need you to invent ${problemCount} BRAND NEW, completely unique Data Structures and Algorithms (DSA) problems.
+DO NOT use standard LeetCode questions verbatim (e.g., no "Two Sum", no "Merge K Lists"). Create unique scenarios.
+
+Difficulty Mode Requested: ${mode} (If 'mixed', provide a variety of difficulties).
+
+You MUST return ONLY a valid JSON array of objects. No markdown formatting, no text. Just the array.
+Format exactly like this:
+[
+  {
+    "id": "ai-gen-1",
+    "title": "A short engaging title",
+    "description": "Full problem description with constraints. Clearly define the input format.",
+    "difficulty": "easy|medium|hard",
+    "category": "arrays|strings|linked_lists|trees|graphs|dp",
+    "timeEstimate": 15,
+    "companies": ["AI Generated"],
+    "hints": ["Hint 1", "Hint 2"],
+    "starterCode": "def solution(params):\n    # TODO: Implement your solution here\n    pass\n\n# Test\n# CRITICAL: You MUST include the input parsing logic here.\n# It should read from sys.stdin and call solution().\n# Example:\n# import sys\n# lines = sys.stdin.readlines()\n# ... call solution ...\n# print(result)",
+    "testCases": [
+      { "input": "...", "expectedOutput": "..." }
+    ]
+  }
+]
+
+CRITICAL RULES:
+1. **NO SOLUTIONS**: The \`starterCode\` must NOT contain any logic for the problem. Use \`pass\` (Python) or \`return null\` (JS).
+2. **STRICT INPUT PARSING**: The \`# Test\` block is REQUIRED. It MUST correctly parse the \`input\` string provided in \`testCases\` and output exactly the \`expectedOutput\`.
+3. **UNIQUE SCENARIOS**: Create interesting backstories (space travel, robot navigation, etc.) but with solid DSA foundations.
+`
 };
 
 module.exports = {

@@ -7,6 +7,7 @@ export const SORTING_PATH = {
     id: 'sorting',
     title: 'Sorting Algorithms',
     icon: '📈',
+    category: 'Algorithm Mastery',
     description: 'Organize your data efficiently! Master Bubble Sort, Selection Sort, and Insertion Sort.',
     prerequisites: ['searching'],
     lessons: [

@@ -266,7 +266,7 @@ const TestLab = () => {
                             <div style={{ fontSize: '48px', marginBottom: '16px' }}>🧪</div>
                             <h3 style={{ color: 'var(--text-bright)', margin: '0 0 8px' }}>Write a Function</h3>
                             <p style={{ color: 'var(--text-muted)', fontSize: '13px', maxWidth: '300px', margin: '0 auto' }}>
-                                Write a function in the editor, then click "Generate Tests" to create comprehensive test cases with edge cases.
+                                Write a function in the editor, then click &quot;Generate Tests&quot; to create comprehensive test cases with edge cases.
                             </p>
                         </div>
                     )}
@@ -343,7 +343,7 @@ const styles = {
     runBtn: {
         padding: '8px 20px', border: 'none', borderRadius: '8px',
         background: 'linear-gradient(135deg, var(--accent-blue), var(--accent-purple))',
-        color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+        color: 'var(--text-primary)', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
     },
     resultsBar: {
         padding: '12px 20px', background: 'var(--bg-primary)', display: 'flex',

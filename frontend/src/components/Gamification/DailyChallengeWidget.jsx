@@ -50,9 +50,9 @@ const DailyChallengeWidget = () => {
     }, []);
 
     const diffColors = {
-        easy: '#48bb78',
-        medium: '#f6ad55',
-        hard: '#fc8181'
+        easy: 'var(--accent-green)',
+        medium: 'var(--accent-yellow)',
+        hard: 'var(--accent-red)'
     };
 
     if (loading) return null;
@@ -63,8 +63,8 @@ const DailyChallengeWidget = () => {
             style={styles.card}
             onClick={() => navigate('/daily-challenge')}
             onMouseEnter={e => {
-                e.currentTarget.style.borderColor = '#667eea';
-                e.currentTarget.style.boxShadow = '0 0 20px rgba(102,126,234,0.15)';
+                e.currentTarget.style.borderColor = 'var(--accent-teal)';
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(13,148,136,0.15)';
             }}
             onMouseLeave={e => {
                 e.currentTarget.style.borderColor = 'var(--border-color, rgba(255,255,255,0.1))';
@@ -107,7 +107,7 @@ const DailyChallengeWidget = () => {
 
 const styles = {
     card: {
-        background: 'linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.06))',
+        background: 'linear-gradient(135deg, rgba(13,148,136,0.08), rgba(118,75,162,0.06))',
         border: '1px solid var(--border-color, rgba(255,255,255,0.1))',
         borderRadius: '12px',
         padding: '16px 20px',
@@ -130,7 +130,7 @@ const styles = {
     },
     label: {
         fontSize: '9px',
-        color: '#667eea',
+        color: 'var(--accent-teal)',
         fontWeight: 700,
         letterSpacing: '1px',
         textTransform: 'uppercase',
@@ -146,14 +146,14 @@ const styles = {
     },
     timerLabel: {
         fontSize: '9px',
-        color: '#888',
+        color: 'var(--text-muted)',
         marginBottom: '2px'
     },
     timer: {
         fontSize: '16px',
         fontWeight: 'bold',
         fontFamily: 'var(--font-code, monospace)',
-        color: '#f6ad55',
+        color: 'var(--accent-yellow)',
         letterSpacing: '1px'
     },
     footer: {
@@ -176,8 +176,8 @@ const styles = {
     },
     catBadge: {
         padding: '2px 8px',
-        background: 'rgba(102,126,234,0.15)',
-        color: '#667eea',
+        background: 'rgba(13,148,136,0.15)',
+        color: 'var(--accent-teal)',
         borderRadius: '10px',
         fontSize: '9px',
         fontWeight: 'bold',
@@ -186,7 +186,7 @@ const styles = {
     xpBadge: {
         padding: '2px 8px',
         background: 'rgba(246,173,85,0.1)',
-        color: '#f6ad55',
+        color: 'var(--accent-yellow)',
         borderRadius: '10px',
         fontSize: '9px',
         fontWeight: 'bold'
@@ -194,7 +194,7 @@ const styles = {
     cta: {
         fontFamily: 'var(--font-code, monospace)',
         fontSize: '12px',
-        color: '#667eea',
+        color: 'var(--accent-teal)',
         fontWeight: 'bold'
     }
 };

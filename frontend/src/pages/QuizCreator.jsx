@@ -289,8 +289,8 @@ const QuizCreator = () => {
 const styles = {
     container: {
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-        color: '#fff',
+        background: 'var(--bg-primary)',
+        color: 'var(--text-primary)',
         padding: '20px'
     },
     header: {
@@ -299,12 +299,12 @@ const styles = {
         justifyContent: 'space-between',
         marginBottom: '20px',
         paddingBottom: '15px',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
+        borderBottom: '1px solid var(--border-color)'
     },
     backBtn: {
         background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.2)',
-        color: '#fff',
+        border: '1px solid var(--border-color)',
+        color: 'var(--text-primary)',
         padding: '8px 16px',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -321,15 +321,15 @@ const styles = {
     draftBtn: {
         background: 'transparent',
         border: '1px solid rgba(255,255,255,0.3)',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '8px 16px',
         borderRadius: '8px',
         cursor: 'pointer'
     },
     publishBtn: {
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
         border: 'none',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '8px 20px',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -372,7 +372,7 @@ const styles = {
     },
     label: {
         fontSize: '12px',
-        color: '#888',
+        color: 'var(--text-muted)',
         textTransform: 'uppercase'
     },
     input: {
@@ -380,7 +380,7 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '8px',
         padding: '10px 12px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '14px'
     },
     select: {
@@ -388,7 +388,7 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '8px',
         padding: '10px 12px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '14px'
     },
     textarea: {
@@ -396,7 +396,7 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '8px',
         padding: '10px 12px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '14px',
         resize: 'vertical'
     },
@@ -413,7 +413,7 @@ const styles = {
     },
     optionLabel: {
         fontSize: '12px',
-        color: '#888',
+        color: 'var(--text-muted)',
         display: 'flex',
         alignItems: 'center',
         gap: '5px'
@@ -423,13 +423,13 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '8px',
         padding: '8px 10px',
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '14px'
     },
     addBtn: {
-        background: 'rgba(102, 126, 234, 0.2)',
-        border: '1px solid rgba(102, 126, 234, 0.4)',
-        color: '#667eea',
+        background: 'rgba(13, 148, 136, 0.2)',
+        border: '1px solid rgba(13, 148, 136, 0.4)',
+        color: 'var(--accent-teal)',
         padding: '10px 20px',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -451,7 +451,7 @@ const styles = {
         borderRadius: '8px'
     },
     questionNum: {
-        background: 'rgba(102, 126, 234, 0.3)',
+        background: 'rgba(13, 148, 136, 0.3)',
         padding: '5px 10px',
         borderRadius: '6px',
         fontSize: '12px',
@@ -464,7 +464,7 @@ const styles = {
     removeBtn: {
         background: 'transparent',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         cursor: 'pointer',
         fontSize: '16px',
         padding: '5px'

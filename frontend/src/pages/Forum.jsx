@@ -164,8 +164,8 @@ const Forum = () => {
     };
 
     const catColors = {
-        general: '#667eea', help: '#f6ad55', showcase: '#48bb78',
-        bug: '#fc8181', discussion: '#9f7aea'
+        general: 'var(--accent-teal)', help: 'var(--accent-yellow)', showcase: 'var(--accent-green)',
+        bug: 'var(--accent-red)', discussion: '#9f7aea'
     };
 
     const catIcons = {
@@ -190,9 +190,9 @@ const Forum = () => {
                         <button key={c} onClick={() => { setCategory(c); setCurrentPage(1); }}
                             style={{
                                 ...S.catTab,
-                                background: category === c ? (catColors[c] || '#667eea') + '22' : 'transparent',
-                                color: category === c ? (catColors[c] || '#667eea') : '#888',
-                                borderColor: category === c ? (catColors[c] || '#667eea') : 'transparent'
+                                background: category === c ? (catColors[c] || 'var(--accent-teal)') + '22' : 'transparent',
+                                color: category === c ? (catColors[c] || 'var(--accent-teal)') : '#888',
+                                borderColor: category === c ? (catColors[c] || 'var(--accent-teal)') : 'transparent'
                             }}>
                             {c === 'all' ? '📋 All' : `${catIcons[c]} ${c.charAt(0).toUpperCase() + c.slice(1)}`}
                         </button>
@@ -212,9 +212,9 @@ const Forum = () => {
 
             {/* Thread Cards */}
             <div style={S.threadList}>
-                {loading && <p style={{ color: '#888', textAlign: 'center', padding: '20px' }}>Loading...</p>}
+                {loading && <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Loading...</p>}
                 {!loading && threads.length === 0 && (
-                    <p style={{ color: '#888', textAlign: 'center', padding: '40px' }}>
+                    <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '40px' }}>
                         No threads found. Start the conversation! 🚀
                     </p>
                 )}
@@ -224,7 +224,7 @@ const Forum = () => {
                             <div style={S.threadVotes}>
                                 <button onClick={(e) => { e.stopPropagation(); handleLikeThread(t._id); }}
                                     style={S.voteBtn}>▲</button>
-                                <span style={{ color: '#e4e4e7', fontSize: '14px', fontWeight: 'bold' }}>
+                                <span style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: 'bold' }}>
                                     {t.likes?.length || 0}
                                 </span>
                             </div>
@@ -237,7 +237,7 @@ const Forum = () => {
                             </div>
                             <p style={S.threadSnippet}>{t.content?.slice(0, 120)}...</p>
                             <div style={S.threadMeta}>
-                                <span style={{ ...S.catBadge, background: (catColors[t.category] || '#667eea') + '22', color: catColors[t.category] || '#667eea' }}>
+                                <span style={{ ...S.catBadge, background: (catColors[t.category] || 'var(--accent-teal)') + '22', color: catColors[t.category] || 'var(--accent-teal)' }}>
                                     {catIcons[t.category]} {t.category}
                                 </span>
                                 {t.tags?.map(tag => (
@@ -258,7 +258,7 @@ const Forum = () => {
                 <div style={S.pagination}>
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
                         <button key={p} onClick={() => setCurrentPage(p)}
-                            style={{ ...S.pageBtn, background: currentPage === p ? '#667eea' : 'rgba(255,255,255,0.05)', color: currentPage === p ? '#fff' : '#888' }}>
+                            style={{ ...S.pageBtn, background: currentPage === p ? 'var(--accent-teal)' : 'rgba(255,255,255,0.05)', color: currentPage === p ? '#fff' : '#888' }}>
                             {p}
                         </button>
                     ))}
@@ -285,7 +285,7 @@ const Forum = () => {
                             <button onClick={handleResolve} style={{
                                 ...S.actionBtn,
                                 background: t.isResolved ? 'rgba(72,187,120,0.15)' : 'rgba(255,255,255,0.05)',
-                                color: t.isResolved ? '#48bb78' : '#888'
+                                color: t.isResolved ? 'var(--accent-green)' : '#888'
                             }}>
                                 {t.isResolved ? '✅ Resolved' : '☐ Mark Resolved'}
                             </button>
@@ -294,7 +294,7 @@ const Forum = () => {
                             <button onClick={handlePin} style={{
                                 ...S.actionBtn,
                                 background: t.isPinned ? 'rgba(246,173,85,0.15)' : 'rgba(255,255,255,0.05)',
-                                color: t.isPinned ? '#f6ad55' : '#888'
+                                color: t.isPinned ? 'var(--accent-yellow)' : '#888'
                             }}>
                                 {t.isPinned ? '📌 Pinned' : '📌 Pin'}
                             </button>
@@ -306,9 +306,9 @@ const Forum = () => {
                 <div style={S.opCard}>
                     <div style={S.opHeader}>
                         <div>
-                            <h2 style={{ margin: 0, fontSize: '22px', color: '#e4e4e7' }}>{t.title}</h2>
+                            <h2 style={{ margin: 0, fontSize: '22px', color: 'var(--text-primary)' }}>{t.title}</h2>
                             <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
-                                <span style={{ ...S.catBadge, background: (catColors[t.category] || '#667eea') + '22', color: catColors[t.category] }}>
+                                <span style={{ ...S.catBadge, background: (catColors[t.category] || 'var(--accent-teal)') + '22', color: catColors[t.category] }}>
                                     {catIcons[t.category]} {t.category}
                                 </span>
                                 {t.tags?.map(tag => <span key={tag} style={S.tagBadge}>#{tag}</span>)}
@@ -325,26 +325,26 @@ const Forum = () => {
                 </div>
 
                 {/* Replies */}
-                <h3 style={{ color: '#e4e4e7', fontSize: '14px', margin: '20px 0 12px 0' }}>
+                <h3 style={{ color: 'var(--text-primary)', fontSize: '14px', margin: '20px 0 12px 0' }}>
                     💬 {t.replies?.length || 0} Replies
                 </h3>
 
                 {t.replies?.map((r, i) => (
                     <div key={i} style={{
                         ...S.replyCard,
-                        borderLeftColor: t.acceptedReplyIdx === i ? '#48bb78' : 'rgba(255,255,255,0.08)'
+                        borderLeftColor: t.acceptedReplyIdx === i ? 'var(--accent-green)' : 'rgba(255,255,255,0.08)'
                     }}>
                         {t.acceptedReplyIdx === i && (
-                            <div style={{ color: '#48bb78', fontSize: '11px', fontWeight: 'bold', marginBottom: '6px' }}>
+                            <div style={{ color: 'var(--accent-green)', fontSize: '11px', fontWeight: 'bold', marginBottom: '6px' }}>
                                 ✅ Accepted Answer
                             </div>
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                                <div style={{ color: '#e4e4e7', fontSize: '13px', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{r.content}</div>
+                                <div style={{ color: 'var(--text-primary)', fontSize: '13px', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{r.content}</div>
                                 <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
-                                    <span style={{ color: '#888', fontSize: '11px' }}>👤 {r.userId?.name || 'User'}</span>
-                                    <span style={{ color: '#888', fontSize: '11px' }}>{timeAgo(r.createdAt)}</span>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>👤 {r.userId?.name || 'User'}</span>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{timeAgo(r.createdAt)}</span>
                                 </div>
                             </div>
                             <button onClick={() => handleLikeReply(i)} style={S.replyLikeBtn}>
@@ -409,7 +409,7 @@ const Forum = () => {
 
     // ═══ Main Render ═══
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--bg-primary, #1a1a2e)', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: 'var(--font-body)' }}>
             {view === 'list' && renderList()}
             {view === 'thread' && renderThread()}
             {view === 'new' && renderNew()}
@@ -423,61 +423,61 @@ const Forum = () => {
 const S = {
     container: { padding: '24px', maxWidth: '900px', margin: '0 auto' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-    pageTitle: { margin: 0, fontSize: '22px', background: 'linear-gradient(135deg, #667eea, #764ba2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-    backBtn: { background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#888', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' },
-    newBtn: { background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+    pageTitle: { margin: 0, fontSize: '22px', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
+    backBtn: { background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' },
+    newBtn: { background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
 
     // Filters
     filterBar: { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' },
     catTabs: { display: 'flex', gap: '6px', flexWrap: 'wrap' },
     catTab: { padding: '5px 12px', borderRadius: '16px', border: '1px solid', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', background: 'none' },
     searchForm: { display: 'flex', gap: '8px' },
-    searchInput: { flex: 1, padding: '8px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#e4e4e7', fontSize: '13px', outline: 'none' },
-    sortSelect: { padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#e4e4e7', fontSize: '12px', outline: 'none' },
+    searchInput: { flex: 1, padding: '8px 14px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none' },
+    sortSelect: { padding: '8px 12px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '12px', outline: 'none' },
 
     // Thread list
     threadList: { display: 'flex', flexDirection: 'column', gap: '8px' },
-    threadCard: { display: 'flex', gap: '14px', padding: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', cursor: 'pointer', transition: 'border-color 0.2s' },
+    threadCard: { display: 'flex', gap: '14px', padding: '16px', background: 'var(--bg-muted)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', cursor: 'pointer', transition: 'border-color 0.2s' },
     threadLeft: { display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '40px' },
     threadVotes: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
-    voteBtn: { background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '14px', padding: '2px' },
+    voteBtn: { background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '14px', padding: '2px' },
     threadContent: { flex: 1, minWidth: 0 },
     threadTitleRow: { display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' },
-    threadTitle: { margin: 0, fontSize: '15px', color: '#e4e4e7', fontWeight: 'bold' },
-    threadSnippet: { margin: '6px 0', color: '#888', fontSize: '12px', lineHeight: '1.4' },
+    threadTitle: { margin: 0, fontSize: '15px', color: 'var(--text-primary)', fontWeight: 'bold' },
+    threadSnippet: { margin: '6px 0', color: 'var(--text-muted)', fontSize: '12px', lineHeight: '1.4' },
     threadMeta: { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' },
     pinBadge: { fontSize: '12px' },
     resolvedBadge: { fontSize: '12px' },
     catBadge: { padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' },
-    tagBadge: { color: '#667eea', fontSize: '10px', fontWeight: 'bold' },
-    metaText: { color: '#666', fontSize: '10px' },
+    tagBadge: { color: 'var(--accent-teal)', fontSize: '10px', fontWeight: 'bold' },
+    metaText: { color: 'var(--text-muted)', fontSize: '10px' },
 
     // Pagination
     pagination: { display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '20px' },
     pageBtn: { width: '32px', height: '32px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' },
 
     // Thread view
-    opCard: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px', marginBottom: '12px' },
+    opCard: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', marginBottom: '12px' },
     opHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
     opBody: { color: '#94a3b8', fontSize: '14px', lineHeight: '1.7', marginTop: '16px', whiteSpace: 'pre-wrap' },
-    likeBtnLarge: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#888', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', minWidth: '60px' },
+    likeBtnLarge: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', minWidth: '60px' },
 
-    replyCard: { background: 'rgba(255,255,255,0.02)', borderLeft: '3px solid', borderRadius: '4px', padding: '14px', marginBottom: '8px' },
-    replyLikeBtn: { background: 'none', border: '1px solid rgba(255,255,255,0.08)', color: '#888', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', whiteSpace: 'nowrap' },
+    replyCard: { background: 'var(--bg-muted)', borderLeft: '3px solid', borderRadius: '4px', padding: '14px', marginBottom: '8px' },
+    replyLikeBtn: { background: 'none', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', whiteSpace: 'nowrap' },
 
-    replyInputCard: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px', marginTop: '16px' },
-    replyTextarea: { width: '100%', minHeight: '80px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px', color: '#e4e4e7', fontSize: '13px', resize: 'vertical', outline: 'none', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' },
-    replySubmitBtn: { marginTop: '10px', padding: '10px 20px', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+    replyInputCard: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', marginTop: '16px' },
+    replyTextarea: { width: '100%', minHeight: '80px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px', color: 'var(--text-primary)', fontSize: '13px', resize: 'vertical', outline: 'none', fontFamily: 'var(--font-body)', boxSizing: 'border-box' },
+    replySubmitBtn: { marginTop: '10px', padding: '10px 20px', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
 
     // New thread
-    formCard: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' },
-    formInput: { width: '100%', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#e4e4e7', fontSize: '14px', outline: 'none', marginBottom: '12px', boxSizing: 'border-box' },
+    formCard: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px' },
+    formInput: { width: '100%', padding: '10px 14px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px', outline: 'none', marginBottom: '12px', boxSizing: 'border-box' },
     formRow: { display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', marginBottom: '12px' },
-    formSelect: { padding: '10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#e4e4e7', fontSize: '13px', outline: 'none' },
-    formTextarea: { width: '100%', minHeight: '200px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '14px', color: '#e4e4e7', fontFamily: "'JetBrains Mono', Consolas, monospace", fontSize: '13px', resize: 'vertical', outline: 'none', marginBottom: '16px', boxSizing: 'border-box' },
-    submitBtn: { width: '100%', padding: '12px', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold' },
+    formSelect: { padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none' },
+    formTextarea: { width: '100%', minHeight: '200px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '14px', color: 'var(--text-primary)', fontFamily: "'JetBrains Mono', Consolas, monospace", fontSize: '13px', resize: 'vertical', outline: 'none', marginBottom: '16px', boxSizing: 'border-box' },
+    submitBtn: { width: '100%', padding: '12px', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold' },
 
-    actionBtn: { padding: '6px 14px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }
+    actionBtn: { padding: '6px 14px', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }
 };
 
 export default Forum;

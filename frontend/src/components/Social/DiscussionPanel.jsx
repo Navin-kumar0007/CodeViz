@@ -177,7 +177,7 @@ const DiscussionPanel = ({ lessonId }) => {
 const styles = {
     container: {
         marginTop: '30px',
-        background: '#1e1e1e',
+        background: 'var(--bg-white)',
         borderRadius: '10px',
         padding: '20px',
         border: '1px solid #333'
@@ -193,7 +193,7 @@ const styles = {
     },
     textarea: {
         width: '100%',
-        background: '#252526',
+        background: 'var(--bg-muted)',
         border: '1px solid #444',
         borderRadius: '6px',
         color: '#ddd',
@@ -204,7 +204,7 @@ const styles = {
     },
     submitBtn: {
         background: '#007acc',
-        color: '#fff',
+        color: 'var(--text-primary)',
         border: 'none',
         padding: '8px 16px',
         borderRadius: '4px',
@@ -212,7 +212,7 @@ const styles = {
         fontWeight: 'bold'
     },
     discussionCard: {
-        background: '#252526',
+        background: 'var(--bg-muted)',
         borderRadius: '8px',
         padding: '15px',
         marginBottom: '15px',
@@ -228,7 +228,7 @@ const styles = {
         width: '32px',
         height: '32px',
         borderRadius: '50%',
-        background: '#333',
+        background: 'var(--bg-hover)',
         color: '#aaa',
         display: 'flex',
         alignItems: 'center',
@@ -238,7 +238,7 @@ const styles = {
     userName: {
         fontWeight: 'bold',
         fontSize: '14px',
-        color: '#fff'
+        color: 'var(--text-primary)'
     },
     badge: {
         background: '#007acc',
@@ -250,7 +250,7 @@ const styles = {
     },
     date: {
         fontSize: '11px',
-        color: '#888'
+        color: 'var(--text-muted)'
     },
     content: {
         fontSize: '14px',
@@ -281,7 +281,7 @@ const styles = {
         color: '#ccc'
     },
     replyDate: {
-        color: '#666'
+        color: 'var(--text-muted)'
     },
     replyContent: {
         fontSize: '13px',
@@ -290,7 +290,7 @@ const styles = {
     replyToggleBtn: {
         background: 'transparent',
         border: 'none',
-        color: '#667eea',
+        color: 'var(--accent-teal)',
         cursor: 'pointer',
         fontSize: '12px',
         marginTop: '5px'
@@ -302,15 +302,15 @@ const styles = {
     },
     replyInput: {
         flex: 1,
-        background: '#333',
+        background: 'var(--bg-hover)',
         border: '1px solid #555',
-        color: '#fff',
+        color: 'var(--text-primary)',
         padding: '6px 10px',
         borderRadius: '4px'
     },
     replyBtn: {
-        background: '#2ea043',
-        color: '#fff',
+        background: 'var(--accent-teal)',
+        color: 'var(--text-primary)',
         border: 'none',
         padding: '6px 12px',
         borderRadius: '4px',
@@ -328,7 +328,7 @@ const styles = {
     },
     empty: {
         textAlign: 'center',
-        color: '#666',
+        color: 'var(--text-muted)',
         padding: '20px'
     }
 };

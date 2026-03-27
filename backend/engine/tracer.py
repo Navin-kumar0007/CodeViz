@@ -4,6 +4,7 @@ import io
 
 # 1. Setup
 trace_data = []
+line_hits = {} # 🔥 Track execution frequency for Heatmap
 # Ensure we get the absolute path to match the frame filename
 import os
 user_script = os.path.abspath(sys.argv[1])
@@ -71,15 +72,20 @@ def tracer(frame, event, arg):
     # Reverse to have Global/Main at the bottom, newest frame at the top
     call_stack.reverse()
     
+    # 🔥 Track hit frequency for this line
+    line_no = frame.f_lineno
+    line_hits[line_no] = line_hits.get(line_no, 0) + 1
+
     # For backward compatibility with existing UI
     variables = call_stack[-1]["variables"] if call_stack else {}
 
     # 4. Stream Step
     step = {
-        "line": frame.f_lineno,
+        "line": line_no,
         "variables": variables,
         "call_stack": call_stack,
-        "stdout": current_stdout
+        "stdout": current_stdout,
+        "hits": line_hits[line_no] # 🎯 Include hit frequency for Heatmap
     }
     
     sys.__stdout__.write(json.dumps(step) + '\n')

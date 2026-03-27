@@ -7,7 +7,8 @@ export const LINKEDLISTS_PATH = {
     id: 'linkedlists',
     title: 'Linked Lists',
     icon: '🔗',
-    description: 'Discover how nodes and pointers create flexible data structures that grow dynamically!',
+    category: 'Data Structures',
+    description: 'Go beyond arrays and learn the power of dynamic memory connections.',
     prerequisites: ['stacks'],
     lessons: [
         {

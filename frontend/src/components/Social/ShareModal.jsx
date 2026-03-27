@@ -7,7 +7,7 @@ const ShareModal = ({ isOpen, onClose, onShare, snippetTitle }) => {
         <div style={styles.overlay}>
             <div style={styles.modal}>
                 <h3 style={styles.title}>Share Code Snippet</h3>
-                <p style={styles.text}>Are you sure you want to make "<strong>{snippetTitle}</strong>" public?</p>
+                <p style={styles.text}>Are you sure you want to make &quot;<strong>{snippetTitle}</strong>&quot; public?</p>
                 <p style={styles.subtext}>Anyone with the link or browsing the community page will be able to view it.</p>
 
                 <div style={styles.actions}>
@@ -26,24 +26,24 @@ const styles = {
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'rgba(0,0,0,0.7)',
+        background: 'rgba(0,0,0,0.4)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 1000
     },
     modal: {
-        background: '#252526',
+        background: 'var(--bg-muted)',
         padding: '20px',
         borderRadius: '8px',
         width: '90%',
         maxWidth: '400px',
         border: '1px solid #444',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+        boxShadow: 'var(--shadow-md)'
     },
     title: {
         marginTop: 0,
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontSize: '18px'
     },
     text: {
@@ -51,7 +51,7 @@ const styles = {
         marginBottom: '10px'
     },
     subtext: {
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '12px',
         marginBottom: '20px'
     },
@@ -70,7 +70,7 @@ const styles = {
     },
     shareBtn: {
         background: 'linear-gradient(135deg, #007acc, #005f9e)',
-        color: '#fff',
+        color: 'var(--text-primary)',
         border: 'none',
         padding: '8px 16px',
         borderRadius: '4px',

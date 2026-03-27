@@ -132,13 +132,13 @@ const ConceptCard = ({ type, onDismiss, isVisible }) => {
 
 const styles = {
     container: {
-        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15))',
-        border: '1px solid rgba(102, 126, 234, 0.4)',
+        background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.15), rgba(118, 75, 162, 0.15))',
+        border: '1px solid rgba(13, 148, 136, 0.4)',
         borderRadius: '12px',
         padding: '16px',
         marginBottom: '15px',
         backdropFilter: 'blur(10px)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+        boxShadow: 'var(--shadow-sm)'
     },
     header: {
         display: 'flex',
@@ -150,17 +150,17 @@ const styles = {
         width: '45px',
         height: '45px',
         borderRadius: '10px',
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+        boxShadow: '0 4px 15px rgba(13, 148, 136, 0.4)'
     },
     icon: {
         fontSize: '24px'
     },
     title: {
-        color: '#fff',
+        color: 'var(--text-primary)',
         fontWeight: 'bold',
         fontSize: '16px'
     },
@@ -173,7 +173,7 @@ const styles = {
         marginLeft: 'auto',
         background: 'transparent',
         border: 'none',
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '18px',
         cursor: 'pointer',
         padding: '5px'
@@ -212,12 +212,12 @@ const styles = {
         gap: '8px'
     },
     exampleLabel: {
-        color: '#888',
+        color: 'var(--text-muted)',
         fontSize: '11px',
         fontWeight: 'bold'
     },
     exampleCode: {
-        background: 'rgba(0, 0, 0, 0.3)',
+        background: 'var(--bg-muted)',
         color: '#4fc3f7',
         padding: '4px 8px',
         borderRadius: '4px',

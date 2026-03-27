@@ -20,6 +20,17 @@ import { HEAPS_PATH } from './heaps';
 import { TRIES_PATH } from './tries';
 import { TWOPOINTERS_PATH } from './twopointers';
 import { BACKTRACKING_PATH } from './backtracking';
+import { NODE_PATH } from './node_path';
+import { ADV_NODE_PATH } from './adv_node_path';
+import { DOCKER_BASICS_PATH } from './docker_basics';
+import { DOCKER_COMPOSE_PATH } from './docker_compose';
+import { K8S_BASICS_PATH } from './k8s_basics';
+import { K8S_ADVANCED_PATH } from './k8s_advanced';
+import { ML_MODELS_PATH } from './ml_models';
+import { PYTORCH_PATH } from './pytorch_basics';
+import { RL_PATH } from './reinforcement_learning';
+import { HUGGINGFACE_PATH } from './hugging_face_transformers';
+import { AI_ENGINEERING_PATH } from './ai_engineering';
 
 // All available courses (ordered by difficulty / dependency)
 export const COURSES = [
@@ -39,7 +50,18 @@ export const COURSES = [
     TRIES_PATH,
     TWOPOINTERS_PATH,
     BACKTRACKING_PATH,
-    DP_PATH
+    DP_PATH,
+    NODE_PATH,
+    ADV_NODE_PATH,
+    DOCKER_BASICS_PATH,
+    DOCKER_COMPOSE_PATH,
+    K8S_BASICS_PATH,
+    K8S_ADVANCED_PATH,
+    ML_MODELS_PATH,
+    PYTORCH_PATH,
+    RL_PATH,
+    HUGGINGFACE_PATH,
+    AI_ENGINEERING_PATH
 ];
 
 // Calculate progress for a specific path

@@ -51,19 +51,19 @@ const AlgorithmDNA = () => {
             <div style={styles.chartWrapper}>
                 <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={dnaData}>
-                        <PolarGrid stroke="#4a5568" />
-                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#a0aec0', fontSize: 12 }} />
+                        <PolarGrid stroke="var(--border-strong)" />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontFamily: 'var(--font-label)' }} />
                         <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                         <Radar
                             name="Skill Level"
                             dataKey="A"
-                            stroke="#8a2be2"
-                            fill="#8a2be2"
-                            fillOpacity={0.5}
+                            stroke="var(--accent-violet)"
+                            fill="var(--accent-violet)"
+                            fillOpacity={0.2}
                         />
                         <Tooltip
-                            contentStyle={{ backgroundColor: '#1a202c', border: '1px solid #4a5568', borderRadius: '8px' }}
-                            itemStyle={{ color: '#8a2be2', fontWeight: 'bold' }}
+                            contentStyle={{ backgroundColor: 'var(--bg-highest)', border: '1px solid var(--border-strong)', borderRadius: '4px', boxShadow: 'none' }}
+                            itemStyle={{ color: 'var(--accent-violet)', fontWeight: 'bold', fontFamily: 'var(--font-code)' }}
                         />
                     </RadarChart>
                 </ResponsiveContainer>
@@ -80,11 +80,6 @@ const AlgorithmDNA = () => {
 
 const styles = {
     container: {
-        background: 'linear-gradient(145deg, #1a202c, #2d3748)',
-        borderRadius: '16px',
-        padding: '24px',
-        border: '1px solid #4a5568',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -98,16 +93,14 @@ const styles = {
     },
     title: {
         margin: 0,
-        fontSize: '22px',
-        fontWeight: 'bold',
-        background: 'linear-gradient(90deg, #9f7aea, #4299e1)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent'
+        fontSize: '18px',
+        fontWeight: 700,
+        color: 'var(--text-primary)'
     },
     subtitle: {
-        margin: '5px 0 0 0',
+        margin: '4px 0 0 0',
         fontSize: '13px',
-        color: '#a0aec0'
+        color: 'var(--text-secondary)'
     },
     chartWrapper: {
         flex: 1,
@@ -122,18 +115,16 @@ const styles = {
     hint: {
         margin: 0,
         fontSize: '12px',
-        color: '#718096',
+        color: 'var(--text-muted)',
         fontStyle: 'italic'
     },
     loading: {
         padding: '40px',
         textAlign: 'center',
-        color: '#a0aec0',
-        background: '#2d3748',
-        borderRadius: '16px'
+        color: 'var(--text-muted)'
     },
     empty: {
-        color: '#a0aec0',
+        color: 'var(--text-muted)',
         textAlign: 'center',
         marginTop: '40px'
     }
