@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import mermaid from 'mermaid';
 import * as acorn from 'acorn';
 import { motion } from 'framer-motion';
@@ -109,14 +109,21 @@ const generateMermaidGraph = (ast) => {
 
 const AstFlowchart = ({ code }) => {
     const [svgContent, setSvgContent] = useState('');
-    const [error, setError] = useState(false);
     const containerRef = useRef(null);
-    const chartIdRef = useRef(`mermaid-chart-${Math.random().toString(36).substr(2, 9)}`);
-    
+    const chartId = React.useId().replace(/:/g, '');
+    const chartIdRef = useRef(chartId);
+    const syntaxError = useMemo(() => {
+        if (!code || code.trim() === '') return false;
+        try {
+            acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'module' });
+            return false;
+        } catch {
+            return true;
+        }
+    }, [code]);
+
     useEffect(() => {
-        if (!code || code.trim() === '') {
-            setSvgContent('');
-            setError(false);
+        if (syntaxError || !code || code.trim() === '') {
             return;
         }
         
@@ -130,22 +137,20 @@ const AstFlowchart = ({ code }) => {
             
             mermaid.render(chartIdRef.current, graphDef).then(({ svg }) => {
                 setSvgContent(svg);
-                setError(false);
-            }).catch(e => {
-                setError(true);
+            }).catch(() => {
+                // Mermaid rendering failed
             });
-        } catch (e) {
-            // Typing incomplete code, silently wait
-            setError(true);
+        } catch {
+            // Should not happen given syntaxError check but safety catch
         }
-    }, [code]);
+    }, [code, syntaxError]);
     
     return (
         <div style={styles.container}>
             <div style={styles.header}>
                 <span style={styles.icon}>🧠</span>
                 <span style={styles.title}>AST Flowchart Synthesis</span>
-                {error && <span style={styles.status}>[Syntax Incomplete]</span>}
+                {syntaxError && <span style={styles.status}>[Syntax Incomplete]</span>}
             </div>
             
             <div style={styles.graphArea} ref={containerRef}>
@@ -156,7 +161,7 @@ const AstFlowchart = ({ code }) => {
                         min-width: 500px !important;
                     }
                 `}</style>
-                {svgContent ? (
+                {(svgContent && code && code.trim() !== '') ? (
                      <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}

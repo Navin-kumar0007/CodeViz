@@ -22,7 +22,7 @@ export const PYTORCH_PATH = {
                 },
                 {
                     type: 'tip',
-                    content: 'Always check your device! You can move tensors between CPU and GPU using \`.to("cuda")\` or \`.to("mps")\` (for Mac) to unlock massive speedups.'
+                    content: 'Always check your device! You can move tensors between CPU and GPU using `.to("cuda")` or `.to("mps")` (for Mac) to unlock massive speedups.'
                 }
             ],
             keyConcepts: [
@@ -73,7 +73,7 @@ print(f"Result:\\n{z}")`
                 },
                 {
                     type: 'text',
-                    content: 'When you call \`.backward()\`, PyTorch automatically calculates the "Gradient" (how much to change each weight) to minimize the error.'
+                    content: 'When you call `.backward()`, PyTorch automatically calculates the "Gradient" (how much to change each weight) to minimize the error.'
                 }
             ],
             keyConcepts: [
@@ -120,11 +120,11 @@ print(f"Gradients:\\n{x.grad}")`
             explanation: [
                 {
                     type: 'text',
-                    content: 'In PyTorch, everything is a Module. You create a custom class that inherits from \`nn.Module\` to define your neural network architecture.'
+                    content: 'In PyTorch, everything is a Module. You create a custom class that inherits from `nn.Module` to define your neural network architecture.'
                 },
                 {
                     type: 'text',
-                    content: 'You define the layers in the \`init\` method and describe how data flows through them in the \`forward\` method.'
+                    content: 'You define the layers in the `init` method and describe how data flows through them in the `forward` method.'
                 }
             ],
             keyConcepts: [

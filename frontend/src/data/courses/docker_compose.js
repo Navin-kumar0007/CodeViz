@@ -22,7 +22,7 @@ export const DOCKER_COMPOSE_PATH = {
                 },
                 {
                     type: 'text',
-                    content: 'With one command (\`docker-compose up\`), you can spin up your entire stack with networking and volumes automatically configured.'
+                    content: 'With one command (`docker-compose up`), you can spin up your entire stack with networking and volumes automatically configured.'
                 }
             ],
             keyConcepts: [

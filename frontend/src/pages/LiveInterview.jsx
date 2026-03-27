@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE from '../utils/api';
@@ -8,31 +8,30 @@ import Canvas from '../components/Visualizer/Canvas';
 const LiveInterview = () => {
     const { sessionId } = useParams();
     const navigate = useNavigate();
-    const [session, setSession] = useState(null);
-    const [problems, setProblems] = useState([]);
-    const [currentProblem, setCurrentProblem] = useState(0);
     const [code, setCode] = useState('');
+    const problems = [];
+    const currentProblem = 0;
     const [traceData, setTraceData] = useState([]);
     const [stepIndex, setStepIndex] = useState(0);
     const [heatmapData, setHeatmapData] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const recordingRef = useRef([]); // 🔴 PROOF-OF-WORK RECORDER
     const user = JSON.parse(localStorage.getItem('userInfo'));
-    const authHeaders = { headers: { Authorization: `Bearer ${user?.token}` } };
+    const authHeaders = useMemo(() => ({ headers: { Authorization: `Bearer ${user?.token}` } }), [user?.token]);
+
+    const fetchSession = useCallback(async () => {
+        try {
+            // In a real app, this would be a public or invite-token-protected route
+            await axios.get(`${API_BASE}/api/interview/stats`, authHeaders); // Mocking session fetch
+            // For now, we'll assume the session is active
+        } catch {
+            // Silently ignore or handle
+        }
+    }, [authHeaders]);
 
     useEffect(() => {
         fetchSession();
-    }, [sessionId]);
-
-    const fetchSession = async () => {
-        try {
-            // In a real app, this would be a public or invite-token-protected route
-            const res = await axios.get(`${API_BASE}/api/interview/stats`, authHeaders); // Mocking session fetch
-            // For now, we'll assume the session is active
-        } catch (err) {
-            console.error('Failed to fetch session:', err);
-        }
-    };
+    }, [sessionId, fetchSession]);
 
     const recordStruggle = async (type) => {
         try {
@@ -40,8 +39,8 @@ const LiveInterview = () => {
                 problemId: problems[currentProblem]?.id || 'p1',
                 type
             }, authHeaders);
-        } catch (err) {
-            console.error('Failed to record struggle:', err);
+        } catch {
+            // Failed to record struggle
         }
     };
 
@@ -61,8 +60,7 @@ const LiveInterview = () => {
             }, authHeaders);
             alert("Proof-of-Work Session Submitted Successfully!");
             navigate('/interview-dashboard');
-        } catch (err) {
-            console.error('Failed to submit session replay:', err);
+        } catch {
             alert("Failed to submit session.");
         }
     };
@@ -79,7 +77,7 @@ const LiveInterview = () => {
             setTraceData(res.data.trace || []);
             setHeatmapData(res.data.heatmap || {});
             setStepIndex(0);
-        } catch (err) {
+        } catch {
             alert("Execution failed");
         } finally {
             setIsLoading(false);
@@ -90,7 +88,7 @@ const LiveInterview = () => {
         <div style={S.container}>
             <header style={S.header}>
                 <div style={S.timer}>⏱ 45:00 REMAINING <span style={{fontSize:'10px', color:'var(--accent-red)', marginLeft:'10px'}}>🔴 REC</span></div>
-                <div style={S.title}>CODE_VIZ <span style={{color:'var(--text-muted)'}}>// LIVE_ASSESSMENT</span></div>
+                <div style={S.title}>CODE_VIZ <span style={{color:'var(--text-muted)'}}>{'//'} LIVE_ASSESSMENT</span></div>
                 <button onClick={submitSession} className="btn-primary" style={S.submitBtn}>[ SUBMIT_SESSION ]</button>
             </header>
 

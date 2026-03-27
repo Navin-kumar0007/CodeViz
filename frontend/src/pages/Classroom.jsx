@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import debounce from 'lodash/debounce';
-import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import { motion, AnimatePresence } from 'framer-motion';
 import Whiteboard from '../components/Whiteboard';
 import API_BASE from '../utils/api';
 

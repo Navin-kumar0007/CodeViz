@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, useSpring, useMotionValue, useTransform } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { useSpring, useMotionValue, AnimatePresence } from 'framer-motion';
 
-const TraceRibbon = ({ activeLine, containerRef }) => {
+const TraceRibbon = ({ containerRef }) => {
     const [points, setPoints] = useState([]);
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
@@ -10,8 +10,6 @@ const TraceRibbon = ({ activeLine, containerRef }) => {
     const springConfig = { damping: 20, stiffness: 150 };
     const smoothX = useSpring(mouseX, springConfig);
     const smoothY = useSpring(mouseY, springConfig);
-
-    const ribbonRef = useRef(null);
 
     useEffect(() => {
         const handleMouseMove = (e) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import API_BASE from '../../utils/api';
@@ -22,10 +22,10 @@ const SocraticTutor = ({ code, language, error, executionState, isVisible, onDis
             fetchTutorQuestion();
             lastFetchedState.current = { code, error };
         }
-    }, [isVisible, code, error]); // 🔥 Re-added dependencies for context awareness
+    }, [isVisible, code, error, question, fetchTutorQuestion]); // 🔥 Fixed: added question and fetchTutorQuestion
 
-    const fetchTutorQuestion = async (forcedCount = null) => {
-        if (!code && !error) return; // Don't fetch for empty state
+    const fetchTutorQuestion = useCallback(async (forcedCount = null) => {
+        if (!code && !error) return; 
         
         setLoading(true);
         try {
@@ -60,7 +60,7 @@ const SocraticTutor = ({ code, language, error, executionState, isVisible, onDis
         } finally {
             setLoading(false);
         }
-    };
+    }, [code, language, error, executionState, requestCount, onAiHighlight]);
 
     const handleNewQuestion = () => {
         const nextCount = requestCount + 1;
@@ -102,7 +102,7 @@ const SocraticTutor = ({ code, language, error, executionState, isVisible, onDis
                             <div style={S.loading}>Thinking... 💭</div>
                         ) : (
                             <>
-                                <p style={S.question}>"{question}"</p>
+                                <p style={S.question}>&quot;{question}&quot;</p>
                                 <div style={S.footer}>
                                     <button 
                                         onClick={speakQuestion} 

@@ -278,8 +278,7 @@ const GitLearn = () => {
         if (activeLessonIdx < GIT_LESSONS.length - 1) {
             setActiveLessonIdx(i => i + 1);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/preserve-manual-memoization
-    }, [lesson?.id, activeLessonIdx]);
+    }, [lesson, activeLessonIdx]);
 
     return (
         <div style={S.page}>

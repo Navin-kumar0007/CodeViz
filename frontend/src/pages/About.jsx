@@ -52,7 +52,7 @@ const About = () => {
                     <span style={s.gradientText}>For Engineers</span>
                 </h1>
                 <p style={s.heroSub}>
-                    CodeViz was born from a simple frustration: algorithms are beautiful, but textbooks make them boring. <span style={{ color: '#00E5EE' }}>We're changing that.</span>
+                    CodeViz was born from a simple frustration: algorithms are beautiful, but textbooks make them boring. <span style={{ color: '#00E5EE' }}>We&apos;re changing that.</span>
                 </p>
                 <div style={s.heroDots}>
                     <span style={{...s.dot, background: '#00E5EE'}} />

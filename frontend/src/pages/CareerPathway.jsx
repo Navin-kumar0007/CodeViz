@@ -14,19 +14,18 @@ const CareerPathway = () => {
     const authHeaders = { headers: { Authorization: `Bearer ${user?.token}` } };
 
     useEffect(() => {
+        const fetchCertificates = async () => {
+            try {
+                const res = await axios.get(`${API_BASE}/api/certificates/my`, authHeaders);
+                setCertificates(res.data);
+            } catch (err) {
+                console.error('Failed to fetch certificates:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchCertificates();
-    }, []);
-
-    const fetchCertificates = async () => {
-        try {
-            const res = await axios.get(`${API_BASE}/api/certificates/my`, authHeaders);
-            setCertificates(res.data);
-        } catch (err) {
-            console.error('Failed to fetch certificates:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const SKILLS = [
         { id: 'python', label: 'Python Mastery', level: 85, color: '#3776ab' },

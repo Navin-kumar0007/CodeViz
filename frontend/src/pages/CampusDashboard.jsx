@@ -102,7 +102,7 @@ const CampusDashboard = () => {
             <div style={styles.grid}>
                 {classrooms.length === 0 ? (
                     <div style={styles.emptyState}>
-                        <p>You don't have any classrooms yet.</p>
+                        <p>You don&apos;t have any classrooms yet.</p>
                     </div>
                 ) : (
                     classrooms.map(c => (

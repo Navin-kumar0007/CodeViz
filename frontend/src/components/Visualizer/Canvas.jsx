@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { motion as Motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { motion as Motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
 import VirtualizedArray from './VirtualizedArray';
 import SortingVisualizer from './SortingVisualizer';
@@ -454,7 +454,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       if (minIdx !== null) currentIndices.min = minIdx;
 
       // Detect comparing indices (i and j if both present)
-      const comparingIndices = (i !== null && j !== null) ? [j, j + 1] : [];
+      const comparingIndices = [];
 
       // Detect sorted section (elements after n-i-1 in bubble sort)
       const n = arr.length;

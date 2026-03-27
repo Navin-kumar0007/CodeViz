@@ -148,7 +148,7 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle }) => {
                             {isCorrect ? (
                                 <>
                                     <span style={styles.feedbackIcon}>🎉</span>
-                                    <span>Great job! That's correct!</span>
+                                    <span>Great job! That&apos;s correct!</span>
                                 </>
                             ) : (
                                 <>

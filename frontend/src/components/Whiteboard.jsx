@@ -256,4 +256,6 @@ const Whiteboard = React.memo(({ socket, isEditor }) => {
     );
 });
 
+Whiteboard.displayName = 'Whiteboard';
+
 export default Whiteboard;

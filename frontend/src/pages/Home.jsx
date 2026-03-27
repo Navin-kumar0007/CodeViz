@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/purity */
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /* ════════════════════════════════════════════
    HOME PAGE — Digital Observatory Landing

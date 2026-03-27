@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const navGroups = [
@@ -157,16 +157,16 @@ const NavItem = ({ item, isActive, isExpanded, onClick }) => {
 const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [user, setUser] = useState(null);
+    const [user] = useState(() => {
+        try {
+            const info = localStorage.getItem('userInfo');
+            return info ? JSON.parse(info) : null;
+        } catch { return null; }
+    });
     const [isHovered, setIsHovered] = useState(false);
     const [brandHovered, setBrandHovered] = useState(false);
 
-    useEffect(() => {
-        try {
-            const info = localStorage.getItem('userInfo');
-            if (info) setUser(JSON.parse(info));
-        } catch { /* ignore */ }
-    }, []);
+    // user is static in Sidebar once loaded; sync removed to satisfy React hook rules.
 
     const isActive = (path) => location.pathname === path;
 

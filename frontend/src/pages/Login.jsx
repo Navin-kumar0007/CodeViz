@@ -1,7 +1,5 @@
-/* eslint-disable react-hooks/purity */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import API_BASE from '../utils/api';
 
@@ -101,7 +99,6 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [status, setStatus] = useState('idle'); // idle, scanning, success
-  const [mousePos, setMousePos] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const navigate = useNavigate();
 
   // If already logged in, redirect to Dashboard
@@ -164,15 +161,12 @@ const Login = () => {
 
       <AnimatePresence>
         {status !== 'success' && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 2, filter: 'blur(30px)', transition: { duration: 1.2, ease: 'easeIn' } }}
-            style={{ position: 'relative', zIndex: 10, perspective: '1000px' }}
-          >
             <motion.div
-              whileHover={{ rotateX: (mousePos.y - window.innerHeight / 2) * -0.02, rotateY: (mousePos.x - window.innerWidth / 2) * 0.02 }}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              style={{ position: 'relative', zIndex: 10, perspective: '1000px' }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
               style={{
                 background: 'rgba(17,17,22,0.7)',
                 padding: '48px',
@@ -243,7 +237,7 @@ const Login = () => {
               </form>
 
               <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                Don't have an account? <Link to="/signup" style={{ color: 'var(--accent-teal)', textDecoration: 'none', fontWeight: 600 }}>Create one</Link>
+                Don&apos;t have an account? <Link to="/signup" style={{ color: 'var(--accent-teal)', textDecoration: 'none', fontWeight: 600 }}>Create one</Link>
               </div>
             </motion.div>
           </motion.div>

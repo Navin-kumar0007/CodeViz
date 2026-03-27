@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/purity */
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
@@ -11,10 +10,6 @@ import { motion } from 'framer-motion';
 
 const GlobalBackground = () => {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-    const particles = React.useMemo(() => [...Array(12)].map(() => ({
-        top: `${Math.random() * 100}%`,
-        left: `${Math.random() * 100}%`
-    })), []);
 
     useEffect(() => {
         const handleMouseMove = (e) => setMousePos({ x: e.clientX, y: e.clientY });

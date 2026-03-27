@@ -20,13 +20,15 @@ const Dashboard = () => {
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
-    if (!user) navigate('/login');
-  }, [user, navigate]);
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (!userInfo) navigate('/login');
+  }, [navigate]);
 
   useEffect(() => {
-    if (user && user.token) {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (userInfo && userInfo.token) {
       fetch(`${API_BASE}/api/gamification/stats`, {
-        headers: { 'Authorization': `Bearer ${user.token}` }
+        headers: { 'Authorization': `Bearer ${userInfo.token}` }
       })
       .then(res => res.json())
       .then(stats => setGamification(stats))

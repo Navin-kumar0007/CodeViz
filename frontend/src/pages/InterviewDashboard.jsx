@@ -1,30 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE from '../utils/api';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 const InterviewDashboard = () => {
     const navigate = useNavigate();
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
     const user = JSON.parse(localStorage.getItem('userInfo'));
-    const authHeaders = { headers: { Authorization: `Bearer ${user?.token}` } };
+    const authHeaders = useMemo(() => ({ headers: { Authorization: `Bearer ${user?.token}` } }), [user?.token]);
 
-    useEffect(() => {
-        fetchSessions();
-    }, []);
-
-    const fetchSessions = async () => {
+    const fetchSessions = useCallback(async () => {
         try {
-            const res = await axios.get(`${API_BASE}/api/interview/history`, authHeaders);
-            setSessions(res.data);
+            setLoading(true);
+            const res = await axios.get(`${API_BASE}/api/interview/recruiter/sessions`, authHeaders);
+            setSessions(res.data.sessions);
         } catch (err) {
             console.error('Failed to fetch sessions:', err);
         } finally {
             setLoading(false);
         }
-    };
+    }, [authHeaders]);
+
+    useEffect(() => {
+        fetchSessions();
+    }, [fetchSessions]);
 
     const createInvite = async () => {
         const email = prompt("Enter candidate email:");
@@ -36,7 +37,7 @@ const InterviewDashboard = () => {
             }, authHeaders);
             alert(`Invite created! Link: ${window.location.origin}/live-interview/${res.data.session._id}`);
             fetchSessions();
-        } catch (err) {
+        } catch {
             alert("Failed to create invite");
         }
     };

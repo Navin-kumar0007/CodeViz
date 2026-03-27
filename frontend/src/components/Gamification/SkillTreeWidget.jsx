@@ -74,7 +74,7 @@ const SkillTreeWidget = () => {
     );
 };
 
-const getDomainColor = (domain) => {
+const getDomainColor = () => {
     return 'var(--accent-cyan)'; // Ion Cyan neon glow
 };
 

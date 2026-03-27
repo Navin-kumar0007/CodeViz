@@ -266,7 +266,7 @@ const TestLab = () => {
                             <div style={{ fontSize: '48px', marginBottom: '16px' }}>🧪</div>
                             <h3 style={{ color: 'var(--text-bright)', margin: '0 0 8px' }}>Write a Function</h3>
                             <p style={{ color: 'var(--text-muted)', fontSize: '13px', maxWidth: '300px', margin: '0 auto' }}>
-                                Write a function in the editor, then click "Generate Tests" to create comprehensive test cases with edge cases.
+                                Write a function in the editor, then click &quot;Generate Tests&quot; to create comprehensive test cases with edge cases.
                             </p>
                         </div>
                     )}

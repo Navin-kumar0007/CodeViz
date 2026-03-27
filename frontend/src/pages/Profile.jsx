@@ -1,21 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from '../utils/axiosConfig';
 import { motion } from 'framer-motion';
 
 const Profile = () => {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(() => {
+        try {
+            const u = localStorage.getItem('userInfo');
+            return u ? JSON.parse(u) : null;
+        } catch { return null; }
+    });
     const [qrCode, setQrCode] = useState(null);
     const [secret, setSecret] = useState(null);
     const [verifyCode, setVerifyCode] = useState('');
     const [msg, setMsg] = useState('');
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        const u = localStorage.getItem('userInfo');
-        if (u) {
-            setUser(JSON.parse(u));
-        }
-    }, []);
+    // useEffect for user sync removed to prevent cascading renders
+    // initial value is now handled by lazy initializer above.
 
     const enable2FA = async () => {
         try {
@@ -24,7 +25,7 @@ const Profile = () => {
             setQrCode(data.qrCode);
             setSecret(data.secret);
             setLoading(false);
-        } catch (err) {
+        } catch {
             setMsg('Failed to generate 2FA token.');
             setLoading(false);
         }
@@ -43,7 +44,7 @@ const Profile = () => {
             setUser(updatedUser);
 
             setLoading(false);
-        } catch (err) {
+        } catch {
             setMsg('Verification failed. Invalid token.');
             setLoading(false);
         }

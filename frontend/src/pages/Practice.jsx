@@ -474,7 +474,7 @@ const Practice = () => {
       {/* HEADER */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 24px', background: 'rgba(17,17,22,0.6)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', fontFamily: "'Inter', sans-serif", background: 'linear-gradient(135deg, #00E5EE, #7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CODE_VIZ <span style={{ fontSize: '12px', color: '#5A5A6A', fontWeight: 400, fontFamily: "'JetBrains Mono', monospace", WebkitTextFillColor: '#5A5A6A' }}>// WORKSPACE</span></h2>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', fontFamily: "'Inter', sans-serif", background: 'linear-gradient(135deg, #00E5EE, #7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CODE_VIZ <span style={{ fontSize: '12px', color: '#5A5A6A', fontWeight: 400, fontFamily: "'JetBrains Mono', monospace", WebkitTextFillColor: '#5A5A6A' }}>{`// WORKSPACE`}</span></h2>
           <button onClick={() => navigate('/')} className="btn-secondary" style={{ padding: '6px 16px', fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", borderRadius: '100px', border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#9898A6', cursor: 'pointer' }}>[ ESC ] Dashboard</button>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>

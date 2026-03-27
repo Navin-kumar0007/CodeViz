@@ -161,17 +161,6 @@ const InterviewPrep = () => {
         setExpandedTest(null);
     };
 
-    // ═══ Code Change Handler (with recorder) ═══
-    const handleCodeChange = (problemId, newCode, event) => {
-        setCodes(prev => ({ ...prev, [problemId]: newCode }));
-        // Record events
-        if (event === 'paste') {
-            interviewRecorder.recordPaste(newCode, newCode.length);
-        } else {
-            interviewRecorder.recordKeystroke('', newCode.length);
-        }
-        interviewRecorder.recordCodeSnapshot(newCode, problemId);
-    };
 
     // ═══════════════════════════════════════
     // RENDER: LOBBY

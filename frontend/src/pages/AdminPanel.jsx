@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import { motion, AnimatePresence } from 'framer-motion';
 import API_BASE from '../utils/api';
 
 /**
@@ -449,7 +449,7 @@ const AdminPanel = () => {
                         >
                             <h3 style={styles.modalTitle}>🔄 Confirm Role Change</h3>
                             <p style={styles.modalText}>
-                                Change <strong>{roleModal.userName}</strong>'s role from{' '}
+                                Change <strong>{roleModal.userName}</strong>&apos;s role from{' '}
                                 <span style={{ ...styles.rolePill, ...getRoleBadgeStyle(roleModal.currentRole) }}>
                                     {roleModal.currentRole}
                                 </span>{' '}

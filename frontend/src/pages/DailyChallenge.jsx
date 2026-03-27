@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../utils/api';
 
@@ -8,7 +8,6 @@ import API from '../utils/api';
  */
 const DailyChallenge = () => {
     const navigate = useNavigate();
-    const user = useMemo(() => JSON.parse(localStorage.getItem('userInfo')), []);
 
     const [challenge, setChallenge] = useState(null);
     const [code, setCode] = useState('');
@@ -145,7 +144,7 @@ const DailyChallenge = () => {
             <div style={styles.container}>
                 <div style={styles.loadingState}>
                     <div style={styles.spinner}></div>
-                    <p style={{ color: 'var(--text-muted)', marginTop: '16px' }}>Loading today's challenge...</p>
+                    <p style={{ color: 'var(--text-muted)', marginTop: '16px' }}>Loading today&apos;s challenge...</p>
                 </div>
             </div>
         );

@@ -266,7 +266,7 @@ print(result)`);
                             <div style={{ fontSize: '48px', marginBottom: '16px' }}>🤖</div>
                             <h3 style={{ color: 'var(--text-bright)', margin: '0 0 8px' }}>Ready to Review</h3>
                             <p style={{ color: 'var(--text-muted)', fontSize: '13px', maxWidth: '280px', margin: '0 auto' }}>
-                                Write or paste your code, then click "Review Code" to get a detailed rubric-based score with line annotations.
+                                Write or paste your code, then click &quot;Review Code&quot; to get a detailed rubric-based score with line annotations.
                             </p>
                         </div>
                     )}

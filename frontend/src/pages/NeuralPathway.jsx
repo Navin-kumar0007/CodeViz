@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   ReactFlow,
   useNodesState,
@@ -7,8 +7,7 @@ import {
   Background,
   Controls,
   Handle,
-  Position,
-  MarkerType
+  Position
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { motion } from 'framer-motion';

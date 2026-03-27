@@ -7,7 +7,7 @@ const ShareModal = ({ isOpen, onClose, onShare, snippetTitle }) => {
         <div style={styles.overlay}>
             <div style={styles.modal}>
                 <h3 style={styles.title}>Share Code Snippet</h3>
-                <p style={styles.text}>Are you sure you want to make "<strong>{snippetTitle}</strong>" public?</p>
+                <p style={styles.text}>Are you sure you want to make &quot;<strong>{snippetTitle}</strong>&quot; public?</p>
                 <p style={styles.subtext}>Anyone with the link or browsing the community page will be able to view it.</p>
 
                 <div style={styles.actions}>

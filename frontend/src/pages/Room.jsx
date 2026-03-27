@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import { motion, AnimatePresence } from 'framer-motion';
 import API_BASE from '../utils/api';
 import CodeEditor from '../components/Editor/CodeEditor'; // 🔥 Collaborative Editor
 import Canvas from '../components/Visualizer/Canvas'; // 🔥 Collaborative Visualizer
@@ -49,12 +49,12 @@ const Room = () => {
     const [isHost, setIsHost] = useState(false);
     const [battleSubmitted, setBattleSubmitted] = useState(false);
     const [battleTestResults, setBattleTestResults] = useState(null); // { passedCount, totalCount, results: [] }
-    const [chaosEnergy, setChaosEnergy] = useState(0);
-    const [activeChaosEffect, setActiveChaosEffect] = useState(null);
+    const [_chaosEnergy, setChaosEnergy] = useState(0);
+    const [activeChaosEffect, setActiveChaosEffect] = useState('none');
 
     const socketRef = useRef(null);
     const chatEndRef = useRef(null);
-    const codeUpdateTimer = useRef(null);
+    const _codeUpdateTimer = useRef(null);
     const battleTimerRef = useRef(null);
 
     const getUserInfo = () => {
@@ -361,31 +361,7 @@ const Room = () => {
         }
     };
 
-    const castChaos = (attackType, cost) => {
-        if (chaosEnergy >= cost && socketRef.current) {
-            setChaosEnergy(prev => prev - cost);
-            socketRef.current.emit('cast-chaos', { attackType, duration: 5000 });
-            setChatMessages(prev => [...prev, {
-                userName: '🪄 System',
-                message: `You cast ${attackType} on the opponent!`,
-                timestamp: new Date(),
-                isSystem: true
-            }]);
-        }
-    };
 
-    // ── Code editing with throttled sync ──
-    const handleCodeChange = (e) => {
-        const newCode = e.target.value;
-        setCode(newCode);
-
-        if (codeUpdateTimer.current) clearTimeout(codeUpdateTimer.current);
-        codeUpdateTimer.current = setTimeout(() => {
-            if (socketRef.current) {
-                socketRef.current.emit('code-update', { code: newCode });
-            }
-        }, 150); // 150ms throttle
-    };
 
     const handleLanguageChange = (lang) => {
         setLanguage(lang);
@@ -707,7 +683,7 @@ const Room = () => {
                             ) : (
                                 <>
                                     <div style={{ fontSize: '60px', marginBottom: '10px' }}>⌛</div>
-                                    <h2 style={{ color: '#ed8936', fontSize: '28px', margin: '0 0 8px' }}>Time's Up!</h2>
+                                    <h2 style={{ color: '#ed8936', fontSize: '28px', margin: '0 0 8px' }}>Time&apos;s Up!</h2>
                                     <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>No correct solution submitted</p>
                                 </>
                             )}

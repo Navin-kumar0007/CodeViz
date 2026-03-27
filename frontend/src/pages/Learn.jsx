@@ -42,9 +42,6 @@ const Learn = () => {
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [progress, setProgress] = useState({});
     const [achievements, setAchievements] = useState([]);
-    const [showAchievements, setShowAchievements] = useState(false);
-    const [showLeaderboard, setShowLeaderboard] = useState(false);
-    const [showQuizBrowser, setShowQuizBrowser] = useState(false);
     const [newAchievement, setNewAchievement] = useState(null);
     
     // Global Curriculum State
