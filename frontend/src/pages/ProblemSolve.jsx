@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { API as axios } from '../utils/api';
 import Editor from '@monaco-editor/react';
 import API_BASE from '../utils/api';
 import AstFlowchart from '../components/Visualizer/AstFlowchart';

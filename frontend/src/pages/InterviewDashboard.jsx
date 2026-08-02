@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { API as axios } from '../utils/api';
 import API_BASE from '../utils/api';
 import { AnimatePresence } from 'framer-motion';
 

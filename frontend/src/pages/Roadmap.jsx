@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import { API as axios } from '../utils/api';
 import { CAREER_PATHS, getNodesForPath, getEdgesForPath, CATEGORY_COLORS } from '../data/roadmapData';
 import API_BASE from '../utils/api';
 

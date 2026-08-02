@@ -154,7 +154,7 @@ app.get('/', (req, res) => {
 
 // 7. Start server
 const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
     logger.info(`🚀 Server running on port ${PORT}`);
     logger.info(`📡 Socket.io ready for connections`);
 });

@@ -19,7 +19,7 @@ jobs:
           node-version: '22'
 
       - name: Install Dependencies
-        run: cd frontend && npm install --no-audit --no-fund --legacy-peer-deps
+        run: cd frontend && npm install --no-audit --no-fund
 
       - name: Lint
         run: cd frontend && npm run lint
@@ -44,7 +44,7 @@ jobs:
           node-version: '22'
 
       - name: Install Dependencies
-        run: cd backend && npm install --no-audit --no-fund --legacy-peer-deps
+        run: cd backend && npm install --no-audit --no-fund
 
       - name: Test
         run: cd backend && npm test
@@ -63,6 +63,6 @@ jobs:
       - name: Build Frontend Image
         run: |
           cd frontend
-          npm install --no-audit --no-fund --legacy-peer-deps
+          npm install --no-audit --no-fund
           npm run build
           echo "Frontend build successful"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import { API as axios } from '../utils/api';
 import { useNavigate } from "react-router-dom";
 import CodeEditor from "../components/Editor/CodeEditor";
 import Canvas from "../components/Visualizer/Canvas";

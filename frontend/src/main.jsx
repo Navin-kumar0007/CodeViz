@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { ThemeProvider } from './contexts/ThemeContext'
-import axios from 'axios';
+import { API as axios } from './utils/api';
 
 // Global Axios Configuration
 axios.defaults.withCredentials = true;
