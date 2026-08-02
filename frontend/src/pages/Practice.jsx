@@ -564,9 +564,10 @@ const Practice = () => {
           <option value="javascript">JavaScript</option>
           <option value="cpp">C++</option>
           <option value="java">Java</option>
+          <option value="c">C</option>
           <option value="typescript">TypeScript</option>
           <option value="go">Go</option>
-          <option value="c">C</option>
+          <option value="rust">Rust</option>
         </select>
 
         <select onChange={handleAlgoChange} style={{ minWidth: '200px' }}>

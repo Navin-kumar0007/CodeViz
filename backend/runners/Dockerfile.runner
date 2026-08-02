@@ -3,14 +3,19 @@
 
 FROM alpine:3.19
 
-# Install runtime dependencies
+# Install runtime dependencies + debuggers/toolchains for real tracing
 RUN apk add --no-cache \
     python3 \
     nodejs \
     npm \
     g++ \
-    openjdk17 \
     gcc \
+    openjdk17 \
+    gdb \
+    go \
+    rust \
+    cargo \
+    musl-dev \
     bash
 
 # Install JavaScript tracer dependencies globally
@@ -18,6 +23,17 @@ RUN npm install -g acorn astring
 
 # Set NODE_PATH to ensure global modules are found without a local node_modules
 ENV NODE_PATH=/usr/local/lib/node_modules
+
+# Bake CodeViz native-language tracers into the image (compiled once, reused per run)
+COPY backend/engine/gdbTracer.py /opt/codeviz/gdbTracer.py
+COPY backend/engine/JdiTracer.java /opt/codeviz/JdiTracer.java
+RUN javac --add-modules jdk.jdi -d /opt/codeviz /opt/codeviz/JdiTracer.java \
+    && chmod -R a+rX /opt/codeviz
+
+# Go: use a writable cache/module dir inside the sandbox
+ENV GOCACHE=/tmp/gocache
+ENV GOPATH=/tmp/gopath
+ENV GOFLAGS=-mod=mod
 
 # Create a non-privileged user
 RUN addgroup -S runner && adduser -S runner -G runner

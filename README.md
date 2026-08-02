@@ -4,7 +4,8 @@
 
 ## ✨ Features
 
-- **Multi-language Support**: Python, JavaScript, Java, C++
+- **Multi-language Support**: Python, JavaScript, TypeScript, Java, C++, C (fully traced/visualized) + Go, Rust (run)
+- **Real debugger-based tracing**: C/C++ via GDB, Java via JDI — accurate call stacks, locals & recursion
 - **Live Visualization**: Arrays, Stacks, Queues, Linked Lists, Trees, Graphs
 - **Step-by-Step Debugging**: Walk through your code line by line
 - **Virtual Scrolling**: Handle 1000+ element arrays smoothly
