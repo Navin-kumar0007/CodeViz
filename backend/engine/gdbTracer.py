@@ -24,14 +24,20 @@ import sys
 
 USER_SRC = os.environ.get("CODEVIZ_SRC", "")
 PROG_OUT = "/home/runner/code/.prog_out"
+TRACE_OUT = "/home/runner/code/.trace.jsonl"
 MAX_STEPS = 4000  # safety cap against runaway loops / deep recursion
 
 line_hits = {}
 
+# Steps are written to a file (not stdout) so GDB's own console chatter — which
+# it emits to stdout on every stop and cannot be fully suppressed — never mixes
+# into the JSON stream. The caller dumps GDB stdout to /dev/null and cats this.
+_trace_fh = open(TRACE_OUT, "w")
+
 
 def emit(step):
-    sys.stdout.write(json.dumps(step) + "\n")
-    sys.stdout.flush()
+    _trace_fh.write(json.dumps(step) + "\n")
+    _trace_fh.flush()
 
 
 def is_user_frame(frame):
@@ -179,27 +185,39 @@ def flush_program_output():
         pass
 
 
+def gx(cmd):
+    """Run a gdb command, swallowing its console output so only our JSON
+    trace reaches stdout."""
+    try:
+        gdb.execute(cmd, to_string=True)
+    except gdb.error:
+        raise
+    except Exception:
+        pass
+
+
 def main():
-    gdb.execute("set pagination off")
-    gdb.execute("set print pretty off")
-    gdb.execute("set print frame-arguments none")
-    gdb.execute("set confirm off")
+    for cfg in ("set pagination off", "set height 0", "set width 0",
+                "set print pretty off", "set print frame-arguments none",
+                "set print address off", "set print symbol off",
+                "set verbose off", "set confirm off"):
+        gx(cfg)
     # Skip stepping into standard library internals
     for pat in ("^std::", "^__gnu_cxx::", "^__"):
         try:
-            gdb.execute("skip -rfunction " + pat)
+            gx("skip -rfunction " + pat)
         except Exception:
             pass
 
     try:
-        gdb.execute("break main")
+        gx("break main")
     except Exception:
         pass
 
     # Redirect the user program's own stdout/stderr to a file so our JSON
     # trace remains the sole thing on GDB's stdout.
     try:
-        gdb.execute("run > {0} 2>&1".format(PROG_OUT))
+        gx("run > {0} 2>&1".format(PROG_OUT))
     except gdb.error:
         # Program failed before/at main
         flush_program_output()
@@ -212,9 +230,17 @@ def main():
         except gdb.error:
             break  # program has exited
 
+        # Once execution leaves code with debug info (e.g. libc cleanup / global
+        # destructors after main returns), the meaningful trace is over.
+        try:
+            sal = frame.find_sal()
+        except gdb.error:
+            break
+        if not sal or not sal.symtab:
+            break
+
         if is_user_frame(frame):
             try:
-                sal = frame.find_sal()
                 line = sal.line
                 line_hits[line] = line_hits.get(line, 0) + 1
                 stack = build_call_stack(frame)
@@ -231,7 +257,7 @@ def main():
 
         steps += 1
         try:
-            gdb.execute("step")
+            gdb.execute("step", to_string=True)
         except gdb.error:
             break  # program finished during step
 
@@ -244,6 +270,10 @@ except Exception as e:
     emit({"line": 0, "variables": {}, "call_stack": [],
           "stdout": "Tracer error: {0}".format(str(e)), "error": True})
 finally:
+    try:
+        _trace_fh.close()
+    except Exception:
+        pass
     try:
         gdb.execute("quit")
     except Exception:

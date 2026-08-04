@@ -3,6 +3,32 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // Guarantee a single React instance across eager + lazy chunks. Without this,
+  // Vite's on-the-fly optimization of lazy-only deps can bind a second React
+  // copy -> null hook dispatcher -> "Cannot read properties of null
+  // (reading 'useContext')" on lazy-loaded pages.
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
+  optimizeDeps: {
+    // Pre-bundle heavy libs used only by lazy pages so no mid-session
+    // re-optimization (and duplicate React) happens on navigation.
+    include: [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      'react-router-dom',
+      'framer-motion',
+      'recharts',
+      '@xyflow/react',
+      'react-window',
+      'mermaid',
+      '@monaco-editor/react',
+      'lodash',
+      'axios',
+      'socket.io-client',
+    ],
+  },
   plugins: [
     react(),
     VitePWA({

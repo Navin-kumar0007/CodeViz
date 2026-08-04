@@ -14,16 +14,6 @@ const SocraticTutor = ({ code, language, error, executionState, isVisible, onDis
     const [requestCount, setRequestCount] = useState(0); 
     const lastFetchedState = useRef({ code: '', error: '' }); // 🔥 Prevent redundant fetches
 
-    useEffect(() => {
-        // Only fetch if visible AND (no question OR code/error changed significantly)
-        const stateChanged = lastFetchedState.current.code !== code || lastFetchedState.current.error !== error;
-        
-        if (isVisible && (!question || stateChanged)) {
-            fetchTutorQuestion();
-            lastFetchedState.current = { code, error };
-        }
-    }, [isVisible, code, error, question, fetchTutorQuestion]); // 🔥 Fixed: added question and fetchTutorQuestion
-
     const fetchTutorQuestion = useCallback(async (forcedCount = null) => {
         if (!code && !error) return; 
         
@@ -61,6 +51,16 @@ const SocraticTutor = ({ code, language, error, executionState, isVisible, onDis
             setLoading(false);
         }
     }, [code, language, error, executionState, requestCount, onAiHighlight]);
+
+    useEffect(() => {
+        // Only fetch if visible AND (no question OR code/error changed significantly)
+        const stateChanged = lastFetchedState.current.code !== code || lastFetchedState.current.error !== error;
+
+        if (isVisible && (!question || stateChanged)) {
+            fetchTutorQuestion();
+            lastFetchedState.current = { code, error };
+        }
+    }, [isVisible, code, error, question, fetchTutorQuestion]);
 
     const handleNewQuestion = () => {
         const nextCount = requestCount + 1;

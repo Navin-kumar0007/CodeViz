@@ -31,12 +31,14 @@ function resolveCommand(language, fileName) {
         case 'cpp':
             return {
                 fileName: fileName || `script.cpp`,
-                run: (f) => `g++ -g ${f} -o out 2>cerr.txt && CODEVIZ_SRC=${f} gdb -q -batch -x /opt/codeviz/gdbTracer.py ./out || cat cerr.txt`,
+                // GDB's own stdout is discarded; the tracer writes clean JSON to
+                // .trace.jsonl which we then stream out.
+                run: (f) => `g++ -g ${f} -o out 2>cerr.txt && { CODEVIZ_SRC=${f} gdb -q -batch -x /opt/codeviz/gdbTracer.py ./out >/dev/null 2>&1; cat .trace.jsonl; } || cat cerr.txt`,
             };
         case 'c':
             return {
                 fileName: fileName || `script.c`,
-                run: (f) => `gcc -g ${f} -o out 2>cerr.txt && CODEVIZ_SRC=${f} gdb -q -batch -x /opt/codeviz/gdbTracer.py ./out || cat cerr.txt`,
+                run: (f) => `gcc -g ${f} -o out 2>cerr.txt && { CODEVIZ_SRC=${f} gdb -q -batch -x /opt/codeviz/gdbTracer.py ./out >/dev/null 2>&1; cat .trace.jsonl; } || cat cerr.txt`,
             };
         case 'java':
             return {
