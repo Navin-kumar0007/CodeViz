@@ -470,13 +470,13 @@ const Practice = () => {
   }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: '#08080C', color: '#E8E8ED', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: 'var(--cz-bg)', color: 'var(--cz-text)', overflow: 'hidden' }}>
 
       {/* HEADER */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 24px', background: 'rgba(17,17,22,0.6)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 24px', background: 'var(--cz-surface)', backdropFilter: 'blur(16px)', borderBottom: '1px solid var(--cz-line)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', fontFamily: "'Inter', sans-serif", background: 'linear-gradient(135deg, #00E5EE, #7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CODE_VIZ <span style={{ fontSize: '12px', color: '#5A5A6A', fontWeight: 400, fontFamily: "'JetBrains Mono', monospace", WebkitTextFillColor: '#5A5A6A' }}>{`// WORKSPACE`}</span></h2>
-          <button onClick={() => navigate('/')} className="btn-secondary" style={{ padding: '6px 16px', fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", borderRadius: '100px', border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#9898A6', cursor: 'pointer' }}>[ ESC ] Dashboard</button>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', fontFamily: "'Inter', sans-serif", background: 'linear-gradient(135deg, var(--cz-accent), #7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CODE_VIZ <span style={{ fontSize: '12px', color: 'var(--cz-faint)', fontWeight: 400, fontFamily: "'JetBrains Mono', monospace", WebkitTextFillColor: 'var(--cz-faint)' }}>{`// WORKSPACE`}</span></h2>
+          <button onClick={() => navigate('/')} className="btn-secondary" style={{ padding: '6px 16px', fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", borderRadius: '100px', border: '1px solid var(--cz-line)', background: 'transparent', color: 'var(--cz-muted)', cursor: 'pointer' }}>[ ESC ] Dashboard</button>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
 
@@ -489,9 +489,9 @@ const Practice = () => {
           <button
             onClick={toggleTheme}
             style={{
-              background: 'rgba(17,17,22,0.5)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              color: '#E8E8ED',
+              background: 'var(--cz-elevated)',
+              border: '1px solid var(--cz-line)',
+              color: 'var(--cz-text)',
               padding: '8px 14px',
               borderRadius: '100px',
               cursor: 'pointer',
@@ -554,10 +554,10 @@ const Practice = () => {
       />
 
       {/* TOOLBAR */}
-      <div style={{ padding: '8px 24px', background: 'rgba(17,17,22,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', gap: '15px', alignItems: 'center' }}>
+      <div style={{ padding: '8px 24px', background: 'var(--cz-elevated)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--cz-line)', display: 'flex', gap: '15px', alignItems: 'center' }}>
 
         {/* RUN BUTTON */}
-        <button onClick={runCode} disabled={isLoading || isExecuting} style={{ padding: '8px 22px', background: 'linear-gradient(135deg, #00E5EE, #7C3AED)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: isLoading || isExecuting ? 'default' : 'pointer', boxShadow: '0 4px 20px rgba(0,229,238,0.2)', opacity: isLoading || isExecuting ? 0.6 : 1 }}>{isLoading ? '⏳ Running...' : '▶ RUN CODE'}
+        <button onClick={runCode} disabled={isLoading || isExecuting} style={{ padding: '8px 22px', background: 'linear-gradient(135deg, var(--cz-accent), #7C3AED)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: isLoading || isExecuting ? 'default' : 'pointer', boxShadow: '0 4px 20px rgba(85,112,255,0.2)', opacity: isLoading || isExecuting ? 0.6 : 1 }}>{isLoading ? '⏳ Running...' : '▶ RUN CODE'}
         </button>
 
         <select value={language} onChange={handleLanguageChange}>
@@ -635,7 +635,7 @@ const Practice = () => {
           flexDirection: isMobile ? 'column' : 'row',
           gap: '0px',
           minHeight: 0,
-          background: '#08080C',
+          background: 'var(--cz-bg)',
         }}
       >
         {/* LEFT: EDITOR PANE */}
@@ -644,7 +644,7 @@ const Practice = () => {
           height: isMaximized ? '0%' : (isMobile ? '50%' : '100%'),
           display: isMaximized ? 'none' : 'flex',
           flexDirection: 'column',
-          background: '#0A0A10', // Deep OLED nesting
+          background: 'var(--cz-surface)', // Deep OLED nesting
           borderRight: (isMobile || isMaximized) ? 'none' : '1px solid var(--border-ghost)',
           borderBottom: isMobile ? '1px solid var(--border-ghost)' : 'none',
           position: 'relative',
@@ -653,7 +653,7 @@ const Practice = () => {
 
           {/* 🎙️ AI NARRATOR FLOATING PANEL */}
           {showNarrator && (
-            <div style={{ position: 'absolute', top: '10px', right: '10px', width: '320px', maxHeight: '80%', background: 'rgba(17,17,22,0.9)', border: '1px solid rgba(202,138,4,0.3)', borderRadius: '16px', zIndex: 10, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: '10px', right: '10px', width: '320px', maxHeight: '80%', background: 'var(--cz-surface)', border: '1px solid rgba(202,138,4,0.3)', borderRadius: '16px', zIndex: 10, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 14px', background: 'rgba(202,138,4,0.15)', color: '#FBBF24', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', borderBottom: '1px solid rgba(202,138,4,0.2)' }}>
                 <span>🎙️ AI Code Narrator</span>
                 <button onClick={() => setShowNarrator(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
@@ -684,25 +684,25 @@ const Practice = () => {
 
           {/* 🕵️ AI DETECTIVE FLOATING PANEL */}
           {showDetective && (
-            <div style={{ position: 'absolute', top: '10px', right: showNarrator ? '340px' : '10px', width: '350px', maxHeight: '90%', background: 'rgba(17,17,22,0.9)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '16px', zIndex: 11, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: '10px', right: showNarrator ? '340px' : '10px', width: '350px', maxHeight: '90%', background: 'var(--cz-surface)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '16px', zIndex: 11, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 14px', background: 'rgba(239,68,68,0.12)', color: '#F87171', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', borderBottom: '1px solid rgba(239,68,68,0.15)' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   🕵️‍♀️ AI Authorship Analysis
                 </span>
-                <button onClick={() => setShowDetective(false)} style={{ background: 'transparent', border: 'none', color: '#ffb3b3', cursor: 'pointer', fontSize: '16px', lineHeight: '1' }}>✕</button>
+                <button onClick={() => setShowDetective(false)} style={{ background: 'transparent', border: 'none', color: 'var(--cz-danger)', cursor: 'pointer', fontSize: '16px', lineHeight: '1' }}>✕</button>
               </div>
-              <div style={{ padding: '15px', overflowY: 'auto', flex: 1, fontSize: '13px', lineHeight: '1.6', color: '#f8fafc' }}>
+              <div style={{ padding: '15px', overflowY: 'auto', flex: 1, fontSize: '13px', lineHeight: '1.6', color: 'var(--cz-text)' }}>
                 {isDetecting ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '150px', gap: '15px' }}>
-                    <div style={{ width: '40px', height: '40px', border: '3px solid #334155', borderTopColor: '#ef4444', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                    <div style={{ color: '#94a3b8', fontStyle: 'italic', animation: 'pulse 2s infinite' }}>Analyzing code signatures...</div>
+                    <div style={{ width: '40px', height: '40px', border: '3px solid var(--cz-line)', borderTopColor: '#ef4444', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                    <div style={{ color: 'var(--cz-muted)', fontStyle: 'italic', animation: 'pulse 2s infinite' }}>Analyzing code signatures...</div>
                   </div>
                 ) : detectionData ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
                     {/* Probability Score Header */}
-                    <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '15px', borderRadius: '8px', border: '1px solid #334155', textAlign: 'center' }}>
-                      <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#94a3b8', marginBottom: '5px' }}>Probability of AI Generation</div>
+                    <div style={{ background: 'var(--cz-elevated)', padding: '15px', borderRadius: '8px', border: '1px solid var(--cz-line)', textAlign: 'center' }}>
+                      <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--cz-muted)', marginBottom: '5px' }}>Probability of AI Generation</div>
                       <div style={{ fontSize: '36px', fontWeight: '900', color: detectionData.aiProbability > 70 ? '#ef4444' : detectionData.aiProbability > 40 ? '#f59e0b' : '#22c55e',  }}>
                         {detectionData.aiProbability}%
                       </div>
@@ -714,14 +714,14 @@ const Practice = () => {
                     {/* Analysis Narrative */}
                     <div>
                       <h4 style={{ color: '#f87171', margin: '0 0 8px 0', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Detailed Analysis</h4>
-                      <p style={{ margin: 0, color: '#cbd5e1' }}>{detectionData.analysis}</p>
+                      <p style={{ margin: 0, color: 'var(--cz-muted)' }}>{detectionData.analysis}</p>
                     </div>
 
                     {/* Telltale Signs */}
                     {detectionData.telltaleSigns && detectionData.telltaleSigns.length > 0 && (
                       <div>
                         <h4 style={{ color: '#f87171', margin: '0 0 8px 0', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Detected Signatures</h4>
-                        <ul style={{ margin: 0, paddingLeft: '20px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--cz-muted)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                           {detectionData.telltaleSigns.map((sign, i) => (
                             <li key={i}>{sign}</li>
                           ))}
@@ -787,14 +787,14 @@ const Practice = () => {
         <div style={{
           width: isMaximized ? '100%' : (isMobile ? '100%' : `${100 - editorWidth}%`), // 📱 Full width on mobile or when maximized
           height: isMobile ? '50%' : '100%',
-          background: '#0A0A10', // Deep OLED terminal base
+          background: 'var(--cz-surface)', // Deep OLED terminal base
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
           transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         }}>
 
-          <div style={{ display: 'flex', padding: 0, borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(17,17,22,0.5)' }}>
+          <div style={{ display: 'flex', padding: 0, borderBottom: '1px solid var(--cz-line)', background: 'var(--cz-elevated)' }}>
             <button
               onClick={() => setActiveTab('visualizer')}
               style={{
@@ -842,8 +842,8 @@ const Practice = () => {
                 title="Open the visualization in a focused theater view"
                 style={{
                   background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: '#5A5A6A',
+                  border: '1px solid var(--cz-line)',
+                  color: 'var(--cz-faint)',
                   padding: '5px 14px',
                   borderRadius: '100px',
                   fontSize: '10px',
@@ -860,9 +860,9 @@ const Practice = () => {
               <button
                 onClick={() => setIsMaximized(!isMaximized)}
                 style={{
-                  background: isMaximized ? 'rgba(0,229,238,0.1)' : 'transparent',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: isMaximized ? '#00E5EE' : '#5A5A6A',
+                  background: isMaximized ? 'rgba(85,112,255,0.1)' : 'transparent',
+                  border: '1px solid var(--cz-line)',
+                  color: isMaximized ? 'var(--cz-accent)' : 'var(--cz-faint)',
                   padding: '5px 14px',
                   borderRadius: '100px',
                   fontSize: '10px',
@@ -872,7 +872,7 @@ const Practice = () => {
                   alignItems: 'center',
                   gap: '6px',
                   transition: 'all 0.3s cubic-bezier(0.23,1,0.32,1)',
-                  boxShadow: isMaximized ? '0 0 16px rgba(0,229,238,0.15)' : 'none'
+                  boxShadow: isMaximized ? '0 0 16px rgba(85,112,255,0.15)' : 'none'
                 }}
               >
                 {isMaximized ? '📉 RESTORE' : '📈 MAXIMIZE'}
@@ -889,7 +889,7 @@ const Practice = () => {
               // one instance owns the keyboard shortcuts / autoplay timers.
               (traceData && traceData.length > 0) ? (
                 showTheater ? (
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A5A6A', fontFamily: "'JetBrains Mono', monospace", fontSize: '12px' }}>
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--cz-faint)', fontFamily: "'JetBrains Mono', monospace", fontSize: '12px' }}>
                     🔍 Playing in Theater — close it to return here.
                   </div>
                 ) : (
@@ -997,7 +997,7 @@ const Practice = () => {
             onClick={(e) => e.stopPropagation()}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column',
-              background: '#0A0A10', border: '1px solid rgba(0,229,238,0.18)',
+              background: 'var(--cz-surface)', border: '1px solid rgba(85,112,255,0.18)',
               borderRadius: '18px', overflow: 'hidden',
               boxShadow: '0 30px 80px rgba(0,0,0,0.6)'
             }}
@@ -1005,13 +1005,13 @@ const Practice = () => {
             {/* Header */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
-              background: 'rgba(17,17,22,0.6)'
+              padding: '14px 20px', borderBottom: '1px solid var(--cz-line)',
+              background: 'var(--cz-surface)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#00E5EE', fontSize: '13px', letterSpacing: '1px', textTransform: 'uppercase' }}>🔍 Theater</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: 'var(--cz-accent)', fontSize: '13px', letterSpacing: '1px', textTransform: 'uppercase' }}>🔍 Theater</span>
                 {traceData && traceData.length > 0 && (
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', color: '#8b93a7' }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', color: 'var(--cz-muted)' }}>
                     step {stepIndex + 1} / {traceData.length}
                   </span>
                 )}
@@ -1020,8 +1020,8 @@ const Practice = () => {
                 onClick={() => setShowTheater(false)}
                 title="Close theater (or click outside)"
                 style={{
-                  background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#E8E8ED', borderRadius: '100px', padding: '6px 16px',
+                  background: 'transparent', border: '1px solid var(--cz-line)',
+                  color: 'var(--cz-text)', borderRadius: '100px', padding: '6px 16px',
                   fontSize: '12px', fontWeight: 700, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: '7px'
                 }}
@@ -1035,7 +1035,7 @@ const Practice = () => {
               {traceData && traceData.length > 0 ? (
                 <Canvas traceData={traceData} stepIndex={stepIndex} setStepIndex={setStepIndex} />
               ) : (
-                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b93a7' }}>
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--cz-muted)' }}>
                   Run your code first — the visualization will appear here.
                 </div>
               )}
