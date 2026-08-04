@@ -110,6 +110,7 @@ const Practice = () => {
   const [showTemplates, setShowTemplates] = useState(false); // 📋 Templates dropdown
   const [showHistory, setShowHistory] = useState(false); // 📜 History dropdown
   const [isMaximized, setIsMaximized] = useState(false); // 📺 Maximize Visualizer Mode
+  const [showTheater, setShowTheater] = useState(false); // 🔍 Theater (fullscreen focus) modal
 
   // 1. Existing Handlers...
   // 📏 RESIZABLE SPLIT PANE STATE
@@ -469,7 +470,7 @@ const Practice = () => {
   }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#08080C', color: '#E8E8ED', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: '#08080C', color: '#E8E8ED', overflow: 'hidden' }}>
 
       {/* HEADER */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 24px', background: 'rgba(17,17,22,0.6)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
@@ -834,8 +835,28 @@ const Practice = () => {
               🖥️ TERMINAL
             </button>
 
-            {/* 🔥 MAXIMIZE / RESTORE BUTTON */}
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingRight: '15px' }}>
+            {/* 🔥 THEATER + MAXIMIZE / RESTORE BUTTONS */}
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', paddingRight: '15px' }}>
+              <button
+                onClick={() => setShowTheater(true)}
+                title="Open the visualization in a focused theater view"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: '#5A5A6A',
+                  padding: '5px 14px',
+                  borderRadius: '100px',
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.3s cubic-bezier(0.23,1,0.32,1)'
+                }}
+              >
+                🔍 THEATER
+              </button>
               <button
                 onClick={() => setIsMaximized(!isMaximized)}
                 style={{
@@ -863,8 +884,15 @@ const Practice = () => {
 
             {/* VISUALIZER TAB */}
             {activeTab === 'visualizer' && (
-              // 🛡️ SAFETY CHECK: Only check .length if traceData exists and is an array
+              // 🛡️ SAFETY CHECK: Only check .length if traceData exists and is an array.
+              // While the Theater modal is open we unmount this inline Canvas so only
+              // one instance owns the keyboard shortcuts / autoplay timers.
               (traceData && traceData.length > 0) ? (
+                showTheater ? (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A5A6A', fontFamily: "'JetBrains Mono', monospace", fontSize: '12px' }}>
+                    🔍 Playing in Theater — close it to return here.
+                  </div>
+                ) : (
                 <>
                   <Canvas traceData={traceData} stepIndex={stepIndex} setStepIndex={setStepIndex} />
                   <ComplexityAnalyzer
@@ -874,6 +902,7 @@ const Practice = () => {
                     onClose={() => setShowComplexity(false)}
                   />
                 </>
+                )
               ) : (
                 <div style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: '50px', lineHeight: '1.6' }}>
                   {['python', 'javascript', 'java', 'cpp'].includes(language) ?
@@ -951,6 +980,67 @@ const Practice = () => {
             output={output}
             onCodeChange={handleSaveSession}
           />
+        </div>
+      )}
+
+      {/* 🔍 THEATER MODE — fullscreen focused visualization with full playback controls */}
+      {showTheater && (
+        <div
+          onClick={() => setShowTheater(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 10000,
+            background: 'rgba(4,4,8,0.82)', backdropFilter: 'blur(10px)',
+            display: 'flex', flexDirection: 'column', padding: '24px'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              flex: 1, display: 'flex', flexDirection: 'column',
+              background: '#0A0A10', border: '1px solid rgba(0,229,238,0.18)',
+              borderRadius: '18px', overflow: 'hidden',
+              boxShadow: '0 30px 80px rgba(0,0,0,0.6)'
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+              background: 'rgba(17,17,22,0.6)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#00E5EE', fontSize: '13px', letterSpacing: '1px', textTransform: 'uppercase' }}>🔍 Theater</span>
+                {traceData && traceData.length > 0 && (
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', color: '#8b93a7' }}>
+                    step {stepIndex + 1} / {traceData.length}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setShowTheater(false)}
+                title="Close theater (or click outside)"
+                style={{
+                  background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#E8E8ED', borderRadius: '100px', padding: '6px 16px',
+                  fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '7px'
+                }}
+              >
+                ✕ Cancel
+              </button>
+            </div>
+
+            {/* Big stage — Canvas ships its own reverse / play / pause / step / speed controls */}
+            <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
+              {traceData && traceData.length > 0 ? (
+                <Canvas traceData={traceData} stepIndex={stepIndex} setStepIndex={setStepIndex} />
+              ) : (
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b93a7' }}>
+                  Run your code first — the visualization will appear here.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
