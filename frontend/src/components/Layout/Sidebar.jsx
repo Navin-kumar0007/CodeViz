@@ -1,52 +1,58 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard, Code2, ListChecks, GraduationCap, Brain, Network, GitBranch,
+  History, Swords, School, Building2, MessagesSquare, Users, ScanSearch,
+  FlaskConical, Languages, PencilRuler, Flag, Target, Video, BarChart3, Flame,
+  Home, Hexagon,
+} from 'lucide-react';
 
 const navGroups = [
   {
     label: 'Main',
     items: [
-      { path: '/', icon: '⬡', label: 'Dashboard' },
-      { path: '/practice', icon: '⟐', label: 'Workspace' },
-      { path: '/problems', icon: '⊞', label: 'Problems' },
-      { path: '/learn', icon: '◈', label: 'Learn Hub' },
+      { path: '/', Icon: LayoutDashboard, label: 'Dashboard' },
+      { path: '/practice', Icon: Code2, label: 'Workspace' },
+      { path: '/problems', Icon: ListChecks, label: 'Problems' },
+      { path: '/learn', Icon: GraduationCap, label: 'Learn Hub' },
     ],
   },
   {
     label: 'Explore',
     items: [
-      { path: '/neural-pathway', icon: '◎', label: 'Neural Pathway' },
-      { path: '/concept-map', icon: '⬢', label: 'Concept Map' },
-      { path: '/git-learn', icon: '⎇', label: 'Git Learn' },
-      { path: '/sessions', icon: '◉', label: 'Sessions' },
+      { path: '/neural-pathway', Icon: Brain, label: 'Neural Pathway' },
+      { path: '/concept-map', Icon: Network, label: 'Concept Map' },
+      { path: '/git-learn', Icon: GitBranch, label: 'Git Learn' },
+      { path: '/sessions', Icon: History, label: 'Sessions' },
     ],
   },
   {
     label: 'Collaborate',
     items: [
-      { path: '/room', icon: '⊡', label: 'Battle Room' },
-      { path: '/classroom', icon: '▦', label: 'Classroom' },
-      { path: '/campus', icon: '⬡', label: 'Campus' },
-      { path: '/forum', icon: '◯', label: 'Forum' },
-      { path: '/peer-review', icon: '◑', label: 'Peer Review' },
+      { path: '/room', Icon: Swords, label: 'Battle Room' },
+      { path: '/classroom', Icon: School, label: 'Classroom' },
+      { path: '/campus', Icon: Building2, label: 'Campus' },
+      { path: '/forum', Icon: MessagesSquare, label: 'Forum' },
+      { path: '/peer-review', Icon: Users, label: 'Peer Review' },
     ],
   },
   {
     label: 'Tools',
     items: [
-      { path: '/code-review', icon: '⟐', label: 'Code Review' },
-      { path: '/test-lab', icon: '⬢', label: 'Test Lab' },
-      { path: '/translator', icon: '⇄', label: 'Translate' },
-      { path: '/quiz-creator', icon: '✎', label: 'Quiz Studio' },
-      { path: '/algo-race', icon: '▷', label: 'Algo Race' },
+      { path: '/code-review', Icon: ScanSearch, label: 'Code Review' },
+      { path: '/test-lab', Icon: FlaskConical, label: 'Test Lab' },
+      { path: '/translator', Icon: Languages, label: 'Translate' },
+      { path: '/quiz-creator', Icon: PencilRuler, label: 'Quiz Studio' },
+      { path: '/algo-race', Icon: Flag, label: 'Algo Race' },
     ],
   },
   {
     label: 'Grow',
     items: [
-      { path: '/interview-prep', icon: '◉', label: 'Interview Prep' },
-      { path: '/video-lessons', icon: '▶', label: 'Video Lessons' },
-      { path: '/progress', icon: '◧', label: 'Progress' },
-      { path: '/daily-challenge', icon: '★', label: 'Daily Challenge' },
+      { path: '/interview-prep', Icon: Target, label: 'Interview Prep' },
+      { path: '/video-lessons', Icon: Video, label: 'Video Lessons' },
+      { path: '/progress', Icon: BarChart3, label: 'Progress' },
+      { path: '/daily-challenge', Icon: Flame, label: 'Daily Challenge' },
     ],
   },
 ];
@@ -77,10 +83,10 @@ function NavItem({ item, active, expanded, onClick }) {
         }} />
       )}
       <span style={{
-        width: '20px', textAlign: 'center', fontSize: '15px', flexShrink: 0,
+        width: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         color: active ? 'var(--cz-accent)' : hover ? 'var(--cz-text)' : 'var(--cz-muted)',
         transition: 'color 160ms ease',
-      }}>{item.icon}</span>
+      }}><item.Icon size={17} strokeWidth={2} /></span>
       {expanded && (
         <span style={{
           fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
@@ -131,8 +137,8 @@ const Sidebar = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'color-mix(in srgb, var(--cz-accent) 16%, transparent)',
           border: '1px solid color-mix(in srgb, var(--cz-accent) 40%, transparent)',
-          color: 'var(--cz-accent)', fontSize: '16px', fontWeight: 900,
-        }}>⬡</span>
+          color: 'var(--cz-accent)',
+        }}><Hexagon size={17} strokeWidth={2.5} /></span>
         {expanded && (
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
             <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--cz-text)', letterSpacing: '-0.02em' }}>CodeViz</span>
@@ -162,7 +168,7 @@ const Sidebar = () => {
 
       {/* Bottom */}
       <div style={{ flexShrink: 0, borderTop: '1px solid var(--cz-line)', padding: expanded ? '10px 10px' : '10px 7px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <NavItem item={{ path: '/home', icon: '⌂', label: 'Home Page' }} active={false} expanded={expanded} onClick={() => { window.location.href = '/home'; }} />
+        <NavItem item={{ path: '/home', Icon: Home, label: 'Home Page' }} active={false} expanded={expanded} onClick={() => { window.location.href = '/home'; }} />
         {expanded && user && (
           <div
             onClick={() => navigate('/profile')}
