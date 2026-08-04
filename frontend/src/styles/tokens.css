@@ -88,12 +88,28 @@
   --cz-shadow-sm:0 1px 2px rgba(0,0,0,.35); --cz-shadow-md:0 6px 18px rgba(0,0,0,.40); --cz-shadow-lg:0 16px 40px rgba(0,0,0,.50);
   color-scheme: dark;
 }
-:root[data-theme="light"] {
-  --cz-bg:#f6f8fc; --cz-surface:#ffffff; --cz-elevated:#eef2f9; --cz-line:#e1e7f1; --cz-line-soft:#edf1f8;
-  --cz-text:#141a29; --cz-muted:#57617a; --cz-faint:#8b95ab;
-  --cz-accent:#3a5bff; --cz-accent-hover:#2f4ff0; --cz-accent-fg:#ffffff;
-  --cz-success:#16a34a; --cz-warning:#c47d0e; --cz-danger:#dc2626; --cz-info:#0284c7;
-  --cz-easy:#16a34a; --cz-medium:#c47d0e; --cz-hard:#dc2626;
-  --cz-shadow-sm:0 1px 2px rgba(20,30,60,.08); --cz-shadow-md:0 6px 18px rgba(20,30,60,.10); --cz-shadow-lg:0 16px 40px rgba(20,30,60,.12);
+/* ── LIGHT is the default. This block applies whenever the theme is not
+   explicitly dark, and remaps BOTH the new tokens and the LEGACY design-system
+   variables — so un-migrated pages render on a clean white theme instead of
+   staying black. Higher specificity (:not) + last position => it always wins
+   over the legacy dark :root, while [data-theme="dark"] still restores dark. ── */
+:root[data-theme="light"],
+:root:not([data-theme="dark"]) {
+  /* new tokens — premium light */
+  --cz-bg:#f6f8fc; --cz-surface:#ffffff; --cz-elevated:#eff3fb; --cz-line:#e4e9f2; --cz-line-soft:#eef2f8;
+  --cz-text:#111725; --cz-muted:#5a6577; --cz-faint:#8a94a6;
+  --cz-accent:#4560f0; --cz-accent-hover:#3a52e0; --cz-accent-fg:#ffffff;
+  --cz-success:#16a34a; --cz-warning:#c2790c; --cz-danger:#dc2626; --cz-info:#0284c7;
+  --cz-easy:#16a34a; --cz-medium:#c2790c; --cz-hard:#dc2626;
+  --cz-shadow-sm:0 1px 2px rgba(20,30,60,.07); --cz-shadow-md:0 6px 20px rgba(20,30,60,.10); --cz-shadow-lg:0 18px 44px rgba(20,30,60,.14);
   color-scheme: light;
+
+  /* legacy design-system variables -> light (flips un-migrated pages) */
+  --bg-void:#f6f8fc; --bg-abyss:#ffffff; --bg-obsidian:#ffffff; --bg-slate:#eff3fb; --bg-ash:#e6ecf6; --bg-terminal:#f3f5fb;
+  --bg-app:#f6f8fc; --bg-surface:#ffffff; --bg-panel:#ffffff; --bg-elevated:#eff3fb; --bg-highest:#e6ecf6;
+  --bg-primary:#f6f8fc; --bg-secondary:#ffffff;
+  --text-primary:#111725; --text-secondary:#4a5568; --text-muted:#7b8494; --text-ghost:#9aa3b2; --text-inverse:#ffffff;
+  --border-color:#e4e9f2; --border-ghost:rgba(20,30,60,0.08); --border-subtle:rgba(20,30,60,0.10); --border-strong:rgba(20,30,60,0.14);
+  --bg-glass:rgba(255,255,255,0.72); --glass-border:1px solid rgba(20,30,60,0.08); --glass-edge:1px solid rgba(20,30,60,0.06);
+  --glass-shadow:0 8px 32px rgba(20,30,60,0.10); --glass-glow:0 0 40px -10px rgba(69,96,240,0.10);
 }
