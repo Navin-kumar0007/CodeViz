@@ -16,6 +16,17 @@
 /* Dark utilities activate on the app's [data-theme="dark"] (not a .dark class) */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* Responsive breakpoints (the split theme import drops the defaults, so define
+   them explicitly — without these, lg:/md:/sm: variants emit no media queries
+   and every responsive grid collapses to one column). */
+@theme {
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
+}
+
 /* Expose design tokens (from styles/tokens.css) to Tailwind so utilities like
    bg-surface / text-muted / border-line / text-accent work and auto-theme. */
 @theme inline {
