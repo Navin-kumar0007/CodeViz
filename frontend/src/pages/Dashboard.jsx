@@ -30,14 +30,22 @@ const QUICK = [
 
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
 const TONE = {
-  accent: 'text-accent bg-accent/12', warning: 'text-warning bg-warning/12',
-  danger: 'text-hard bg-hard/12', success: 'text-success bg-success/12',
+  accent: { chip: 'text-accent', v: '--cz-accent' },
+  warning: { chip: 'text-warning', v: '--cz-warning' },
+  danger: { chip: 'text-hard', v: '--cz-hard' },
+  success: { chip: 'text-success', v: '--cz-success' },
 };
 
 function StatTile({ Icon, value, label, tone = 'accent' }) {
+  const t = TONE[tone];
   return (
-    <div className="flex items-center gap-3 bg-surface border border-line rounded-xl px-4 py-3.5 min-w-0 shadow-[var(--cz-shadow-sm)]">
-      <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${TONE[tone]}`}>
+    <div
+      className="relative flex items-center gap-3 border border-line rounded-xl px-4 py-3.5 min-w-0 shadow-[var(--cz-shadow-sm)] overflow-hidden"
+      style={{ background: `linear-gradient(135deg, color-mix(in srgb, var(${t.v}) 12%, var(--cz-surface)), var(--cz-surface) 60%)` }}
+    >
+      <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `var(${t.v})` }} />
+      <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${t.chip}`}
+        style={{ background: `color-mix(in srgb, var(${t.v}) 18%, transparent)`, border: `1px solid color-mix(in srgb, var(${t.v}) 35%, transparent)` }}>
         <Icon size={17} strokeWidth={2.2} />
       </span>
       <div className="flex flex-col min-w-0 leading-tight">
@@ -106,7 +114,8 @@ const Dashboard = () => {
         <header className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-5 border-b border-line">
           <div>
             <h1 className="text-[24px] font-extrabold tracking-tight leading-tight m-0">
-              {greeting}, <span className="text-accent">{firstName}</span>
+              {greeting},{' '}
+              <span style={{ background: 'linear-gradient(90deg, var(--cz-accent), #94a6ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{firstName}</span>
             </h1>
             <p className="text-muted text-[13px] m-0 mt-0.5">Welcome back — keep the momentum going.</p>
           </div>
