@@ -33,13 +33,13 @@ const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
 function StatTile({ Icon, value, label, tone = 'accent' }) {
   const toneCls = { accent: 'text-accent bg-accent/12', warning: 'text-warning bg-warning/12', danger: 'text-hard bg-hard/12', success: 'text-success bg-success/12' }[tone];
   return (
-    <Card className="p-6 flex items-center gap-4">
-      <span className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${toneCls}`}>
-        <Icon size={22} strokeWidth={2} />
+    <Card className="p-5 flex items-center gap-3.5 min-w-0">
+      <span className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${toneCls}`}>
+        <Icon size={20} strokeWidth={2} />
       </span>
-      <div className="flex flex-col gap-1 min-w-0">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-faint">{label}</span>
-        <span className="text-[30px] font-extrabold text-text tabular-nums leading-none">{value}</span>
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-faint truncate">{label}</span>
+        <span className="text-[24px] font-extrabold text-text tabular-nums leading-none">{value}</span>
       </div>
     </Card>
   );
@@ -85,8 +85,8 @@ const Dashboard = () => {
   const streak = typeof gamification?.streak === 'object' ? (gamification.streak?.current || 0) : (gamification?.streak || 0);
 
   return (
-    <div className="min-h-full bg-bg text-text" style={FONT}>
-      <div className="max-w-[1280px] mx-auto px-6 md:px-10 py-8 pb-20">
+    <div className="min-h-full bg-bg text-text overflow-x-hidden" style={FONT}>
+      <div className="w-full px-6 md:px-8 py-7 pb-20">
         {/* Header */}
         <motion.header
           initial={{ y: -12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.4 }}
@@ -114,12 +114,12 @@ const Dashboard = () => {
 
         {/* Progress + Mission */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-5">
-          <Card className="lg:col-span-7">
+          <Card className="lg:col-span-7 min-w-0 overflow-hidden">
             <CardHeader className="px-6 py-4">
               <CardTitle>Progress &amp; Streak</CardTitle>
               <Badge tone="success">Live</Badge>
             </CardHeader>
-            <CardBody className="p-6 flex flex-col justify-center gap-5 min-h-[180px]">
+            <CardBody className="p-6 flex flex-col justify-center gap-5 min-h-[180px] overflow-x-auto">
               {gamification ? <XPBar xp={gamification.xp} level={gamification.level} /> : <div className="h-4 rounded bg-elevated animate-pulse" />}
               {gamification ? <StreakCounter streak={gamification.streak} /> : <div className="h-4 rounded bg-elevated animate-pulse w-2/3" />}
             </CardBody>
@@ -163,13 +163,13 @@ const Dashboard = () => {
 
         {/* Widgets */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
-          <Card className="min-h-[360px]">
+          <Card className="min-h-[340px] min-w-0 overflow-hidden">
             <CardHeader className="px-6 py-4"><CardTitle>Algorithm DNA</CardTitle><Badge tone="accent">AI analysis</Badge></CardHeader>
-            <CardBody className="p-6"><AlgorithmDNA /></CardBody>
+            <CardBody className="p-6 overflow-x-auto"><AlgorithmDNA /></CardBody>
           </Card>
-          <Card className="min-h-[360px]">
+          <Card className="min-h-[340px] min-w-0 overflow-hidden">
             <CardHeader className="px-6 py-4"><CardTitle>Skill Architecture</CardTitle></CardHeader>
-            <CardBody className="p-6"><SkillTreeWidget /></CardBody>
+            <CardBody className="p-6 overflow-x-auto"><SkillTreeWidget /></CardBody>
           </Card>
         </div>
 
