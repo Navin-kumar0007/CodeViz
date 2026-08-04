@@ -353,7 +353,7 @@ const styles = {
     container: {
         minHeight: '100vh',
         background: 'transparent',
-        color: '#E8E8ED',
+        color: 'var(--cz-text)',
         padding: '30px 40px',
         display: 'flex',
         flexDirection: 'column'
@@ -367,9 +367,9 @@ const styles = {
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
     },
     backBtn: {
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        color: '#E8E8ED',
+        background: 'var(--cz-line)',
+        border: '1px solid var(--cz-line)',
+        color: 'var(--cz-text)',
         padding: '10px 20px',
         borderRadius: '100px',
         cursor: 'pointer',
@@ -585,7 +585,7 @@ const styles = {
     },
     compareDivider: {
         width: '2px',
-        background: 'rgba(255,255,255,0.1)'
+        background: 'var(--cz-line)'
     },
     compareSelect: {
         background: 'transparent',
@@ -608,7 +608,7 @@ const styles = {
         justifyContent: 'space-between',
         marginTop: '20px',
         paddingTop: '15px',
-        borderTop: '1px solid rgba(255,255,255,0.1)'
+        borderTop: '1px solid var(--cz-line)'
     },
     progressDots: {
         display: 'flex',

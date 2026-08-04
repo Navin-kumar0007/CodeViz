@@ -304,7 +304,7 @@ const Learn = () => {
 const styles = {
     container: {
         minHeight: '100vh',
-        color: '#E8E8ED',
+        color: 'var(--cz-text)',
         padding: '30px 40px',
         background: 'transparent',
     },
@@ -333,7 +333,7 @@ const styles = {
         marginRight: '12px',
     },
     subHeading: {
-        color: '#9898A6',
+        color: 'var(--cz-muted)',
         fontSize: '15px',
         margin: 0,
     },
@@ -356,8 +356,8 @@ const styles = {
         opacity: 0.8,
     },
     dropdown: {
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.1)',
+        background: 'var(--cz-line)',
+        border: '1px solid var(--cz-line)',
         borderRadius: '12px',
         padding: '10px 16px',
         color: '#fff',
@@ -408,13 +408,13 @@ const styles = {
         fontWeight: 800,
         textTransform: 'uppercase',
         letterSpacing: '0.15em',
-        color: '#5A5A6A',
+        color: 'var(--cz-faint)',
         whiteSpace: 'nowrap',
     },
     sectionLine: {
         flex: 1,
         height: '1px',
-        background: 'rgba(255,255,255,0.05)',
+        background: 'var(--cz-line)',
     },
     pathGrid: {
         display: 'grid',
@@ -429,10 +429,10 @@ const styles = {
     },
     backBtn: {
         background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.1)',
+        border: '1px solid var(--cz-line)',
         padding: '10px 20px',
         borderRadius: '100px',
-        color: '#E8E8ED',
+        color: 'var(--cz-text)',
         fontSize: '13px',
         fontWeight: 600,
         cursor: 'pointer',
@@ -454,7 +454,7 @@ const styles = {
     },
     pathDescription: {
         fontSize: '16px',
-        color: '#9898A6',
+        color: 'var(--cz-muted)',
         maxWidth: '700px',
         margin: '0 auto',
     },
