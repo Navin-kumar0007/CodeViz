@@ -7,11 +7,14 @@
    @import must precede them. */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
-/* Tailwind v4 — utilities ONLY (no preflight) so the new component system can
-   use utilities without the reset clobbering the legacy design system. */
-@layer theme, base, components, utilities;
+/* Tailwind v4 — utilities ONLY (no preflight). Theme stays in a layer, but
+   utilities are imported UNLAYERED, because the legacy design system in this
+   file is also unlayered and unlayered CSS always beats layered utilities —
+   which was silently overriding the color and spacing classes on migrated
+   pages. Unlayered utilities compete normally and win. */
+@layer theme;
 @import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/utilities.css" layer(utilities);
+@import "tailwindcss/utilities.css";
 
 /* Dark utilities activate on the app's [data-theme="dark"] (not a .dark class) */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
