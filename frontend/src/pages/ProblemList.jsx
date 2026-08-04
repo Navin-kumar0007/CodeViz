@@ -1,227 +1,128 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, Circle, Search } from 'lucide-react';
 import { API as axios } from '../utils/api';
 import API_BASE from '../utils/api';
+import { Input, Select, Button, DifficultyBadge, Badge, Spinner, EmptyState } from '../components/ui';
 
 const API = `${API_BASE}/api/problems`;
+const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
+const DIFFS = ['', 'easy', 'medium', 'hard'];
 
-const DIFFICULTY_COLORS = {
-    easy: 'var(--accent-green)', medium: 'var(--accent-yellow)', hard: 'var(--accent-red)'
-};
+export default function ProblemList() {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('userInfo'));
+  const token = user?.token;
 
-const ProblemList = () => {
-    const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('userInfo'));
-    const token = user?.token;
+  const [problems, setProblems] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState({ difficulty: '', category: '', search: '' });
+  const [stats, setStats] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-    const [problems, setProblems] = useState([]);
-    const [categories, setCategories] = useState([]);
-    const [total, setTotal] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState({ difficulty: '', category: '', search: '' });
-    const [stats, setStats] = useState(null);
-    const [refreshKey, setRefreshKey] = useState(0);
-
-    useEffect(() => {
-        const headers = { Authorization: `Bearer ${token}` };
-        let cancelled = false;
-
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const params = {};
-                if (filter.difficulty) params.difficulty = filter.difficulty;
-                if (filter.category) params.category = filter.category;
-                if (filter.search) params.search = filter.search;
-                const { data } = await axios.get(API, { headers, params });
-                if (!cancelled) {
-                    setProblems(data.problems);
-                    setTotal(data.total);
-                    setCategories(data.categories || []);
-                }
-            } catch { /* ignore */ }
-
-            try {
-                const { data } = await axios.get(`${API}/submissions/stats`, { headers });
-                if (!cancelled) setStats(data);
-            } catch { /* ignore */ }
-
-            if (!cancelled) setLoading(false);
-        };
-
-        fetchData();
-        return () => { cancelled = true; };
+  useEffect(() => {
+    const headers = { Authorization: `Bearer ${token}` };
+    let cancelled = false;
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const params = {};
+        if (filter.difficulty) params.difficulty = filter.difficulty;
+        if (filter.category) params.category = filter.category;
+        if (filter.search) params.search = filter.search;
+        const { data } = await axios.get(API, { headers, params });
+        if (!cancelled) { setProblems(data.problems || []); setTotal(data.total || 0); setCategories(data.categories || []); }
+      } catch { /* ignore */ }
+      try {
+        const { data } = await axios.get(`${API}/submissions/stats`, { headers });
+        if (!cancelled) setStats(data);
+      } catch { /* ignore */ }
+      if (!cancelled) setLoading(false);
+    };
+    fetchData();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [token, filter.difficulty, filter.category, refreshKey]);
+  }, [token, filter.difficulty, filter.category, refreshKey]);
 
-    const handleSearch = useCallback((e) => {
-        e.preventDefault();
-        setRefreshKey(k => k + 1);
-    }, []);
+  const handleSearch = useCallback((e) => { e.preventDefault(); setRefreshKey((k) => k + 1); }, []);
+  const solvedCount = stats?.solved ?? problems.filter((p) => p.solved).length;
 
-    return (
-        <div style={S.page}>
-            <div style={S.container}>
-
-                {/* Header */}
-                <div style={S.header}>
-                    <div>
-                        <h1 style={S.title}>📋 Problem Set</h1>
-                        <p style={S.subtitle}>{total} problems • Master DSA with curated challenges</p>
-                    </div>
-                    <button onClick={() => navigate('/')} style={S.backBtn}>← Dashboard</button>
-                </div>
-
-                {/* Stats Bar */}
-                {stats && (
-                    <div style={S.statsBar}>
-                        <div style={S.statItem}>
-                            <span style={S.statNum}>{stats.uniqueSolved}</span>
-                            <span style={S.statLabel}>Solved</span>
-                        </div>
-                        <div style={S.statDivider} />
-                        <div style={S.statItem}>
-                            <span style={{ ...S.statNum, color: 'var(--accent-green)' }}>{stats.byDifficulty?.easy || 0}</span>
-                            <span style={S.statLabel}>Easy</span>
-                        </div>
-                        <div style={S.statItem}>
-                            <span style={{ ...S.statNum, color: 'var(--accent-yellow)' }}>{stats.byDifficulty?.medium || 0}</span>
-                            <span style={S.statLabel}>Medium</span>
-                        </div>
-                        <div style={S.statItem}>
-                            <span style={{ ...S.statNum, color: 'var(--accent-red)' }}>{stats.byDifficulty?.hard || 0}</span>
-                            <span style={S.statLabel}>Hard</span>
-                        </div>
-                    </div>
-                )}
-
-                {/* Filters */}
-                <div style={S.filters}>
-                    <form onSubmit={handleSearch} style={S.searchForm}>
-                        <input
-                            value={filter.search}
-                            onChange={e => setFilter(f => ({ ...f, search: e.target.value }))}
-                            placeholder="🔍 Search problems..."
-                            style={S.searchInput}
-                        />
-                        <button type="submit" style={S.searchBtn}>Search</button>
-                    </form>
-
-                    <div style={S.filterBtns}>
-                        {['', 'easy', 'medium', 'hard'].map(d => (
-                            <button key={d} onClick={() => setFilter(f => ({ ...f, difficulty: d }))}
-                                style={{ ...S.filterBtn, ...(filter.difficulty === d ? S.filterActive : {}), color: d ? DIFFICULTY_COLORS[d] : '#e4e4e7' }}>
-                                {d ? d.charAt(0).toUpperCase() + d.slice(1) : 'All'}
-                            </button>
-                        ))}
-                    </div>
-
-                    <select value={filter.category} onChange={e => setFilter(f => ({ ...f, category: e.target.value }))} style={S.catSelect}>
-                        <option value="">All Categories</option>
-                        {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
-                    </select>
-                </div>
-
-                {/* Problem Table */}
-                <div style={S.table}>
-                    <div style={S.tableHeader}>
-                        <span style={{ width: '40px' }}>✓</span>
-                        <span style={{ flex: 1 }}>Title</span>
-                        <span style={{ width: '100px' }}>Difficulty</span>
-                        <span style={{ width: '120px' }}>Category</span>
-                        <span style={{ width: '100px' }}>Acceptance</span>
-                    </div>
-
-                    {loading ? (
-                        <div style={S.loadingRow}>Loading problems...</div>
-                    ) : problems.length === 0 ? (
-                        <div style={S.loadingRow}>No problems found</div>
-                    ) : (
-                        problems.map((p, i) => (
-                            <div key={p._id} onClick={() => navigate(`/problems/${p.slug}`)}
-                                style={{ ...S.tableRow, background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                                <span style={{ width: '40px', fontSize: '14px' }}>
-                                    {p.solved ? '✅' : <span style={{ opacity: 0.3 }}>○</span>}
-                                </span>
-                                <span style={{ flex: 1, color: 'var(--text-primary)', fontWeight: 500 }}>
-                                    {p.order}. {p.title}
-                                </span>
-                                <span style={{ width: '100px' }}>
-                                    <span style={{ ...S.diffBadge, color: DIFFICULTY_COLORS[p.difficulty], background: `${DIFFICULTY_COLORS[p.difficulty]}15` }}>
-                                        {p.difficulty}
-                                    </span>
-                                </span>
-                                <span style={{ width: '120px', color: 'var(--text-muted)', fontSize: '12px', textTransform: 'capitalize' }}>
-                                    {p.category.replace(/_/g, ' ')}
-                                </span>
-                                <span style={{ width: '100px', color: 'var(--text-muted)', fontSize: '12px' }}>
-                                    {p.stats?.totalSubmissions > 0
-                                        ? `${Math.round((p.stats.acceptedSubmissions / p.stats.totalSubmissions) * 100)}%`
-                                        : '—'}
-                                </span>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
+  return (
+    <div className="min-h-full bg-bg text-text" style={FONT}>
+      <div className="max-w-5xl mx-auto px-6 py-8 pb-16">
+        {/* Header */}
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
+          <div>
+            <h1 className="text-[24px] font-extrabold tracking-tight m-0">Problem Set</h1>
+            <p className="text-muted text-[13px] m-0 mt-1">{total} problems · master DSA with curated challenges</p>
+          </div>
+          <div className="flex items-center gap-2 text-[13px]">
+            <Badge tone="success">{solvedCount} solved</Badge>
+            <Badge tone="neutral">{total} total</Badge>
+          </div>
         </div>
-    );
-};
 
-const S = {
-    page: { minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' },
-    container: { padding: '24px', maxWidth: '1100px', margin: '0 auto' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' },
-    title: { margin: 0, fontSize: '28px', fontWeight: 800, background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-    subtitle: { color: 'var(--text-muted)', fontSize: '13px', marginTop: '4px' },
-    backBtn: { background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' },
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <form onSubmit={handleSearch} className="flex items-center gap-2 flex-1 min-w-[220px]">
+            <div className="relative flex-1">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
+              <Input className="pl-9" placeholder="Search problems…" value={filter.search} onChange={(e) => setFilter((f) => ({ ...f, search: e.target.value }))} />
+            </div>
+            <Button type="submit" variant="secondary" size="md">Search</Button>
+          </form>
+          <div className="w-44">
+            <Select value={filter.category} onChange={(e) => setFilter((f) => ({ ...f, category: e.target.value }))}>
+              <option value="">All categories</option>
+              {categories.map((c) => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
+            </Select>
+          </div>
+          <div className="inline-flex bg-surface border border-line rounded-lg p-0.5">
+            {DIFFS.map((d) => (
+              <button
+                key={d}
+                onClick={() => setFilter((f) => ({ ...f, difficulty: d }))}
+                className={`px-3 h-7 rounded-md text-[12px] font-semibold capitalize transition-colors cursor-pointer ${filter.difficulty === d ? 'bg-accent text-accent-fg' : 'text-muted hover:text-text'}`}
+              >
+                {d || 'All'}
+              </button>
+            ))}
+          </div>
+        </div>
 
-    statsBar: {
-        display: 'flex', alignItems: 'center', gap: '24px', padding: '16px 24px',
-        background: 'var(--bg-muted)', borderRadius: '12px', border: '1px solid var(--border-color)',
-        marginBottom: '20px'
-    },
-    statItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
-    statNum: { fontSize: '22px', fontWeight: 'bold', color: 'var(--accent-teal)' },
-    statLabel: { fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' },
-    statDivider: { width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)' },
+        {/* Table */}
+        <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-[var(--cz-shadow-sm)]">
+          <div className="grid grid-cols-[44px_56px_1fr_auto] items-center gap-3 px-4 h-10 border-b border-line bg-elevated text-[11px] font-bold uppercase tracking-wide text-faint">
+            <span>Status</span><span>#</span><span>Title</span><span>Difficulty</span>
+          </div>
 
-    filters: { display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' },
-    searchForm: { display: 'flex', gap: '8px', flex: 1, minWidth: '200px' },
-    searchInput: {
-        flex: 1, padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border-color)',
-        background: 'var(--bg-muted)', color: 'var(--text-primary)', fontSize: '13px', outline: 'none'
-    },
-    searchBtn: { padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--accent-teal)', color: 'var(--text-on-teal)', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' },
-    filterBtns: { display: 'flex', gap: '4px', background: 'var(--bg-muted)', borderRadius: '8px', padding: '3px' },
-    filterBtn: {
-        padding: '6px 14px', border: 'none', borderRadius: '6px', background: 'transparent',
-        fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
-    },
-    filterActive: { background: 'rgba(255,255,255,0.08)' },
-    catSelect: {
-        padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)',
-        background: 'var(--bg-muted)', color: 'var(--text-primary)', fontSize: '12px', outline: 'none'
-    },
-
-    table: {
-        background: 'var(--bg-muted)', borderRadius: '12px', border: '1px solid var(--border-color)',
-        overflow: 'hidden'
-    },
-    tableHeader: {
-        display: 'flex', alignItems: 'center', padding: '12px 20px', gap: '12px',
-        borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-muted)', fontSize: '11px',
-        fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px'
-    },
-    tableRow: {
-        display: 'flex', alignItems: 'center', padding: '12px 20px', gap: '12px',
-        borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer',
-        transition: 'background 0.15s', fontSize: '13px'
-    },
-    loadingRow: { padding: '40px', textAlign: 'center', color: 'var(--text-muted)' },
-    diffBadge: {
-        padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, textTransform: 'capitalize'
-    },
-};
-
-export default ProblemList;
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-16 text-muted text-sm"><Spinner /> Loading problems…</div>
+          ) : problems.length === 0 ? (
+            <EmptyState icon="🔍" title="No problems found" hint="Try a different search or filter." action={<Button size="sm" onClick={() => setFilter({ difficulty: '', category: '', search: '' })}>Clear filters</Button>} />
+          ) : (
+            problems.map((p) => (
+              <button
+                key={p._id}
+                onClick={() => navigate(`/problems/${p.slug}`)}
+                className="w-full grid grid-cols-[44px_56px_1fr_auto] items-center gap-3 px-4 h-[52px] border-b border-line last:border-0 text-left cursor-pointer hover:bg-elevated transition-colors"
+              >
+                <span className="flex justify-center">
+                  {p.solved ? <CheckCircle2 size={17} className="text-success" /> : <Circle size={16} className="text-faint" />}
+                </span>
+                <span className="font-mono text-[13px] text-muted tabular-nums">{p.order}</span>
+                <span className="min-w-0">
+                  <span className="block text-[14px] font-semibold text-text truncate">{p.title}</span>
+                  {p.category && <span className="block text-[12px] text-muted truncate capitalize">{String(p.category).replace(/_/g, ' ')}</span>}
+                </span>
+                <DifficultyBadge level={p.difficulty} />
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
