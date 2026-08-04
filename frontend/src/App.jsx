@@ -49,6 +49,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const About = lazy(() => import('./pages/About'));
+const UIKit = lazy(() => import('./pages/UIKit'));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -122,6 +123,7 @@ const AnimatedRoutes = () => {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/snippet/:id" element={<SnippetViewer />} />
         <Route path="/about" element={<About />} />
+        <Route path="/ui-kit" element={<UIKit />} />
         <Route path="/classroom/join/:code" element={<ClassroomJoinHandler />} />
 
         {/* Protected Routes */}

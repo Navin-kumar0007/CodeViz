@@ -1,0 +1,99 @@
+/* ============================================================
+   CodeViz Design Tokens  (Phase 0 foundation)
+   Single source of truth. Components consume these via Tailwind
+   (bg-surface, text-muted, border-line…) — never raw hex.
+   Dark-first; light gets equal care. Themes flip on
+   [data-theme] (set by ThemeContext) and OS preference.
+   Prefix: --cz-*  (avoids clashing with legacy --bg-* vars)
+   ============================================================ */
+
+:root {
+  /* neutrals — slight blue bias, chosen not defaulted */
+  --cz-bg:        #0b0d13;
+  --cz-surface:   #141824;
+  --cz-elevated:  #1a1f2c;
+  --cz-line:      #242b39;
+  --cz-line-soft: #1c2230;
+  --cz-text:      #e6e9f0;
+  --cz-muted:     #93a0b4;
+  --cz-faint:     #5f6b7e;
+
+  /* brand + on-brand foreground */
+  --cz-accent:    #4f6bff;
+  --cz-accent-hover: #5f79ff;
+  --cz-accent-fg: #ffffff;
+
+  /* semantic (separate from accent) */
+  --cz-success:   #22c55e;
+  --cz-warning:   #f59e0b;
+  --cz-danger:    #ef4444;
+  --cz-info:      #38bdf8;
+
+  /* difficulty (LeetCode-style) */
+  --cz-easy:      #22c55e;
+  --cz-medium:    #f59e0b;
+  --cz-hard:      #ef4444;
+
+  /* elevation */
+  --cz-shadow-sm: 0 1px 2px rgba(0,0,0,.35);
+  --cz-shadow-md: 0 6px 18px rgba(0,0,0,.40);
+  --cz-shadow-lg: 0 16px 40px rgba(0,0,0,.50);
+
+  /* control heights — the "compact, fits the layout" contract */
+  --cz-h-sm: 28px;
+  --cz-h-md: 32px;
+  --cz-h-lg: 36px;
+
+  --cz-radius: 10px;
+  --cz-radius-sm: 6px;
+  --cz-radius-lg: 14px;
+
+  color-scheme: dark;
+}
+
+/* Light — applied when the app has no explicit theme but the OS prefers light */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --cz-bg:        #f6f8fc;
+    --cz-surface:   #ffffff;
+    --cz-elevated:  #eef2f9;
+    --cz-line:      #e1e7f1;
+    --cz-line-soft: #edf1f8;
+    --cz-text:      #141a29;
+    --cz-muted:     #57617a;
+    --cz-faint:     #8b95ab;
+    --cz-accent:    #3a5bff;
+    --cz-accent-hover: #2f4ff0;
+    --cz-success:   #16a34a;
+    --cz-warning:   #c47d0e;
+    --cz-danger:    #dc2626;
+    --cz-info:      #0284c7;
+    --cz-easy:      #16a34a;
+    --cz-medium:    #c47d0e;
+    --cz-hard:      #dc2626;
+    --cz-shadow-sm: 0 1px 2px rgba(20,30,60,.08);
+    --cz-shadow-md: 0 6px 18px rgba(20,30,60,.10);
+    --cz-shadow-lg: 0 16px 40px rgba(20,30,60,.12);
+    color-scheme: light;
+  }
+}
+
+/* Explicit theme via ThemeContext (data-theme) always wins */
+:root[data-theme="dark"] {
+  --cz-bg:#0b0d13; --cz-surface:#141824; --cz-elevated:#1a1f2c; --cz-line:#242b39; --cz-line-soft:#1c2230;
+  --cz-text:#e6e9f0; --cz-muted:#93a0b4; --cz-faint:#5f6b7e;
+  --cz-accent:#4f6bff; --cz-accent-hover:#5f79ff; --cz-accent-fg:#ffffff;
+  --cz-success:#22c55e; --cz-warning:#f59e0b; --cz-danger:#ef4444; --cz-info:#38bdf8;
+  --cz-easy:#22c55e; --cz-medium:#f59e0b; --cz-hard:#ef4444;
+  --cz-shadow-sm:0 1px 2px rgba(0,0,0,.35); --cz-shadow-md:0 6px 18px rgba(0,0,0,.40); --cz-shadow-lg:0 16px 40px rgba(0,0,0,.50);
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --cz-bg:#f6f8fc; --cz-surface:#ffffff; --cz-elevated:#eef2f9; --cz-line:#e1e7f1; --cz-line-soft:#edf1f8;
+  --cz-text:#141a29; --cz-muted:#57617a; --cz-faint:#8b95ab;
+  --cz-accent:#3a5bff; --cz-accent-hover:#2f4ff0; --cz-accent-fg:#ffffff;
+  --cz-success:#16a34a; --cz-warning:#c47d0e; --cz-danger:#dc2626; --cz-info:#0284c7;
+  --cz-easy:#16a34a; --cz-medium:#c47d0e; --cz-hard:#dc2626;
+  --cz-shadow-sm:0 1px 2px rgba(20,30,60,.08); --cz-shadow-md:0 6px 18px rgba(20,30,60,.10); --cz-shadow-lg:0 16px 40px rgba(20,30,60,.12);
+  color-scheme: light;
+}

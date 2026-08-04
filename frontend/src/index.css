@@ -3,7 +3,40 @@
    Phase 12: Premium 2026 Overhaul
    ═══════════════════════════════════════════ */
 
+/* Tailwind v4 — utilities ONLY (no preflight) so the new component system can
+   use utilities without the reset clobbering the legacy design system. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* Dark utilities activate on the app's [data-theme="dark"] (not a .dark class) */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Expose design tokens (from styles/tokens.css) to Tailwind so utilities like
+   bg-surface / text-muted / border-line / text-accent work and auto-theme. */
+@theme inline {
+  --color-bg:       var(--cz-bg);
+  --color-surface:  var(--cz-surface);
+  --color-elevated: var(--cz-elevated);
+  --color-line:     var(--cz-line);
+  --color-line-soft: var(--cz-line-soft);
+  --color-text:     var(--cz-text);
+  --color-muted:    var(--cz-muted);
+  --color-faint:    var(--cz-faint);
+  --color-accent:   var(--cz-accent);
+  --color-accent-hover: var(--cz-accent-hover);
+  --color-accent-fg: var(--cz-accent-fg);
+  --color-success:  var(--cz-success);
+  --color-warning:  var(--cz-warning);
+  --color-danger:   var(--cz-danger);
+  --color-info:     var(--cz-info);
+  --color-easy:     var(--cz-easy);
+  --color-medium:   var(--cz-medium);
+  --color-hard:     var(--cz-hard);
+  --radius-card:    var(--cz-radius);
+  --font-mono:      ui-monospace, "JetBrains Mono", Menlo, monospace;
+}
 
 :root {
   /* ── Surface Depth Layers ── */
