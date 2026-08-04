@@ -36,7 +36,7 @@ const TONE = {
 
 function StatTile({ Icon, value, label, tone = 'accent' }) {
   return (
-    <div className="flex items-center gap-3 bg-surface border border-line rounded-xl px-4 py-3 min-w-0">
+    <div className="flex items-center gap-3 bg-surface border border-line rounded-xl px-4 py-3.5 min-w-0 shadow-[var(--cz-shadow-sm)]">
       <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${TONE[tone]}`}>
         <Icon size={17} strokeWidth={2.2} />
       </span>
@@ -50,7 +50,7 @@ function StatTile({ Icon, value, label, tone = 'accent' }) {
 
 function Panel({ title, right, children, className = '', bodyClass = '' }) {
   return (
-    <div className={`flex flex-col bg-surface border border-line rounded-xl min-w-0 overflow-hidden ${className}`}>
+    <div className={`flex flex-col bg-surface border border-line rounded-xl min-w-0 overflow-hidden shadow-[var(--cz-shadow-sm)] ${className}`}>
       <div className="flex items-center justify-between gap-3 px-4 h-11 border-b border-line shrink-0">
         <span className="text-[13px] font-bold text-text">{title}</span>
         {right}
@@ -117,7 +117,7 @@ const Dashboard = () => {
         </header>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatTile Icon={Trophy} value={gamification?.level || 1} label="Current level" tone="warning" />
           <StatTile Icon={Zap} value={gamification?.xp || 0} label="Total XP" tone="accent" />
           <StatTile Icon={Flame} value={streak} label="Day streak" tone="danger" />
@@ -146,7 +146,7 @@ const Dashboard = () => {
 
         {/* Quick launch */}
         <SectionLabel>Quick launch</SectionLabel>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {MODULES.map((m, i) => (
             <motion.button
               key={m.path}
@@ -178,7 +178,7 @@ const Dashboard = () => {
 
         {/* Explore */}
         <SectionLabel>Explore more</SectionLabel>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {QUICK.map((q) => (
             <button
               key={q.path}

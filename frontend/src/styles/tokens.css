@@ -8,19 +8,19 @@
    ============================================================ */
 
 :root {
-  /* neutrals — slight blue bias, chosen not defaulted */
-  --cz-bg:        #0b0d13;
-  --cz-surface:   #141824;
-  --cz-elevated:  #1a1f2c;
-  --cz-line:      #242b39;
-  --cz-line-soft: #1c2230;
-  --cz-text:      #e6e9f0;
-  --cz-muted:     #93a0b4;
-  --cz-faint:     #5f6b7e;
+  /* neutrals — layered for clear card separation on a deep ground */
+  --cz-bg:        #070a10;  /* deepest page ground */
+  --cz-surface:   #151b28;  /* cards — clearly lighter than bg so they pop */
+  --cz-elevated:  #1e2636;  /* hover / nested surfaces */
+  --cz-line:      #2b3648;  /* visible hairline borders */
+  --cz-line-soft: #1c2434;
+  --cz-text:      #eef1f7;
+  --cz-muted:     #97a3b6;
+  --cz-faint:     #616d80;
 
   /* brand + on-brand foreground */
-  --cz-accent:    #4f6bff;
-  --cz-accent-hover: #5f79ff;
+  --cz-accent:    #5570ff;
+  --cz-accent-hover: #667fff;
   --cz-accent-fg: #ffffff;
 
   /* semantic (separate from accent) */
@@ -80,9 +80,9 @@
 
 /* Explicit theme via ThemeContext (data-theme) always wins */
 :root[data-theme="dark"] {
-  --cz-bg:#0b0d13; --cz-surface:#141824; --cz-elevated:#1a1f2c; --cz-line:#242b39; --cz-line-soft:#1c2230;
-  --cz-text:#e6e9f0; --cz-muted:#93a0b4; --cz-faint:#5f6b7e;
-  --cz-accent:#4f6bff; --cz-accent-hover:#5f79ff; --cz-accent-fg:#ffffff;
+  --cz-bg:#070a10; --cz-surface:#151b28; --cz-elevated:#1e2636; --cz-line:#2b3648; --cz-line-soft:#1c2434;
+  --cz-text:#eef1f7; --cz-muted:#97a3b6; --cz-faint:#616d80;
+  --cz-accent:#5570ff; --cz-accent-hover:#667fff; --cz-accent-fg:#ffffff;
   --cz-success:#22c55e; --cz-warning:#f59e0b; --cz-danger:#ef4444; --cz-info:#38bdf8;
   --cz-easy:#22c55e; --cz-medium:#f59e0b; --cz-hard:#ef4444;
   --cz-shadow-sm:0 1px 2px rgba(0,0,0,.35); --cz-shadow-md:0 6px 18px rgba(0,0,0,.40); --cz-shadow-lg:0 16px 40px rgba(0,0,0,.50);
