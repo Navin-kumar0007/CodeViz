@@ -107,7 +107,7 @@
   /* legacy design-system variables -> light (flips un-migrated pages) */
   --bg-void:#f6f8fc; --bg-abyss:#ffffff; --bg-obsidian:#ffffff; --bg-slate:#eff3fb; --bg-ash:#e6ecf6; --bg-terminal:#f3f5fb;
   --bg-app:#f6f8fc; --bg-surface:#ffffff; --bg-panel:#ffffff; --bg-elevated:#eff3fb; --bg-highest:#e6ecf6;
-  --bg-primary:#f6f8fc; --bg-secondary:#ffffff;
+  --bg-primary:#f6f8fc; --bg-secondary:#ffffff; --bg-muted:#ffffff; --bg-card:#ffffff;
   --text-primary:#111725; --text-secondary:#4a5568; --text-muted:#7b8494; --text-ghost:#9aa3b2; --text-inverse:#ffffff;
   --border-color:#e4e9f2; --border-ghost:rgba(20,30,60,0.08); --border-subtle:rgba(20,30,60,0.10); --border-strong:rgba(20,30,60,0.14);
   --bg-glass:rgba(255,255,255,0.72); --glass-border:1px solid rgba(20,30,60,0.08); --glass-edge:1px solid rgba(20,30,60,0.06);
