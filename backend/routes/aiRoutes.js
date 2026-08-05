@@ -43,4 +43,12 @@ router.post('/generate-tests', generateTestCases);
 // 🌐 Code translator
 router.post('/translate', translateCode);
 
+// 🧠 AI Mentor + AI-generated problems (Phase 5) — plan-gated / metered
+const { generateProblem, mentorReview, mentorNext } = require('../controllers/aiMentorController');
+const { requireFeature, meterUsage } = require('../middleware/billingMiddleware');
+
+router.post('/generate-problem', meterUsage('aiCalls'), generateProblem); // metered for everyone
+router.post('/mentor/review', requireFeature('ai-mentor'), meterUsage('aiCalls'), mentorReview);
+router.get('/mentor/next', requireFeature('ai-mentor'), mentorNext);
+
 module.exports = router;

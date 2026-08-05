@@ -41,6 +41,8 @@ const problemSchema = new mongoose.Schema({
         totalSubmissions: { type: Number, default: 0 },
         acceptedSubmissions: { type: Number, default: 0 }
     },
+    aiGenerated: { type: Boolean, default: false },
+    generatedFor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     order: { type: Number, default: 0 }
 }, { timestamps: true });
 
