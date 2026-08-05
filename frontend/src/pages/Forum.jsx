@@ -1,483 +1,227 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Plus, Search, Heart, MessageSquare, CheckCircle2, Pin, Send } from 'lucide-react';
 import { API as axios } from '../utils/api';
 import API_BASE from '../utils/api';
+import { Button, Input, Textarea, Select, Badge, EmptyState, Spinner } from '../components/ui';
 
-/**
- * 💬 Discussion Forum — Threaded discussions with upvotes, replies, search
- */
-const Forum = () => {
-    const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('userInfo'));
-    const authHeaders = { headers: { Authorization: `Bearer ${user?.token}` } };
-    const API = `${API_BASE}/api/discussions`;
+const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
+const CATS = ['all', 'general', 'help', 'showcase', 'bug', 'discussion'];
+const CAT_TONE = { general: 'accent', help: 'warning', showcase: 'success', bug: 'danger', discussion: 'info' };
 
-    // Views: list | thread | new
-    const [view, setView] = useState('list');
-    const [threads, setThreads] = useState([]);
-    const [totalPages, setTotalPages] = useState(1);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [activeThread, setActiveThread] = useState(null);
-    const [loading, setLoading] = useState(false);
+export default function Forum() {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('userInfo'));
+  const authHeaders = { headers: { Authorization: `Bearer ${user?.token}` } };
+  const API = `${API_BASE}/api/discussions`;
 
-    // Filters
-    const [category, setCategory] = useState('all');
-    const [sortBy, setSortBy] = useState('latest');
-    const [searchTerm, setSearchTerm] = useState('');
+  const [view, setView] = useState('list');
+  const [threads, setThreads] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [activeThread, setActiveThread] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [category, setCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('latest');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [newTitle, setNewTitle] = useState('');
+  const [newContent, setNewContent] = useState('');
+  const [newCategory, setNewCategory] = useState('general');
+  const [newTags, setNewTags] = useState('');
+  const [replyContent, setReplyContent] = useState('');
 
-    // New thread form
-    const [newTitle, setNewTitle] = useState('');
-    const [newContent, setNewContent] = useState('');
-    const [newCategory, setNewCategory] = useState('general');
-    const [newTags, setNewTags] = useState('');
+  const loadThreads = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ category, sort: sortBy, page: currentPage, limit: 15 });
+      if (searchTerm) params.set('search', searchTerm);
+      const res = await axios.get(`${API}/all?${params}`, authHeaders);
+      setThreads(res.data.threads || []);
+      setTotalPages(res.data.totalPages || 1);
+    } catch (err) { console.error('Failed to load threads:', err); }
+    setLoading(false);
+  };
 
-    // Reply
-    const [replyContent, setReplyContent] = useState('');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadThreads(); }, [category, sortBy, currentPage]);
 
-    const loadThreads = async () => {
-        setLoading(true);
-        try {
-            const params = new URLSearchParams({
-                category, sort: sortBy, page: currentPage, limit: 15
-            });
-            if (searchTerm) params.append('search', searchTerm);
-            const res = await axios.get(`${API}/all?${params}`, authHeaders);
-            setThreads(res.data.threads || []);
-            setTotalPages(res.data.pages || 1);
-        } catch (err) {
-            console.error('Failed to load threads:', err);
-            setThreads([]);
-        }
-        setLoading(false);
-    };
+  const handleSearch = (e) => { e.preventDefault(); setCurrentPage(1); loadThreads(); };
+  const openThread = async (id) => {
+    setLoading(true);
+    try { const res = await axios.get(`${API}/thread/${id}`, authHeaders); setActiveThread(res.data); setView('thread'); } catch { alert('Failed to load thread'); }
+    setLoading(false);
+  };
+  const handleCreate = async () => {
+    if (!newTitle.trim() || !newContent.trim()) return;
+    setLoading(true);
+    try {
+      const tags = newTags.split(',').map((t) => t.trim()).filter(Boolean);
+      await axios.post(API, { title: newTitle, content: newContent, category: newCategory, tags, lessonId: 'general' }, authHeaders);
+      setNewTitle(''); setNewContent(''); setNewTags(''); setView('list'); loadThreads();
+    } catch (err) { alert(err.response?.data?.message || 'Failed to create thread'); }
+    setLoading(false);
+  };
+  const handleReply = async () => {
+    if (!replyContent.trim() || !activeThread) return;
+    setLoading(true);
+    try { const res = await axios.post(`${API}/${activeThread._id}/reply`, { content: replyContent }, authHeaders); setActiveThread(res.data); setReplyContent(''); } catch { alert('Failed to post reply'); }
+    setLoading(false);
+  };
+  const handleLikeThread = async (id) => {
+    try { await axios.put(`${API}/${id}/like`, {}, authHeaders); if (activeThread?._id === id) openThread(id); else loadThreads(); } catch (err) { console.error('Like failed:', err); }
+  };
+  const handleLikeReply = async (replyIdx) => {
+    if (!activeThread) return;
+    try { await axios.put(`${API}/${activeThread._id}/reply/${replyIdx}/like`, {}, authHeaders); openThread(activeThread._id); } catch (err) { console.error('Reply like failed:', err); }
+  };
+  const handleResolve = async () => { if (!activeThread) return; try { await axios.put(`${API}/${activeThread._id}/resolve`, {}, authHeaders); openThread(activeThread._id); } catch (err) { console.error('Resolve failed:', err); } };
+  const handlePin = async () => { if (!activeThread) return; try { await axios.put(`${API}/${activeThread._id}/pin`, {}, authHeaders); openThread(activeThread._id); } catch (err) { console.error('Pin failed:', err); } };
 
-    // ═══ Load Threads ═══
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { loadThreads(); }, [category, sortBy, currentPage]);
+  const timeAgo = (date) => {
+    const mins = Math.floor((Date.now() - new Date(date).getTime()) / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    return hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs / 24)}d ago`;
+  };
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        setCurrentPage(1);
-        loadThreads();
-    };
-
-    // ═══ Open Thread ═══
-    const openThread = async (id) => {
-        setLoading(true);
-        try {
-            const res = await axios.get(`${API}/thread/${id}`, authHeaders);
-            setActiveThread(res.data);
-            setView('thread');
-        } catch {
-            alert('Failed to load thread');
-        }
-        setLoading(false);
-    };
-
-    // ═══ Create Thread ═══
-    const handleCreate = async () => {
-        if (!newTitle.trim() || !newContent.trim()) return;
-        setLoading(true);
-        try {
-            const tags = newTags.split(',').map(t => t.trim()).filter(Boolean);
-            await axios.post(API, {
-                title: newTitle, content: newContent, category: newCategory,
-                tags, lessonId: 'general'
-            }, authHeaders);
-            setNewTitle(''); setNewContent(''); setNewTags('');
-            setView('list');
-            loadThreads();
-        } catch (err) {
-            alert(err.response?.data?.message || 'Failed to create thread');
-        }
-        setLoading(false);
-    };
-
-    // ═══ Reply ═══
-    const handleReply = async () => {
-        if (!replyContent.trim() || !activeThread) return;
-        setLoading(true);
-        try {
-            const res = await axios.post(`${API}/${activeThread._id}/reply`, {
-                content: replyContent
-            }, authHeaders);
-            setActiveThread(res.data);
-            setReplyContent('');
-        } catch {
-            alert('Failed to post reply');
-        }
-        setLoading(false);
-    };
-
-    // ═══ Like Thread ═══
-    const handleLikeThread = async (id) => {
-        try {
-            await axios.put(`${API}/${id}/like`, {}, authHeaders);
-            if (activeThread?._id === id) openThread(id);
-            else loadThreads();
-        } catch (err) {
-            console.error('Like failed:', err);
-        }
-    };
-
-    // ═══ Like Reply ═══
-    const handleLikeReply = async (replyIdx) => {
-        if (!activeThread) return;
-        try {
-            await axios.put(`${API}/${activeThread._id}/reply/${replyIdx}/like`, {}, authHeaders);
-            openThread(activeThread._id);
-        } catch (err) {
-            console.error('Reply like failed:', err);
-        }
-    };
-
-    // ═══ Resolve ═══
-    const handleResolve = async () => {
-        if (!activeThread) return;
-        try {
-            await axios.put(`${API}/${activeThread._id}/resolve`, {}, authHeaders);
-            openThread(activeThread._id);
-        } catch (err) {
-            console.error('Resolve failed:', err);
-        }
-    };
-
-    // ═══ Pin ═══
-    const handlePin = async () => {
-        if (!activeThread) return;
-        try {
-            await axios.put(`${API}/${activeThread._id}/pin`, {}, authHeaders);
-            openThread(activeThread._id);
-        } catch (err) {
-            console.error('Pin failed:', err);
-        }
-    };
-
-    // Helpers
-    const timeAgo = (date) => {
-        const diff = Date.now() - new Date(date).getTime();
-        const mins = Math.floor(diff / 60000);
-        if (mins < 60) return `${mins}m ago`;
-        const hrs = Math.floor(mins / 60);
-        if (hrs < 24) return `${hrs}h ago`;
-        return `${Math.floor(hrs / 24)}d ago`;
-    };
-
-    const catColors = {
-        general: 'var(--accent-teal)', help: 'var(--accent-yellow)', showcase: 'var(--accent-green)',
-        bug: 'var(--accent-red)', discussion: '#9f7aea'
-    };
-
-    const catIcons = {
-        general: '💬', help: '❓', showcase: '🌟', bug: '🐛', discussion: '🗣️'
-    };
-
-    // ═══════════════════════════════════════
-    // RENDER: THREAD LIST
-    // ═══════════════════════════════════════
-    const renderList = () => (
-        <div style={S.container}>
-            <div style={S.header}>
-                <button onClick={() => navigate('/')} style={S.backBtn}>← Dashboard</button>
-                <h1 style={S.pageTitle}>💬 Discussion Forum</h1>
-                <button onClick={() => setView('new')} style={S.newBtn}>+ New Thread</button>
-            </div>
-
-            {/* Filters */}
-            <div style={S.filterBar}>
-                <div style={S.catTabs}>
-                    {['all', 'general', 'help', 'showcase', 'bug', 'discussion'].map(c => (
-                        <button key={c} onClick={() => { setCategory(c); setCurrentPage(1); }}
-                            style={{
-                                ...S.catTab,
-                                background: category === c ? (catColors[c] || 'var(--accent-teal)') + '22' : 'transparent',
-                                color: category === c ? (catColors[c] || 'var(--accent-teal)') : '#888',
-                                borderColor: category === c ? (catColors[c] || 'var(--accent-teal)') : 'transparent'
-                            }}>
-                            {c === 'all' ? '📋 All' : `${catIcons[c]} ${c.charAt(0).toUpperCase() + c.slice(1)}`}
-                        </button>
-                    ))}
-                </div>
-                <form onSubmit={handleSearch} style={S.searchForm}>
-                    <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                        placeholder="Search threads..." style={S.searchInput} />
-                    <select value={sortBy} onChange={e => { setSortBy(e.target.value); setCurrentPage(1); }}
-                        style={S.sortSelect}>
-                        <option value="latest">Latest</option>
-                        <option value="popular">Most Liked</option>
-                        <option value="unanswered">Unanswered</option>
-                    </select>
-                </form>
-            </div>
-
-            {/* Thread Cards */}
-            <div style={S.threadList}>
-                {loading && <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Loading...</p>}
-                {!loading && threads.length === 0 && (
-                    <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '40px' }}>
-                        No threads found. Start the conversation! 🚀
-                    </p>
-                )}
-                {threads.map(t => (
-                    <div key={t._id} onClick={() => openThread(t._id)} style={S.threadCard}>
-                        <div style={S.threadLeft}>
-                            <div style={S.threadVotes}>
-                                <button onClick={(e) => { e.stopPropagation(); handleLikeThread(t._id); }}
-                                    style={S.voteBtn}>▲</button>
-                                <span style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: 'bold' }}>
-                                    {t.likes?.length || 0}
-                                </span>
-                            </div>
-                        </div>
-                        <div style={S.threadContent}>
-                            <div style={S.threadTitleRow}>
-                                {t.isPinned && <span style={S.pinBadge}>📌</span>}
-                                {t.isResolved && <span style={S.resolvedBadge}>✅</span>}
-                                <h3 style={S.threadTitle}>{t.title}</h3>
-                            </div>
-                            <p style={S.threadSnippet}>{t.content?.slice(0, 120)}...</p>
-                            <div style={S.threadMeta}>
-                                <span style={{ ...S.catBadge, background: (catColors[t.category] || 'var(--accent-teal)') + '22', color: catColors[t.category] || 'var(--accent-teal)' }}>
-                                    {catIcons[t.category]} {t.category}
-                                </span>
-                                {t.tags?.map(tag => (
-                                    <span key={tag} style={S.tagBadge}>#{tag}</span>
-                                ))}
-                                <span style={S.metaText}>👤 {t.userId?.name || 'Unknown'}</span>
-                                <span style={S.metaText}>💬 {t.replies?.length || 0}</span>
-                                <span style={S.metaText}>👁 {t.views || 0}</span>
-                                <span style={S.metaText}>{timeAgo(t.createdAt)}</span>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div style={S.pagination}>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                        <button key={p} onClick={() => setCurrentPage(p)}
-                            style={{ ...S.pageBtn, background: currentPage === p ? 'var(--accent-teal)' : 'rgba(255,255,255,0.05)', color: currentPage === p ? '#fff' : '#888' }}>
-                            {p}
-                        </button>
-                    ))}
-                </div>
-            )}
+  // ── List view ──
+  const renderList = () => (
+    <div className="max-w-4xl mx-auto px-6 py-8 pb-16">
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/')}><ArrowLeft size={15} /> Dashboard</Button>
+          <h1 className="text-[24px] font-extrabold tracking-tight m-0">Discussion Forum</h1>
         </div>
-    );
+        <Button onClick={() => setView('new')}><Plus size={15} /> New thread</Button>
+      </div>
 
-    // ═══════════════════════════════════════
-    // RENDER: THREAD VIEW
-    // ═══════════════════════════════════════
-    const renderThread = () => {
-        if (!activeThread) return null;
-        const t = activeThread;
-        const isAuthor = t.userId?._id === user?._id;
-        const isAdmin = ['instructor', 'admin'].includes(user?.role);
-
-        return (
-            <div style={S.container}>
-                <div style={S.header}>
-                    <button onClick={() => { setView('list'); loadThreads(); }} style={S.backBtn}>← Back</button>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        {(isAuthor || isAdmin) && (
-                            <button onClick={handleResolve} style={{
-                                ...S.actionBtn,
-                                background: t.isResolved ? 'rgba(72,187,120,0.15)' : 'rgba(255,255,255,0.05)',
-                                color: t.isResolved ? 'var(--accent-green)' : '#888'
-                            }}>
-                                {t.isResolved ? '✅ Resolved' : '☐ Mark Resolved'}
-                            </button>
-                        )}
-                        {isAdmin && (
-                            <button onClick={handlePin} style={{
-                                ...S.actionBtn,
-                                background: t.isPinned ? 'rgba(246,173,85,0.15)' : 'rgba(255,255,255,0.05)',
-                                color: t.isPinned ? 'var(--accent-yellow)' : '#888'
-                            }}>
-                                {t.isPinned ? '📌 Pinned' : '📌 Pin'}
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Original Post */}
-                <div style={S.opCard}>
-                    <div style={S.opHeader}>
-                        <div>
-                            <h2 style={{ margin: 0, fontSize: '22px', color: 'var(--text-primary)' }}>{t.title}</h2>
-                            <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
-                                <span style={{ ...S.catBadge, background: (catColors[t.category] || 'var(--accent-teal)') + '22', color: catColors[t.category] }}>
-                                    {catIcons[t.category]} {t.category}
-                                </span>
-                                {t.tags?.map(tag => <span key={tag} style={S.tagBadge}>#{tag}</span>)}
-                                <span style={S.metaText}>👤 {t.userId?.name}</span>
-                                <span style={S.metaText}>{timeAgo(t.createdAt)}</span>
-                                <span style={S.metaText}>👁 {t.views}</span>
-                            </div>
-                        </div>
-                        <button onClick={() => handleLikeThread(t._id)} style={S.likeBtnLarge}>
-                            ▲ {t.likes?.length || 0}
-                        </button>
-                    </div>
-                    <div style={S.opBody}>{t.content}</div>
-                </div>
-
-                {/* Replies */}
-                <h3 style={{ color: 'var(--text-primary)', fontSize: '14px', margin: '20px 0 12px 0' }}>
-                    💬 {t.replies?.length || 0} Replies
-                </h3>
-
-                {t.replies?.map((r, i) => (
-                    <div key={i} style={{
-                        ...S.replyCard,
-                        borderLeftColor: t.acceptedReplyIdx === i ? 'var(--accent-green)' : 'rgba(255,255,255,0.08)'
-                    }}>
-                        {t.acceptedReplyIdx === i && (
-                            <div style={{ color: 'var(--accent-green)', fontSize: '11px', fontWeight: 'bold', marginBottom: '6px' }}>
-                                ✅ Accepted Answer
-                            </div>
-                        )}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <div style={{ color: 'var(--text-primary)', fontSize: '13px', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{r.content}</div>
-                                <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
-                                    <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>👤 {r.userId?.name || 'User'}</span>
-                                    <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{timeAgo(r.createdAt)}</span>
-                                </div>
-                            </div>
-                            <button onClick={() => handleLikeReply(i)} style={S.replyLikeBtn}>
-                                ▲ {r.likes?.length || 0}
-                            </button>
-                        </div>
-                    </div>
-                ))}
-
-                {/* Reply Input */}
-                <div style={S.replyInputCard}>
-                    <textarea value={replyContent} onChange={e => setReplyContent(e.target.value)}
-                        placeholder="Write your reply... (Markdown and code blocks supported)"
-                        style={S.replyTextarea} />
-                    <button onClick={handleReply} disabled={loading || !replyContent.trim()}
-                        style={{ ...S.replySubmitBtn, opacity: replyContent.trim() ? 1 : 0.5 }}>
-                        {loading ? '⏳ Posting...' : '💬 Post Reply'}
-                    </button>
-                </div>
-            </div>
-        );
-    };
-
-    // ═══════════════════════════════════════
-    // RENDER: NEW THREAD
-    // ═══════════════════════════════════════
-    const renderNew = () => (
-        <div style={S.container}>
-            <div style={S.header}>
-                <button onClick={() => setView('list')} style={S.backBtn}>← Back</button>
-                <h1 style={S.pageTitle}>✏️ New Thread</h1>
-                <div />
-            </div>
-
-            <div style={S.formCard}>
-                <input value={newTitle} onChange={e => setNewTitle(e.target.value)}
-                    placeholder="Thread title..." style={S.formInput} maxLength={200} />
-
-                <div style={S.formRow}>
-                    <select value={newCategory} onChange={e => setNewCategory(e.target.value)} style={S.formSelect}>
-                        <option value="general">💬 General</option>
-                        <option value="help">❓ Help</option>
-                        <option value="showcase">🌟 Showcase</option>
-                        <option value="bug">🐛 Bug</option>
-                        <option value="discussion">🗣️ Discussion</option>
-                    </select>
-                    <input value={newTags} onChange={e => setNewTags(e.target.value)}
-                        placeholder="Tags (comma-separated)" style={S.formInput} />
-                </div>
-
-                <textarea value={newContent} onChange={e => setNewContent(e.target.value)}
-                    placeholder="Write your post... Use ``` for code blocks"
-                    style={S.formTextarea} rows={10} />
-
-                <button onClick={handleCreate} disabled={loading || !newTitle.trim() || !newContent.trim()}
-                    style={{ ...S.submitBtn, opacity: (newTitle.trim() && newContent.trim()) ? 1 : 0.5 }}>
-                    {loading ? '⏳ Creating...' : '🚀 Post Thread'}
-                </button>
-            </div>
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex flex-wrap gap-1.5 flex-1">
+          {CATS.map((c) => (
+            <button key={c} onClick={() => { setCategory(c); setCurrentPage(1); }}
+              className={`px-3 h-8 rounded-lg text-[12px] font-semibold capitalize border transition-colors cursor-pointer ${category === c ? 'bg-accent text-accent-fg border-accent' : 'bg-surface text-muted border-line hover:text-text'}`}>
+              {c}
+            </button>
+          ))}
         </div>
-    );
+        <div className="w-36"><Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} size="sm"><option value="latest">Latest</option><option value="popular">Popular</option><option value="unanswered">Unanswered</option></Select></div>
+        <form onSubmit={handleSearch} className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
+          <Input className="pl-9 w-56" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search threads…" />
+        </form>
+      </div>
 
-    // ═══ Main Render ═══
-    return (
-        <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: 'var(--font-body)' }}>
-            {view === 'list' && renderList()}
-            {view === 'thread' && renderThread()}
-            {view === 'new' && renderNew()}
+      {loading ? (
+        <div className="flex items-center justify-center gap-2 py-16 text-muted text-sm"><Spinner /> Loading…</div>
+      ) : threads.length === 0 ? (
+        <EmptyState icon="💬" title="No threads yet" hint="Start the conversation." action={<Button size="sm" onClick={() => setView('new')}>New thread</Button>} />
+      ) : (
+        <div className="flex flex-col gap-2">
+          {threads.map((t) => (
+            <button key={t._id} onClick={() => openThread(t._id)} className="text-left bg-surface border border-line rounded-xl p-4 cursor-pointer transition-all hover:border-accent hover:-translate-y-0.5">
+              <div className="flex items-center gap-2 mb-1.5">
+                {t.isPinned && <Pin size={13} className="text-accent" />}
+                <Badge tone={CAT_TONE[t.category] || 'neutral'}>{t.category}</Badge>
+                {t.isResolved && <Badge tone="success"><CheckCircle2 size={11} /> Resolved</Badge>}
+              </div>
+              <div className="text-[15px] font-bold text-text">{t.title}</div>
+              <div className="flex items-center gap-3 mt-2 text-[12px] text-muted">
+                <span>{t.author?.name || 'Anonymous'}</span>
+                <span>·</span><span>{timeAgo(t.createdAt)}</span>
+                <span className="flex items-center gap-1"><Heart size={12} /> {t.likes?.length || 0}</span>
+                <span className="flex items-center gap-1"><MessageSquare size={12} /> {t.replies?.length || 0}</span>
+              </div>
+            </button>
+          ))}
         </div>
-    );
-};
+      )}
 
-// ═══════════════════════════════════════
-// STYLES
-// ═══════════════════════════════════════
-const S = {
-    container: { padding: '24px', maxWidth: '900px', margin: '0 auto' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-    pageTitle: { margin: 0, fontSize: '22px', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-    backBtn: { background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' },
-    newBtn: { background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 mt-6">
+          <Button variant="secondary" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)}>Prev</Button>
+          <span className="text-[13px] text-muted font-mono">{currentPage} / {totalPages}</span>
+          <Button variant="secondary" size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
+        </div>
+      )}
+    </div>
+  );
 
-    // Filters
-    filterBar: { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' },
-    catTabs: { display: 'flex', gap: '6px', flexWrap: 'wrap' },
-    catTab: { padding: '5px 12px', borderRadius: '16px', border: '1px solid', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', background: 'none' },
-    searchForm: { display: 'flex', gap: '8px' },
-    searchInput: { flex: 1, padding: '8px 14px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none' },
-    sortSelect: { padding: '8px 12px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '12px', outline: 'none' },
+  // ── Thread view ──
+  const renderThread = () => (
+    <div className="max-w-3xl mx-auto px-6 py-8 pb-16">
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <Button variant="ghost" size="sm" onClick={() => { setView('list'); setActiveThread(null); }}><ArrowLeft size={15} /> Back</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={handleResolve}><CheckCircle2 size={14} /> {activeThread?.isResolved ? 'Unresolve' : 'Resolve'}</Button>
+          <Button variant="secondary" size="sm" onClick={handlePin}><Pin size={14} /> {activeThread?.isPinned ? 'Unpin' : 'Pin'}</Button>
+        </div>
+      </div>
 
-    // Thread list
-    threadList: { display: 'flex', flexDirection: 'column', gap: '8px' },
-    threadCard: { display: 'flex', gap: '14px', padding: '16px', background: 'var(--bg-muted)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', cursor: 'pointer', transition: 'border-color 0.2s' },
-    threadLeft: { display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '40px' },
-    threadVotes: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
-    voteBtn: { background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '14px', padding: '2px' },
-    threadContent: { flex: 1, minWidth: 0 },
-    threadTitleRow: { display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' },
-    threadTitle: { margin: 0, fontSize: '15px', color: 'var(--text-primary)', fontWeight: 'bold' },
-    threadSnippet: { margin: '6px 0', color: 'var(--text-muted)', fontSize: '12px', lineHeight: '1.4' },
-    threadMeta: { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' },
-    pinBadge: { fontSize: '12px' },
-    resolvedBadge: { fontSize: '12px' },
-    catBadge: { padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' },
-    tagBadge: { color: 'var(--accent-teal)', fontSize: '10px', fontWeight: 'bold' },
-    metaText: { color: 'var(--text-muted)', fontSize: '10px' },
+      {activeThread && (
+        <>
+          <div className="bg-surface border border-line rounded-xl p-5 mb-4 shadow-[var(--cz-shadow-sm)]">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge tone={CAT_TONE[activeThread.category] || 'neutral'}>{activeThread.category}</Badge>
+              {activeThread.isResolved && <Badge tone="success"><CheckCircle2 size={11} /> Resolved</Badge>}
+            </div>
+            <h1 className="text-[22px] font-extrabold tracking-tight m-0">{activeThread.title}</h1>
+            <div className="flex items-center gap-3 mt-2 text-[12px] text-muted">
+              <span>{activeThread.author?.name || 'Anonymous'}</span><span>·</span><span>{timeAgo(activeThread.createdAt)}</span>
+            </div>
+            <p className="text-[14px] text-text leading-relaxed whitespace-pre-wrap mt-4 m-0">{activeThread.content}</p>
+            <div className="mt-4">
+              <Button variant="secondary" size="sm" onClick={() => handleLikeThread(activeThread._id)}><Heart size={14} /> {activeThread.likes?.length || 0}</Button>
+            </div>
+          </div>
 
-    // Pagination
-    pagination: { display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '20px' },
-    pageBtn: { width: '32px', height: '32px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' },
+          <div className="text-[13px] font-bold uppercase tracking-wide text-faint mb-3">{activeThread.replies?.length || 0} replies</div>
+          <div className="flex flex-col gap-2 mb-5">
+            {activeThread.replies?.map((r, i) => (
+              <div key={i} className="bg-surface border border-line rounded-xl p-4">
+                <div className="flex items-center gap-2 text-[12px] text-muted mb-1.5">
+                  <span className="font-semibold text-text">{r.author?.name || 'Anonymous'}</span><span>·</span><span>{timeAgo(r.createdAt)}</span>
+                </div>
+                <p className="text-[14px] text-text leading-relaxed whitespace-pre-wrap m-0">{r.content}</p>
+                <button onClick={() => handleLikeReply(i)} className="flex items-center gap-1 mt-2 text-[12px] text-muted hover:text-accent transition-colors bg-transparent border-0 cursor-pointer"><Heart size={13} /> {r.likes?.length || 0}</button>
+              </div>
+            ))}
+          </div>
 
-    // Thread view
-    opCard: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', marginBottom: '12px' },
-    opHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
-    opBody: { color: '#94a3b8', fontSize: '14px', lineHeight: '1.7', marginTop: '16px', whiteSpace: 'pre-wrap' },
-    likeBtnLarge: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', minWidth: '60px' },
+          <div className="bg-surface border border-line rounded-xl p-4 flex flex-col gap-3">
+            <Textarea value={replyContent} onChange={(e) => setReplyContent(e.target.value)} placeholder="Write a reply…" rows={3} />
+            <Button className="self-end" onClick={handleReply} disabled={loading}><Send size={14} /> Reply</Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
 
-    replyCard: { background: 'var(--bg-muted)', borderLeft: '3px solid', borderRadius: '4px', padding: '14px', marginBottom: '8px' },
-    replyLikeBtn: { background: 'none', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', whiteSpace: 'nowrap' },
+  // ── New thread view ──
+  const renderNew = () => (
+    <div className="max-w-2xl mx-auto px-6 py-8 pb-16">
+      <div className="flex items-center gap-3 mb-5">
+        <Button variant="ghost" size="sm" onClick={() => setView('list')}><ArrowLeft size={15} /> Back</Button>
+        <h1 className="text-[24px] font-extrabold tracking-tight m-0">New thread</h1>
+      </div>
+      <div className="bg-surface border border-line rounded-xl p-5 flex flex-col gap-4">
+        <div><label className="text-[12px] font-semibold text-muted block mb-1.5">Title</label><Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="What's your question or topic?" /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><label className="text-[12px] font-semibold text-muted block mb-1.5">Category</label>
+            <Select value={newCategory} onChange={(e) => setNewCategory(e.target.value)}>
+              {CATS.filter((c) => c !== 'all').map((c) => <option key={c} value={c} className="capitalize">{c}</option>)}
+            </Select>
+          </div>
+          <div><label className="text-[12px] font-semibold text-muted block mb-1.5">Tags (comma-sep)</label><Input value={newTags} onChange={(e) => setNewTags(e.target.value)} placeholder="arrays, sorting" /></div>
+        </div>
+        <div><label className="text-[12px] font-semibold text-muted block mb-1.5">Content</label><Textarea value={newContent} onChange={(e) => setNewContent(e.target.value)} placeholder="Describe it in detail…" rows={7} /></div>
+        <Button className="self-end" onClick={handleCreate} disabled={loading}>Post thread</Button>
+      </div>
+    </div>
+  );
 
-    replyInputCard: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', marginTop: '16px' },
-    replyTextarea: { width: '100%', minHeight: '80px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px', color: 'var(--text-primary)', fontSize: '13px', resize: 'vertical', outline: 'none', fontFamily: 'var(--font-body)', boxSizing: 'border-box' },
-    replySubmitBtn: { marginTop: '10px', padding: '10px 20px', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
-
-    // New thread
-    formCard: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px' },
-    formInput: { width: '100%', padding: '10px 14px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px', outline: 'none', marginBottom: '12px', boxSizing: 'border-box' },
-    formRow: { display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', marginBottom: '12px' },
-    formSelect: { padding: '10px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none' },
-    formTextarea: { width: '100%', minHeight: '200px', background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '14px', color: 'var(--text-primary)', fontFamily: "'JetBrains Mono', Consolas, monospace", fontSize: '13px', resize: 'vertical', outline: 'none', marginBottom: '16px', boxSizing: 'border-box' },
-    submitBtn: { width: '100%', padding: '12px', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', color: 'var(--text-primary)', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold' },
-
-    actionBtn: { padding: '6px 14px', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }
-};
-
-export default Forum;
+  return (
+    <div className="min-h-full bg-bg text-text" style={FONT}>
+      {view === 'list' ? renderList() : view === 'thread' ? renderThread() : renderNew()}
+    </div>
+  );
+}
