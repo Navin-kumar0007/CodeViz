@@ -5,6 +5,7 @@ import {
   Sparkles, GitBranch, Gauge,
 } from 'lucide-react';
 import { Button } from '../components/ui';
+import PublicFooter from '../components/marketing/PublicFooter';
 
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
 
@@ -128,6 +129,35 @@ export default function Home() {
         <p className="text-muted text-[14px] mt-6 flex items-center justify-center gap-2"><GitBranch size={15} /> C/C++ via GDB · Java via JDI · full call-stacks &amp; recursion</p>
       </section>
 
+      {/* Stats band */}
+      <section className="border-y border-line bg-elevated">
+        <div className="max-w-5xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          {[['8', 'Languages'], ['50+', 'Practice problems'], ['100%', 'Animated traces'], ['GDB · JDI', 'Real debuggers']].map(([v, l]) => (
+            <div key={l}><div className="text-[28px] font-extrabold tracking-tight text-accent">{v}</div><div className="text-[13px] text-muted mt-1">{l}</div></div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <div className="text-center mb-10">
+          <span className="text-[12px] font-bold uppercase tracking-[0.16em] text-accent">Loved by learners</span>
+          <h2 className="text-[30px] font-extrabold tracking-tight mt-2 m-0">Where the logic finally clicks</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {[
+            ['“Watching the array actually swap made sorting click in five minutes.”', 'Aisha, CS student'],
+            ['“The Socratic tutor nudges instead of spoiling — my students actually think.”', 'Mr. Rao, bootcamp instructor'],
+            ['“Debugger-accurate traces for C++ and Java? Nothing else does this.”', 'Deepak, backend engineer'],
+          ].map(([quote, who]) => (
+            <div key={who} className="bg-surface border border-line rounded-2xl p-6 shadow-[var(--cz-shadow-sm)]">
+              <p className="text-[15px] text-text leading-relaxed m-0">{quote}</p>
+              <div className="text-[13px] text-muted mt-4">— {who}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-6 pb-20">
         <div className="rounded-3xl border border-accent/30 p-10 md:p-14 text-center relative overflow-hidden" style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--cz-accent) 12%, var(--cz-surface)), var(--cz-surface))' }}>
@@ -140,21 +170,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-line">
-        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-wrap items-center justify-between gap-4 text-[13px] text-muted">
-          <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-md flex items-center justify-center text-accent border border-accent/40 bg-accent/12"><Hexagon size={12} strokeWidth={2.5} /></span>
-            <span className="font-bold text-text">CodeViz</span>
-            <span className="text-faint">© {new Date().getFullYear()}</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <button onClick={() => navigate('/about')} className="bg-transparent border-0 cursor-pointer text-inherit hover:text-text transition-colors">About</button>
-            <button onClick={() => navigate('/login')} className="bg-transparent border-0 cursor-pointer text-inherit hover:text-text transition-colors">Sign in</button>
-            <button onClick={() => navigate('/signup')} className="bg-transparent border-0 cursor-pointer text-inherit hover:text-text transition-colors">Get started</button>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

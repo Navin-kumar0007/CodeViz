@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Hexagon, Eye, Gamepad2, Bot, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui';
+import PublicFooter from '../components/marketing/PublicFooter';
 
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
 
@@ -74,8 +75,25 @@ export default function About() {
         </div>
       </section>
 
+      {/* Founder */}
+      <section id="founder" className="max-w-3xl mx-auto px-6 py-16 scroll-mt-20">
+        <span className="text-[12px] font-bold uppercase tracking-[0.16em] text-accent">Founder</span>
+        <div className="mt-4 flex flex-col sm:flex-row items-start gap-5 bg-surface border border-line rounded-2xl p-6 shadow-[var(--cz-shadow-sm)]">
+          <span className="w-16 h-16 rounded-2xl flex items-center justify-center text-[22px] font-extrabold text-accent-fg shrink-0" style={{ background: 'linear-gradient(135deg, var(--cz-accent), #7c93ff)' }}>NK</span>
+          <div>
+            <div className="text-[18px] font-bold m-0">Navin Kumar</div>
+            <div className="text-[13px] text-accent font-semibold">Founder &amp; Engineer</div>
+            <p className="text-[14px] text-muted leading-relaxed mt-2 m-0">
+              I built CodeViz because the moment an algorithm finally “clicks” shouldn’t depend on staring at static code.
+              Seeing data structures move — pointers gliding, values swapping, recursion unfolding — makes the abstract concrete.
+              The goal is simple: make algorithms impossible to <i>not</i> understand, for learners and educators alike.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
-      <section className="max-w-3xl mx-auto px-6 py-16 text-center">
+      <section className="max-w-3xl mx-auto px-6 pb-16 text-center">
         <h2 className="text-[30px] font-extrabold tracking-tight m-0">Come see your code run.</h2>
         <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
           <Button size="lg" onClick={() => navigate('/signup')}>Get started free <ArrowRight size={16} /></Button>
@@ -83,12 +101,7 @@ export default function About() {
         </div>
       </section>
 
-      <footer className="border-t border-line">
-        <div className="max-w-5xl mx-auto px-6 py-7 flex items-center justify-between text-[13px] text-muted">
-          <span className="font-bold text-text">CodeViz</span>
-          <span className="text-faint">© {new Date().getFullYear()}</span>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
