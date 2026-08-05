@@ -18,6 +18,18 @@ const TRACED_LANGS = new Set(['python', 'javascript', 'cpp', 'c', 'java']);
 const COMPILED_LANGS = new Set(['cpp', 'c', 'java', 'go', 'rust']);
 
 /**
+ * Concurrency limiter — caps how many Docker containers run at once so a burst
+ * of executions can't exhaust the host. Extra requests wait in a bounded queue;
+ * if the queue is full they're rejected fast ("server busy") rather than piling
+ * up. Tune with env: EXEC_MAX_CONCURRENT, EXEC_MAX_QUEUE.
+ */
+const { createLimiter } = require('../utils/limiter');
+const limiter = createLimiter({
+    max: parseInt(process.env.EXEC_MAX_CONCURRENT, 10) || 4,
+    maxQueue: parseInt(process.env.EXEC_MAX_QUEUE, 10) || 50,
+});
+
+/**
  * Resolve the sandbox filename + shell command for a given language.
  * `code` has already been prepared by the controller (tracer-wrapped for
  * python/js, raw user source for compiled languages).
@@ -65,7 +77,7 @@ function resolveCommand(language, fileName) {
  * @param {function} onStream - Optional callback for live output streaming
  * @returns {Promise<object>} - Execution results (stdout, stderr, exitCode)
  */
-async function runInSandbox(code, language, input = '', onStream = null) {
+function _runInSandbox(code, language, input = '', onStream = null) {
     return new Promise((resolve) => {
         const spec = resolveCommand(language, null);
         if (!spec) {
@@ -93,7 +105,13 @@ async function runInSandbox(code, language, input = '', onStream = null) {
             '-i',
             '--network', 'none',
             '--memory', memory,
+            '--memory-swap', memory,               // no swap beyond the memory cap
+            '--cpus', process.env.EXEC_CPUS || '1', // cap CPU
             '--pids-limit', '128',
+            '--cap-drop', 'ALL',                    // 🔒 drop all Linux capabilities
+            '--security-opt', 'no-new-privileges',  // 🔒 block privilege escalation
+            '--ulimit', 'nproc=256:256',            // fork bomb guard
+            '--ulimit', 'fsize=20000000',           // 20MB max file size
             '-v', `${runDir}:/home/runner/code`,
             DOCKER_IMAGE,
             'bash', '-c', runCommand
@@ -166,4 +184,21 @@ async function runInSandbox(code, language, input = '', onStream = null) {
     });
 }
 
-module.exports = { runInSandbox };
+/**
+ * Public entry: acquire a concurrency slot (or fail fast when the host is
+ * saturated), run the sandbox, and always release the slot afterwards.
+ */
+async function runInSandbox(code, language, input = '', onStream = null) {
+    try {
+        await limiter.acquire();
+    } catch {
+        return { error: 'Server is busy — too many executions right now. Please retry in a moment.', busy: true };
+    }
+    try {
+        return await _runInSandbox(code, language, input, onStream);
+    } finally {
+        limiter.release();
+    }
+}
+
+module.exports = { runInSandbox, _stats: () => limiter.stats() };
