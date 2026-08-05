@@ -10,6 +10,8 @@ import XPBar from '../components/Gamification/XPBar';
 import AlgorithmDNA from '../components/Gamification/AlgorithmDNA';
 import SkillTreeWidget from '../components/Gamification/SkillTreeWidget';
 import { Badge, Button } from '../components/ui';
+import { useCountUp } from '../hooks/useCountUp';
+import { getFx } from '../utils/effects';
 import API_BASE from '../utils/api';
 
 const MODULES = [
@@ -38,6 +40,7 @@ const TONE = {
 
 function StatTile({ Icon, value, label, tone = 'accent' }) {
   const t = TONE[tone];
+  const shown = useCountUp(Number(value) || 0, { enabled: getFx().countUp });
   return (
     <div
       className="relative flex items-center gap-3 border border-line rounded-xl px-4 py-3.5 min-w-0 shadow-[var(--cz-shadow-sm)] overflow-hidden"
@@ -49,7 +52,7 @@ function StatTile({ Icon, value, label, tone = 'accent' }) {
         <Icon size={17} strokeWidth={2.2} />
       </span>
       <div className="flex flex-col min-w-0 leading-tight">
-        <span className="text-[20px] font-bold text-text tabular-nums">{value}</span>
+        <span className="text-[20px] font-bold text-text tabular-nums">{shown}</span>
         <span className="text-[11px] text-muted truncate">{label}</span>
       </div>
     </div>

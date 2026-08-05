@@ -6,6 +6,7 @@ import { ArrowLeft, Play, Rocket, CheckCircle2, XCircle, Clock, Lightbulb } from
 import API_BASE from '../utils/api';
 import AstFlowchart from '../components/Visualizer/AstFlowchart';
 import { Button, Select, DifficultyBadge, Badge, Spinner, EmptyState } from '../components/ui';
+import { celebrate } from '../utils/celebrate';
 
 const API = `${API_BASE}/api/problems`;
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
@@ -78,6 +79,7 @@ export default function ProblemSolve() {
     try {
       const { data } = await axios.post(`${API}/submit`, { problemId: problem._id, language, code }, { headers });
       setResult({ type: 'submit', ...data });
+      if (data.verdict === 'accepted') celebrate({ xp: data.xpEarned || 50 });
       loadSubmissions();
     } catch { setResult({ type: 'submit', verdict: 'runtime_error', testResults: [], totalTests: 0, passedTests: 0 }); }
     setSubmitting(false);

@@ -6,6 +6,37 @@ import { Card, CardHeader, CardTitle, CardBody, Badge, Button, Input } from '../
 import { API } from '../utils/api';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { getTrail, setTrail, TRAIL_COLORS } from '../utils/cursorTrail';
+import { getFx, setFx } from '../utils/effects';
+import { celebrate } from '../utils/celebrate';
+
+const FX_ROWS = [
+  ['spotlight', 'Cursor spotlight', 'Soft glow follows the pointer'],
+  ['ripple', 'Click ripple', 'Expanding ring on every click'],
+  ['magnetic', 'Magnetic buttons', 'Buttons pull toward the cursor'],
+  ['aurora', 'Aurora background', 'Slow-drifting ambient glow'],
+  ['countUp', 'Count-up numbers', 'Stat tiles animate from zero'],
+  ['confetti', 'Celebrations', 'Confetti + XP on wins'],
+];
+
+function EffectsCard() {
+  const [fx, setFxState] = useState(getFx);
+  const toggle = (k) => setFxState(setFx({ [k]: !fx[k] }));
+  return (
+    <Card className="mb-4">
+      <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles size={15} className="text-accent" /> Visual effects</CardTitle>
+        <Button size="sm" variant="secondary" onClick={() => celebrate({ xp: 50 })}>Test 🎉</Button>
+      </CardHeader>
+      <CardBody className="flex flex-col gap-3">
+        {FX_ROWS.map(([k, label, hint]) => (
+          <div key={k} className="flex items-center justify-between gap-3">
+            <div><div className="text-[14px] font-semibold text-text">{label}</div><div className="text-[12px] text-muted">{hint}</div></div>
+            <Toggle on={fx[k]} onClick={() => toggle(k)} />
+          </div>
+        ))}
+      </CardBody>
+    </Card>
+  );
+}
 
 function Toggle({ on, onClick }) {
   return (
@@ -237,6 +268,9 @@ export default function Profile() {
 
         {/* Cursor trail */}
         <CursorTrailCard />
+
+        {/* Visual effects */}
+        <EffectsCard />
 
         {/* Danger */}
         <Card>
