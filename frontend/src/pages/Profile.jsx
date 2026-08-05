@@ -1,334 +1,200 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axiosConfig';
-import { motion } from 'framer-motion';
+import { ShieldCheck, ShieldAlert, LogOut, Mail, User as UserIcon, Sparkles, AtSign } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardBody, Badge, Button, Input } from '../components/ui';
+import { API } from '../utils/api';
+import { useEntitlements } from '../hooks/useEntitlements';
 
-const Profile = () => {
-    const [user, setUser] = useState(() => {
-        try {
-            const u = localStorage.getItem('userInfo');
-            return u ? JSON.parse(u) : null;
-        } catch { return null; }
-    });
-    const [qrCode, setQrCode] = useState(null);
-    const [secret, setSecret] = useState(null);
-    const [verifyCode, setVerifyCode] = useState('');
-    const [msg, setMsg] = useState('');
-    const [loading, setLoading] = useState(false);
+const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
 
-    // useEffect for user sync removed to prevent cascading renders
-    // initial value is now handled by lazy initializer above.
-
-    const enable2FA = async () => {
-        try {
-            setLoading(true);
-            const { data } = await axios.post('/api/users/2fa/generate');
-            setQrCode(data.qrCode);
-            setSecret(data.secret);
-            setLoading(false);
-        } catch {
-            setMsg('Failed to generate 2FA token.');
-            setLoading(false);
-        }
-    };
-
-    const verifyAndActivate2FA = async () => {
-        try {
-            setLoading(true);
-            const { data } = await axios.post('/api/users/2fa/verify', { token: verifyCode });
-            setMsg(data.message);
-            setQrCode(null);
-            
-            // Update local storage to reflect 2FA is active
-            const updatedUser = { ...user, isTwoFactorEnabled: true };
-            localStorage.setItem('userInfo', JSON.stringify(updatedUser));
-            setUser(updatedUser);
-
-            setLoading(false);
-        } catch {
-            setMsg('Verification failed. Invalid token.');
-            setLoading(false);
-        }
-    };
-
-    const logout = async () => {
-        try {
-            await axios.post('/api/users/logout');
-            localStorage.removeItem('userInfo');
-            window.location.href = '/login';
-        } catch (err) {
-            console.error('Logout error', err);
-        }
-    };
-
-    if (!user) return <div style={s.layout}><div style={s.loader}>INITIALIZING...</div></div>;
-
-    return (
-        <div style={s.layout}>
-            <div style={s.header}>
-                <h1 style={s.h1}>Profile Settings</h1>
-                <p style={s.subText}>Account & security configuration</p>
+function BillingCard() {
+  const navigate = useNavigate();
+  const { data, loading, refresh } = useEntitlements();
+  const [busy, setBusy] = useState(false);
+  const cancel = async () => {
+    setBusy(true);
+    try { await API.post('/api/billing/cancel', {}); await refresh(); } catch { /* ignore */ }
+    setBusy(false);
+  };
+  const pct = (used, limit) => (limit ? Math.min(100, Math.round((used / limit) * 100)) : 0);
+  return (
+    <Card className="mb-4">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Sparkles size={15} className="text-accent" /> Plan &amp; billing</CardTitle>
+        {!loading && data && <Badge tone={data.plan === 'free' ? 'neutral' : 'accent'}>{data.planName || data.plan}</Badge>}
+      </CardHeader>
+      <CardBody className="flex flex-col gap-4">
+        {loading || !data ? (
+          <p className="text-muted text-sm m-0">Loading…</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              {[['Executions', 'executions', 'executionsPerDay'], ['AI calls', 'aiCalls', 'aiCallsPerDay']].map(([label, uk, lk]) => (
+                <div key={uk}>
+                  <div className="flex items-center justify-between text-[12px] mb-1"><span className="text-muted">{label} today</span><span className="font-mono text-faint">{data.usage[uk]} / {data.limits[lk]}</span></div>
+                  <div className="h-2 rounded-full bg-elevated border border-line overflow-hidden"><div className="h-full rounded-full bg-accent" style={{ width: `${pct(data.usage[uk], data.limits[lk])}%` }} /></div>
+                </div>
+              ))}
             </div>
-
-            <div style={s.grid}>
-                {/* ID Plate */}
-                <motion.div style={s.card} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-                    <div style={s.cardHeader}>
-                        <h2 style={s.h2}>Account Details</h2>
-                        <span style={s.statusBadge}>ACTIVE</span>
-                    </div>
-                    <div style={s.fieldGroup}>
-                        <label style={s.label}>Name</label>
-                        <div style={s.value}>{user.name}</div>
-                    </div>
-                    <div style={s.fieldGroup}>
-                        <label style={s.label}>Email</label>
-                        <div style={s.value}>{user.email}</div>
-                    </div>
-                    <div style={s.fieldGroup}>
-                        <label style={s.label}>Role</label>
-                        <div style={{...s.value, color: 'var(--accent-violet)'}}>{(user.role || 'operator').toUpperCase()}</div>
-                    </div>
-                </motion.div>
-
-                {/* Security Node */}
-                <motion.div style={s.card} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
-                    <div style={s.cardHeader}>
-                        <h2 style={s.h2}>Security</h2>
-                    </div>
-                    
-                    <div style={s.authBlock}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                            <div>
-                                <h3 style={s.h3}>Multi-Factor Authentication (MFA)</h3>
-                                <p style={s.muted}>Requires an authenticator app for secure access.</p>
-                            </div>
-                            {user.isTwoFactorEnabled ? (
-                                <span style={s.statusBadgeGreen}>ENABLED</span>
-                            ) : (
-                                <span style={s.statusBadgeRed}>OFFLINE</span>
-                            )}
-                        </div>
-
-                        {!user.isTwoFactorEnabled && !qrCode && (
-                            <button onClick={enable2FA} style={s.btnCyan}>{loading ? 'Generating...' : 'Enable 2FA'}</button>
-                        )}
-
-                        {qrCode && (
-                            <div style={s.qrBox}>
-                                <img src={qrCode} alt="2FA QR Code" style={s.qrImg} />
-                                <p style={s.muted}>Secret: <strong style={{ color: 'var(--text-primary)' }}>{secret}</strong></p>
-                                <input 
-                                    style={s.input} 
-                                    placeholder="Enter 6-digit verification code" 
-                                    value={verifyCode} 
-                                    onChange={(e) => setVerifyCode(e.target.value)} 
-                                />
-                                <button onClick={verifyAndActivate2FA} style={s.btnCyan}>{loading ? 'Verifying...' : 'Verify & Activate'}</button>
-                            </div>
-                        )}
-
-                        {msg && <div style={{ marginTop: '16px', color: 'var(--text-secondary)', fontSize: '12px' }}>{msg}</div>}
-                    </div>
-
-                    <div style={{ marginTop: '40px', borderTop: '1px solid var(--border-ghost)', paddingTop: '24px' }}>
-                        <button onClick={logout} style={s.btnRed}>Sign Out</button>
-                    </div>
-                </motion.div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => navigate('/pricing')}>{data.plan === 'free' ? 'Upgrade' : 'Change plan'}</Button>
+              {data.plan !== 'free' && <Button size="sm" variant="secondary" onClick={cancel} disabled={busy}>Cancel</Button>}
             </div>
+          </>
+        )}
+      </CardBody>
+    </Card>
+  );
+}
+
+function UsernameCard({ initial }) {
+  const [username, setUsername] = useState(initial || '');
+  const [msg, setMsg] = useState('');
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
+    setSaving(true); setMsg('');
+    try { const { data } = await API.put('/api/users/username', { username }); setMsg(`Claimed @${data.username}`); }
+    catch (e) { setMsg(e.response?.data?.message || 'Could not set username.'); }
+    setSaving(false);
+  };
+  return (
+    <Card className="mb-4">
+      <CardHeader><CardTitle className="flex items-center gap-2"><AtSign size={15} /> Public handle</CardTitle></CardHeader>
+      <CardBody className="flex flex-col gap-2">
+        <p className="text-[13px] text-muted m-0">Claim a username for your public profile at <span className="font-mono">/u/&lt;name&gt;</span>.</p>
+        <div className="flex gap-2 max-w-sm">
+          <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="your_handle" />
+          <Button onClick={save} disabled={saving}>Save</Button>
         </div>
-    );
-};
+        {msg && <div className="text-[12px] text-accent">{msg}</div>}
+      </CardBody>
+    </Card>
+  );
+}
 
-/* ───────── Digital Observatory Profile Styles ───────── */
-const s = {
-    layout: {
-        padding: '32px 40px',
-        maxWidth: '1200px',
-        margin: '0 auto',
-        fontFamily: 'var(--font-body)',
-        color: 'var(--text-primary)',
-        minHeight: '100vh',
-    },
-    loader: {
-        fontFamily: 'var(--font-code)',
-        fontSize: '14px',
-        color: '#00E5EE',
-        textAlign: 'center',
-        marginTop: '100px',
-        letterSpacing: '2px',
-    },
-    header: {
-        marginBottom: '40px',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
-        paddingBottom: '24px',
-    },
-    h1: {
-        fontSize: '28px',
-        fontFamily: 'var(--font-display)',
-        fontWeight: 800,
-        margin: 0,
-        letterSpacing: '-0.02em',
-    },
-    subText: {
-        fontSize: '13px',
-        color: '#5A5A6A',
-        margin: '6px 0 0 0',
-    },
-    grid: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-        gap: '20px',
-    },
-    card: {
-        background: 'rgba(17, 17, 22, 0.6)',
-        backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: '16px',
-        padding: '32px',
-        transition: 'all 0.4s cubic-bezier(0.23,1,0.32,1)',
-    },
-    cardHeader: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '28px',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
-        paddingBottom: '16px',
-    },
-    h2: {
-        fontSize: '14px',
-        fontWeight: 700,
-        color: '#E8E8ED',
-        letterSpacing: '0.5px',
-        margin: 0,
-    },
-    h3: {
-        fontSize: '14px',
-        fontWeight: 600,
-        color: '#E8E8ED',
-        margin: '0 0 4px 0',
-    },
-    muted: {
-        fontSize: '12px',
-        color: '#5A5A6A',
-        margin: 0,
-    },
-    statusBadge: {
-        background: 'rgba(0, 229, 238, 0.1)',
-        color: '#00E5EE',
-        border: '1px solid rgba(0,229,238,0.2)',
-        padding: '4px 14px',
-        fontSize: '10px',
-        fontWeight: 700,
-        letterSpacing: '1px',
-        borderRadius: '100px',
-    },
-    statusBadgeGreen: {
-        background: 'rgba(16, 185, 129, 0.1)',
-        color: '#10B981',
-        border: '1px solid rgba(16,185,129,0.2)',
-        padding: '4px 14px',
-        fontSize: '10px',
-        fontWeight: 700,
-        letterSpacing: '1px',
-        borderRadius: '100px',
-    },
-    statusBadgeRed: {
-        background: 'rgba(244, 63, 94, 0.1)',
-        color: '#F43F5E',
-        border: '1px solid rgba(244,63,94,0.2)',
-        padding: '4px 14px',
-        fontSize: '10px',
-        fontWeight: 700,
-        letterSpacing: '1px',
-        borderRadius: '100px',
-    },
-    fieldGroup: {
-        marginBottom: '20px',
-    },
-    label: {
-        display: 'block',
-        fontSize: '11px',
-        color: '#5A5A6A',
-        marginBottom: '8px',
-        letterSpacing: '0.5px',
-        fontWeight: 600,
-        textTransform: 'uppercase',
-    },
-    value: {
-        fontSize: '15px',
-        fontWeight: 500,
-        color: '#E8E8ED',
-        background: 'rgba(8, 8, 12, 0.6)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        padding: '12px 16px',
-        borderRadius: '12px',
-        fontFamily: 'var(--font-code)',
-    },
-    authBlock: {
-        background: 'rgba(26, 26, 34, 0.5)',
-        border: '1px solid rgba(255,255,255,0.04)',
-        borderRadius: '14px',
-        padding: '24px',
-        marginTop: '24px',
-    },
-    btnCyan: {
-        background: 'linear-gradient(135deg, #00E5EE, #00b8c0)',
-        color: '#050508',
-        border: 'none',
-        padding: '12px 24px',
-        fontSize: '12px',
-        fontWeight: 700,
-        letterSpacing: '0.5px',
-        cursor: 'pointer',
-        width: '100%',
-        marginTop: '16px',
-        transition: 'all 0.2s',
-        borderRadius: '12px',
-    },
-    btnRed: {
-        background: 'transparent',
-        color: '#F43F5E',
-        border: '1px solid rgba(244,63,94,0.3)',
-        padding: '12px 24px',
-        fontSize: '12px',
-        fontWeight: 700,
-        letterSpacing: '0.5px',
-        cursor: 'pointer',
-        width: '100%',
-        transition: 'all 0.2s',
-        borderRadius: '12px',
-    },
-    qrBox: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '16px',
-        marginTop: '24px',
-        padding: '24px',
-        background: 'rgba(8, 8, 12, 0.6)',
-        border: '1px dashed rgba(255,255,255,0.08)',
-        borderRadius: '14px',
-    },
-    qrImg: {
-        width: '150px',
-        height: '150px',
-        border: '4px solid white',
-        borderRadius: '12px',
-    },
-    input: {
-        background: 'rgba(5, 5, 8, 0.8)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        color: '#E8E8ED',
-        padding: '12px',
-        width: '100%',
-        fontFamily: 'var(--font-code)',
-        fontSize: '14px',
-        textAlign: 'center',
-        outline: 'none',
-        marginTop: '8px',
-        borderRadius: '10px',
-    },
-};
+export default function Profile() {
+  const [user, setUser] = useState(() => {
+    try { const u = localStorage.getItem('userInfo'); return u ? JSON.parse(u) : null; } catch { return null; }
+  });
+  const [qrCode, setQrCode] = useState(null);
+  const [secret, setSecret] = useState(null);
+  const [verifyCode, setVerifyCode] = useState('');
+  const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(false);
 
-export default Profile;
+  const enable2FA = async () => {
+    try {
+      setLoading(true);
+      const { data } = await axios.post('/api/users/2fa/generate');
+      setQrCode(data.qrCode); setSecret(data.secret); setLoading(false);
+    } catch { setMsg('Failed to generate 2FA token.'); setLoading(false); }
+  };
+
+  const verifyAndActivate2FA = async () => {
+    try {
+      setLoading(true);
+      const { data } = await axios.post('/api/users/2fa/verify', { token: verifyCode });
+      setMsg(data.message);
+      setQrCode(null);
+      const updatedUser = { ...user, isTwoFactorEnabled: true };
+      localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      setLoading(false);
+    } catch { setMsg('Verification failed. Invalid token.'); setLoading(false); }
+  };
+
+  const logout = async () => {
+    try { await axios.post('/api/users/logout'); } catch (err) { console.error('Logout error', err); }
+    localStorage.removeItem('userInfo');
+    window.location.assign('/login');
+  };
+
+  if (!user) return null;
+  const initials = user.name ? user.name.substring(0, 2).toUpperCase() : 'U';
+
+  return (
+    <div className="min-h-full bg-bg text-text" style={FONT}>
+      <div className="max-w-3xl mx-auto px-6 py-8 pb-16">
+        <h1 className="text-[24px] font-extrabold tracking-tight m-0 mb-5">Profile &amp; settings</h1>
+
+        {/* Identity */}
+        <Card className="mb-4">
+          <CardBody className="flex items-center gap-4">
+            <span className="w-16 h-16 rounded-2xl flex items-center justify-center text-[22px] font-extrabold text-accent-fg shrink-0" style={{ background: 'linear-gradient(135deg, var(--cz-accent), #7c93ff)' }}>{initials}</span>
+            <div className="min-w-0">
+              <div className="text-[19px] font-bold text-text truncate">{user.name || 'User'}</div>
+              <div className="flex items-center gap-1.5 text-[13px] text-muted mt-0.5"><Mail size={14} /> {user.email}</div>
+              <div className="mt-2"><Badge tone="accent">{(user.role || 'student').toUpperCase()}</Badge></div>
+            </div>
+          </CardBody>
+        </Card>
+
+        {/* Account fields */}
+        <Card className="mb-4">
+          <CardHeader><CardTitle>Account</CardTitle></CardHeader>
+          <CardBody className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div className="text-[12px] font-semibold text-muted mb-1 flex items-center gap-1.5"><UserIcon size={13} /> Name</div>
+              <div className="text-[14px] text-text bg-elevated border border-line rounded-lg px-3 py-2">{user.name}</div>
+            </div>
+            <div>
+              <div className="text-[12px] font-semibold text-muted mb-1 flex items-center gap-1.5"><Mail size={13} /> Email</div>
+              <div className="text-[14px] text-text bg-elevated border border-line rounded-lg px-3 py-2 truncate">{user.email}</div>
+            </div>
+          </CardBody>
+        </Card>
+
+        {/* Security / 2FA */}
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>Two-factor authentication</CardTitle>
+            {user.isTwoFactorEnabled
+              ? <Badge tone="success"><ShieldCheck size={12} /> Enabled</Badge>
+              : <Badge tone="warning"><ShieldAlert size={12} /> Off</Badge>}
+          </CardHeader>
+          <CardBody className="flex flex-col gap-3">
+            {user.isTwoFactorEnabled ? (
+              <p className="text-[13px] text-muted m-0">Your account is protected with an authenticator app. Great job.</p>
+            ) : !qrCode ? (
+              <>
+                <p className="text-[13px] text-muted m-0">Add a second layer of security with a TOTP authenticator (Google Authenticator, Authy…).</p>
+                <Button className="self-start" onClick={enable2FA} disabled={loading}>{loading ? 'Generating…' : 'Enable 2FA'}</Button>
+              </>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-5 items-start">
+                <img src={qrCode} alt="2FA QR code" className="w-40 h-40 rounded-lg border border-line bg-white p-2" />
+                <div className="flex flex-col gap-3 flex-1">
+                  <p className="text-[13px] text-muted m-0">Scan the QR with your authenticator, then enter the 6-digit code to activate.</p>
+                  {secret && <code className="text-[12px] text-faint break-all font-mono">{secret}</code>}
+                  <div className="flex gap-2 max-w-xs">
+                    <Input value={verifyCode} onChange={(e) => setVerifyCode(e.target.value)} placeholder="123456" maxLength={6} />
+                    <Button onClick={verifyAndActivate2FA} disabled={loading}>{loading ? 'Verifying…' : 'Verify'}</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {msg && <div className="text-[13px] text-accent bg-accent/10 border border-accent/25 rounded-lg px-3 py-2">{msg}</div>}
+          </CardBody>
+        </Card>
+
+        {/* Plan & billing */}
+        <BillingCard />
+
+        {/* Public handle */}
+        <UsernameCard initial={user.username} />
+
+        {/* Danger */}
+        <Card>
+          <CardBody className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-[14px] font-bold text-text">Sign out</div>
+              <div className="text-[13px] text-muted">End your session on this device.</div>
+            </div>
+            <Button variant="danger" onClick={logout}><LogOut size={15} /> Sign out</Button>
+          </CardBody>
+        </Card>
+      </div>
+    </div>
+  );
+}

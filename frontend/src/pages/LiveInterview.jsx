@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { API as axios } from '../utils/api';
 import API_BASE from '../utils/api';
 import CodeEditor from '../components/Editor/CodeEditor';
 import Canvas from '../components/Visualizer/Canvas';

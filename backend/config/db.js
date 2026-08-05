@@ -9,8 +9,11 @@ const connectDB = async () => {
         });
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
-        console.error(`❌ Error: ${error.message}`);
-        process.exit(1);
+        // Don't hard-crash the whole server on DB failure — let the API boot so
+        // frontend dev / non-DB routes still work. Auth & data routes will error
+        // until a reachable MONGO_URI is configured.
+        console.error(`❌ MongoDB connection failed: ${error.message}`);
+        console.error(`   Server is running WITHOUT a database. Fix MONGO_URI in backend/.env.`);
     }
 };
 

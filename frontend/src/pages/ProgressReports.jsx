@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { API as axios } from '../utils/api';
 import API_BASE from '../utils/api';
 
 /**
@@ -46,7 +46,7 @@ const ProgressReports = () => {
     };
 
     // Heatmap level colors
-    const heatColors = ['rgba(255,255,255,0.03)', 'rgba(72,187,120,0.3)', 'rgba(72,187,120,0.6)', 'rgba(72,187,120,0.9)'];
+    const heatColors = ['var(--cz-elevated)', 'rgba(72,187,120,0.3)', 'rgba(72,187,120,0.6)', 'rgba(72,187,120,0.9)'];
 
     const ratingColors = {
         needs_practice: 'var(--accent-red)', getting_there: 'var(--accent-yellow)', solid: '#4fd1c5', excellent: 'var(--accent-teal)', interview_ready: 'var(--accent-green)'
@@ -261,11 +261,11 @@ const ProgressReports = () => {
                     <h1 style={S.pageTitle}>📊 Progress Reports</h1>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <button onClick={() => { setView('weekly'); loadWeekly(); }}
-                            style={{ ...S.tabBtn, background: view === 'weekly' ? 'var(--accent-teal)' : 'rgba(255,255,255,0.05)', color: view === 'weekly' ? '#fff' : '#888' }}>
+                            style={{ ...S.tabBtn, background: view === 'weekly' ? 'var(--accent-teal)' : 'var(--cz-elevated)', color: view === 'weekly' ? '#fff' : '#888' }}>
                             📅 Weekly
                         </button>
                         <button onClick={loadAnalytics}
-                            style={{ ...S.tabBtn, background: view === 'analytics' ? 'var(--accent-teal)' : 'rgba(255,255,255,0.05)', color: view === 'analytics' ? '#fff' : '#888' }}>
+                            style={{ ...S.tabBtn, background: view === 'analytics' ? 'var(--accent-teal)' : 'var(--cz-elevated)', color: view === 'analytics' ? '#fff' : '#888' }}>
                             📈 Analytics
                         </button>
                     </div>
@@ -279,17 +279,17 @@ const ProgressReports = () => {
 };
 
 const S = {
-    container: { padding: '24px', maxWidth: '900px', margin: '0 auto' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-    pageTitle: { margin: 0, fontSize: '22px', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-    backBtn: { background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' },
-    tabBtn: { padding: '6px 14px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' },
+    container: { padding: '32px 24px', maxWidth: '960px', margin: '0 auto', fontFamily: "'Inter', system-ui, sans-serif" },
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
+    pageTitle: { margin: 0, fontSize: '24px', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--cz-text)' },
+    backBtn: { background: 'var(--cz-surface)', border: '1px solid var(--cz-line)', color: 'var(--cz-muted)', padding: '7px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 },
+    tabBtn: { padding: '7px 14px', border: '1px solid var(--cz-line)', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 },
 
-    statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '16px' },
-    statCard: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', textAlign: 'center' },
+    statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '16px' },
+    statCard: { background: 'var(--cz-surface)', border: '1px solid var(--cz-line)', borderRadius: '12px', padding: '18px', textAlign: 'center', boxShadow: 'var(--cz-shadow-sm)' },
 
-    card: { background: 'var(--bg-muted)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', marginBottom: '16px' },
-    cardTitle: { margin: '0 0 14px 0', fontSize: '14px', color: 'var(--text-primary)' },
+    card: { background: 'var(--cz-surface)', border: '1px solid var(--cz-line)', borderRadius: '12px', padding: '20px', marginBottom: '16px', boxShadow: 'var(--cz-shadow-sm)' },
+    cardTitle: { margin: '0 0 14px 0', fontSize: '14px', fontWeight: 700, color: 'var(--cz-text)' },
 
     heatmap: { display: 'flex', flexWrap: 'wrap', gap: '3px' },
 
@@ -297,7 +297,7 @@ const S = {
     trendBar: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' },
 
     catRow: { display: 'flex', alignItems: 'center', gap: '12px', padding: '6px 0', borderBottom: '1px solid var(--border-color)' },
-    progressBar: { width: '100px', height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' },
+    progressBar: { width: '100px', height: '6px', background: 'var(--cz-line)', borderRadius: '3px', overflow: 'hidden' },
     progressFill: { height: '100%', borderRadius: '3px', transition: 'width 0.3s ease' },
 
     weakRow: { display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)' },

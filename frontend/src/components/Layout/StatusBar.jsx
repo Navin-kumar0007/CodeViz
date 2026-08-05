@@ -67,8 +67,8 @@ const styles = {
         left: 0,
         right: 0,
         height: 'var(--statusbar-height, 28px)',
-        background: '#08080C',
-        borderTop: '1px solid rgba(255,255,255,0.04)',
+        background: 'var(--cz-bg)',
+        borderTop: '1px solid var(--cz-line)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -90,7 +90,7 @@ const styles = {
         gap: '8px',
     },
     branch: {
-        color: '#00E5EE',
+        color: 'var(--cz-accent)',
         fontWeight: 500,
     },
     page: {

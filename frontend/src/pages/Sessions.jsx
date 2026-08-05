@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import { API as axios } from '../utils/api';
 import SessionPlayer from '../components/Session/SessionPlayer';
 import SessionRecorder from '../components/Session/SessionRecorder';
 import API_BASE from '../utils/api';

@@ -2,8 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion as Motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
 import VirtualizedArray from './VirtualizedArray';
-import SortingVisualizer from './SortingVisualizer';
-import SearchVisualizer from './SearchVisualizer';
+import MotionFlowArray from './MotionFlowArray';
 import ErrorBoundary from '../ErrorBoundary';
 import ConceptCard from '../ConceptCard';
 import VariableTracker from '../VariableTracker';
@@ -389,7 +388,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
   };
 
   // 🔥 ENHANCED ARRAY VISUALIZER (with algorithm detection)
-  const renderArray = (name, arr, state) => {
+  const renderArray = (name, arr, state, kind = 'array') => {
     // Use virtual scrolling for arrays > 50 elements
     if (arr.length > 50) {
       return (
@@ -403,264 +402,50 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
       );
     }
 
-    // 🔍 Detect if this is a sorting/search context based on variable names
-    const allVarNames = Object.keys(currentVariables).map(k => k.toLowerCase());
-    const hasSortingIndicators = allVarNames.some(v =>
-      ['i', 'j', 'temp', 'min_idx', 'minidx', 'key'].includes(v)
-    );
-    const hasSearchIndicators = allVarNames.some(v =>
-      ['low', 'high', 'mid', 'target', 'left', 'right'].includes(v)
-    );
+    // 🌊 MOTION-FLOW: derive pointers + sorted region from the live trace, then
+    // let MotionFlowArray animate the algorithm's actions (arc-swaps, gliding
+    // pointers, change flashes) instead of recoloring static boxes.
+    const prevArr = previousVariables[name];
 
-    // Get index pointers from primitive variables
-    const getIndexValue = (names) => {
-      for (const n of names) {
-        const val = currentVariables[n] ?? currentVariables[n.toLowerCase()];
-        if (typeof val === 'number' && val >= 0 && val < arr.length) return val;
+    const POINTER_NAMES = new Set([
+      'i', 'j', 'k', 'l', 'r', 'lo', 'hi', 'mid', 'left', 'right', 'low', 'high',
+      'start', 'end', 'slow', 'fast', 'pivot', 'min_idx', 'minidx', 'key', 'idx',
+      'index', 'p', 'q', 'cur', 'curr', 'target',
+    ]);
+    const pointers = {};
+    for (const [vk, vv] of Object.entries(currentVariables)) {
+      if (typeof vv === 'number' && Number.isInteger(vv) && vv >= 0 && vv < arr.length) {
+        if (POINTER_NAMES.has(vk.toLowerCase()) || vk.length <= 2) pointers[vk] = vv;
       }
-      return null;
-    };
-
-    // 🔍 Use SearchVisualizer for binary search context
-    if (hasSearchIndicators && (name === 'arr' || name.toLowerCase().includes('arr'))) {
-      const low = getIndexValue(['low', 'left']);
-      const high = getIndexValue(['high', 'right']);
-      const mid = getIndexValue(['mid']);
-      const target = currentVariables.target ?? currentVariables.Target ?? null;
-
-      return (
-        <SearchVisualizer
-          key={name}
-          name={name}
-          arr={arr}
-          target={target}
-          low={low}
-          high={high}
-          mid={mid}
-        />
-      );
     }
 
-    // 🔢 Use SortingVisualizer for sorting context
-    if (hasSortingIndicators && (name === 'arr' || name.toLowerCase().includes('arr'))) {
-      const i = getIndexValue(['i']);
-      const j = getIndexValue(['j']);
-      const minIdx = getIndexValue(['min_idx', 'minIdx', 'minidx']);
+    // Bubble-sort style sorted tail: once outer index i has advanced, the last i
+    // elements are locked in place.
+    const iVal = currentVariables.i;
+    const n = arr.length;
+    const sortedIndices = (typeof iVal === 'number' && iVal > 0)
+      ? Array.from({ length: iVal }, (_, k) => n - 1 - k).filter(x => x >= 0)
+      : [];
 
-      // Build current indices object
-      const currentIndices = {};
-      if (i !== null) currentIndices.i = i;
-      if (j !== null) currentIndices.j = j;
-      if (minIdx !== null) currentIndices.min = minIdx;
-
-      // Detect comparing indices (i and j if both present)
-      const comparingIndices = [];
-
-      // Detect sorted section (elements after n-i-1 in bubble sort)
-      const n = arr.length;
-      const sortedIndices = i !== null ? Array.from({ length: i }, (_, k) => n - 1 - k).filter(x => x >= 0) : [];
-
-      return (
-        <SortingVisualizer
-          key={name}
-          name={name}
-          arr={arr}
-          state={state}
-          currentIndices={currentIndices}
-          comparingIndices={comparingIndices}
-          sortedIndices={sortedIndices}
-          getVariableColor={getVariableColor}
-        />
-      );
-    }
-
-    // Regular rendering for non-algorithm arrays
     return (
-      <Motion.div
+      <MotionFlowArray
         key={name}
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.3 }}
-        style={{
-          ...styles.enhancedArrayWrapper,
-          borderColor: getVariableColor(state),
-          boxShadow: state === 'changed' ? `0 0 25px ${getVariableColor(state)}40` : styles.glassEffect.boxShadow
-        }}
-      >
-        {/* Header */}
-        <div style={styles.arrayHeader}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={styles.arrayIcon}>📊</span>
-            <div>
-              <div style={styles.varName}>{name}</div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Length: {arr.length}</div>
-            </div>
-          </div>
-          {state === 'new' && <div style={styles.badge}>NEW</div>}
-          {state === 'changed' && <div style={{ ...styles.badge, background: 'var(--accent-yellow)' }}>CHANGED</div>}
-        </div>
-
-        {/* Array Elements */}
-        <div style={styles.enhancedArrayContainer}>
-          {arr.map((val, idx) => (
-            <Motion.div
-              key={idx}
-              initial={{ scale: 0, y: -20 }}
-              animate={{ scale: 1, y: 0 }}
-              transition={{ delay: Math.min(idx * 0.03, 0.3), duration: 0.2, type: 'spring' }}
-              style={styles.enhancedArrayItem}
-            >
-              {/* Index label on top */}
-              <div style={styles.arrayIndexTop}>[{idx}]</div>
-
-              {/* Value box */}
-              <Motion.div
-                whileHover={{ scale: 1.1, rotate: 2 }}
-                style={{
-                  ...styles.enhancedArrayBox,
-                  background: `linear-gradient(135deg, ${getVariableColor(state)}, ${getVariableColor(state)}dd)`
-                }}
-              >
-                {String(val)}
-              </Motion.div>
-            </Motion.div>
-          ))}
-        </div>
-      </Motion.div>
+        name={name}
+        arr={arr}
+        prevArr={prevArr}
+        pointers={pointers}
+        sortedIndices={sortedIndices}
+        kind={kind}
+      />
     );
   }; // Close renderArray function
 
+  // Stacks & queues are arrays too — render them through the same Motion-Flow
+  // component (with an endpoint highlight) so every structure shares one look.
+  const renderStack = (name, stack, state) => renderArray(name, stack, state, 'stack');
+  const renderQueue = (name, queue, state) => renderArray(name, queue, state, 'queue');
+
   // 🔥 STACK VISUALIZATION (Vertical, bottom-to-top)
-  const renderStack = (name, stack, state) => (
-    <Motion.div
-      key={name}
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      style={{
-        ...styles.enhancedArrayWrapper,
-        borderColor: 'var(--accent-yellow)',
-        minWidth: '200px',
-        maxWidth: '250px'
-      }}
-    >
-      {/* Header */}
-      <div style={styles.arrayHeader}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '20px' }}>📚</span>
-          <div>
-            <div style={styles.varName}>{name}</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Stack (Size: {stack.length})</div>
-          </div>
-        </div>
-        {state === 'changed' && <div style={{ ...styles.badge, background: 'var(--accent-yellow)' }}>CHANGED</div>}
-      </div>
-
-      {/* Stack items - vertical, bottom to top */}
-      <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '4px', maxHeight: '250px', overflowY: 'auto' }}>
-        <AnimatePresence mode="popLayout">
-          {stack.slice(0, 10).map((val, idx) => (
-            <Motion.div
-              key={`${val}-${idx}`}
-              initial={{ y: -30, opacity: 0, scale: 0.8 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ x: 50, opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.4, type: 'spring' }}
-              style={{
-                ...styles.stackItem,
-                background: idx === stack.length - 1
-                  ? 'linear-gradient(135deg, var(--accent-yellow), #f59042)'
-                  : 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <span>{String(val)}</span>
-              {idx === stack.length - 1 && (
-                <Motion.span
-                  initial={{ x: -10, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  style={{ fontSize: '11px', color: 'var(--text-primary)', fontWeight: 'bold' }}
-                >
-                  ← TOP
-                </Motion.span>
-              )}
-            </Motion.div>
-          ))}
-        </AnimatePresence>
-        {stack.length === 0 && (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', fontStyle: 'italic' }}>
-            Empty Stack
-          </div>
-        )}
-      </div>
-    </Motion.div>
-  );
-
-  // 🔥 QUEUE VISUALIZATION (Horizontal, left-to-right)
-  const renderQueue = (name, queue, state) => (
-    <Motion.div
-      key={name}
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      style={{
-        ...styles.enhancedArrayWrapper,
-        borderColor: '#4299e1',
-        minWidth: '300px'
-      }}
-    >
-      {/* Header */}
-      <div style={styles.arrayHeader}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '20px' }}>🎫</span>
-          <div>
-            <div style={styles.varName}>{name}</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Queue (Size: {queue.length})</div>
-          </div>
-        </div>
-        {state === 'changed' && <div style={{ ...styles.badge, background: '#4299e1' }}>CHANGED</div>}
-      </div>
-
-      {/* Queue items - horizontal */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', padding: '6px 0' }}>
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'bold', minWidth: '50px' }}>FRONT →</span>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <AnimatePresence mode="popLayout">
-            {queue.slice(0, 10).map((val, idx) => (
-              <Motion.div
-                key={`${val}-${idx}`}
-                initial={{ x: -30, opacity: 0, scale: 0.8 }}
-                animate={{ x: 0, opacity: 1, scale: 1 }}
-                exit={{ x: 30, opacity: 0, scale: 0.8 }}
-                layout
-                transition={{ duration: 0.4, type: 'spring' }}
-                style={{
-                  ...styles.queueItem,
-                  background: idx === 0
-                    ? 'linear-gradient(135deg, #4fc3f7, #29b6f6)'
-                    : 'linear-gradient(135deg, #4299e1, #3182ce)'
-                }}
-              >
-                {String(val)}
-              </Motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'bold', minWidth: '50px' }}>← REAR</span>
-      </div>
-
-      {queue.length === 0 && (
-        <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', fontStyle: 'italic' }}>
-          Empty Queue
-        </div>
-      )}
-    </Motion.div>
-  );
-
   // 🔗 LINKED LIST VISUALIZATION (Horizontal with arrows)
   const renderLinkedList = (name, head, state) => {
     // Traverse linked list and collect nodes (max 10 to prevent infinite loops)
@@ -697,7 +482,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
         animate={{ scale: 1, opacity: 1 }}
         style={{
           ...styles.enhancedArrayWrapper,
-          borderColor: '#4fc3f7',
+          borderColor: '#5b7cff',
           minWidth: '400px'
         }}
       >
@@ -710,7 +495,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
               <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Linked List ({nodes.length} nodes)</div>
             </div>
           </div>
-          {state === 'changed' && <div style={{ ...styles.badge, background: '#4fc3f7' }}>CHANGED</div>}
+          {state === 'changed' && <div style={{ ...styles.badge, background: '#5b7cff' }}>CHANGED</div>}
         </div>
 
         {/* SVG Canvas */}
@@ -724,7 +509,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
               refX="9"
               refY="3"
               orient="auto"
-              fill="#4fc3f7"
+              fill="#5b7cff"
             >
               <polygon points="0 0, 10 3, 0 6" />
             </marker>
@@ -747,8 +532,8 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
                   width={nodeWidth}
                   height={nodeHeight}
                   rx="8"
-                  fill="url(#linkedListGradient)"
-                  stroke="#4fc3f7"
+                  fill="#1e2436"
+                  stroke="#5b7cff"
                   strokeWidth="2"
                 />
 
@@ -785,7 +570,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
                     y1={y + nodeHeight / 2}
                     x2={x + nodeWidth + arrowGap}
                     y2={y + nodeHeight / 2}
-                    stroke="#4fc3f7"
+                    stroke="#5b7cff"
                     strokeWidth="3"
                     markerEnd="url(#arrowhead)"
                   />
@@ -825,82 +610,77 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
     );
   };
 
+  // Motion-Flow palette (shared with MotionFlowArray) so every structure matches.
+  const MF = { cell: '#1e2436', line: '#313a54', text: '#e7eaf3', muted: '#8b93a7', accent: '#5b7cff', change: '#f5b544' };
+  const mfMono = 'ui-monospace, "JetBrains Mono", Menlo, monospace';
+
   const renderObject = (name, value, state) => (
     <Motion.div
       key={name}
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0.9, opacity: 0 }}
-      whileHover={{ scale: 1.02 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
       style={{
-        ...styles.varBox,
-        ...styles.glassEffect,
-        borderColor: getVariableColor(state),
-        boxShadow: state === 'changed' ? `0 0 20px ${getVariableColor(state)}40` : styles.glassEffect.boxShadow
+        background: MF.cell, border: `1px solid ${state === 'changed' ? MF.change : MF.line}`,
+        borderRadius: '10px', padding: '12px 14px', minWidth: '200px',
+        boxShadow: state === 'changed' ? `0 0 0 2px ${MF.change}30` : 'none'
       }}
     >
-      <div style={styles.varHeader}>
-        <span style={styles.varName}>📦 {name}</span>
-        <span style={styles.varType}>Object</span>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
+        <span style={{ fontFamily: mfMono, fontWeight: 700, color: MF.text }}>{name}</span>
+        <span style={{ fontSize: '10px', color: MF.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>object</span>
       </div>
       {Object.keys(value).length === 0 ? (
-        <div style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Empty</div>
+        <div style={{ color: MF.muted, fontStyle: 'italic', fontFamily: mfMono, fontSize: '12px' }}>empty</div>
       ) : (
-        Object.keys(value).map(key => (
-          <div key={key} style={styles.objectRow}>
-            <span style={styles.objKey}>{key}:</span>
-            <span style={styles.objValue}>
-              {typeof value[key] === 'object' && value[key] !== null
-                ? (Array.isArray(value[key]) ? `[${value[key]}]` : '{...}')
-                : String(value[key])}
-            </span>
-          </div>
-        ))
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {Object.keys(value).map(key => (
+            <div key={key} style={{ display: 'flex', gap: '8px', fontFamily: mfMono, fontSize: '13px' }}>
+              <span style={{ color: MF.accent }}>{key}</span>
+              <span style={{ color: MF.muted }}>:</span>
+              <span style={{ color: MF.text }}>
+                {typeof value[key] === 'object' && value[key] !== null
+                  ? (Array.isArray(value[key]) ? `[${value[key]}]` : '{…}')
+                  : String(value[key])}
+              </span>
+            </div>
+          ))}
+        </div>
       )}
     </Motion.div>
   );
 
-  const renderPrimitive = (name, value, state) => (
-    <Motion.div
-      key={name}
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0.8, opacity: 0 }}
-      whileHover={{ scale: 1.05 }}
-      transition={{ duration: 0.3 }}
-      style={{
-        ...styles.primitiveBox,
-        ...styles.glassEffect,
-        borderColor: getVariableColor(state),
-        borderWidth: '2px',
-        boxShadow: state === 'changed'
-          ? `0 0 25px ${getVariableColor(state)}50, 0 4px 15px rgba(0,0,0,0.3)`
-          : styles.glassEffect.boxShadow
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{ ...styles.varName, color: getVariableColor(state) }}>{name}</div>
-        {state === 'new' && <div style={styles.badge}>NEW</div>}
-        {state === 'changed' && <div style={{ ...styles.badge, background: 'var(--accent-yellow)' }}>CHANGED</div>}
-      </div>
+  const renderPrimitive = (name, value, state) => {
+    const valColor = typeof value === 'number' ? '#5b7cff'
+      : typeof value === 'string' ? '#37d67a'
+        : typeof value === 'boolean' ? '#f5b544' : '#f472b6';
+    return (
       <Motion.div
-        animate={{ scale: state === 'changed' ? [1, 1.1, 1] : 1 }}
-        transition={{ duration: 0.5 }}
+        key={name}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
         style={{
-          ...styles.primitiveValue,
-          color: typeof value === 'number' ? '#4fc3f7' :
-            typeof value === 'string' ? '#4ec9b0' :
-              typeof value === 'boolean' ? '#dcdcaa' : '#ce9178'
+          background: MF.cell, border: `1px solid ${state === 'changed' ? MF.change : MF.line}`,
+          borderRadius: '10px', padding: '10px 14px', minWidth: '92px',
+          display: 'flex', flexDirection: 'column', gap: '2px',
+          boxShadow: state === 'changed' ? `0 0 0 2px ${MF.change}40` : 'none'
         }}
       >
-        {typeof value === 'string' ? `"${value}"` : String(value)}
+        <div style={{ fontFamily: mfMono, fontSize: '11px', color: MF.muted }}>{name}</div>
+        <Motion.div
+          key={String(value)}
+          initial={{ scale: state === 'changed' ? 1.18 : 1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.35 }}
+          style={{ fontFamily: mfMono, fontWeight: 700, fontSize: '20px', color: valColor }}
+        >
+          {typeof value === 'string' ? `"${value}"` : String(value)}
+        </Motion.div>
+        <div style={{ fontFamily: mfMono, fontSize: '9px', color: MF.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{typeof value}</div>
       </Motion.div>
-      <div style={{ fontSize: '8px', color: 'var(--text-muted)', marginTop: '2px', textTransform: 'uppercase' }}>
-        {typeof value}
-      </div>
-    </Motion.div>
-  );
+    );
+  };
 
   // 🎯 SECTION RENDERER
   const renderSection = (title, icon, variables, renderFn, categoryKey) => {
@@ -1550,40 +1330,44 @@ const styles = {
     borderRadius: '6px'
   },
   graphNode: {
-    width: '28px',
-    height: '28px',
+    width: '32px',
+    height: '32px',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-purple) 100%)',
-    color: 'var(--text-primary)',
+    background: '#1e2436',
+    color: '#e7eaf3',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 'bold',
     fontSize: '12px',
-    boxShadow: '0 4px 10px rgba(13, 148, 136, 0.4)'
+    fontFamily: 'ui-monospace, "JetBrains Mono", Menlo, monospace',
+    border: '1px solid #5b7cff',
+    boxShadow: '0 0 0 2px rgba(91,124,255,0.18)'
   },
   graphNeighbor: {
     padding: '4px 10px',
-    background: 'var(--accent-blue)',
-    color: 'var(--text-primary)',
-    borderRadius: '4px',
+    background: 'color-mix(in srgb, #5b7cff 16%, #1e2436)',
+    color: '#e7eaf3',
+    borderRadius: '6px',
     fontSize: '12px',
-    boxShadow: '0 2px 8px rgba(14, 99, 156, 0.3)'
+    fontFamily: 'ui-monospace, "JetBrains Mono", Menlo, monospace',
+    border: '1px solid #313a54'
   },
   treeNode: {
-    width: '28px',
-    height: '28px',
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #007acc, #0098ff)',
-    color: 'var(--text-primary)',
+    width: '34px',
+    height: '34px',
+    borderRadius: '8px',
+    background: '#1e2436',
+    color: '#e7eaf3',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 'bold',
-    fontSize: '10px',
+    fontSize: '11px',
+    fontFamily: 'ui-monospace, "JetBrains Mono", Menlo, monospace',
     zIndex: 10,
-    border: '1px solid rgba(0, 122, 204, 0.3)',
-    boxShadow: '0 2px 8px rgba(0, 122, 204, 0.4)'
+    border: '1px solid #5b7cff',
+    boxShadow: '0 0 0 2px rgba(91,124,255,0.18)'
   },
   nullNode: { fontSize: '10px', color: 'var(--text-muted)', marginTop: '5px' },
   objectRow: {

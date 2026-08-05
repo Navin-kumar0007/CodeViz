@@ -49,6 +49,12 @@ const Profile = lazy(() => import('./pages/Profile'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const About = lazy(() => import('./pages/About'));
+const UIKit = lazy(() => import('./pages/UIKit'));
+const SharePage = lazy(() => import('./pages/SharePage'));
+const EmbedPage = lazy(() => import('./pages/EmbedPage'));
+const PublicProfile = lazy(() => import('./pages/PublicProfile'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const Mentor = lazy(() => import('./pages/Mentor'));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -63,7 +69,9 @@ const AppLayout = ({ children }) => {
   const location = useLocation();
   const publicPaths = ['/home', '/login', '/signup', '/about'];
   const isSnippet = location.pathname.startsWith('/snippet/');
-  const isPublic = publicPaths.includes(location.pathname) || isSnippet;
+  const isShare = location.pathname.startsWith('/share/') || location.pathname.startsWith('/embed/');
+  const isPublicProfile = location.pathname.startsWith('/u/');
+  const isPublic = publicPaths.includes(location.pathname) || isSnippet || isShare || isPublicProfile;
 
   if (isPublic) return <>{children}</>;
 
@@ -122,6 +130,10 @@ const AnimatedRoutes = () => {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/snippet/:id" element={<SnippetViewer />} />
         <Route path="/about" element={<About />} />
+        <Route path="/ui-kit" element={<UIKit />} />
+        <Route path="/share/:token" element={<SharePage />} />
+        <Route path="/embed/:token" element={<EmbedPage />} />
+        <Route path="/u/:handle" element={<PublicProfile />} />
         <Route path="/classroom/join/:code" element={<ClassroomJoinHandler />} />
 
         {/* Protected Routes */}
@@ -156,6 +168,8 @@ const AnimatedRoutes = () => {
         <Route path="/git-learn" element={<ProtectedRoute><GitLearn /></ProtectedRoute>} />
         <Route path="/algo-race" element={<ProtectedRoute><AlgoRace /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+        <Route path="/mentor" element={<ProtectedRoute><Mentor /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   );

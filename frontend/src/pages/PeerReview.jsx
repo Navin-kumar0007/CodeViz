@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { API as axios } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import API_BASE from '../utils/api';
@@ -223,7 +223,7 @@ const PeerReview = () => {
                                 <Editor
                                     height="100%"
                                     language={language}
-                                    theme="vs-dark"
+                                    theme="light"
                                     value={code}
                                     onChange={setCode}
                                     options={{ minimap: { enabled: false } }}
@@ -263,7 +263,7 @@ const PeerReview = () => {
                                 <Editor
                                     height="100%"
                                     language={selectedReview.language}
-                                    theme="vs-dark"
+                                    theme="light"
                                     value={selectedReview.code}
                                     options={{ readOnly: true, minimap: { enabled: false } }}
                                 />

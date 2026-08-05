@@ -64,7 +64,8 @@ const generateResponse = async (prompt, userId, cacheKey = null) => {
 
     // 3. Prepare Keys and Models for rotation
     const keys = (process.env.GEMINI_API_KEY || '').split(',').map(k => k.trim()).filter(Boolean);
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
+    // Valid current model ids — the "-latest" aliases now 404 on v1beta.
+    const models = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
 
     let lastError = null;
 

@@ -113,6 +113,12 @@ app.use(cors({
     origin: allowedOrigins,
     credentials: true
 }));
+
+// 💳 Stripe webhook needs the RAW body for signature verification — mount it
+// BEFORE express.json() so the JSON parser doesn't consume the body.
+const billingRoutes = require('./routes/billingRoutes');
+app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), billingRoutes.webhookHandler);
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -144,6 +150,8 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/problems', problemRoutes);
 app.use('/api/peer-reviews', peerReviewRoutes);
 app.use('/api/autograder', autograderRoutes);
+app.use('/api/billing', billingRoutes); // 💳 Billing (entitlements, checkout, portal)
+app.use('/api/share', require('./routes/shareRoutes')); // 🔗 Shareable viz embeds (growth)
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)
 
@@ -154,7 +162,7 @@ app.get('/', (req, res) => {
 
 // 7. Start server
 const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
     logger.info(`🚀 Server running on port ${PORT}`);
     logger.info(`📡 Socket.io ready for connections`);
 });

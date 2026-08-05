@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
+const { requireFeature, meterUsage } = require('../middleware/billingMiddleware');
 const {
     getHint,
     explainError,
@@ -18,8 +19,9 @@ const {
     socraticTutor
 } = require('../controllers/aiController');
 
-// All routes require authentication
+// All routes require authentication + count against the daily AI-call limit.
 router.use(protect);
+router.use(meterUsage('aiCalls'));
 
 // AI Assistant routes
 router.post('/hint', getHint);
@@ -42,5 +44,13 @@ router.post('/generate-tests', generateTestCases);
 
 // 🌐 Code translator
 router.post('/translate', translateCode);
+
+// 🧠 AI Mentor + AI-generated problems (Phase 5). AI-call metering is applied
+// router-wide above; mentor features additionally require the 'ai-mentor' plan.
+const { generateProblem, mentorReview, mentorNext } = require('../controllers/aiMentorController');
+
+router.post('/generate-problem', generateProblem);
+router.post('/mentor/review', requireFeature('ai-mentor'), mentorReview);
+router.get('/mentor/next', requireFeature('ai-mentor'), mentorNext);
 
 module.exports = router;

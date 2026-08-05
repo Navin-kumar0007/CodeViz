@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { API as axios } from '../../utils/api';
 import API_BASE from '../../utils/api';
 
 const DiscussionPanel = ({ lessonId }) => {

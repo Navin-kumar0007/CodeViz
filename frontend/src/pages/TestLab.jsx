@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
-import axios from 'axios';
+import { API as axios } from '../utils/api';
 import API_BASE from '../utils/api';
 
 const API = API_BASE;
@@ -149,7 +149,7 @@ const TestLab = () => {
                             language={language === 'cpp' ? 'cpp' : language}
                             value={code}
                             onChange={v => setCode(v || '')}
-                            theme="vs-dark"
+                            theme="light"
                             options={{
                                 fontSize: 14,
                                 minimap: { enabled: false },

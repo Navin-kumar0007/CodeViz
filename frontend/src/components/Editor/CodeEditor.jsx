@@ -2,6 +2,18 @@ import React, { useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { useTheme } from '../../contexts/ThemeContext';
 
+// Map CodeViz language ids -> Monaco language ids (Monaco supports these natively)
+const MONACO_LANG = {
+  python: 'python',
+  javascript: 'javascript',
+  typescript: 'typescript',
+  java: 'java',
+  cpp: 'cpp',
+  c: 'c',
+  go: 'go',
+  rust: 'rust',
+};
+
 // ⚡️ NOW ACCEPTS 'activeLine' AND 'heatmapData' PROPS
 const CodeEditor = ({ code, setCode, language, activeLine, heatmapData }) => {
   const editorRef = useRef(null);
@@ -116,8 +128,8 @@ const CodeEditor = ({ code, setCode, language, activeLine, heatmapData }) => {
     <div style={{ height: '100%', borderRadius: '0', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
       <Editor
         height="100%"
-        defaultLanguage={language === 'java' || language === 'cpp' ? 'java' : language}
-        language={language === 'java' || language === 'cpp' ? 'java' : language}
+        defaultLanguage={MONACO_LANG[language] || language}
+        language={MONACO_LANG[language] || language}
         theme={colors.editorTheme}
         value={code}
         onChange={handleEditorChange}

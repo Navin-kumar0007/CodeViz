@@ -1121,10 +1121,150 @@ export const getFlatExamples = (language) => {
     return flat;
 };
 
+// Curated starter examples for the newer languages. C is fully traced (GDB),
+// TypeScript is fully traced (transpiled -> JS tracer); Go/Rust are run-only.
+const C_EXAMPLES = {
+    'Bubble Sort': `#include <stdio.h>
+
+int main() {
+    int arr[6] = {5, 2, 9, 1, 5, 6};
+    int n = 6;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - 1 - i; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int tmp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = tmp;
+            }
+        }
+    }
+    for (int i = 0; i < n; i++) printf("%d ", arr[i]);
+    printf("\\n");
+    return 0;
+}`,
+    'Fibonacci (recursion)': `#include <stdio.h>
+
+int fib(int n) {
+    if (n <= 1) return n;
+    return fib(n - 1) + fib(n - 2);
+}
+
+int main() {
+    for (int i = 0; i < 10; i++) printf("%d ", fib(i));
+    printf("\\n");
+    return 0;
+}`,
+    'Array Sum': `#include <stdio.h>
+
+int main() {
+    int arr[5] = {10, 20, 30, 40, 50};
+    int sum = 0;
+    for (int i = 0; i < 5; i++) {
+        sum += arr[i];
+    }
+    printf("Sum = %d\\n", sum);
+    return 0;
+}`,
+};
+
+const TS_EXAMPLES = {
+    'Binary Search': `function binarySearch(arr: number[], target: number): number {
+  let left = 0, right = arr.length - 1;
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    if (arr[mid] === target) return mid;
+    else if (arr[mid] < target) left = mid + 1;
+    else right = mid - 1;
+  }
+  return -1;
+}
+console.log(binarySearch([1, 3, 5, 7, 9], 7));`,
+    'Quick Sort': `function quickSort(arr: number[]): number[] {
+  if (arr.length <= 1) return arr;
+  const pivot = arr[arr.length - 1];
+  const left = arr.filter((x, i) => i < arr.length - 1 && x <= pivot);
+  const right = arr.filter((x, i) => i < arr.length - 1 && x > pivot);
+  return [...quickSort(left), pivot, ...quickSort(right)];
+}
+console.log(quickSort([38, 27, 43, 3, 9, 82, 10]));`,
+    'Fibonacci': `function fib(n: number): number {
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+const out: number[] = [];
+for (let i = 0; i < 10; i++) out.push(fib(i));
+console.log(out.join(" "));`,
+};
+
+const GO_EXAMPLES = {
+    'Bubble Sort': `package main
+
+import "fmt"
+
+func main() {
+    arr := []int{5, 2, 9, 1, 5, 6}
+    for i := 0; i < len(arr)-1; i++ {
+        for j := 0; j < len(arr)-1-i; j++ {
+            if arr[j] > arr[j+1] {
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+            }
+        }
+    }
+    fmt.Println(arr)
+}`,
+    'Fibonacci': `package main
+
+import "fmt"
+
+func fib(n int) int {
+    if n <= 1 {
+        return n
+    }
+    return fib(n-1) + fib(n-2)
+}
+
+func main() {
+    for i := 0; i < 10; i++ {
+        fmt.Print(fib(i), " ")
+    }
+    fmt.Println()
+}`,
+};
+
+const RUST_EXAMPLES = {
+    'Bubble Sort': `fn main() {
+    let mut arr = [5, 2, 9, 1, 5, 6];
+    let n = arr.len();
+    for i in 0..n - 1 {
+        for j in 0..n - 1 - i {
+            if arr[j] > arr[j + 1] {
+                arr.swap(j, j + 1);
+            }
+        }
+    }
+    println!("{:?}", arr);
+}`,
+    'Fibonacci': `fn fib(n: u32) -> u32 {
+    if n <= 1 { return n; }
+    fib(n - 1) + fib(n - 2)
+}
+
+fn main() {
+    for i in 0..10 {
+        print!("{} ", fib(i));
+    }
+    println!();
+}`,
+};
+
 // Keep old format for backward compatibility
 export const EXAMPLES = {
     python: getFlatExamples('python'),
     javascript: getFlatExamples('javascript'),
     java: getFlatExamples('java'),
-    cpp: getFlatExamples('cpp')
+    cpp: getFlatExamples('cpp'),
+    c: C_EXAMPLES,
+    typescript: TS_EXAMPLES,
+    go: GO_EXAMPLES,
+    rust: RUST_EXAMPLES,
 };

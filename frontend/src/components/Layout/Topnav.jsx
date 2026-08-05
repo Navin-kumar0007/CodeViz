@@ -1,119 +1,72 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Topnav = () => {
-    const location = useLocation();
-    const navigate = useNavigate();
-    
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    const initials = userInfo.name ? userInfo.name.substring(0, 2).toUpperCase() : 'U';
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
-    // Generate simple breadcrumbs from path
-    const pathParts = location.pathname.split('/').filter(p => p);
-    const breadcrumbs = ['CodeViz', ...pathParts.map(p => p.charAt(0).toUpperCase() + p.slice(1).replace(/-/g, ' '))];
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  const initials = userInfo.name ? userInfo.name.substring(0, 2).toUpperCase() : 'U';
 
-    return (
-        <div style={S.container}>
-            <div style={S.breadcrumbs}>
-                {breadcrumbs.map((crumb, index) => (
-                    <React.Fragment key={crumb + index}>
-                        <span style={index === breadcrumbs.length - 1 ? S.crumbActive : S.crumb}>
-                            {crumb}
-                        </span>
-                        {index < breadcrumbs.length - 1 && <span style={S.separator}>/</span>}
-                    </React.Fragment>
-                ))}
-            </div>
-            <div style={S.actions}>
-                <div style={S.search}>
-                    <span style={{ opacity: 0.5 }}>Search...</span>
-                    <span style={S.shortcut}>⌘ K</span>
-                </div>
-                <div style={S.avatar} onClick={() => navigate('/profile')}>{initials}</div>
-            </div>
-        </div>
-    );
-};
+  const parts = location.pathname.split('/').filter(Boolean);
+  const crumbs = ['CodeViz', ...parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1).replace(/-/g, ' '))];
 
-const S = {
-    container: {
-        height: 'var(--header-height)',
-        background: 'var(--bg-glass)',
-        backdropFilter: 'var(--glass-blur)',
-        WebkitBackdropFilter: 'var(--glass-blur)',
-        borderBottom: 'var(--glass-border)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 24px',
-        flexShrink: 0,
-        position: 'sticky',
-        top: 0,
-        zIndex: 90,
-    },
-    breadcrumbs: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        fontSize: '12px',
-        fontFamily: 'var(--font-code)',
-    },
-    crumb: {
-        color: 'var(--text-secondary)',
-    },
-    crumbActive: {
-        color: 'var(--text-primary)',
-        fontWeight: 700,
-    },
-    separator: {
-        color: 'var(--border-strong)',
-    },
-    actions: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '16px',
-    },
-    search: {
-        fontSize: '12px',
-        fontFamily: 'var(--font-code)',
-        color: 'var(--text-secondary)',
-        background: 'var(--bg-panel)',
-        padding: '6px 12px',
-        borderRadius: '100px',
-        border: '1px solid rgba(255,255,255,0.06)',
-        cursor: 'text',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '24px',
-        minWidth: '200px',
-        justifyContent: 'space-between',
-        transition: 'border-color var(--transition-fast)',
-    },
-    shortcut: {
-        border: '1px solid var(--border-ghost)',
-        padding: '2px 4px',
-        borderRadius: '6px',
-        fontSize: '10px',
-        background: 'var(--bg-panel)',
-        color: 'var(--text-muted)',
-    },
-    avatar: {
-        width: '28px',
-        height: '28px',
-        borderRadius: '50%',
-        background: 'rgba(17,17,22,0.5)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        color: '#00E5EE',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '12px',
-        fontFamily: 'var(--font-code)',
-        fontWeight: 700,
-        cursor: 'pointer',
-        boxShadow: 'none',
-        transition: 'all var(--transition-fast)',
-    }
+  return (
+    <div style={{
+      height: '56px', flexShrink: 0, position: 'sticky', top: 0, zIndex: 90,
+      background: 'color-mix(in srgb, var(--cz-surface) 88%, transparent)',
+      backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+      borderBottom: '1px solid var(--cz-line)',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px',
+    }}>
+      {/* Breadcrumbs */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '12.5px', fontFamily: 'ui-monospace, monospace' }}>
+        {crumbs.map((c, i) => (
+          <React.Fragment key={c + i}>
+            <span style={{ color: i === crumbs.length - 1 ? 'var(--cz-text)' : 'var(--cz-muted)', fontWeight: i === crumbs.length - 1 ? 700 : 500 }}>{c}</span>
+            {i < crumbs.length - 1 && <span style={{ color: 'var(--cz-faint)' }}>/</span>}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <button
+          onClick={() => { const e = new KeyboardEvent('keydown', { key: 'k', metaKey: true }); window.dispatchEvent(e); }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '22px', justifyContent: 'space-between',
+            minWidth: '208px', height: '32px', padding: '0 10px 0 12px', cursor: 'text',
+            background: 'var(--cz-elevated)', border: '1px solid var(--cz-line)', borderRadius: '8px',
+            color: 'var(--cz-muted)', fontSize: '12.5px',
+          }}
+        >
+          <span style={{ opacity: 0.8 }}>Search…</span>
+          <span style={{ display: 'flex', gap: '2px', fontFamily: 'ui-monospace, monospace', fontSize: '11px', color: 'var(--cz-faint)' }}>
+            <kbd style={{ padding: '1px 5px', border: '1px solid var(--cz-line)', borderRadius: '4px', background: 'var(--cz-surface)' }}>⌘</kbd>
+            <kbd style={{ padding: '1px 5px', border: '1px solid var(--cz-line)', borderRadius: '4px', background: 'var(--cz-surface)' }}>K</kbd>
+          </span>
+        </button>
+
+        <button
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+          style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid var(--cz-line)', background: 'var(--cz-elevated)', color: 'var(--cz-muted)', cursor: 'pointer', fontSize: '14px' }}
+        >
+          {theme === 'dark' ? '☀' : '☾'}
+        </button>
+
+        <button
+          onClick={() => navigate('/profile')}
+          aria-label="Profile"
+          style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--cz-accent)', color: 'var(--cz-accent-fg)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'ui-monospace, monospace' }}
+        >
+          {initials}
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default Topnav;

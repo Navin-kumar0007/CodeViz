@@ -558,7 +558,7 @@ const Room = () => {
                 <>
                     {/* Countdown Overlay */}
                     {battleState === 'countdown' && (
-                        <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)' }}>
+                        <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--cz-text)', backdropFilter: 'blur(10px)' }}>
                             <div style={{ fontSize: '80px', fontWeight: 'bold', color: '#f56565', textShadow: '0 0 40px rgba(245,101,101,0.5)' }}>{countdown}</div>
                             {battleProblem && (
                                 <div style={{ textAlign: 'center', maxWidth: '500px', marginTop: '20px' }}>
@@ -577,7 +577,7 @@ const Room = () => {
                     {/* Battle Timer Bar */}
                     {battleState === 'active' && (
                         <div style={{ padding: '6px 20px', background: 'rgba(245,101,101,0.1)', borderBottom: '1px solid rgba(245,101,101,0.2)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                            <div style={{ flex: 1, height: '4px', background: 'var(--cz-line)', borderRadius: '2px', overflow: 'hidden' }}>
                                 <div style={{ width: `${(battleTimer / battleTimeLimit) * 100}%`, height: '100%', background: battleTimer > 60 ? 'var(--accent-green)' : battleTimer > 30 ? '#ed8936' : '#f56565', transition: 'width 1s linear', borderRadius: '2px' }} />
                             </div>
                             <span style={{ fontSize: '14px', fontWeight: 'bold', color: battleTimer > 60 ? 'var(--accent-green)' : '#f56565', fontFamily: 'monospace', minWidth: '60px' }}>
@@ -649,7 +649,7 @@ const Room = () => {
 
                     {/* Battle Waiting (host start controls) */}
                     {(!battleState || battleState === 'waiting') && (
-                        <div style={{ padding: '12px 20px', background: 'rgba(245,101,101,0.05)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ padding: '12px 20px', background: 'rgba(245,101,101,0.05)', borderBottom: '1px solid var(--cz-line)', display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <span style={{ color: '#f56565', fontWeight: 'bold', fontSize: '13px' }}>⚔️ Battle Mode</span>
                             <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{participants.length} player(s) ready</span>
                             {isHost && (
@@ -673,7 +673,7 @@ const Room = () => {
 
                     {/* Battle Results Overlay */}
                     {battleState === 'finished' && battleResult && (
-                        <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)' }}>
+                        <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--cz-text)', backdropFilter: 'blur(10px)' }}>
                             {battleResult.winner ? (
                                 <>
                                     <div style={{ fontSize: '60px', marginBottom: '10px' }}>🏆</div>
@@ -753,7 +753,7 @@ const Room = () => {
                     </div>
                     
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <div style={{ height: '50%', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div style={{ height: '50%', borderBottom: '1px solid var(--cz-line)' }}>
                             <CodeEditor 
                                 code={code}
                                 setCode={(newVal) => {
@@ -850,17 +850,17 @@ const Room = () => {
 const S = {
     container: {
         minHeight: '100vh',
-        color: '#E8E8ED',
+        color: 'var(--cz-text)',
         display: 'flex',
         flexDirection: 'column',
     },
     header: {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.04)',
+        padding: '16px 24px', borderBottom: '1px solid var(--cz-line)',
     },
     backBtn: {
-        background: 'transparent', border: '1px solid rgba(255,255,255,0.08)',
-        color: '#E8E8ED', padding: '8px 18px', borderRadius: '100px', cursor: 'pointer',
+        background: 'transparent', border: '1px solid var(--cz-line)',
+        color: 'var(--cz-text)', padding: '8px 18px', borderRadius: '100px', cursor: 'pointer',
         fontSize: '13px', fontWeight: 600, fontFamily: "'Inter', sans-serif",
     },
     pageTitle: { margin: 0, fontSize: '22px', fontWeight: 800, letterSpacing: '-0.02em' },
@@ -878,83 +878,83 @@ const S = {
         padding: '30px 24px', maxWidth: '1000px', margin: '0 auto', width: '100%',
     },
     lobbyCard: {
-        background: 'rgba(17,17,22,0.6)', backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '28px',
+        background: 'var(--cz-surface)', backdropFilter: 'blur(16px)',
+        border: '1px solid var(--cz-line)', borderRadius: '16px', padding: '28px',
         transition: 'all 0.4s cubic-bezier(0.23,1,0.32,1)',
     },
     cardTitle: { margin: '0 0 6px', fontSize: '20px', fontWeight: 800 },
-    cardDesc: { color: '#5A5A6A', fontSize: '13px', margin: '0 0 20px' },
+    cardDesc: { color: 'var(--cz-faint)', fontSize: '13px', margin: '0 0 20px' },
     input: {
-        width: '100%', background: 'rgba(8,8,12,0.6)', border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '12px', padding: '12px 14px', color: '#E8E8ED', fontSize: '14px',
+        width: '100%', background: 'var(--cz-surface)', border: '1px solid var(--cz-line)',
+        borderRadius: '12px', padding: '12px 14px', color: 'var(--cz-text)', fontSize: '14px',
         marginBottom: '14px', boxSizing: 'border-box', outline: 'none',
     },
     langRow: { display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' },
     langBtn: {
-        background: 'rgba(17,17,22,0.5)', border: '1px solid rgba(255,255,255,0.08)',
-        color: '#9898A6', padding: '8px 14px', borderRadius: '10px', cursor: 'pointer',
+        background: 'var(--cz-surface)', border: '1px solid var(--cz-line)',
+        color: 'var(--cz-muted)', padding: '8px 14px', borderRadius: '10px', cursor: 'pointer',
         fontSize: '13px', transition: 'all 0.2s',
     },
     langBtnSmall: {
-        background: 'rgba(17,17,22,0.5)', border: '1px solid rgba(255,255,255,0.08)',
-        color: '#9898A6', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer',
+        background: 'var(--cz-surface)', border: '1px solid var(--cz-line)',
+        color: 'var(--cz-muted)', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer',
         fontSize: '12px', transition: 'all 0.2s',
     },
     langBtnActive: {
-        background: 'rgba(0,229,238,0.1)', borderColor: 'rgba(0,229,238,0.3)', color: '#00E5EE',
+        background: 'rgba(85,112,255,0.1)', borderColor: 'rgba(85,112,255,0.3)', color: 'var(--cz-accent)',
     },
     toggleLabel: {
-        display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#9898A6',
+        display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--cz-muted)',
         marginBottom: '16px', cursor: 'pointer',
     },
     checkbox: { width: '16px', height: '16px' },
     primaryBtn: {
-        width: '100%', padding: '12px', background: 'linear-gradient(135deg, #00E5EE, #7C3AED)',
+        width: '100%', padding: '12px', background: 'linear-gradient(135deg, var(--cz-accent), #7C3AED)',
         border: 'none', borderRadius: '12px', color: '#fff', fontSize: '14px', fontWeight: 700,
-        cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,229,238,0.2)',
+        cursor: 'pointer', boxShadow: '0 4px 20px rgba(85,112,255,0.2)',
     },
     joinRow: { display: 'flex', flexDirection: 'column', gap: '12px' },
     activeSection: { marginTop: '24px' },
     sectionLabel: {
-        fontSize: '11px', fontWeight: 700, color: '#5A5A6A', textTransform: 'uppercase',
+        fontSize: '11px', fontWeight: 700, color: 'var(--cz-faint)', textTransform: 'uppercase',
         letterSpacing: '1.5px', margin: '0 0 10px',
     },
     roomRow: {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '12px 14px', background: 'rgba(17,17,22,0.5)',
-        border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', marginBottom: '8px',
+        padding: '12px 14px', background: 'var(--cz-surface)',
+        border: '1px solid var(--cz-line)', borderRadius: '12px', marginBottom: '8px',
     },
     roomName: { fontWeight: 600, fontSize: '14px', marginBottom: '3px' },
-    roomMeta: { fontSize: '11px', color: '#5A5A6A' },
+    roomMeta: { fontSize: '11px', color: 'var(--cz-faint)' },
     joinBtn: {
-        background: 'rgba(0,229,238,0.1)', border: '1px solid rgba(0,229,238,0.2)',
-        color: '#00E5EE', padding: '6px 16px', borderRadius: '100px', cursor: 'pointer',
+        background: 'rgba(85,112,255,0.1)', border: '1px solid rgba(85,112,255,0.2)',
+        color: 'var(--cz-accent)', padding: '6px 16px', borderRadius: '100px', cursor: 'pointer',
         fontSize: '12px', fontWeight: 700,
     },
 
     // Live Room Header
     roomHeader: {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)',
-        background: 'rgba(17,17,22,0.5)',
+        padding: '12px 20px', borderBottom: '1px solid var(--cz-line)',
+        background: 'var(--cz-surface)',
     },
     roomHeaderLeft: { display: 'flex', alignItems: 'center', gap: '12px' },
     roomHeaderRight: { display: 'flex', alignItems: 'center', gap: '16px' },
     roomTitle: { margin: 0, fontSize: '18px', fontWeight: 800 },
     codeBadge: {
-        background: 'rgba(0,229,238,0.1)', border: '1px solid rgba(0,229,238,0.2)',
-        color: '#00E5EE', padding: '4px 12px', borderRadius: '100px', cursor: 'pointer',
+        background: 'rgba(85,112,255,0.1)', border: '1px solid rgba(85,112,255,0.2)',
+        color: 'var(--cz-accent)', padding: '4px 12px', borderRadius: '100px', cursor: 'pointer',
         fontSize: '12px', fontWeight: 700, letterSpacing: '1px',
     },
     statusDot: { width: '8px', height: '8px', borderRadius: '50%', display: 'inline-block' },
-    statusText: { fontSize: '12px', color: '#5A5A6A' },
+    statusText: { fontSize: '12px', color: 'var(--cz-faint)' },
     avatarRow: { display: 'flex', alignItems: 'center', gap: '0px' },
     avatar: {
         width: '30px', height: '30px', borderRadius: '50%', display: 'flex',
         alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold',
-        color: '#fff', border: '2px solid rgba(255,255,255,0.08)', marginLeft: '-8px',
+        color: '#fff', border: '2px solid var(--cz-line)', marginLeft: '-8px',
     },
-    participantCount: { fontSize: '12px', color: '#5A5A6A', marginLeft: '8px' },
+    participantCount: { fontSize: '12px', color: 'var(--cz-faint)', marginLeft: '8px' },
     leaveBtn: {
         background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)',
         color: '#F43F5E', padding: '6px 16px', borderRadius: '100px', cursor: 'pointer',
@@ -963,36 +963,36 @@ const S = {
 
     // Main Layout
     liveLayout: { display: 'flex', flex: 1, overflow: 'hidden' },
-    editorPanel: { flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255,255,255,0.04)' },
+    editorPanel: { flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--cz-line)' },
     editorToolbar: {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)',
-        background: 'rgba(17,17,22,0.5)',
+        padding: '8px 14px', borderBottom: '1px solid var(--cz-line)',
+        background: 'var(--cz-surface)',
     },
     editingIndicator: { fontSize: '12px', color: '#F59E0B', fontStyle: 'italic' },
     codeEditor: {
-        flex: 1, width: '100%', background: 'transparent', border: 'none', color: '#E8E8ED',
+        flex: 1, width: '100%', background: 'transparent', border: 'none', color: 'var(--cz-text)',
         fontFamily: "'JetBrains Mono', 'SF Mono', monospace",
         fontSize: '14px', lineHeight: '1.7', padding: '16px', resize: 'none', outline: 'none',
         boxSizing: 'border-box',
     },
 
     // Sidebar
-    sidebar: { width: '320px', display: 'flex', flexDirection: 'column', background: 'rgba(17,17,22,0.4)' },
-    sidebarTabs: { display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.04)' },
+    sidebar: { width: '320px', display: 'flex', flexDirection: 'column', background: 'var(--cz-elevated)' },
+    sidebarTabs: { display: 'flex', borderBottom: '1px solid var(--cz-line)' },
     sidebarTab: {
-        flex: 1, background: 'transparent', border: 'none', color: '#5A5A6A',
+        flex: 1, background: 'transparent', border: 'none', color: 'var(--cz-faint)',
         padding: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 600,
         borderBottom: '2px solid transparent', transition: 'all 0.2s',
     },
-    sidebarTabActive: { color: '#00E5EE', borderBottomColor: '#00E5EE' },
+    sidebarTabActive: { color: 'var(--cz-accent)', borderBottomColor: 'var(--cz-accent)' },
     sidebarContent: { flex: 1, padding: '12px', overflowY: 'auto' },
 
     // Participants
     participantRow: {
         display: 'flex', alignItems: 'center', gap: '10px',
         padding: '10px', borderRadius: '12px', marginBottom: '6px',
-        background: 'rgba(17,17,22,0.4)',
+        background: 'var(--cz-elevated)',
     },
     participantAvatar: {
         width: '34px', height: '34px', borderRadius: '50%', display: 'flex',
@@ -1011,20 +1011,20 @@ const S = {
     chatMsg: { marginBottom: '8px' },
     systemMsg: { textAlign: 'center', opacity: 0.5 },
     chatUser: {
-        fontSize: '11px', fontWeight: 700, color: '#00E5EE', display: 'block', marginBottom: '2px',
+        fontSize: '11px', fontWeight: 700, color: 'var(--cz-accent)', display: 'block', marginBottom: '2px',
     },
-    chatText: { fontSize: '13px', color: '#9898A6', lineHeight: 1.4 },
-    systemText: { fontSize: '11px', color: '#5A5A6A', fontStyle: 'italic' },
+    chatText: { fontSize: '13px', color: 'var(--cz-muted)', lineHeight: 1.4 },
+    systemText: { fontSize: '11px', color: 'var(--cz-faint)', fontStyle: 'italic' },
     chatInputRow: {
         display: 'flex', gap: '8px', padding: '10px',
-        borderTop: '1px solid rgba(255,255,255,0.04)',
+        borderTop: '1px solid var(--cz-line)',
     },
     chatInput: {
-        flex: 1, background: 'rgba(8,8,12,0.6)', border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '10px', padding: '8px 12px', color: '#E8E8ED', fontSize: '13px', outline: 'none',
+        flex: 1, background: 'var(--cz-surface)', border: '1px solid var(--cz-line)',
+        borderRadius: '10px', padding: '8px 12px', color: 'var(--cz-text)', fontSize: '13px', outline: 'none',
     },
     sendBtn: {
-        width: '36px', height: '36px', background: 'linear-gradient(135deg, #00E5EE, #7C3AED)',
+        width: '36px', height: '36px', background: 'linear-gradient(135deg, var(--cz-accent), #7C3AED)',
         border: 'none', borderRadius: '10px', color: '#fff', fontSize: '16px', cursor: 'pointer',
         fontWeight: 'bold',
     },

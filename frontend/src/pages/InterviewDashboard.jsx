@@ -1,144 +1,88 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { Plus, Play } from 'lucide-react';
+import { Button, Badge, Spinner, EmptyState } from '../components/ui';
+import { API as axios } from '../utils/api';
 import API_BASE from '../utils/api';
-import { AnimatePresence } from 'framer-motion';
 
-const InterviewDashboard = () => {
-    const navigate = useNavigate();
-    const [sessions, setSessions] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const user = JSON.parse(localStorage.getItem('userInfo'));
-    const authHeaders = useMemo(() => ({ headers: { Authorization: `Bearer ${user?.token}` } }), [user?.token]);
+const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
 
-    const fetchSessions = useCallback(async () => {
-        try {
-            setLoading(true);
-            const res = await axios.get(`${API_BASE}/api/interview/recruiter/sessions`, authHeaders);
-            setSessions(res.data.sessions);
-        } catch (err) {
-            console.error('Failed to fetch sessions:', err);
-        } finally {
-            setLoading(false);
-        }
-    }, [authHeaders]);
+export default function InterviewDashboard() {
+  const navigate = useNavigate();
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const user = JSON.parse(localStorage.getItem('userInfo'));
+  const authHeaders = useMemo(() => ({ headers: { Authorization: `Bearer ${user?.token}` } }), [user?.token]);
 
-    useEffect(() => {
-        fetchSessions();
-    }, [fetchSessions]);
+  const fetchSessions = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE}/api/interview/recruiter/sessions`, authHeaders);
+      setSessions(res.data.sessions || []);
+    } catch (err) {
+      console.error('Failed to fetch sessions:', err);
+    } finally { setLoading(false); }
+  }, [authHeaders]);
 
-    const createInvite = async () => {
-        const email = prompt("Enter candidate email:");
-        if (!email) return;
-        try {
-            const res = await axios.post(`${API_BASE}/api/interview/recruiter/create`, {
-                candidateEmail: email,
-                mode: 'mixed'
-            }, authHeaders);
-            alert(`Invite created! Link: ${window.location.origin}/live-interview/${res.data.session._id}`);
-            fetchSessions();
-        } catch {
-            alert("Failed to create invite");
-        }
-    };
+  useEffect(() => { fetchSessions(); }, [fetchSessions]);
 
-    return (
-        <div style={S.container}>
-            <header style={S.header}>
-                <div>
-                    <h1 style={S.title}>CodeViz Recruit 🛡️</h1>
-                    <p style={S.subtitle}>Proof-of-Work Technical Assessment Dashboard</p>
-                </div>
-                <button onClick={createInvite} style={S.inviteBtn}>+ Create Interview Invite</button>
-            </header>
+  const createInvite = async () => {
+    const email = prompt('Enter candidate email:');
+    if (!email) return;
+    try {
+      const res = await axios.post(`${API_BASE}/api/interview/recruiter/create`, { candidateEmail: email, mode: 'mixed' }, authHeaders);
+      alert(`Invite created! Link: ${window.location.origin}/live-interview/${res.data.session._id}`);
+      fetchSessions();
+    } catch { alert('Failed to create invite'); }
+  };
 
-            <div style={S.statsGrid}>
-                <div style={S.statCard}>
-                    <div style={S.statValue}>{sessions.length}</div>
-                    <div style={S.statLabel}>Total Assessments</div>
-                </div>
-                <div style={S.statCard}>
-                    <div style={{...S.statValue, color: 'var(--accent-green)'}}>{sessions.filter(s => s.totalScore > 70).length}</div>
-                    <div style={S.statLabel}>High Intuition Candidates</div>
-                </div>
-            </div>
+  const highIntuition = sessions.filter((s) => s.totalScore > 70).length;
 
-            <div style={S.tableCard}>
-                <table style={S.table}>
-                    <thead>
-                        <tr style={S.tableHeader}>
-                            <th style={S.th}>Candidate</th>
-                            <th style={S.th}>Status</th>
-                            <th style={S.th}>Score</th>
-                            <th style={S.th}>Intuition</th>
-                            <th style={S.th}>Date</th>
-                            <th style={S.th}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            <tr><td colSpan="6" style={S.loading}>Loading assessments...</td></tr>
-                        ) : sessions.map(session => (
-                            <tr key={session.id} style={S.tr}>
-                                <td style={S.td}>
-                                    <div style={S.candidateName}>{session.candidateEmail || 'Anonymous'}</div>
-                                    <div style={S.sessionId}>ID: {session.id.slice(-6)}</div>
-                                </td>
-                                <td style={S.td}>
-                                    <span style={{
-                                        ...S.statusBadge,
-                                        background: session.status === 'completed' ? 'rgba(72,187,120,0.2)' : 'rgba(246,173,85,0.2)',
-                                        color: session.status === 'completed' ? 'var(--accent-green)' : 'var(--accent-yellow)'
-                                    }}>
-                                        {session.status.toUpperCase()}
-                                    </span>
-                                </td>
-                                <td style={S.td}>
-                                    <div style={S.scoreValue}>{session.totalScore}%</div>
-                                </td>
-                                <td style={S.td}>
-                                    <div style={{
-                                        ...S.intuitionScore,
-                                        color: session.totalScore > 80 ? 'var(--accent-green)' : session.totalScore > 50 ? 'var(--accent-yellow)' : 'var(--accent-red)'
-                                    }}>
-                                        {session.totalScore > 0 ? 'High' : 'N/A'}
-                                    </div>
-                                </td>
-                                <td style={S.td}>{new Date(session.date).toLocaleDateString()}</td>
-                                <td style={S.td}>
-                                    <button onClick={() => navigate(`/live-interview/${session.id}`)} style={S.viewBtn}>View Replay ⏪</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+  return (
+    <div className="min-h-full bg-bg text-text" style={FONT}>
+      <div className="max-w-5xl mx-auto px-6 py-8 pb-16">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h1 className="text-[24px] font-extrabold tracking-tight m-0">Recruit</h1>
+            <p className="text-muted text-[13px] m-0 mt-1">Proof-of-work technical assessments.</p>
+          </div>
+          <Button onClick={createInvite}><Plus size={15} /> Create invite</Button>
         </div>
-    );
-};
 
-const S = {
-    container: { padding: '40px', background: 'var(--bg-primary)', minHeight: '100vh', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' },
-    title: { fontSize: '28px', margin: 0, background: 'linear-gradient(to right, #0df2f2, #a45afe)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 'bold' },
-    subtitle: { color: '#8890b5', margin: '5px 0 0 0' },
-    inviteBtn: { background: 'linear-gradient(135deg, #0df2f2, #00ffaa)', color: '#000', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 0 20px rgba(13, 242, 242, 0.3)' },
-    statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' },
-    statCard: { background: 'rgba(13, 242, 242, 0.05)', border: '1px solid rgba(13, 242, 242, 0.1)', padding: '20px', borderRadius: '12px', textAlign: 'center' },
-    statValue: { fontSize: '32px', fontWeight: 'bold', color: '#0df2f2' },
-    statLabel: { fontSize: '12px', color: '#8890b5', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '5px' },
-    tableCard: { background: 'rgba(10, 10, 15, 0.4)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', overflow: 'hidden' },
-    table: { width: '100%', borderCollapse: 'collapse' },
-    tableHeader: { background: 'rgba(255, 255, 255, 0.02)', textAlign: 'left' },
-    th: { padding: '15px 20px', color: '#4a5070', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' },
-    td: { padding: '20px', borderBottom: '1px solid rgba(255, 255, 255, 0.03)' },
-    candidateName: { fontWeight: 'bold', fontSize: '14px' },
-    sessionId: { fontSize: '10px', color: '#4a5070', marginTop: '4px' },
-    statusBadge: { padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold' },
-    scoreValue: { fontWeight: 'bold', fontSize: '16px' },
-    intuitionScore: { fontWeight: 'bold', fontSize: '14px' },
-    viewBtn: { background: 'rgba(164, 90, 254, 0.1)', color: '#a45afe', border: '1px solid rgba(164, 90, 254, 0.2)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', transition: 'all 0.2s' },
-    loading: { textAlign: 'center', padding: '40px', color: '#4a5070' }
-};
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-surface border border-line rounded-xl px-4 py-3 shadow-[var(--cz-shadow-sm)]">
+            <div className="text-[24px] font-extrabold tabular-nums">{sessions.length}</div>
+            <div className="text-[12px] text-muted">Total assessments</div>
+          </div>
+          <div className="bg-surface border border-line rounded-xl px-4 py-3 shadow-[var(--cz-shadow-sm)]">
+            <div className="text-[24px] font-extrabold tabular-nums text-success">{highIntuition}</div>
+            <div className="text-[12px] text-muted">High-intuition candidates</div>
+          </div>
+        </div>
 
-export default InterviewDashboard;
+        <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-[var(--cz-shadow-sm)]">
+          <div className="grid grid-cols-[1fr_100px_80px_110px] items-center gap-3 px-4 h-10 border-b border-line bg-elevated text-[11px] font-bold uppercase tracking-wide text-faint">
+            <span>Candidate</span><span>Status</span><span>Score</span><span></span>
+          </div>
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-12 text-muted text-sm"><Spinner /> Loading…</div>
+          ) : sessions.length === 0 ? (
+            <EmptyState icon="🛡️" title="No assessments yet" hint="Create an invite to start assessing candidates." action={<Button size="sm" onClick={createInvite}>Create invite</Button>} />
+          ) : (
+            sessions.map((s) => (
+              <div key={s.id} className="grid grid-cols-[1fr_100px_80px_110px] items-center gap-3 px-4 py-3 border-b border-line last:border-0">
+                <div className="min-w-0">
+                  <div className="text-[14px] font-semibold text-text truncate">{s.candidateEmail || 'Anonymous'}</div>
+                  <div className="text-[11px] font-mono text-faint">ID: {String(s.id).slice(-6)} · {new Date(s.date).toLocaleDateString()}</div>
+                </div>
+                <Badge tone={s.status === 'completed' ? 'success' : 'warning'}>{s.status}</Badge>
+                <span className="text-[14px] font-bold tabular-nums">{s.totalScore}%</span>
+                <Button size="sm" variant="secondary" onClick={() => navigate(`/live-interview/${s.id}`)}><Play size={13} /> Replay</Button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,9 +1,18 @@
 const fs = require('fs');
 const path = require('path');
-const { instrumentJava } = require('../engine/javaTracerUtil');
-const { instrumentCpp } = require('../engine/cppTracerUtil');
 const dockerService = require('../services/dockerService');
 const { packTrace } = require('../utils/binaryTrace'); // ⚡ Binary Serialization
+
+// Wrap JavaScript source with the acorn-based tracer (also used for TypeScript
+// after transpilation).
+const wrapJsTracer = (source) => {
+    const tracerSource = fs.readFileSync(path.join(__dirname, '../engine/jsTracer.js'), 'utf8');
+    return `
+require('fs').writeFileSync('/home/runner/code/student_code.js', ${JSON.stringify(source)});
+process.argv[2] = '/home/runner/code/student_code.js';
+${tracerSource}
+`;
+};
 
 const executeCode = async (req, res) => {
     const { language, code, input, socketId } = req.body;
@@ -17,14 +26,14 @@ const executeCode = async (req, res) => {
     const traceArray = [];
     const heatmap = {}; // 🔥 Consolidated heatmap frequencies
 
-    // --- Prepare Tracer Wrappers ---
+    // --- Prepare code + pick the sandbox language ---
+    // Traced interpreted langs get a tracer wrapper; compiled langs (c/cpp/java)
+    // run raw and are traced in-sandbox by GDB/JDI; go/rust are run-only.
     let finalCode = code;
-    let runnerRequired = false;
+    let execLanguage = language;
 
     if (language === 'python') {
-        const runnerPath = path.join(__dirname, '../engine/tracer.py');
-        const tracerSource = fs.readFileSync(runnerPath, 'utf8');
-
+        const tracerSource = fs.readFileSync(path.join(__dirname, '../engine/tracer.py'), 'utf8');
         finalCode = `
 import os
 with open('/home/runner/code/student_code.py', 'w') as f:
@@ -33,24 +42,22 @@ with open('/home/runner/code/student_code.py', 'w') as f:
 # Now run the tracer
 ${tracerSource.replace("sys.argv[1]", "'/home/runner/code/student_code.py'")}
 `;
-        runnerRequired = true;
     } else if (language === 'javascript') {
-        const runnerPath = path.join(__dirname, '../engine/jsTracer.js');
-        const tracerSource = fs.readFileSync(runnerPath, 'utf8');
-
-        finalCode = `
-require('fs').writeFileSync('/home/runner/code/student_code.js', ${JSON.stringify(code)});
-process.argv[2] = '/home/runner/code/student_code.js';
-${tracerSource}
-`;
-        runnerRequired = true;
-    } else if (language === 'java') {
-        finalCode = instrumentJava(code);
-        runnerRequired = true;
-    } else if (language === 'cpp') {
-        finalCode = instrumentCpp(code);
-        runnerRequired = true;
+        finalCode = wrapJsTracer(code);
+    } else if (language === 'typescript') {
+        // Transpile TS -> JS on the host, then trace it as JavaScript.
+        try {
+            const ts = require('typescript');
+            const js = ts.transpileModule(code, {
+                compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS },
+            }).outputText;
+            finalCode = wrapJsTracer(js);
+            execLanguage = 'javascript';
+        } catch (e) {
+            return res.json({ error: `TypeScript transpile failed: ${e.message}` });
+        }
     }
+    // c / cpp / java / go / rust: finalCode stays as the raw user source.
 
     try {
         const onStream = (line) => {
@@ -73,7 +80,7 @@ ${tracerSource}
             }
         };
 
-        const result = await dockerService.runInSandbox(finalCode, language, input || '', onStream);
+        const result = await dockerService.runInSandbox(finalCode, execLanguage, input || '', onStream);
 
         if (result.error && !result.output) {
             return res.json({ error: result.error });

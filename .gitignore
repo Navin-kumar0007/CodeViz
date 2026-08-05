@@ -33,3 +33,12 @@ coverage/
 *.tmp
 .cache/
 .gemini/
+
+# npm cache (should never be committed)
+.npm-cache/
+frontend/.npm-cache/
+
+# Lint reports / scratch
+frontend/lint_*.txt
+frontend/lint_report*.txt
+frontend/lint_results.json
