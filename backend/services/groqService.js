@@ -78,12 +78,10 @@ Object.entries(methodToPrompt).forEach(([method, promptKey]) => {
             try {
                 return JSON.parse(content);
             } catch (e) {
-                console.error(`Failed to parse Groq JSON for ${method}:`, e);
-                // Try one more aggressive cleanup if first parse fails
                 try {
-                    const cleaned = content.replace(/```json|```/g, '').trim();
-                    return JSON.parse(cleaned);
+                    return safeParseJson(content);
                 } catch (e2) {
+                    console.error(`Failed to parse Groq JSON for ${method}:`, e2.message);
                     throw new Error(`Invalid JSON from Groq for ${method}`);
                 }
             }
@@ -92,5 +90,37 @@ Object.entries(methodToPrompt).forEach(([method, promptKey]) => {
         return content;
     };
 });
+
+/**
+ * Robust JSON recovery for LLM output: strip markdown fences, isolate the JSON
+ * body, and escape raw control characters that appear INSIDE string literals
+ * (LLMs frequently emit unescaped newlines/tabs in code strings, which is the
+ * usual "Bad control character in string literal" failure).
+ */
+function safeParseJson(raw) {
+    let text = String(raw).replace(/```json|```/g, '').trim();
+    const start = text.search(/[[{]/);
+    const end = Math.max(text.lastIndexOf(']'), text.lastIndexOf('}'));
+    if (start !== -1 && end !== -1 && end > start) text = text.slice(start, end + 1);
+
+    let out = '';
+    let inString = false;
+    let escaped = false;
+    for (const ch of text) {
+        if (escaped) { out += ch; escaped = false; continue; }
+        if (ch === '\\') { out += ch; escaped = true; continue; }
+        if (ch === '"') { inString = !inString; out += ch; continue; }
+        if (inString) {
+            const code = ch.charCodeAt(0);
+            if (code < 0x20) {
+                out += ch === '\n' ? '\\n' : ch === '\t' ? '\\t' : ch === '\r' ? '\\r'
+                    : '\\u' + code.toString(16).padStart(4, '0');
+                continue;
+            }
+        }
+        out += ch;
+    }
+    return JSON.parse(out);
+}
 
 module.exports = groqProvider;
