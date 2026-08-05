@@ -13,6 +13,7 @@ import { EXAMPLES } from "../examples";
 import { useTheme } from "../contexts/ThemeContext";
 import ShareModal from "../components/Social/ShareModal";
 import CodeSnapshot from "../components/Social/CodeSnapshot";
+import ShareVizButton from "../components/Social/ShareVizButton";
 import ComplexityAnalyzer from "../components/Visualizer/ComplexityAnalyzer";
 import SessionRecorder from "../components/Session/SessionRecorder";
 import Terminal from "../components/Terminal/Terminal";
@@ -531,6 +532,9 @@ const Practice = () => {
           <button onClick={() => setShowTutor(!showTutor)} className="btn-secondary" style={{ borderColor: showTutor ? 'var(--accent-purple)' : 'var(--border-color)', color: showTutor ? 'var(--accent-purple)' : 'var(--text-primary)' }}>🤖 {showTutor ? 'Hide Tutor' : 'AI Tutor'}</button>
           <button onClick={showNarrator ? () => setShowNarrator(false) : fetchNarration} className="btn-secondary" style={{ borderColor: showNarrator ? 'var(--accent-yellow)' : 'var(--border-color)', color: showNarrator ? 'var(--accent-yellow)' : 'var(--text-primary)' }}>🎙️ {isNarrating ? 'Thinking...' : showNarrator ? 'Hide Narrator' : 'AI Narrator'}</button>
           <button onClick={() => setShowSnapshot(true)} className="btn-secondary">📸 Snapshot</button>
+          {traceData && traceData.length > 0 && (
+            <ShareVizButton code={code} language={language} trace={traceData} output={output} />
+          )}
           <button onClick={() => setShowComplexity(!showComplexity)} className="btn-secondary" style={{ borderColor: showComplexity ? 'var(--accent-purple)' : 'var(--border-color)', color: showComplexity ? 'var(--accent-purple)' : 'var(--text-primary)' }}>📊 {showComplexity ? 'Hide Complexity' : 'Complexity'}</button>
           <button onClick={handleSave} className="btn-primary">💾 Save Code</button>
         </div>
