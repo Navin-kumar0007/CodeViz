@@ -243,7 +243,7 @@ const ClassroomDetails = () => {
                             <Editor
                                 height="100%"
                                 language={activeAssignment.language}
-                                theme="vs-dark"
+                                theme="light"
                                 value={solveCode}
                                 onChange={setSolveCode}
                                 options={{ minimap: { enabled: false } }}

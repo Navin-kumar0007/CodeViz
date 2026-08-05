@@ -133,7 +133,7 @@ print(result)`);
                             language={language === 'cpp' ? 'cpp' : language}
                             value={code}
                             onChange={v => setCode(v || '')}
-                            theme="vs-dark"
+                            theme="light"
                             options={{
                                 fontSize: 14,
                                 minimap: { enabled: false },

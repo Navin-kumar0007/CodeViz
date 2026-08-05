@@ -229,7 +229,7 @@ const AlgoRace = () => {
                     <Editor
                         height="100%"
                         language="python"
-                        theme="vs-dark"
+                        theme="light"
                         value={code}
                         onChange={v => setCode(v || '')}
                         options={{ minimap: { enabled: false }, fontSize: 13, readOnly: isRacing || isLoading }}

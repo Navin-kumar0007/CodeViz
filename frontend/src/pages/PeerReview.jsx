@@ -223,7 +223,7 @@ const PeerReview = () => {
                                 <Editor
                                     height="100%"
                                     language={language}
-                                    theme="vs-dark"
+                                    theme="light"
                                     value={code}
                                     onChange={setCode}
                                     options={{ minimap: { enabled: false } }}
@@ -263,7 +263,7 @@ const PeerReview = () => {
                                 <Editor
                                     height="100%"
                                     language={selectedReview.language}
-                                    theme="vs-dark"
+                                    theme="light"
                                     value={selectedReview.code}
                                     options={{ readOnly: true, minimap: { enabled: false } }}
                                 />

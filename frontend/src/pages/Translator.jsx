@@ -136,7 +136,7 @@ print(result)`);
                             language={getMonacoLang(sourceLanguage)}
                             value={sourceCode}
                             onChange={v => { setSourceCode(v || ''); setTranslation(null); }}
-                            theme="vs-dark"
+                            theme="light"
                             options={{
                                 fontSize: 14,
                                 minimap: { enabled: false },
@@ -169,7 +169,7 @@ print(result)`);
                                 height="100%"
                                 language={getMonacoLang(targetLanguage)}
                                 value={translation.translatedCode}
-                                theme="vs-dark"
+                                theme="light"
                                 options={{
                                     fontSize: 14,
                                     minimap: { enabled: false },
