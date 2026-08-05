@@ -54,6 +54,7 @@ const SharePage = lazy(() => import('./pages/SharePage'));
 const EmbedPage = lazy(() => import('./pages/EmbedPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const Pricing = lazy(() => import('./pages/Pricing'));
+const Mentor = lazy(() => import('./pages/Mentor'));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -168,6 +169,7 @@ const AnimatedRoutes = () => {
         <Route path="/algo-race" element={<ProtectedRoute><AlgoRace /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+        <Route path="/mentor" element={<ProtectedRoute><Mentor /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   );
