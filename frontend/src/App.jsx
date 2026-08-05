@@ -53,6 +53,7 @@ const UIKit = lazy(() => import('./pages/UIKit'));
 const SharePage = lazy(() => import('./pages/SharePage'));
 const EmbedPage = lazy(() => import('./pages/EmbedPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
+const Pricing = lazy(() => import('./pages/Pricing'));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -166,6 +167,7 @@ const AnimatedRoutes = () => {
         <Route path="/git-learn" element={<ProtectedRoute><GitLearn /></ProtectedRoute>} />
         <Route path="/algo-race" element={<ProtectedRoute><AlgoRace /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   );
