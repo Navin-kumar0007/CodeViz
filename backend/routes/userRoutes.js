@@ -1,5 +1,6 @@
 const express = require('express');
 const { registerUser, loginUser, logoutUser, generate2FA, verify2FA, forgotPassword, resetPassword } = require('../controllers/authController');
+const { getPublicProfile, setUsername } = require('../controllers/profileController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -8,6 +9,10 @@ const router = express.Router();
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/logout', logoutUser);
+
+// Public profile (SEO) + username management
+router.get('/public/:handle', getPublicProfile);
+router.put('/username', protect, setUsername);
 
 // 2FA Routes (Protected)
 router.post('/2fa/generate', protect, generate2FA);

@@ -6,6 +6,9 @@ const userSchema = mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
+    // Public handle for SEO profile pages (/u/:username). Optional + unique.
+    username: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
+    bio: { type: String, default: '', maxlength: 200 },
     password: { type: String, required: true },
     role: { type: String, enum: ['student', 'instructor', 'admin'], default: 'student' },
     skillLevel: { type: String, enum: ['beginner', 'intermediate', 'advanced'], default: 'beginner' },

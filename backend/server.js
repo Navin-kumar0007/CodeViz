@@ -151,6 +151,7 @@ app.use('/api/problems', problemRoutes);
 app.use('/api/peer-reviews', peerReviewRoutes);
 app.use('/api/autograder', autograderRoutes);
 app.use('/api/billing', billingRoutes); // 💳 Billing (entitlements, checkout, portal)
+app.use('/api/share', require('./routes/shareRoutes')); // 🔗 Shareable viz embeds (growth)
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)
 
