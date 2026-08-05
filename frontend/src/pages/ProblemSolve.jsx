@@ -5,7 +5,6 @@ import Editor from '@monaco-editor/react';
 import { ArrowLeft, Play, Rocket, CheckCircle2, XCircle, Clock, Lightbulb } from 'lucide-react';
 import API_BASE from '../utils/api';
 import AstFlowchart from '../components/Visualizer/AstFlowchart';
-import TraceRibbon from '../components/Visualizer/TraceRibbon';
 import { Button, Select, DifficultyBadge, Badge, Spinner, EmptyState } from '../components/ui';
 
 const API = `${API_BASE}/api/problems`;
@@ -96,8 +95,6 @@ export default function ProblemSolve() {
 
   return (
     <div ref={workspaceRef} className="h-full flex flex-col bg-bg text-text overflow-hidden" style={FONT}>
-      <TraceRibbon containerRef={workspaceRef} />
-
       {/* Top bar */}
       <div className="flex items-center gap-3 px-4 h-12 border-b border-line shrink-0 bg-surface">
         <Button variant="ghost" size="sm" onClick={() => navigate('/problems')}><ArrowLeft size={15} /> Problems</Button>

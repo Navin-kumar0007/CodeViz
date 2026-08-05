@@ -6,6 +6,7 @@ import Topnav from './components/Layout/Topnav';
 import StatusBar from './components/Layout/StatusBar';
 import OfflineBanner from './components/Network/OfflineBanner';
 import ErrorBoundary from './components/ErrorBoundary';
+import GlobalCursorTrail from './components/Layout/GlobalCursorTrail';
 
 // Eager Loading for generic pages
 import Login from './pages/Login';
@@ -178,6 +179,7 @@ const AnimatedRoutes = () => {
 const App = () => {
   return (
     <Router>
+      <GlobalCursorTrail />
       <OfflineBanner />
       <ErrorBoundary>
         <AppLayout>
