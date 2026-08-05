@@ -1,101 +1,93 @@
 const Subscription = require('../models/Subscription');
-const User = require('../models/User');
-const stripeService = require('../services/stripeService');
+const razorpay = require('../services/razorpayService');
 const { getEntitlements } = require('../services/entitlementService');
-const { PLANS, getPlan, planIdFromPriceId } = require('../config/plans');
+const { PLANS, getPlan, planIdFromRazorpayPlanId } = require('../config/plans');
 
 const FRONTEND = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 /** GET /api/billing/entitlements — current plan, features, limits, usage. */
 const entitlements = async (req, res) => {
   const data = await getEntitlements(req.user._id);
-  res.json({ ...data, stripeConfigured: stripeService.isConfigured(), plans: publicPlans() });
+  res.json({ ...data, gatewayConfigured: razorpay.isConfigured(), gateway: 'razorpay', plans: publicPlans() });
 };
 
 /** Public-safe plan catalogue for the pricing page. */
 function publicPlans() {
   return Object.values(PLANS).map((p) => ({
-    id: p.id, name: p.name, features: p.features, limits: p.limits, purchasable: Boolean(p.priceId),
+    id: p.id, name: p.name, features: p.features, limits: p.limits, purchasable: Boolean(p.razorpayPlanId),
   }));
 }
 
-/** POST /api/billing/checkout { plan } — start a Stripe Checkout session. */
+/**
+ * POST /api/billing/checkout { plan } — create a Razorpay subscription and
+ * return its hosted checkout URL (short_url) to redirect the user to.
+ */
 const checkout = async (req, res) => {
   const { plan } = req.body;
   const def = getPlan(plan);
   if (!def || def.id === 'free') return res.status(400).json({ message: 'Choose a paid plan.' });
-  if (!def.priceId) return res.status(400).json({ message: `Plan "${def.id}" has no configured price.` });
-  if (!stripeService.isConfigured()) return res.status(503).json({ message: 'Billing is not configured yet.' });
+  if (!def.razorpayPlanId) return res.status(400).json({ message: `Plan "${def.id}" has no configured Razorpay plan.` });
+  if (!razorpay.isConfigured()) return res.status(503).json({ message: 'Billing is not configured yet.' });
 
   try {
     let sub = await Subscription.findOne({ user: req.user._id });
-    let customerId = sub?.stripeCustomerId;
+    let customerId = sub?.gatewayCustomerId;
     if (!customerId) {
-      const customer = await stripeService.createCustomer({ email: req.user.email, name: req.user.name, userId: req.user._id });
+      const customer = await razorpay.createCustomer({ email: req.user.email, name: req.user.name, userId: req.user._id });
       customerId = customer.id;
-      sub = await Subscription.findOneAndUpdate(
-        { user: req.user._id }, { stripeCustomerId: customerId }, { upsert: true, new: true }
-      );
     }
-    const session = await stripeService.createCheckoutSession({
-      priceId: def.priceId,
-      customerId,
-      userId: req.user._id,
-      successUrl: `${FRONTEND}/profile?billing=success`,
-      cancelUrl: `${FRONTEND}/profile?billing=cancel`,
-    });
-    res.json({ url: session.url });
+    const rzSub = await razorpay.createSubscription({ planId: def.razorpayPlanId, customerId, userId: req.user._id });
+    await Subscription.findOneAndUpdate(
+      { user: req.user._id },
+      { user: req.user._id, gateway: 'razorpay', gatewayCustomerId: customerId, gatewaySubscriptionId: rzSub.id, status: rzSub.status },
+      { upsert: true }
+    );
+    res.json({ url: rzSub.short_url, subscriptionId: rzSub.id });
   } catch (err) {
-    console.error('checkout error:', err.message);
+    console.error('checkout error:', err?.error?.description || err.message);
     res.status(500).json({ message: 'Could not start checkout.' });
   }
 };
 
-/** POST /api/billing/portal — open the Stripe customer portal. */
-const portal = async (req, res) => {
-  if (!stripeService.isConfigured()) return res.status(503).json({ message: 'Billing is not configured yet.' });
+/** POST /api/billing/cancel — cancel the active subscription (Razorpay has no portal). */
+const cancel = async (req, res) => {
+  if (!razorpay.isConfigured()) return res.status(503).json({ message: 'Billing is not configured yet.' });
   const sub = await Subscription.findOne({ user: req.user._id });
-  if (!sub?.stripeCustomerId) return res.status(400).json({ message: 'No billing account yet.' });
+  if (!sub?.gatewaySubscriptionId) return res.status(400).json({ message: 'No active subscription.' });
   try {
-    const session = await stripeService.createBillingPortalSession({ customerId: sub.stripeCustomerId, returnUrl: `${FRONTEND}/profile` });
-    res.json({ url: session.url });
+    const atCycleEnd = req.body?.atCycleEnd !== false; // default: keep access until cycle end
+    await razorpay.cancelSubscription(sub.gatewaySubscriptionId, atCycleEnd);
+    sub.cancelAtPeriodEnd = atCycleEnd;
+    if (!atCycleEnd) { sub.status = 'cancelled'; sub.plan = 'free'; }
+    await sub.save();
+    res.json({ ok: true, cancelAtPeriodEnd: atCycleEnd });
   } catch (err) {
-    console.error('portal error:', err.message);
-    res.status(500).json({ message: 'Could not open billing portal.' });
+    console.error('cancel error:', err?.error?.description || err.message);
+    res.status(500).json({ message: 'Could not cancel subscription.' });
   }
 };
 
-/** POST /api/billing/webhook — Stripe events (raw body). Keeps subs in sync. */
+/** POST /api/billing/webhook — Razorpay events (raw body). Keeps subs in sync. */
 const webhook = async (req, res) => {
-  let event;
+  const signature = req.headers['x-razorpay-signature'];
   try {
-    event = stripeService.constructEvent(req.body, req.headers['stripe-signature']);
+    if (!razorpay.verifyWebhook(req.body, signature)) {
+      return res.status(400).send('Invalid signature');
+    }
   } catch (err) {
-    console.error('webhook signature failed:', err.message);
+    console.error('webhook verify failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  let event;
+  try { event = JSON.parse(Buffer.isBuffer(req.body) ? req.body.toString('utf8') : req.body); }
+  catch { return res.status(400).send('Bad payload'); }
+
   try {
-    const obj = event.data.object;
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const userId = obj.metadata?.userId || obj.client_reference_id;
-        if (userId && obj.subscription) {
-          const stripeSub = await stripeService.getSubscription(obj.subscription);
-          await upsertFromStripeSub(userId, obj.customer, stripeSub);
-        }
-        break;
-      }
-      case 'customer.subscription.updated':
-      case 'customer.subscription.created':
-      case 'customer.subscription.deleted': {
-        const sub = await Subscription.findOne({ stripeSubscriptionId: obj.id });
-        const userId = sub?.user || obj.metadata?.userId;
-        if (userId) await upsertFromStripeSub(userId, obj.customer, obj);
-        break;
-      }
-      default:
-        break;
+    const entity = event.payload?.subscription?.entity;
+    if (entity && String(event.event).startsWith('subscription.')) {
+      const userId = entity.notes?.userId || (await Subscription.findOne({ gatewaySubscriptionId: entity.id }))?.user;
+      if (userId) await upsertFromRazorpaySub(userId, entity);
     }
   } catch (err) {
     console.error('webhook handling error:', err.message);
@@ -103,21 +95,18 @@ const webhook = async (req, res) => {
   res.json({ received: true });
 };
 
-async function upsertFromStripeSub(userId, customerId, stripeSub) {
-  const priceId = stripeSub.items?.data?.[0]?.price?.id;
-  const plan = planIdFromPriceId(priceId);
-  const canceled = stripeSub.status === 'canceled';
+async function upsertFromRazorpaySub(userId, entity) {
+  const dead = ['cancelled', 'completed', 'expired'].includes(entity.status);
   await Subscription.findOneAndUpdate(
     { user: userId },
     {
       user: userId,
-      plan: canceled ? 'free' : plan,
-      status: stripeSub.status,
-      seats: stripeSub.items?.data?.[0]?.quantity || 1,
-      stripeCustomerId: customerId,
-      stripeSubscriptionId: stripeSub.id,
-      currentPeriodEnd: stripeSub.current_period_end ? new Date(stripeSub.current_period_end * 1000) : null,
-      cancelAtPeriodEnd: Boolean(stripeSub.cancel_at_period_end),
+      gateway: 'razorpay',
+      plan: dead ? 'free' : planIdFromRazorpayPlanId(entity.plan_id),
+      status: entity.status,
+      gatewayCustomerId: entity.customer_id || null,
+      gatewaySubscriptionId: entity.id,
+      currentPeriodEnd: entity.current_end ? new Date(entity.current_end * 1000) : null,
     },
     { upsert: true }
   );
@@ -125,7 +114,7 @@ async function upsertFromStripeSub(userId, customerId, stripeSub) {
 
 /**
  * POST /api/billing/dev/set-plan { plan } — testing helper to set a plan
- * without Stripe. Disabled in production.
+ * without the gateway. Disabled in production.
  */
 const devSetPlan = async (req, res) => {
   if (process.env.NODE_ENV === 'production') return res.status(403).json({ message: 'Disabled in production.' });
@@ -140,4 +129,4 @@ const devSetPlan = async (req, res) => {
   res.json({ ok: true, ...data });
 };
 
-module.exports = { entitlements, checkout, portal, webhook, devSetPlan };
+module.exports = { entitlements, checkout, cancel, webhook, devSetPlan };

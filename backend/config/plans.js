@@ -1,21 +1,21 @@
 /**
  * Plan & entitlement definitions — the single source of truth for what each
- * tier can do and how much. Stripe price IDs come from env so the same code
- * works in test and live mode.
+ * tier can do and how much. Razorpay plan IDs come from env so the same code
+ * works in test and live mode. (Razorpay = India-friendly gateway.)
  */
 
 const PLANS = {
   free: {
     id: 'free',
     name: 'Free',
-    priceId: null,
+    razorpayPlanId: null,
     features: ['visualizer', 'basic-practice', 'community'],
     limits: { executionsPerDay: 40, aiCallsPerDay: 15, seats: 1 },
   },
   pro: {
     id: 'pro',
     name: 'Pro',
-    priceId: process.env.STRIPE_PRICE_PRO || null,
+    razorpayPlanId: process.env.RAZORPAY_PLAN_PRO || null,
     features: [
       'visualizer', 'basic-practice', 'community',
       'ai-mentor', 'interview-prep', 'advanced-courses', 'unlimited-share', 'priority-execution',
@@ -25,7 +25,7 @@ const PLANS = {
   team: {
     id: 'team',
     name: 'Team / EDU',
-    priceId: process.env.STRIPE_PRICE_TEAM || null,
+    razorpayPlanId: process.env.RAZORPAY_PLAN_TEAM || null,
     features: [
       'visualizer', 'basic-practice', 'community',
       'ai-mentor', 'interview-prep', 'advanced-courses', 'unlimited-share', 'priority-execution',
@@ -42,10 +42,10 @@ function getPlan(planId) {
   return PLANS[planId] || PLANS[DEFAULT_PLAN];
 }
 
-/** Map a Stripe price id back to our plan id (for webhook handling). */
-function planIdFromPriceId(priceId) {
-  const match = Object.values(PLANS).find((p) => p.priceId && p.priceId === priceId);
+/** Map a Razorpay plan id back to our plan id (for webhook handling). */
+function planIdFromRazorpayPlanId(rzPlanId) {
+  const match = Object.values(PLANS).find((p) => p.razorpayPlanId && p.razorpayPlanId === rzPlanId);
   return match ? match.id : DEFAULT_PLAN;
 }
 
-module.exports = { PLANS, DEFAULT_PLAN, getPlan, planIdFromPriceId };
+module.exports = { PLANS, DEFAULT_PLAN, getPlan, planIdFromRazorpayPlanId };

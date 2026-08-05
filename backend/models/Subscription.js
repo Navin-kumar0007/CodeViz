@@ -9,13 +9,15 @@ const subscriptionSchema = mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
     plan: { type: String, enum: ['free', 'pro', 'team'], default: 'free' },
     status: {
+      // Razorpay statuses: created, authenticated, active, pending, halted,
+      // cancelled, completed, expired (+ 'none' for never-subscribed).
       type: String,
-      enum: ['active', 'trialing', 'past_due', 'canceled', 'incomplete', 'none'],
       default: 'none',
     },
     seats: { type: Number, default: 1 },
-    stripeCustomerId: { type: String, default: null, index: true },
-    stripeSubscriptionId: { type: String, default: null },
+    gateway: { type: String, default: 'razorpay' },
+    gatewayCustomerId: { type: String, default: null, index: true },
+    gatewaySubscriptionId: { type: String, default: null, index: true },
     currentPeriodEnd: { type: Date, default: null },
     cancelAtPeriodEnd: { type: Boolean, default: false },
   },
