@@ -63,7 +63,9 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
     const [error, setError] = useState(null);
 
     const explanationSteps = lesson.explanation || [];
-    const conceptVisual = getVisual(slug, lesson.id);
+    // Hand-authored visual (registry) wins; otherwise use the AI-generated one
+    // stored on the lesson (Phase 4).
+    const conceptVisual = getVisual(slug, lesson.id) || lesson.visual || null;
 
     // Run code through tracer
     const handleRunVisualize = async () => {

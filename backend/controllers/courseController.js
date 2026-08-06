@@ -165,4 +165,25 @@ const generateCourse = async (req, res) => {
   }
 };
 
-module.exports = { listCourses, getCourse, listCourseMeta, gradeQuiz, completeLesson, generateCourse };
+// POST /api/courses/:slug/lessons/:lessonId/visual/generate  (admin)
+// Generates an animated concept spec for the lesson and saves it. LLM-backed.
+const generateLessonVisual = async (req, res) => {
+  try {
+    const { slug, lessonId } = req.params;
+    const course = await Course.findOne({ slug });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const lesson = course.lessons.find((l) => l.lessonId === lessonId);
+    if (!lesson) return res.status(404).json({ message: 'Lesson not found' });
+
+    const summary = (lesson.explanation || []).map((b) => b?.content).filter(Boolean).slice(0, 2).join(' ');
+    const spec = await aiMentorService.generateVisual({ courseTitle: course.title, lessonTitle: lesson.title, summary });
+    lesson.visual = spec;
+    course.markModified('lessons');
+    await course.save();
+    res.status(201).json({ slug, lessonId, kind: spec.kind, steps: spec.steps.length });
+  } catch (error) {
+    res.status(502).json({ message: `Visual generation failed: ${error.message}` });
+  }
+};
+
+module.exports = { listCourses, getCourse, listCourseMeta, gradeQuiz, completeLesson, generateCourse, generateLessonVisual };

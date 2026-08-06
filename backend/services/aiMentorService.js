@@ -217,4 +217,106 @@ async function generateCourse({ topic, category = 'General', lessonCount = 5, la
   return saved;
 }
 
-module.exports = { generateAndSaveProblems, reviewCode, recommendNext, generateCourse };
+// --- AI visual (concept animation) generation ----------------------------
+
+function buildVisualPrompt({ courseTitle, lessonTitle, summary }) {
+  return `You are creating an ANIMATED explanation for a coding lesson.
+Course: "${courseTitle}". Lesson: "${lessonTitle}".
+Concept summary: ${summary || lessonTitle}
+
+Choose the best animation type and return ONLY minified JSON (no markdown, no prose).
+
+If the concept is about an ARRAY, STACK, or QUEUE (data moving), use:
+{
+ "kind":"array"|"stack"|"queue",
+ "title": string,
+ "data": number[] (array kind only; 5-7 DISTINCT small integers),
+ "moveByValue": boolean (true only if elements physically swap/reorder),
+ "steps":[ {
+   "caption": string,
+   "array": number[] (array kind, full state at this step; distinct ints),
+   "stack": (number|string)[] (stack kind, bottom→top),
+   "queue": (number|string)[] (queue kind, front→back),
+   "pointers": { "name": index },
+   "compare": index[], "highlight": index[], "dim": index[], "done": index[]
+ } ]  (4-8 steps)
+}
+
+If the concept is ABSTRACT (systems, flow, process, security, networking, protocols), use a DIAGRAM:
+{
+ "kind":"diagram",
+ "title": string,
+ "nodes":[ {"id":string,"label":string,"sub"?:string,"icon"?:string,"x":0-600,"y":0-260} ]  (3-6 nodes; x,y are CENTRE coords),
+ "edges":[ {"id":string,"from":nodeId,"to":nodeId,"label"?:string} ],
+ "steps":[ {"caption":string,"activeNodes":nodeId[],"activeEdges":edgeId[],"dimNodes":nodeId[],"packet":{"edge":edgeId},"show":id[]} ]  (4-6 steps)
+}
+
+Rules: valid JSON only. All indices within array bounds. All edge from/to and packet.edge must reference ids that exist. Keep it accurate and clear. Prefer arrays/stack/queue for data-structure topics, diagram for everything conceptual.`;
+}
+
+const clampInt = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
+
+function validateVisual(spec) {
+  if (!spec || typeof spec !== 'object') throw new Error('not an object');
+  const kind = spec.kind;
+  const steps = Array.isArray(spec.steps) ? spec.steps.filter((s) => s && typeof s.caption === 'string') : [];
+  if (steps.length < 2) throw new Error('needs >= 2 steps');
+
+  if (kind === 'array') {
+    const data = Array.isArray(spec.data) ? spec.data.map(Number).filter((x) => Number.isFinite(x)) : [];
+    if (data.length < 2) throw new Error('array kind needs data');
+    const inRange = (idxArr, len) => Array.isArray(idxArr) ? idxArr.map(Number).filter((i) => Number.isInteger(i) && i >= 0 && i < len) : undefined;
+    const cleanSteps = steps.map((s) => {
+      const arr = Array.isArray(s.array) ? s.array.map(Number).filter((x) => Number.isFinite(x)) : undefined;
+      const len = (arr && arr.length) || data.length;
+      const ptr = s.pointers && typeof s.pointers === 'object'
+        ? Object.fromEntries(Object.entries(s.pointers).filter(([, v]) => Number.isInteger(v) && v >= 0 && v < len))
+        : undefined;
+      return { caption: s.caption, array: arr, pointers: ptr, compare: inRange(s.compare, len), highlight: inRange(s.highlight, len), dim: inRange(s.dim, len), done: inRange(s.done, len) };
+    });
+    return { kind, title: spec.title || '', data, moveByValue: !!spec.moveByValue, steps: cleanSteps };
+  }
+
+  if (kind === 'stack' || kind === 'queue') {
+    const field = kind;
+    const cleanSteps = steps.map((s) => ({ caption: s.caption, [field]: Array.isArray(s[field]) ? s[field] : [] }));
+    return { kind, title: spec.title || '', steps: cleanSteps };
+  }
+
+  if (kind === 'diagram') {
+    const nodes = (Array.isArray(spec.nodes) ? spec.nodes : [])
+      .filter((n) => n && n.id && n.label)
+      .map((n) => ({ id: String(n.id), label: String(n.label), sub: n.sub, icon: n.icon, x: clampInt(n.x, 30, 570), y: clampInt(n.y, 30, 230), w: n.w }));
+    if (nodes.length < 2) throw new Error('diagram needs >= 2 nodes');
+    const nodeIds = new Set(nodes.map((n) => n.id));
+    const edges = (Array.isArray(spec.edges) ? spec.edges : [])
+      .filter((e) => e && e.id && nodeIds.has(e.from) && nodeIds.has(e.to))
+      .map((e) => ({ id: String(e.id), from: e.from, to: e.to, label: e.label, dashed: !!e.dashed }));
+    const edgeIds = new Set(edges.map((e) => e.id));
+    const filterIds = (arr, set) => Array.isArray(arr) ? arr.filter((x) => set.has(x)) : undefined;
+    const cleanSteps = steps.map((s) => ({
+      caption: s.caption,
+      activeNodes: filterIds(s.activeNodes, nodeIds),
+      dimNodes: filterIds(s.dimNodes, nodeIds),
+      activeEdges: filterIds(s.activeEdges, edgeIds),
+      show: Array.isArray(s.show) ? s.show.filter((x) => nodeIds.has(x)) : undefined,
+      packet: s.packet && edgeIds.has(s.packet.edge) ? { edge: s.packet.edge } : undefined,
+    }));
+    return { kind, title: spec.title || '', nodes, edges, steps: cleanSteps };
+  }
+
+  throw new Error(`unknown kind: ${kind}`);
+}
+
+/**
+ * Generate a validated concept-animation spec for a lesson via the AI
+ * orchestrator. Returns the spec (does not save).
+ */
+async function generateVisual({ courseTitle, lessonTitle, summary }) {
+  const prompt = buildVisualPrompt({ courseTitle, lessonTitle, summary });
+  const text = await callLLM(prompt);
+  const parsed = groqProvider.safeParseJson(text);
+  return validateVisual(parsed);
+}
+
+module.exports = { generateAndSaveProblems, reviewCode, recommendNext, generateCourse, generateVisual };

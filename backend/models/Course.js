@@ -13,6 +13,7 @@ const lessonSchema = new mongoose.Schema(
     keyConcepts: { type: [String], default: [] },
     code: { type: Map, of: String, default: {} },
     quiz: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    visual: { type: mongoose.Schema.Types.Mixed, default: null }, // AI/authored concept-animation spec
   },
   { _id: false }
 );
@@ -63,6 +64,7 @@ courseSchema.methods.toClientShape = function ({ withAnswers = false } = {}) {
       keyConcepts: l.keyConcepts || [],
       code: l.code instanceof Map ? Object.fromEntries(l.code) : (l.code || {}),
       quiz: sanitizeQuiz(l.quiz),
+      visual: l.visual || null,
     })),
   };
 };
