@@ -27,17 +27,29 @@ const LANGUAGES = [
     { id: 'typescript', name: 'TypeScript', icon: '📘' }
 ];
 
-const CATEGORIES = [
+// Preferred display order. Any category present in the data but not listed here
+// (e.g. new AI-generated topics) is appended automatically, so the hub never
+// silently hides a course.
+const CATEGORY_ORDER = [
     'Foundations',
+    'Web Development',
+    'Languages',
     'Data Structures',
     'Algorithm Mastery',
     'Backend Engineering',
+    'Databases',
+    'System Design',
+    'Software Quality',
+    'Security',
     'Artificial Intelligence',
     'Cloud & DevOps'
 ];
 
 const Learn = () => {
     const navigate = useNavigate();
+    // Course content is now DB-backed (/api/courses). Bundled COURSES stays as
+    // an instant, offline fallback so the page never blocks on the network.
+    const [courses, setCourses] = useState(COURSES);
     const [selectedPath, setSelectedPath] = useState(null);
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [progress, setProgress] = useState({});
@@ -53,17 +65,33 @@ const Learn = () => {
     // Group courses by category
     const categorizedCourses = useMemo(() => {
         const groups = {};
-        CATEGORIES.forEach(cat => groups[cat] = []);
-        
-        COURSES.forEach(course => {
+        courses.forEach(course => {
             const cat = course.category || 'Foundations';
-            if (groups[cat]) {
-                groups[cat].push(course);
-            } else {
-                groups[cat] = [course];
-            }
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(course);
         });
         return groups;
+    }, [courses]);
+
+    // Categories actually present, in preferred order (unknowns appended).
+    const CATEGORIES = useMemo(() => {
+        const present = Object.keys(categorizedCourses);
+        const ordered = CATEGORY_ORDER.filter(c => present.includes(c));
+        const extra = present.filter(c => !CATEGORY_ORDER.includes(c)).sort();
+        return [...ordered, ...extra];
+    }, [categorizedCourses]);
+
+    // Load course content from the backend; fall back silently to bundled data.
+    useEffect(() => {
+        let cancelled = false;
+        API.get('/api/courses')
+            .then((res) => {
+                if (!cancelled && Array.isArray(res.data) && res.data.length > 0) {
+                    setCourses(res.data);
+                }
+            })
+            .catch(() => { /* keep bundled fallback */ });
+        return () => { cancelled = true; };
     }, []);
 
     // Get user info and handle auth
@@ -112,9 +140,13 @@ const Learn = () => {
             newProgress[pathId].completed.push(lessonId);
         }
         newProgress[pathId].quizScores[lessonId] = quizScore;
-        
+
         setProgress(newProgress);
         localStorage.setItem('learningProgress', JSON.stringify(newProgress));
+
+        // 🔒 Authoritative completion — server awards XP + streak exactly once.
+        // (Quiz scores are recorded server-side by the graded quiz endpoint.)
+        API.post(`/api/courses/${pathId}/lessons/${lessonId}/complete`).catch(() => { /* offline: local optimistic update stands */ });
 
         // Achievements check
         const newlyUnlocked = checkAchievements(newProgress, achievements);
@@ -135,7 +167,7 @@ const Learn = () => {
     const isPathUnlocked = (path) => {
         if (!path.prerequisites || path.prerequisites.length === 0) return true;
         return path.prerequisites.every(prereq => {
-            const p = COURSES.find(c => c.id === prereq);
+            const p = courses.find(c => c.id === prereq);
             if (!p) return true;
             return getPathProgress(prereq, progress) >= 100;
         });
@@ -151,6 +183,7 @@ const Learn = () => {
         return (
             <LessonView
                 path={selectedPath}
+                slug={selectedPath.id}
                 lesson={selectedLesson}
                 preferredLanguage={selectedLang}
                 onBack={handleBack}
@@ -275,7 +308,7 @@ const Learn = () => {
             {/* Achievements & Recommendations */}
             <div style={styles.lowerContent}>
                 <Recommendations onNavigate={(topic) => {
-                    const path = COURSES.find(c => c.id === topic);
+                    const path = courses.find(c => c.id === topic);
                     if (path && isPathUnlocked(path)) setSelectedPath(path);
                 }} />
             </div>

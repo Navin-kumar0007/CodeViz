@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { API as axios } from '../utils/api';
 import { useNavigate } from "react-router-dom";
 import CodeEditor from "../components/Editor/CodeEditor";
@@ -50,6 +51,7 @@ const CODE_TEMPLATES = {
 
 const Practice = () => {
   const navigate = useNavigate();
+  const reduce = useReducedMotion();
   const user = JSON.parse(localStorage.getItem('userInfo'));
   const { theme, toggleTheme } = useTheme();
 
@@ -561,8 +563,16 @@ const Practice = () => {
       <div style={{ padding: '8px 24px', background: 'var(--cz-elevated)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--cz-line)', display: 'flex', gap: '15px', alignItems: 'center' }}>
 
         {/* RUN BUTTON */}
-        <button onClick={runCode} disabled={isLoading || isExecuting} style={{ padding: '8px 22px', background: 'linear-gradient(135deg, var(--cz-accent), #7C3AED)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: isLoading || isExecuting ? 'default' : 'pointer', boxShadow: '0 4px 20px rgba(85,112,255,0.2)', opacity: isLoading || isExecuting ? 0.6 : 1 }}>{isLoading ? '⏳ Running...' : '▶ RUN CODE'}
-        </button>
+        <motion.button
+          onClick={runCode}
+          disabled={isLoading || isExecuting}
+          whileHover={reduce || isLoading || isExecuting ? undefined : { scale: 1.04, boxShadow: '0 6px 26px rgba(85,112,255,0.35)' }}
+          whileTap={reduce || isLoading || isExecuting ? undefined : { scale: 0.95 }}
+          animate={!reduce && (isLoading || isExecuting) ? { opacity: [0.55, 0.85, 0.55] } : { opacity: isLoading || isExecuting ? 0.6 : 1 }}
+          transition={isLoading || isExecuting ? { duration: 1, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.2 }}
+          style={{ padding: '8px 22px', background: 'linear-gradient(135deg, var(--cz-accent), #7C3AED)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: isLoading || isExecuting ? 'default' : 'pointer', boxShadow: '0 4px 20px rgba(85,112,255,0.2)' }}
+        >{isLoading ? '⏳ Running...' : '▶ RUN CODE'}
+        </motion.button>
 
         <select value={language} onChange={handleLanguageChange}>
           <option value="python">Python</option>
@@ -885,6 +895,15 @@ const Practice = () => {
           </div>
 
           <div style={{ flex: 1, padding: '10px', overflow: 'auto' }}>
+           <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={reduce ? false : { opacity: 0, y: 8 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              exit={reduce ? undefined : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              style={{ height: '100%' }}
+            >
 
             {/* VISUALIZER TAB */}
             {activeTab === 'visualizer' && (
@@ -952,6 +971,8 @@ const Practice = () => {
               />
             )}
 
+            </motion.div>
+           </AnimatePresence>
           </div>
         </div>
       </div>
@@ -988,17 +1009,26 @@ const Practice = () => {
       )}
 
       {/* 🔍 THEATER MODE — fullscreen focused visualization with full playback controls */}
-      {showTheater && (
-        <div
+      <AnimatePresence>
+       {showTheater && (
+        <motion.div
           onClick={() => setShowTheater(false)}
+          initial={reduce ? { opacity: 0 } : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           style={{
             position: 'fixed', inset: 0, zIndex: 10000,
             background: 'rgba(4,4,8,0.82)', backdropFilter: 'blur(10px)',
             display: 'flex', flexDirection: 'column', padding: '24px'
           }}
         >
-          <div
+          <motion.div
             onClick={(e) => e.stopPropagation()}
+            initial={reduce ? false : { scale: 0.94, opacity: 0, y: 16 }}
+            animate={reduce ? undefined : { scale: 1, opacity: 1, y: 0 }}
+            exit={reduce ? undefined : { scale: 0.96, opacity: 0, y: 16 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 26 }}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column',
               background: 'var(--cz-surface)', border: '1px solid rgba(85,112,255,0.18)',
@@ -1044,9 +1074,10 @@ const Practice = () => {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        </motion.div>
+       )}
+      </AnimatePresence>
     </div>
   );
 };

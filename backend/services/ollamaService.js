@@ -87,3 +87,4 @@ Object.entries(methodToPrompt).forEach(([method, promptKey]) => {
 });
 
 module.exports = ollamaProvider;
+module.exports.generateOllamaResponse = generateOllamaResponse; // low-level raw-text completion

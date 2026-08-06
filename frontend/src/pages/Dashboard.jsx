@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Trophy, Zap, Flame, CheckCircle2, Code2, GraduationCap, Swords, ListChecks,
   Target, BarChart3, Flag, Search, Map, ArrowRight, ArrowUpRight,
@@ -38,36 +38,49 @@ const TONE = {
   success: { chip: 'text-success', v: '--cz-success' },
 };
 
+// ---- Shared motion ----
+const EASE = [0.22, 1, 0.36, 1];
+const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.06, delayChildren: 0.03 } } };
+const popIn = { hidden: { opacity: 0, y: 14, scale: 0.96 }, show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 280, damping: 24 } } };
+const fadeUp = { hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } } };
+
 function StatTile({ Icon, value, label, tone = 'accent' }) {
   const t = TONE[tone];
+  const reduce = useReducedMotion();
   const shown = useCountUp(Number(value) || 0, { enabled: getFx().countUp });
   return (
-    <div
-      className="relative flex items-center gap-3 border border-line rounded-xl px-4 py-3.5 min-w-0 shadow-[var(--cz-shadow-sm)] overflow-hidden"
+    <motion.div
+      variants={reduce ? undefined : popIn}
+      whileHover={reduce ? undefined : { y: -4, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
+      className="group relative flex items-center gap-3 border border-line rounded-xl px-4 py-3.5 min-w-0 shadow-[var(--cz-shadow-sm)] hover:shadow-[var(--cz-shadow-md)] overflow-hidden transition-shadow"
       style={{ background: `linear-gradient(135deg, color-mix(in srgb, var(${t.v}) 12%, var(--cz-surface)), var(--cz-surface) 60%)` }}
     >
       <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `var(${t.v})` }} />
-      <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${t.chip}`}
-        style={{ background: `color-mix(in srgb, var(${t.v}) 18%, transparent)`, border: `1px solid color-mix(in srgb, var(${t.v}) 35%, transparent)` }}>
+      <motion.span
+        whileHover={reduce ? undefined : { rotate: -8, scale: 1.1 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 12 }}
+        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${t.chip}`}
+        style={{ background: `color-mix(in srgb, var(${t.v}) 18%, transparent)`, border: `1px solid color-mix(in srgb, var(${t.v}) 35%, transparent)` }}
+      >
         <Icon size={17} strokeWidth={2.2} />
-      </span>
+      </motion.span>
       <div className="flex flex-col min-w-0 leading-tight">
         <span className="text-[20px] font-bold text-text tabular-nums">{shown}</span>
         <span className="text-[11px] text-muted truncate">{label}</span>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
-function Panel({ title, right, children, className = '', bodyClass = '' }) {
+function Panel({ title, right, children, className = '', bodyClass = '', variants }) {
   return (
-    <div className={`flex flex-col bg-surface border border-line rounded-xl min-w-0 overflow-hidden shadow-[var(--cz-shadow-sm)] ${className}`}>
+    <motion.div variants={variants} className={`flex flex-col bg-surface border border-line rounded-xl min-w-0 overflow-hidden shadow-[var(--cz-shadow-sm)] ${className}`}>
       <div className="flex items-center justify-between gap-3 px-4 h-11 border-b border-line shrink-0">
         <span className="text-[13px] font-bold text-text">{title}</span>
         {right}
       </div>
       <div className={`flex-1 min-h-0 ${bodyClass}`}>{children}</div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -82,6 +95,7 @@ function SectionLabel({ children }) {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const reduce = useReducedMotion();
   const user = JSON.parse(localStorage.getItem('userInfo'));
   const [gamification, setGamification] = useState(null);
   const [time, setTime] = useState('');
@@ -110,11 +124,19 @@ const Dashboard = () => {
   const firstName = user?.name?.split(' ')[0] || 'Developer';
   const streak = typeof gamification?.streak === 'object' ? (gamification.streak?.current || 0) : (gamification?.streak || 0);
 
+  // On-mount reveal helper (above the fold → animate immediately, not on scroll)
+  const reveal = reduce ? {} : { variants: stagger, initial: 'hidden', animate: 'show' };
+
   return (
     <div className="min-h-full bg-bg text-text overflow-x-hidden" style={FONT}>
       <div className="w-full px-6 py-6 pb-16">
         {/* Header */}
-        <header className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-5 border-b border-line">
+        <motion.header
+          initial={reduce ? false : { opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE }}
+          className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-5 border-b border-line"
+        >
           <div>
             <h1 className="text-[24px] font-extrabold tracking-tight leading-tight m-0">
               {greeting},{' '}
@@ -126,45 +148,49 @@ const Dashboard = () => {
             <span className="font-mono text-[13px] text-muted tabular-nums">{time}</span>
             <Button variant="secondary" size="sm" onClick={handleLogout}>Sign out</Button>
           </div>
-        </header>
+        </motion.header>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-4" {...reveal}>
           <StatTile Icon={Trophy} value={gamification?.level || 1} label="Current level" tone="warning" />
           <StatTile Icon={Zap} value={gamification?.xp || 0} label="Total XP" tone="accent" />
           <StatTile Icon={Flame} value={streak} label="Day streak" tone="danger" />
           <StatTile Icon={CheckCircle2} value={gamification?.problemsSolved || 0} label="Problems solved" tone="success" />
-        </div>
+        </motion.div>
 
         {/* Progress + Mission */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
-          <Panel title="Progress & Streak" right={<Badge tone="success">Live</Badge>} className="lg:col-span-7 min-h-[168px]" bodyClass="p-4 flex flex-col justify-center gap-4 overflow-x-auto">
+        <motion.div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4" {...reveal}>
+          <Panel variants={reduce ? undefined : fadeUp} title="Progress & Streak" right={<Badge tone="success">Live</Badge>} className="lg:col-span-7 min-h-[168px]" bodyClass="p-4 flex flex-col justify-center gap-4 overflow-x-auto">
             {gamification ? <XPBar xp={gamification.xp} level={gamification.level} /> : <div className="h-3 rounded bg-elevated animate-pulse" />}
             {gamification ? <StreakCounter streak={gamification.streak} /> : <div className="h-3 rounded bg-elevated animate-pulse w-2/3" />}
           </Panel>
 
-          <Panel title="Daily Mission" right={<Target size={15} className="text-accent" />} className="lg:col-span-5" bodyClass="p-4 flex flex-col gap-3">
+          <Panel variants={reduce ? undefined : fadeUp} title="Daily Mission" right={<Target size={15} className="text-accent" />} className="lg:col-span-5" bodyClass="p-4 flex flex-col gap-3">
             <h3 className="text-[15px] font-bold text-text m-0">Solve a Medium problem</h3>
             <p className="text-[13px] text-muted leading-relaxed m-0">Complete any medium challenge to earn bonus XP and extend your streak.</p>
             <div className="flex gap-2">
               <Badge tone="accent">+50 XP</Badge>
               <Badge tone="warning">+1 streak</Badge>
             </div>
-            <Button size="md" className="self-start mt-0.5" onClick={() => navigate('/problems')}>
-              Accept mission <ArrowRight size={15} />
-            </Button>
+            <motion.div className="self-start mt-0.5" whileHover={reduce ? undefined : { scale: 1.04 }} whileTap={reduce ? undefined : { scale: 0.97 }}>
+              <Button size="md" onClick={() => navigate('/problems')}>
+                Accept mission <ArrowRight size={15} />
+              </Button>
+            </motion.div>
           </Panel>
-        </div>
+        </motion.div>
 
         {/* Quick launch */}
         <SectionLabel>Quick launch</SectionLabel>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {MODULES.map((m, i) => (
+        <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" variants={reduce ? undefined : stagger} initial={reduce ? false : 'hidden'} whileInView={reduce ? undefined : 'show'} viewport={{ once: true, amount: 0.2 }}>
+          {MODULES.map((m) => (
             <motion.button
               key={m.path}
-              initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.04 * i }}
+              variants={reduce ? undefined : popIn}
+              whileHover={reduce ? undefined : { y: -4, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
+              whileTap={reduce ? undefined : { scale: 0.98 }}
               onClick={() => navigate(m.path)}
-              className="group relative flex items-center gap-3 text-left bg-surface border border-line rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-accent hover:-translate-y-0.5"
+              className="group relative flex items-center gap-3 text-left bg-surface border border-line rounded-xl p-4 cursor-pointer hover:border-accent hover:shadow-[var(--cz-shadow-md)] transition-[border-color,box-shadow]"
             >
               <span className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-accent/12 text-accent border border-accent/25 group-hover:bg-accent group-hover:text-accent-fg transition-colors">
                 <m.Icon size={19} strokeWidth={2} />
@@ -173,36 +199,39 @@ const Dashboard = () => {
                 <span className="block text-[14px] font-bold text-text truncate">{m.title}</span>
                 <span className="block text-[12px] text-muted truncate">{m.desc}</span>
               </span>
-              <ArrowUpRight size={16} className="ml-auto shrink-0 text-muted opacity-0 group-hover:opacity-100 group-hover:text-accent transition-all" />
+              <ArrowUpRight size={16} className="ml-auto shrink-0 text-muted opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-accent transition-all" />
             </motion.button>
           ))}
-        </div>
+        </motion.div>
 
         {/* Widgets — fixed height, scroll inside so legacy widgets never overflow */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-          <Panel title="Algorithm DNA" right={<Badge tone="accent">AI analysis</Badge>} className="h-[320px]" bodyClass="p-4 overflow-auto">
+        <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4" variants={reduce ? undefined : stagger} initial={reduce ? false : 'hidden'} whileInView={reduce ? undefined : 'show'} viewport={{ once: true, amount: 0.15 }}>
+          <Panel variants={reduce ? undefined : fadeUp} title="Algorithm DNA" right={<Badge tone="accent">AI analysis</Badge>} className="h-[320px]" bodyClass="p-4 overflow-auto">
             <AlgorithmDNA />
           </Panel>
-          <Panel title="Skill Architecture" className="h-[320px]" bodyClass="p-4 overflow-auto">
+          <Panel variants={reduce ? undefined : fadeUp} title="Skill Architecture" className="h-[320px]" bodyClass="p-4 overflow-auto">
             <SkillTreeWidget />
           </Panel>
-        </div>
+        </motion.div>
 
         {/* Explore */}
         <SectionLabel>Explore more</SectionLabel>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-4" variants={reduce ? undefined : stagger} initial={reduce ? false : 'hidden'} whileInView={reduce ? undefined : 'show'} viewport={{ once: true, amount: 0.3 }}>
           {QUICK.map((q) => (
-            <button
+            <motion.button
               key={q.path}
+              variants={reduce ? undefined : popIn}
+              whileHover={reduce ? undefined : { y: -3, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
+              whileTap={reduce ? undefined : { scale: 0.98 }}
               onClick={() => navigate(q.path)}
-              className="flex items-center gap-2.5 bg-surface border border-line rounded-lg px-4 py-3 cursor-pointer transition-all hover:border-accent hover:-translate-y-0.5 min-w-0"
+              className="flex items-center gap-2.5 bg-surface border border-line rounded-lg px-4 py-3 cursor-pointer hover:border-accent transition-colors min-w-0"
             >
               <span className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-elevated text-muted"><q.Icon size={16} /></span>
               <span className="text-[13px] font-semibold text-text flex-1 text-left truncate">{q.label}</span>
               <ArrowRight size={14} className="text-muted shrink-0" />
-            </button>
+            </motion.button>
           ))}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -6,15 +6,54 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
  * No harsh failures - allows retries and shows explanations
  */
 
-const Quiz = ({ questions, onComplete, onBack, lessonTitle }) => {
+const Quiz = ({ questions, onComplete, onBack, lessonTitle, onGrade }) => {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [showResult, setShowResult] = useState(false);
     const [answers, setAnswers] = useState([]);
     const [showExplanation, setShowExplanation] = useState(false);
+    const [grading, setGrading] = useState(false);
+    const [review, setReview] = useState(null); // server-graded results screen
 
     const totalQuestions = questions.length;
     const question = questions[currentQuestion];
+
+    // Answer keys are stripped from server-delivered content, so we grade on the
+    // server (deferred). When keys are present (offline/bundled fallback) we keep
+    // the original instant per-question feedback.
+    const deferred = !questions.every((q) => typeof q.correct === 'number');
+
+    // Finish: server-grade in deferred mode, else compute locally.
+    const finishQuiz = async (allAnswers) => {
+        if (deferred && onGrade) {
+            setGrading(true);
+            try {
+                const r = await onGrade(allAnswers); // { score, results }
+                setGrading(false);
+                setReview({ score: r.score, results: r.results || [], answers: allAnswers });
+                return;
+            } catch {
+                setGrading(false); // fall through to a best-effort local score (0 without keys)
+            }
+        }
+        const finalScore = Math.round(
+            (allAnswers.filter((a, i) => questions[i] && a === questions[i].correct).length / totalQuestions) * 100
+        );
+        onComplete(finalScore);
+    };
+
+    // Deferred mode: record answer and advance (no reveal until the end).
+    const handleAdvance = () => {
+        if (selectedAnswer === null) return;
+        const newAnswers = [...answers, selectedAnswer];
+        setAnswers(newAnswers);
+        if (currentQuestion < totalQuestions - 1) {
+            setCurrentQuestion(currentQuestion + 1);
+            setSelectedAnswer(null);
+        } else {
+            finishQuiz(newAnswers);
+        }
+    };
 
     // Guard: If we've gone past all questions, show completion state
     if (!question) {
@@ -57,11 +96,7 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle }) => {
             setShowResult(false);
             setShowExplanation(false);
         } else {
-            // Quiz complete - calculate final score
-            const finalScore = Math.round(
-                ((newAnswers.filter((a, i) => questions[i] && a === questions[i].correct).length) / totalQuestions) * 100
-            );
-            onComplete(finalScore);
+            finishQuiz(newAnswers);
         }
     };
 
@@ -71,6 +106,65 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle }) => {
         setShowResult(false);
         setShowExplanation(false);
     };
+
+    // Grading in flight
+    if (grading) {
+        return (
+            <div style={styles.container}>
+                <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                    <div style={{ fontSize: '40px', marginBottom: '16px' }}>⏳</div>
+                    <h2 style={{ color: 'var(--text-primary)', marginBottom: '8px' }}>Grading…</h2>
+                    <p style={{ color: 'var(--text-muted)' }}>Checking your answers.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Server-graded review screen (deferred mode)
+    if (review) {
+        return (
+            <div style={styles.container}>
+                <header style={styles.header}>
+                    <button onClick={onBack} style={styles.backBtn}>← Back to Lesson</button>
+                    <h2 style={styles.title}>📊 Results: {lessonTitle}</h2>
+                    <div style={styles.progress}>Score: {review.score}%</div>
+                </header>
+                <div style={{ padding: '10px 4px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {questions.map((q, i) => {
+                        const r = review.results[i] || {};
+                        const picked = review.answers[i];
+                        return (
+                            <div key={i} style={styles.questionCard}>
+                                <h3 style={{ ...styles.questionText, fontSize: '15px' }}>
+                                    {r.correct ? '✅' : '❌'} {q.question}
+                                </h3>
+                                <div style={styles.options}>
+                                    {q.options.map((option, idx) => {
+                                        let optionStyle = { ...styles.option };
+                                        if (idx === r.correctIndex) optionStyle = { ...optionStyle, ...styles.correctOption };
+                                        else if (idx === picked) optionStyle = { ...optionStyle, ...styles.wrongOption };
+                                        return (
+                                            <div key={idx} style={optionStyle}>
+                                                <span style={styles.optionLetter}>{String.fromCharCode(65 + idx)}</span>
+                                                <span style={styles.optionText}>{option}</span>
+                                                {idx === r.correctIndex && <span style={styles.checkmark}>✓</span>}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {r.explanation && (
+                                    <div style={styles.explanation}><strong>💡 Explanation:</strong> {r.explanation}</div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+                <div style={styles.actions}>
+                    <button onClick={() => onComplete(review.score)} style={styles.nextBtn}>Continue →</button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div style={styles.container}>
@@ -174,7 +268,15 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle }) => {
 
             {/* Actions */}
             <div style={styles.actions}>
-                {!showResult ? (
+                {deferred ? (
+                    <button
+                        onClick={handleAdvance}
+                        disabled={selectedAnswer === null}
+                        style={{ ...styles.nextBtn, opacity: selectedAnswer === null ? 0.5 : 1 }}
+                    >
+                        {currentQuestion < totalQuestions - 1 ? 'Next Question →' : 'Finish Quiz 🎉'}
+                    </button>
+                ) : !showResult ? (
                     <button
                         onClick={handleSubmit}
                         disabled={selectedAnswer === null}

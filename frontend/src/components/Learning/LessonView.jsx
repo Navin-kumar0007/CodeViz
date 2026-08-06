@@ -3,7 +3,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import Quiz from './Quiz';
 import Canvas from '../Visualizer/Canvas';
 import DiscussionPanel from '../Social/DiscussionPanel';
-import API_BASE from '../../utils/api';
+import API_BASE, { API } from '../../utils/api';
 
 /**
  * LessonView - Full lesson display with explanation, code, and quiz
@@ -30,7 +30,7 @@ const LANGUAGE_MAP = {
     c: 'c'
 };
 
-const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascript' }) => {
+const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascript', slug }) => {
     const availableLanguages = Object.keys(lesson.code || {});
     
     // Initialize with preferred language if available, else first available
@@ -99,12 +99,19 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
         onComplete(score);
     };
 
+    // Server-side grading (answer keys never reach the client).
+    const gradeQuiz = async (answers) => {
+        const { data } = await API.post(`/api/courses/${slug}/lessons/${lesson.id}/quiz`, { answers });
+        return data; // { score, results }
+    };
+
     // Show quiz after explanation
     if (showQuiz && lesson.quiz) {
         return (
             <Quiz
                 questions={lesson.quiz}
                 onComplete={handleQuizComplete}
+                onGrade={slug ? gradeQuiz : undefined}
                 onBack={() => setShowQuiz(false)}
                 lessonTitle={lesson.title}
             />
