@@ -6,6 +6,8 @@ import { motion as Motion } from 'framer-motion';
  * Shows completion status and duration for each lesson
  */
 
+const FONT = "'Inter', system-ui, -apple-system, sans-serif";
+
 const LessonList = ({ lessons, progress, onSelectLesson }) => {
     const isCompleted = (lessonId) => progress.completed?.includes(lessonId);
     const getQuizScore = (lessonId) => progress.quizScores?.[lessonId];
@@ -15,8 +17,8 @@ const LessonList = ({ lessons, progress, onSelectLesson }) => {
             {lessons.map((lesson, index) => {
                 const completed = isCompleted(lesson.id);
                 const score = getQuizScore(lesson.id);
-                // Removed unused isFirst
                 const previousCompleted = index === 0 || isCompleted(lessons[index - 1].id);
+                const passed = score >= 70;
 
                 return (
                     <Motion.div
@@ -28,19 +30,20 @@ const LessonList = ({ lessons, progress, onSelectLesson }) => {
                         onClick={() => previousCompleted && onSelectLesson(lesson)}
                         style={{
                             ...styles.lessonCard,
-                            opacity: previousCompleted ? 1 : 0.5,
+                            opacity: previousCompleted ? 1 : 0.55,
                             cursor: previousCompleted ? 'pointer' : 'not-allowed',
-                            borderColor: completed ? 'var(--accent-green)' : 'rgba(255,255,255,0.1)'
+                            borderColor: completed ? 'color-mix(in srgb, var(--cz-success) 45%, var(--cz-line))' : 'var(--cz-line)',
                         }}
                     >
                         {/* Lesson number */}
                         <div style={{
                             ...styles.lessonNumber,
+                            color: (completed || previousCompleted) ? '#fff' : 'var(--cz-muted)',
                             background: completed
-                                ? 'linear-gradient(135deg, var(--accent-green), #38a169)'
+                                ? 'linear-gradient(135deg, var(--cz-success), #22c55e)'
                                 : previousCompleted
-                                    ? 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))'
-                                    : 'rgba(255,255,255,0.1)'
+                                    ? 'linear-gradient(135deg, var(--cz-accent), #7c93ff)'
+                                    : 'var(--cz-elevated)',
                         }}>
                             {completed ? '✓' : index + 1}
                         </div>
@@ -58,7 +61,13 @@ const LessonList = ({ lessons, progress, onSelectLesson }) => {
                         {score !== undefined && (
                             <div style={{
                                 ...styles.scoreBadge,
-                                background: score >= 70 ? 'var(--accent-green)' : 'var(--accent-yellow)'
+                                color: passed ? 'var(--cz-success)' : 'var(--cz-warning)',
+                                background: passed
+                                    ? 'color-mix(in srgb, var(--cz-success) 15%, transparent)'
+                                    : 'color-mix(in srgb, var(--cz-warning) 15%, transparent)',
+                                borderColor: passed
+                                    ? 'color-mix(in srgb, var(--cz-success) 35%, transparent)'
+                                    : 'color-mix(in srgb, var(--cz-warning) 35%, transparent)',
                             }}>
                                 {score}%
                             </div>
@@ -77,56 +86,61 @@ const styles = {
     container: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
-        maxWidth: '800px',
-        margin: '0 auto'
+        gap: '10px',
+        maxWidth: '820px',
+        margin: '0 auto',
+        width: '100%',
+        fontFamily: FONT,
     },
     lessonCard: {
         display: 'flex',
         alignItems: 'center',
         gap: '15px',
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '12px',
-        padding: '15px 20px',
-        transition: 'all 0.2s ease'
+        background: 'var(--cz-surface)',
+        border: '1px solid var(--cz-line)',
+        borderRadius: '14px',
+        padding: '14px 18px',
+        boxShadow: 'var(--cz-shadow-sm)',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
     },
     lessonNumber: {
         width: '40px',
         height: '40px',
-        borderRadius: '50%',
+        borderRadius: '12px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '16px',
-        fontWeight: 'bold',
-        color: 'var(--text-primary)',
-        flexShrink: 0
+        fontSize: '15px',
+        fontWeight: 800,
+        flexShrink: 0,
     },
     lessonInfo: {
-        flex: 1
+        flex: 1,
+        minWidth: 0,
     },
     lessonTitle: {
-        margin: '0 0 4px 0',
+        margin: '0 0 3px 0',
         fontSize: '15px',
-        fontWeight: '600',
-        color: 'var(--text-primary)'
+        fontWeight: 700,
+        color: 'var(--cz-text)',
     },
     lessonMeta: {
         fontSize: '12px',
-        color: 'var(--text-muted)'
+        color: 'var(--cz-muted)',
     },
     scoreBadge: {
         padding: '4px 10px',
         borderRadius: '20px',
         fontSize: '11px',
-        fontWeight: 'bold',
-        color: 'var(--text-primary)'
+        fontWeight: 800,
+        border: '1px solid transparent',
+        flexShrink: 0,
     },
     arrow: {
-        color: 'var(--text-muted)',
-        fontSize: '18px'
-    }
+        color: 'var(--cz-faint)',
+        fontSize: '18px',
+        flexShrink: 0,
+    },
 };
 
 export default LessonList;

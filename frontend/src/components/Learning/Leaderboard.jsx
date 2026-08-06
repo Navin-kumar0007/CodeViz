@@ -86,8 +86,8 @@ const Leaderboard = ({ onClose, currentUserId }) => {
     const getRankStyle = (rank) => {
         if (rank === 1) return { background: 'linear-gradient(135deg, #ffd700, #ffaa00)', color: '#000' };
         if (rank === 2) return { background: 'linear-gradient(135deg, #c0c0c0, #a0a0a0)', color: '#000' };
-        if (rank === 3) return { background: 'linear-gradient(135deg, #cd7f32, #a0522d)', color: 'var(--text-primary)' };
-        return { background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)' };
+        if (rank === 3) return { background: 'linear-gradient(135deg, #cd7f32, #a0522d)', color: 'var(--cz-text)' };
+        return { background: 'var(--cz-line)', color: 'var(--cz-text)' };
     };
 
     const getRankEmoji = (rank) => {
@@ -119,11 +119,11 @@ const Leaderboard = ({ onClose, currentUserId }) => {
                 </div>
 
                 {/* Tab Switcher */}
-                <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', borderBottom: '1px solid var(--cz-line)' }}>
                     {[{ id: 'alltime', label: '🏅 All Time' }, { id: 'weekly', label: '⚡ This Week' }, { id: 'skill', label: '🎯 By Skill' }].map(tab => (
                         <button key={tab.id} onClick={() => setActiveView(tab.id)} style={{
                             flex: 1, padding: '12px', background: activeView === tab.id ? 'rgba(13,148,136,0.2)' : 'transparent',
-                            border: 'none', borderBottom: activeView === tab.id ? '2px solid var(--accent-teal)' : '2px solid transparent',
+                            border: 'none', borderBottom: activeView === tab.id ? '2px solid var(--cz-accent)' : '2px solid transparent',
                             color: activeView === tab.id ? '#fff' : '#888', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer'
                         }}>{tab.label}</button>
                     ))}
@@ -139,7 +139,7 @@ const Leaderboard = ({ onClose, currentUserId }) => {
                 {/* Skill category dropdown */}
                 {activeView === 'skill' && (
                     <div style={{ padding: '10px 20px', background: 'rgba(13,148,136,0.1)' }}>
-                        <select value={selectedSkill} onChange={(e) => setSelectedSkill(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', background: 'var(--bg-muted)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '13px' }}>
+                        <select value={selectedSkill} onChange={(e) => setSelectedSkill(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', background: 'var(--cz-elevated)', color: 'var(--cz-text)', border: '1px solid var(--cz-line)', fontSize: '13px' }}>
                             {SKILL_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}</option>)}
                         </select>
                     </div>
@@ -213,7 +213,7 @@ const styles = {
     },
     panel: {
         background: 'var(--bg-primary)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '1px solid var(--cz-line)',
         borderRadius: '20px',
         width: '100%',
         maxWidth: '500px',
@@ -227,17 +227,17 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '20px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        borderBottom: '1px solid var(--cz-line)'
     },
     title: {
         margin: 0,
         fontSize: '20px',
-        color: 'var(--text-primary)'
+        color: 'var(--cz-text)'
     },
     closeBtn: {
         background: 'transparent',
         border: 'none',
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         fontSize: '20px',
         cursor: 'pointer',
         padding: '5px',
@@ -248,8 +248,8 @@ const styles = {
         justifyContent: 'space-between',
         padding: '15px 20px',
         background: 'rgba(13, 148, 136, 0.2)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        color: 'var(--text-primary)',
+        borderBottom: '1px solid var(--cz-line)',
+        color: 'var(--cz-text)',
         fontSize: '14px'
     },
     list: {
@@ -259,13 +259,13 @@ const styles = {
     },
     loading: {
         textAlign: 'center',
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         padding: '40px'
     },
     empty: {
         textAlign: 'center',
         padding: '40px',
-        color: 'var(--text-muted)'
+        color: 'var(--cz-muted)'
     },
     leaderItem: {
         display: 'flex',
@@ -273,8 +273,8 @@ const styles = {
         padding: '12px',
         borderRadius: '10px',
         marginBottom: '8px',
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid rgba(255, 255, 255, 0.05)'
+        background: 'var(--cz-surface)',
+        border: '1px solid var(--cz-elevated)'
     },
     currentUser: {
         border: '1px solid rgba(13, 148, 136, 0.5)',
@@ -295,17 +295,17 @@ const styles = {
         flex: 1
     },
     leaderName: {
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         fontWeight: '600',
         fontSize: '15px'
     },
     leaderStats: {
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         fontSize: '12px',
         marginTop: '2px'
     },
     score: {
-        color: 'var(--accent-teal)',
+        color: 'var(--cz-accent)',
         fontWeight: 'bold',
         fontSize: '16px'
     }

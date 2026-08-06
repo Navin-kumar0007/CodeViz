@@ -238,7 +238,7 @@ const QuizBrowser = ({ onClose }) => {
                         <div style={styles.empty}>
                             <span style={{ fontSize: '40px' }}>📝</span>
                             <p>No quizzes found</p>
-                            <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            <p style={{ fontSize: '12px', color: 'var(--cz-muted)' }}>
                                 Try different filters or create your own!
                             </p>
                         </div>
@@ -300,7 +300,7 @@ const styles = {
     },
     panel: {
         background: 'var(--bg-primary)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '1px solid var(--cz-line)',
         borderRadius: '20px',
         width: '100%',
         maxWidth: '600px',
@@ -311,7 +311,7 @@ const styles = {
     },
     quizPanel: {
         background: 'var(--bg-primary)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '1px solid var(--cz-line)',
         borderRadius: '20px',
         width: '100%',
         maxWidth: '500px',
@@ -322,17 +322,17 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '20px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        borderBottom: '1px solid var(--cz-line)'
     },
     title: {
         margin: 0,
         fontSize: '20px',
-        color: 'var(--text-primary)'
+        color: 'var(--cz-text)'
     },
     closeBtn: {
         background: 'transparent',
         border: 'none',
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         fontSize: '20px',
         cursor: 'pointer',
         padding: '5px',
@@ -342,15 +342,15 @@ const styles = {
         display: 'flex',
         gap: '10px',
         padding: '15px 20px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+        borderBottom: '1px solid var(--cz-elevated)'
     },
     filterSelect: {
         flex: 1,
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'var(--cz-elevated)',
+        border: '1px solid var(--cz-line)',
         borderRadius: '8px',
         padding: '8px 12px',
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         fontSize: '13px'
     },
     list: {
@@ -360,13 +360,13 @@ const styles = {
     },
     loading: {
         textAlign: 'center',
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         padding: '40px'
     },
     empty: {
         textAlign: 'center',
         padding: '40px',
-        color: 'var(--text-muted)'
+        color: 'var(--cz-muted)'
     },
     quizCard: {
         display: 'flex',
@@ -375,8 +375,8 @@ const styles = {
         padding: '15px',
         borderRadius: '12px',
         marginBottom: '10px',
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid rgba(255, 255, 255, 0.05)',
+        background: 'var(--cz-surface)',
+        border: '1px solid var(--cz-elevated)',
         cursor: 'pointer',
         transition: 'all 0.2s'
     },
@@ -384,7 +384,7 @@ const styles = {
         flex: 1
     },
     quizTitle: {
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         fontWeight: '600',
         fontSize: '15px',
         marginBottom: '4px'
@@ -392,11 +392,11 @@ const styles = {
     quizMeta: {
         display: 'flex',
         gap: '8px',
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         fontSize: '12px'
     },
     quizDesc: {
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         fontSize: '12px',
         marginTop: '6px'
     },
@@ -407,15 +407,15 @@ const styles = {
     },
     statBadge: {
         background: 'rgba(13, 148, 136, 0.15)',
-        color: 'var(--accent-teal)',
+        color: 'var(--cz-accent)',
         padding: '4px 8px',
         borderRadius: '10px',
         fontSize: '11px'
     },
     startBtn: {
-        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
+        background: 'linear-gradient(135deg, var(--cz-accent), var(--cz-accent))',
         border: 'none',
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         padding: '8px 16px',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -429,23 +429,23 @@ const styles = {
         marginBottom: '15px'
     },
     quizProgress: {
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         fontSize: '14px'
     },
     progressBar: {
         height: '4px',
-        background: 'rgba(255, 255, 255, 0.1)',
+        background: 'var(--cz-line)',
         borderRadius: '2px',
         marginBottom: '25px',
         overflow: 'hidden'
     },
     progressFill: {
         height: '100%',
-        background: 'linear-gradient(90deg, var(--accent-teal), var(--accent-purple))',
+        background: 'linear-gradient(90deg, var(--cz-accent), var(--cz-accent))',
         transition: 'width 0.3s ease'
     },
     questionText: {
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         fontSize: '18px',
         fontWeight: '500',
         marginBottom: '25px',
@@ -457,9 +457,9 @@ const styles = {
         gap: '10px'
     },
     optionBtn: {
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        color: 'var(--text-primary)',
+        background: 'var(--cz-elevated)',
+        border: '1px solid var(--cz-line)',
+        color: 'var(--cz-text)',
         padding: '15px',
         borderRadius: '10px',
         fontSize: '14px',
@@ -475,7 +475,7 @@ const styles = {
         width: '120px',
         height: '120px',
         borderRadius: '50%',
-        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
+        background: 'linear-gradient(135deg, var(--cz-accent), var(--cz-accent))',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -484,22 +484,22 @@ const styles = {
     scoreValue: {
         fontSize: '36px',
         fontWeight: 'bold',
-        color: 'var(--text-primary)'
+        color: 'var(--cz-text)'
     },
     resultsTitle: {
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         fontSize: '24px',
         margin: '0 0 10px'
     },
     resultsSubtitle: {
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         fontSize: '14px',
         marginBottom: '30px'
     },
     closeResultsBtn: {
-        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
+        background: 'linear-gradient(135deg, var(--cz-accent), var(--cz-accent))',
         border: 'none',
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         padding: '12px 30px',
         borderRadius: '10px',
         cursor: 'pointer',

@@ -61,8 +61,8 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle, onGrade }) => {
             <div style={styles.container}>
                 <div style={{ textAlign: 'center', padding: '60px 20px' }}>
                     <div style={{ fontSize: '48px', marginBottom: '20px' }}>🎉</div>
-                    <h2 style={{ color: 'var(--text-primary)', marginBottom: '10px' }}>Quiz Complete!</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>Processing your results...</p>
+                    <h2 style={{ color: 'var(--cz-text)', marginBottom: '10px' }}>Quiz Complete!</h2>
+                    <p style={{ color: 'var(--cz-muted)' }}>Processing your results...</p>
                 </div>
             </div>
         );
@@ -113,8 +113,8 @@ const Quiz = ({ questions, onComplete, onBack, lessonTitle, onGrade }) => {
             <div style={styles.container}>
                 <div style={{ textAlign: 'center', padding: '60px 20px' }}>
                     <div style={{ fontSize: '40px', marginBottom: '16px' }}>⏳</div>
-                    <h2 style={{ color: 'var(--text-primary)', marginBottom: '8px' }}>Grading…</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>Checking your answers.</p>
+                    <h2 style={{ color: 'var(--cz-text)', marginBottom: '8px' }}>Grading…</h2>
+                    <p style={{ color: 'var(--cz-muted)' }}>Checking your answers.</p>
                 </div>
             </div>
         );
@@ -308,7 +308,7 @@ const styles = {
     container: {
         minHeight: '100vh',
         background: 'var(--bg-primary)',
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         padding: '20px',
         display: 'flex',
         flexDirection: 'column'
@@ -321,8 +321,8 @@ const styles = {
     },
     backBtn: {
         background: 'transparent',
-        border: '1px solid var(--border-color)',
-        color: 'var(--text-primary)',
+        border: '1px solid var(--cz-line)',
+        color: 'var(--cz-text)',
         padding: '8px 16px',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -334,24 +334,24 @@ const styles = {
         flex: 1
     },
     progress: {
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         fontSize: '14px'
     },
     progressBar: {
         height: '6px',
-        background: 'rgba(255,255,255,0.1)',
+        background: 'var(--cz-line)',
         borderRadius: '3px',
         marginBottom: '30px',
         overflow: 'hidden'
     },
     progressFill: {
         height: '100%',
-        background: 'linear-gradient(90deg, var(--accent-teal), var(--accent-purple))',
+        background: 'linear-gradient(90deg, var(--cz-accent), var(--cz-accent))',
         borderRadius: '3px'
     },
     questionCard: {
-        background: 'var(--bg-muted)',
-        border: '1px solid var(--border-color)',
+        background: 'var(--cz-elevated)',
+        border: '1px solid var(--cz-line)',
         borderRadius: '16px',
         padding: '30px',
         maxWidth: '700px',
@@ -373,18 +373,18 @@ const styles = {
         alignItems: 'center',
         gap: '15px',
         padding: '15px 20px',
-        background: 'var(--bg-muted)',
-        border: '2px solid rgba(255,255,255,0.1)',
+        background: 'var(--cz-elevated)',
+        border: '2px solid var(--cz-line)',
         borderRadius: '12px',
         cursor: 'pointer',
         transition: 'all 0.2s'
     },
     selectedOption: {
-        borderColor: 'var(--accent-teal)',
+        borderColor: 'var(--cz-accent)',
         background: 'rgba(13, 148, 136, 0.1)'
     },
     correctOption: {
-        borderColor: 'var(--accent-green)',
+        borderColor: 'var(--cz-success)',
         background: 'rgba(72, 187, 120, 0.15)'
     },
     wrongOption: {
@@ -395,7 +395,7 @@ const styles = {
         width: '32px',
         height: '32px',
         borderRadius: '50%',
-        background: 'rgba(255,255,255,0.1)',
+        background: 'var(--cz-line)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -407,7 +407,7 @@ const styles = {
         fontSize: '15px'
     },
     checkmark: {
-        color: 'var(--accent-green)',
+        color: 'var(--cz-success)',
         fontSize: '20px',
         fontWeight: 'bold'
     },
@@ -420,7 +420,7 @@ const styles = {
         background: 'rgba(72, 187, 120, 0.15)',
         border: '1px solid rgba(72, 187, 120, 0.3)',
         borderRadius: '10px',
-        color: 'var(--accent-green)',
+        color: 'var(--cz-success)',
         fontSize: '15px'
     },
     wrongFeedback: {
@@ -432,7 +432,7 @@ const styles = {
         background: 'rgba(246, 173, 85, 0.15)',
         border: '1px solid rgba(246, 173, 85, 0.3)',
         borderRadius: '10px',
-        color: 'var(--accent-yellow)',
+        color: 'var(--cz-warning)',
         fontSize: '15px'
     },
     feedbackIcon: {
@@ -454,8 +454,8 @@ const styles = {
         justifyContent: 'center'
     },
     submitBtn: {
-        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
-        color: 'var(--text-primary)',
+        background: 'linear-gradient(135deg, var(--cz-accent), var(--cz-accent))',
+        color: 'var(--cz-text)',
         border: 'none',
         padding: '14px 40px',
         borderRadius: '10px',
@@ -469,16 +469,16 @@ const styles = {
     },
     retryBtn: {
         background: 'transparent',
-        border: '2px solid rgba(255,255,255,0.2)',
-        color: 'var(--text-primary)',
+        border: '2px solid var(--cz-muted)',
+        color: 'var(--cz-text)',
         padding: '14px 30px',
         borderRadius: '10px',
         fontSize: '15px',
         cursor: 'pointer'
     },
     nextBtn: {
-        background: 'linear-gradient(135deg, var(--accent-green), #38a169)',
-        color: 'var(--text-primary)',
+        background: 'linear-gradient(135deg, var(--cz-success), #38a169)',
+        color: 'var(--cz-text)',
         border: 'none',
         padding: '14px 30px',
         borderRadius: '10px',

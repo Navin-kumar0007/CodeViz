@@ -51,8 +51,8 @@ const styles = {
         flexDirection: 'column',
         alignItems: 'center',
         gap: '8px',
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'var(--cz-surface)',
+        border: '1px solid var(--cz-line)',
         borderRadius: '12px',
         position: 'relative',
         cursor: 'default',
@@ -64,7 +64,7 @@ const styles = {
         justifyContent: 'center'
     },
     title: {
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         fontWeight: '500',
         textAlign: 'center',
         maxWidth: '80px',
