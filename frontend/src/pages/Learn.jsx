@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import LearningPath from '../components/Learning/LearningPath';
 import LessonList from '../components/Learning/LessonList';
 import LessonView from '../components/Learning/LessonView';
@@ -45,8 +45,12 @@ const CATEGORY_ORDER = [
     'Cloud & DevOps'
 ];
 
+const CARD_STAGGER = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
+const CARD_IN = { hidden: { opacity: 0, y: 18, scale: 0.96 }, show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 260, damping: 22 } } };
+
 const Learn = () => {
     const navigate = useNavigate();
+    const reduce = useReducedMotion();
     // Course content is now DB-backed (/api/courses). Bundled COURSES stays as
     // an instant, offline fallback so the page never blocks on the network.
     const [courses, setCourses] = useState(COURSES);
@@ -186,6 +190,7 @@ const Learn = () => {
                 slug={selectedPath.id}
                 lesson={selectedLesson}
                 preferredLanguage={selectedLang}
+                autoVisualize={['Data Structures', 'Algorithm Mastery'].includes(selectedPath.category)}
                 onBack={handleBack}
                 onComplete={(score) => {
                     completeLesson(selectedPath.id, selectedLesson.id, score);
@@ -226,7 +231,12 @@ const Learn = () => {
     return (
         <div style={styles.container}>
             {/* Premium Curriculum Header */}
-            <div style={styles.curriculumControls}>
+            <motion.div
+                style={styles.curriculumControls}
+                initial={reduce ? false : { opacity: 0, y: -16 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
                 <div style={styles.controlsLeft}>
                     <h1 style={styles.mainHeading}>
                         <span style={styles.headingIcon}>📚</span> Structured Learning
@@ -268,40 +278,59 @@ const Learn = () => {
 
                     <div style={styles.globalStats}>
                         <span style={styles.statLabel}>Overall Mastery</span>
-                        <div style={styles.statValue}>{getTotalProgress(progress)}%</div>
+                        <motion.div
+                            style={styles.statValue}
+                            key={getTotalProgress(progress)}
+                            initial={reduce ? false : { scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                        >
+                            {getTotalProgress(progress)}%
+                        </motion.div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Categorized Course Sections */}
             <div style={styles.sectionsContainer}>
                 {CATEGORIES.filter(cat => activeCategory === 'All' || activeCategory === cat).map(category => (
-                    <section key={category} style={styles.categorySection}>
+                    <motion.section
+                        key={category}
+                        style={styles.categorySection}
+                        initial={reduce ? false : { opacity: 0, y: 20 }}
+                        whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.1 }}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    >
                         <div style={styles.sectionHeader}>
                             <h2 style={styles.sectionTitle}>{category}</h2>
                             <div style={styles.sectionLine} />
                         </div>
-                        
-                        <div style={styles.pathGrid}>
-                            <AnimatePresence>
-                                {categorizedCourses[category].map((path, index) => (
-                                    <motion.div
-                                        key={path.id}
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: index * 0.05 }}
-                                    >
-                                        <LearningPath
-                                            path={path}
-                                            progress={getPathProgress(path.id, progress)}
-                                            isLocked={!isPathUnlocked(path)}
-                                            onClick={() => isPathUnlocked(path) && setSelectedPath(path)}
-                                        />
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
-                        </div>
-                    </section>
+
+                        <motion.div
+                            style={styles.pathGrid}
+                            variants={reduce ? undefined : CARD_STAGGER}
+                            initial={reduce ? false : 'hidden'}
+                            whileInView={reduce ? undefined : 'show'}
+                            viewport={{ once: true, amount: 0.1 }}
+                        >
+                            {categorizedCourses[category].map((path) => (
+                                <motion.div
+                                    key={path.id}
+                                    variants={reduce ? undefined : CARD_IN}
+                                    whileHover={reduce ? undefined : { y: -6, scale: 1.02, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
+                                    whileTap={reduce ? undefined : { scale: 0.99 }}
+                                >
+                                    <LearningPath
+                                        path={path}
+                                        progress={getPathProgress(path.id, progress)}
+                                        isLocked={!isPathUnlocked(path)}
+                                        onClick={() => isPathUnlocked(path) && setSelectedPath(path)}
+                                    />
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    </motion.section>
                 ))}
             </div>
 

@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import Quiz from './Quiz';
+import ConceptPlayer from './ConceptPlayer';
+import DiagramPlayer from './DiagramPlayer';
+import { getVisual } from '../../data/visuals';
 import Canvas from '../Visualizer/Canvas';
+
+// Route a visual spec to the right player by its kind.
+const VisualBlock = ({ spec }) => (
+    spec.kind === 'diagram' ? <DiagramPlayer spec={spec} /> : <ConceptPlayer spec={spec} />
+);
 import DiscussionPanel from '../Social/DiscussionPanel';
 import API_BASE, { API } from '../../utils/api';
 
@@ -30,7 +38,10 @@ const LANGUAGE_MAP = {
     c: 'c'
 };
 
-const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascript', slug }) => {
+// Languages whose lesson code the tracer can meaningfully step through.
+const TRACEABLE_LANGS = ['python', 'javascript', 'java', 'cpp', 'c'];
+
+const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascript', slug, autoVisualize = false }) => {
     const availableLanguages = Object.keys(lesson.code || {});
     
     // Initialize with preferred language if available, else first available
@@ -52,6 +63,7 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
     const [error, setError] = useState(null);
 
     const explanationSteps = lesson.explanation || [];
+    const conceptVisual = getVisual(slug, lesson.id);
 
     // Run code through tracer
     const handleRunVisualize = async () => {
@@ -93,6 +105,18 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
             setIsLoading(false);
         }
     };
+
+    // Phase 1: auto-play the concept animation for algorithm/data-structure
+    // lessons (category-gated by the parent) so learners SEE the topic run the
+    // moment they open the lesson — no button press needed. Conceptual lessons
+    // (Git, SQL, System Design…) skip this since their code isn't traceable.
+    useEffect(() => {
+        if (!autoVisualize) return;
+        if (!TRACEABLE_LANGS.includes(selectedLang)) return;
+        if (!lesson.code?.[selectedLang]) return;
+        handleRunVisualize();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lesson.id, selectedLang, autoVisualize]);
 
     // Handle quiz completion
     const handleQuizComplete = (score) => {
@@ -186,8 +210,15 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
                 <div style={styles.explanationPanel}>
                     <h3 style={styles.sectionTitle}>📖 Explanation</h3>
 
+                    {/* Concept animation (Phase 2): a hand-authored, step-by-step
+                        animated explanation of this concept, if one exists. */}
+                    {conceptVisual && <VisualBlock spec={conceptVisual} />}
+
                     <div style={styles.explanationContent}>
                         {explanationSteps.map((step, idx) => (
+                            step.type === 'visual' ? (
+                                <VisualBlock key={idx} spec={step} />
+                            ) : (
                             <Motion.div
                                 key={idx}
                                 initial={{ opacity: 0, y: 10 }}
@@ -211,6 +242,7 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
                                     </div>
                                 )}
                             </Motion.div>
+                            )
                         ))}
                     </div>
 
