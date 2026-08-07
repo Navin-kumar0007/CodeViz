@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import API_BASE from '../utils/api';
+import API_BASE, { API } from '../utils/api';
+import IntegrityReport from '../components/Integrity/IntegrityReport';
 
 /**
  * InstructorDashboard - Analytics dashboard for instructors
@@ -20,6 +21,14 @@ const InstructorDashboard = () => {
     const [students, setStudents] = useState([]);
     const [sortBy, setSortBy] = useState('totalScore');
     const [sortOrder, setSortOrder] = useState('desc');
+    const [integrityRows, setIntegrityRows] = useState([]);
+    const [integritySubId, setIntegritySubId] = useState(null);
+
+    useEffect(() => {
+        API.get('/api/integrity/recent?limit=25')
+            .then((r) => setIntegrityRows(Array.isArray(r.data) ? r.data : []))
+            .catch(() => { /* not an instructor / none yet */ });
+    }, []);
 
     // Get user info
     const getUserInfo = () => {
@@ -172,6 +181,30 @@ const InstructorDashboard = () => {
                 </div>
             )}
 
+            {/* Academic Integrity signals */}
+            {integrityRows.length > 0 && (
+                <div style={{ background: 'var(--cz-surface)', border: '1px solid var(--cz-line)', borderRadius: 16, padding: 20, marginBottom: 24, boxShadow: 'var(--cz-shadow-sm)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                        <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--cz-text)' }}>🔍 Academic Integrity</span>
+                        <span style={{ fontSize: 12, color: 'var(--cz-muted)' }}>recent submissions · behavioural signals, not verdicts</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {integrityRows.map((r) => {
+                            const c = r.flag === 'high' ? 'var(--cz-hard)' : r.flag === 'medium' ? 'var(--cz-warning)' : 'var(--cz-success)';
+                            return (
+                                <div key={r.submissionId} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--cz-elevated)', border: '1px solid var(--cz-line)', borderRadius: 10, padding: '10px 14px' }}>
+                                    <span style={{ width: 9, height: 9, borderRadius: '50%', background: c, flexShrink: 0 }} />
+                                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--cz-text)', minWidth: 120 }}>{r.user?.name || 'Student'}</span>
+                                    <span style={{ fontSize: 12, color: 'var(--cz-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.problem?.title || 'Problem'}</span>
+                                    {r.pastePct !== null && <span style={{ fontSize: 12, color: c, fontWeight: 700 }}>{r.pastePct}% pasted</span>}
+                                    <button onClick={() => setIntegritySubId(r.submissionId)} style={{ fontSize: 12, fontWeight: 700, color: 'var(--cz-accent)', background: 'transparent', border: '1px solid var(--cz-line)', borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}>View</button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* Main Content */}
             <div style={styles.mainContent}>
                 {/* Classroom Selector */}
@@ -313,6 +346,8 @@ const InstructorDashboard = () => {
                     )}
                 </div>
             </div>
+
+            {integritySubId && <IntegrityReport submissionId={integritySubId} onClose={() => setIntegritySubId(null)} />}
         </div>
     );
 };

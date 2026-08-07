@@ -148,10 +148,13 @@ app.use('/api/plagiarism', plagiarismRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/problems', problemRoutes);
+app.use('/api/courses', require('./routes/courseRoutes')); // 📚 Learn hub content (DB-backed)
+app.use('/api/integrity', require('./routes/integrityRoutes')); // 🔍 Academic-integrity signals
 app.use('/api/peer-reviews', peerReviewRoutes);
 app.use('/api/autograder', autograderRoutes);
 app.use('/api/billing', billingRoutes); // 💳 Billing (entitlements, checkout, portal)
 app.use('/api/share', require('./routes/shareRoutes')); // 🔗 Shareable viz embeds (growth)
+app.use('/api/contact', require('./routes/contactRoutes')); // 📨 Contact form
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)
 

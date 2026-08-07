@@ -82,7 +82,20 @@ const seedDB = async () => {
         const user = await User.findOne();
         const userId = user ? user._id : new mongoose.Types.ObjectId();
 
-        const sampleQuizzes = quizzes.map(q => ({ ...q, createdBy: userId }));
+        // Normalise to the CustomQuiz schema: difficulty enum + `correct` index.
+        const DIFF = { Easy: 'beginner', Medium: 'intermediate', Hard: 'advanced' };
+        const sampleQuizzes = quizzes.map(q => ({
+            ...q,
+            createdBy: userId,
+            isPublished: true,
+            difficulty: DIFF[q.difficulty] || 'beginner',
+            questions: (q.questions || []).map(qq => ({
+                question: qq.question,
+                options: qq.options,
+                correct: qq.correct ?? qq.correctAnswer ?? 0,
+                explanation: qq.explanation || '',
+            })),
+        }));
 
         await CustomQuiz.insertMany(sampleQuizzes);
         console.log('✅ Quizzes Seeded Successfully!');

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import LearningPath from '../components/Learning/LearningPath';
 import LessonList from '../components/Learning/LessonList';
 import LessonView from '../components/Learning/LessonView';
@@ -27,17 +27,33 @@ const LANGUAGES = [
     { id: 'typescript', name: 'TypeScript', icon: '📘' }
 ];
 
-const CATEGORIES = [
+// Preferred display order. Any category present in the data but not listed here
+// (e.g. new AI-generated topics) is appended automatically, so the hub never
+// silently hides a course.
+const CATEGORY_ORDER = [
     'Foundations',
+    'Web Development',
+    'Languages',
     'Data Structures',
     'Algorithm Mastery',
     'Backend Engineering',
+    'Databases',
+    'System Design',
+    'Software Quality',
+    'Security',
     'Artificial Intelligence',
     'Cloud & DevOps'
 ];
 
+const CARD_STAGGER = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
+const CARD_IN = { hidden: { opacity: 0, y: 18, scale: 0.96 }, show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 260, damping: 22 } } };
+
 const Learn = () => {
     const navigate = useNavigate();
+    const reduce = useReducedMotion();
+    // Course content is now DB-backed (/api/courses). Bundled COURSES stays as
+    // an instant, offline fallback so the page never blocks on the network.
+    const [courses, setCourses] = useState(COURSES);
     const [selectedPath, setSelectedPath] = useState(null);
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [progress, setProgress] = useState({});
@@ -53,17 +69,33 @@ const Learn = () => {
     // Group courses by category
     const categorizedCourses = useMemo(() => {
         const groups = {};
-        CATEGORIES.forEach(cat => groups[cat] = []);
-        
-        COURSES.forEach(course => {
+        courses.forEach(course => {
             const cat = course.category || 'Foundations';
-            if (groups[cat]) {
-                groups[cat].push(course);
-            } else {
-                groups[cat] = [course];
-            }
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(course);
         });
         return groups;
+    }, [courses]);
+
+    // Categories actually present, in preferred order (unknowns appended).
+    const CATEGORIES = useMemo(() => {
+        const present = Object.keys(categorizedCourses);
+        const ordered = CATEGORY_ORDER.filter(c => present.includes(c));
+        const extra = present.filter(c => !CATEGORY_ORDER.includes(c)).sort();
+        return [...ordered, ...extra];
+    }, [categorizedCourses]);
+
+    // Load course content from the backend; fall back silently to bundled data.
+    useEffect(() => {
+        let cancelled = false;
+        API.get('/api/courses')
+            .then((res) => {
+                if (!cancelled && Array.isArray(res.data) && res.data.length > 0) {
+                    setCourses(res.data);
+                }
+            })
+            .catch(() => { /* keep bundled fallback */ });
+        return () => { cancelled = true; };
     }, []);
 
     // Get user info and handle auth
@@ -112,9 +144,13 @@ const Learn = () => {
             newProgress[pathId].completed.push(lessonId);
         }
         newProgress[pathId].quizScores[lessonId] = quizScore;
-        
+
         setProgress(newProgress);
         localStorage.setItem('learningProgress', JSON.stringify(newProgress));
+
+        // 🔒 Authoritative completion — server awards XP + streak exactly once.
+        // (Quiz scores are recorded server-side by the graded quiz endpoint.)
+        API.post(`/api/courses/${pathId}/lessons/${lessonId}/complete`).catch(() => { /* offline: local optimistic update stands */ });
 
         // Achievements check
         const newlyUnlocked = checkAchievements(newProgress, achievements);
@@ -135,7 +171,7 @@ const Learn = () => {
     const isPathUnlocked = (path) => {
         if (!path.prerequisites || path.prerequisites.length === 0) return true;
         return path.prerequisites.every(prereq => {
-            const p = COURSES.find(c => c.id === prereq);
+            const p = courses.find(c => c.id === prereq);
             if (!p) return true;
             return getPathProgress(prereq, progress) >= 100;
         });
@@ -151,8 +187,10 @@ const Learn = () => {
         return (
             <LessonView
                 path={selectedPath}
+                slug={selectedPath.id}
                 lesson={selectedLesson}
                 preferredLanguage={selectedLang}
+                autoVisualize={['Data Structures', 'Algorithm Mastery'].includes(selectedPath.category)}
                 onBack={handleBack}
                 onComplete={(score) => {
                     completeLesson(selectedPath.id, selectedLesson.id, score);
@@ -193,7 +231,12 @@ const Learn = () => {
     return (
         <div style={styles.container}>
             {/* Premium Curriculum Header */}
-            <div style={styles.curriculumControls}>
+            <motion.div
+                style={styles.curriculumControls}
+                initial={reduce ? false : { opacity: 0, y: -16 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
                 <div style={styles.controlsLeft}>
                     <h1 style={styles.mainHeading}>
                         <span style={styles.headingIcon}>📚</span> Structured Learning
@@ -235,47 +278,66 @@ const Learn = () => {
 
                     <div style={styles.globalStats}>
                         <span style={styles.statLabel}>Overall Mastery</span>
-                        <div style={styles.statValue}>{getTotalProgress(progress)}%</div>
+                        <motion.div
+                            style={styles.statValue}
+                            key={getTotalProgress(progress)}
+                            initial={reduce ? false : { scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                        >
+                            {getTotalProgress(progress)}%
+                        </motion.div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Categorized Course Sections */}
             <div style={styles.sectionsContainer}>
                 {CATEGORIES.filter(cat => activeCategory === 'All' || activeCategory === cat).map(category => (
-                    <section key={category} style={styles.categorySection}>
+                    <motion.section
+                        key={category}
+                        style={styles.categorySection}
+                        initial={reduce ? false : { opacity: 0, y: 20 }}
+                        whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.1 }}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    >
                         <div style={styles.sectionHeader}>
                             <h2 style={styles.sectionTitle}>{category}</h2>
                             <div style={styles.sectionLine} />
                         </div>
-                        
-                        <div style={styles.pathGrid}>
-                            <AnimatePresence>
-                                {categorizedCourses[category].map((path, index) => (
-                                    <motion.div
-                                        key={path.id}
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: index * 0.05 }}
-                                    >
-                                        <LearningPath
-                                            path={path}
-                                            progress={getPathProgress(path.id, progress)}
-                                            isLocked={!isPathUnlocked(path)}
-                                            onClick={() => isPathUnlocked(path) && setSelectedPath(path)}
-                                        />
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
-                        </div>
-                    </section>
+
+                        <motion.div
+                            style={styles.pathGrid}
+                            variants={reduce ? undefined : CARD_STAGGER}
+                            initial={reduce ? false : 'hidden'}
+                            whileInView={reduce ? undefined : 'show'}
+                            viewport={{ once: true, amount: 0.1 }}
+                        >
+                            {categorizedCourses[category].map((path) => (
+                                <motion.div
+                                    key={path.id}
+                                    variants={reduce ? undefined : CARD_IN}
+                                    whileHover={reduce ? undefined : { y: -6, scale: 1.02, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
+                                    whileTap={reduce ? undefined : { scale: 0.99 }}
+                                >
+                                    <LearningPath
+                                        path={path}
+                                        progress={getPathProgress(path.id, progress)}
+                                        isLocked={!isPathUnlocked(path)}
+                                        onClick={() => isPathUnlocked(path) && setSelectedPath(path)}
+                                    />
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    </motion.section>
                 ))}
             </div>
 
             {/* Achievements & Recommendations */}
             <div style={styles.lowerContent}>
                 <Recommendations onNavigate={(topic) => {
-                    const path = COURSES.find(c => c.id === topic);
+                    const path = courses.find(c => c.id === topic);
                     if (path && isPathUnlocked(path)) setSelectedPath(path);
                 }} />
             </div>

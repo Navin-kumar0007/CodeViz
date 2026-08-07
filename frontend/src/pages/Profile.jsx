@@ -1,10 +1,92 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axiosConfig';
-import { ShieldCheck, ShieldAlert, LogOut, Mail, User as UserIcon, Sparkles, AtSign } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, LogOut, Mail, User as UserIcon, Sparkles, AtSign, MousePointer2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardBody, Badge, Button, Input } from '../components/ui';
 import { API } from '../utils/api';
 import { useEntitlements } from '../hooks/useEntitlements';
+import { getTrail, setTrail, TRAIL_COLORS } from '../utils/cursorTrail';
+import { getFx, setFx } from '../utils/effects';
+import { celebrate } from '../utils/celebrate';
+
+const FX_ROWS = [
+  ['spotlight', 'Cursor spotlight', 'Soft glow follows the pointer'],
+  ['ripple', 'Click ripple', 'Expanding ring on every click'],
+  ['magnetic', 'Magnetic buttons', 'Buttons pull toward the cursor'],
+  ['aurora', 'Aurora background', 'Slow-drifting ambient glow'],
+  ['countUp', 'Count-up numbers', 'Stat tiles animate from zero'],
+  ['confetti', 'Celebrations', 'Confetti + XP on wins'],
+];
+
+function EffectsCard() {
+  const [fx, setFxState] = useState(getFx);
+  const toggle = (k) => setFxState(setFx({ [k]: !fx[k] }));
+  return (
+    <Card className="mb-4">
+      <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles size={15} className="text-accent" /> Visual effects</CardTitle>
+        <Button size="sm" variant="secondary" onClick={() => celebrate({ xp: 50 })}>Test 🎉</Button>
+      </CardHeader>
+      <CardBody className="flex flex-col gap-3">
+        {FX_ROWS.map(([k, label, hint]) => (
+          <div key={k} className="flex items-center justify-between gap-3">
+            <div><div className="text-[14px] font-semibold text-text">{label}</div><div className="text-[12px] text-muted">{hint}</div></div>
+            <Toggle on={fx[k]} onClick={() => toggle(k)} />
+          </div>
+        ))}
+      </CardBody>
+    </Card>
+  );
+}
+
+function Toggle({ on, onClick }) {
+  return (
+    <button onClick={onClick} role="switch" aria-checked={on}
+      className="relative w-10 h-6 rounded-full transition-colors cursor-pointer border"
+      style={{ background: on ? 'var(--cz-accent)' : 'var(--cz-elevated)', borderColor: on ? 'var(--cz-accent)' : 'var(--cz-line)' }}>
+      <span className="absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white transition-all" style={{ left: on ? '18px' : '2px', width: 18, height: 18 }} />
+    </button>
+  );
+}
+
+function TrailSlider({ label, value, min, max, onChange, disabled }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-[12px] mb-1"><span className="text-muted">{label}</span><span className="font-mono text-faint">{value}</span></div>
+      <input type="range" min={min} max={max} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full" style={{ accentColor: 'var(--cz-accent)' }} disabled={disabled} />
+    </div>
+  );
+}
+
+function CursorTrailCard() {
+  const [cfg, setCfg] = useState(getTrail);
+  const update = (patch) => setCfg(setTrail(patch));
+  return (
+    <Card className="mb-4">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><MousePointer2 size={15} className="text-accent" /> Cursor trail</CardTitle>
+        <Toggle on={cfg.enabled} onClick={() => update({ enabled: !cfg.enabled })} />
+      </CardHeader>
+      <CardBody className={`flex flex-col gap-4 ${cfg.enabled ? '' : 'opacity-50'}`}>
+        <div>
+          <div className="text-[12px] text-muted mb-2">Color</div>
+          <div className="flex gap-2 flex-wrap">
+            {Object.entries(TRAIL_COLORS).map(([name, val]) => (
+              <button key={name} onClick={() => update({ color: name })} title={name} disabled={!cfg.enabled}
+                className="w-7 h-7 rounded-full border-2 cursor-pointer transition-transform hover:scale-110"
+                style={{ background: val, borderColor: cfg.color === name ? 'var(--cz-text)' : 'transparent' }} />
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <TrailSlider label="Length" value={cfg.length} min={4} max={30} disabled={!cfg.enabled} onChange={(v) => update({ length: v })} />
+          <TrailSlider label="Thickness" value={cfg.thickness} min={1} max={8} disabled={!cfg.enabled} onChange={(v) => update({ thickness: v })} />
+          <TrailSlider label="Glow" value={cfg.glow} min={0} max={8} disabled={!cfg.enabled} onChange={(v) => update({ glow: v })} />
+        </div>
+        <p className="text-[12px] text-faint m-0">Changes apply instantly. Auto-off on touch devices and reduced-motion.</p>
+      </CardBody>
+    </Card>
+  );
+}
 
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
 
@@ -183,6 +265,12 @@ export default function Profile() {
 
         {/* Public handle */}
         <UsernameCard initial={user.username} />
+
+        {/* Cursor trail */}
+        <CursorTrailCard />
+
+        {/* Visual effects */}
+        <EffectsCard />
 
         {/* Danger */}
         <Card>

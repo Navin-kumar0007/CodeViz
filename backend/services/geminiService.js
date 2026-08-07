@@ -65,7 +65,7 @@ const generateResponse = async (prompt, userId, cacheKey = null) => {
     // 3. Prepare Keys and Models for rotation
     const keys = (process.env.GEMINI_API_KEY || '').split(',').map(k => k.trim()).filter(Boolean);
     // Valid current model ids — the "-latest" aliases now 404 on v1beta.
-    const models = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite'];
 
     let lastError = null;
 
@@ -307,5 +307,6 @@ module.exports = {
     analyzeIntuition,
     socraticTutor,
     generateInterviewTestCases,
-    generateInterviewProblems
+    generateInterviewProblems,
+    generateResponse, // low-level raw-text completion (used by the course generator)
 };

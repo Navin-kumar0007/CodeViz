@@ -31,10 +31,36 @@ import { PYTORCH_PATH } from './pytorch_basics';
 import { RL_PATH } from './reinforcement_learning';
 import { HUGGINGFACE_PATH } from './hugging_face_transformers';
 import { AI_ENGINEERING_PATH } from './ai_engineering';
+import { REACT_PATH } from './react';
+import { GIT_PATH } from './git';
+import { SQL_PATH } from './sql';
+import { HTML_CSS_PATH } from './html_css';
+import { MODERN_JS_PATH } from './modern_js';
+import { MONGODB_PATH } from './mongodb';
+import { WEB_SECURITY_PATH } from './web_security';
+import { SYSTEM_DESIGN_PATH } from './system_design';
+import { REST_APIS_PATH } from './rest_apis';
+import { DOCKER_DEEP_PATH } from './docker_deep';
+import { AWS_PATH } from './aws';
+import { LLM_FUNDAMENTALS_PATH } from './llm_fundamentals';
+import { SOFTWARE_TESTING_PATH } from './software_testing';
 
 // All available courses (ordered by difficulty / dependency)
 export const COURSES = [
     BASICS_PATH,
+    HTML_CSS_PATH,
+    MODERN_JS_PATH,
+    REACT_PATH,
+    GIT_PATH,
+    SQL_PATH,
+    MONGODB_PATH,
+    REST_APIS_PATH,
+    WEB_SECURITY_PATH,
+    SOFTWARE_TESTING_PATH,
+    SYSTEM_DESIGN_PATH,
+    DOCKER_DEEP_PATH,
+    AWS_PATH,
+    LLM_FUNDAMENTALS_PATH,
     ARRAYS_PATH,
     STRINGS_PATH,
     SEARCHING_PATH,

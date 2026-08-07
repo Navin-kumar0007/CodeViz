@@ -104,7 +104,7 @@ const styles = {
     },
     panel: {
         background: 'var(--bg-primary)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '1px solid var(--cz-line)',
         borderRadius: '20px',
         width: '100%',
         maxWidth: '600px',
@@ -117,23 +117,23 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         padding: '20px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        borderBottom: '1px solid var(--cz-line)'
     },
     title: {
         margin: 0,
         fontSize: '20px',
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         flex: 1
     },
     progress: {
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         fontSize: '14px',
         marginRight: '15px'
     },
     closeBtn: {
         background: 'transparent',
         border: 'none',
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         fontSize: '20px',
         cursor: 'pointer',
         padding: '5px',
@@ -141,11 +141,11 @@ const styles = {
     },
     progressBar: {
         height: '4px',
-        background: 'rgba(255, 255, 255, 0.1)'
+        background: 'var(--cz-line)'
     },
     progressFill: {
         height: '100%',
-        background: 'linear-gradient(90deg, var(--accent-teal), var(--accent-purple))',
+        background: 'linear-gradient(90deg, var(--cz-accent), var(--cz-accent))',
         borderRadius: '2px'
     },
     content: {
@@ -164,17 +164,17 @@ const styles = {
     categoryTitle: {
         margin: 0,
         fontSize: '16px',
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         flex: 1
     },
     categoryProgress: {
         fontSize: '12px',
-        color: 'var(--text-muted)'
+        color: 'var(--cz-muted)'
     },
     categoryDesc: {
         margin: '0 0 15px 0',
         fontSize: '12px',
-        color: 'var(--text-muted)'
+        color: 'var(--cz-muted)'
     },
     grid: {
         display: 'grid',

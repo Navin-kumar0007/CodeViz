@@ -221,6 +221,122 @@ console.log("Min:", pq.peek()); // 1`
                     explanation: 'Because Heaps are strictly filled left to right, we can mathematically calculate that the left child of an index `i` is at `2i+1`, and right child is `2i+2`. No pointers are needed, it just sits sequentially in an array!'
                 }
             ]
+        },
+        {
+            id: 'heapify-build',
+            title: 'Heapify & Building a Heap',
+            duration: '9 min',
+            explanation: [
+                { type: 'text', content: 'To restore the heap property after an insert, an element **bubbles up** (sift-up); after removing the root, the last element moves to the top and **sinks down** (sift-down).' },
+                { type: 'text', content: 'Building a heap from an array by inserting one-by-one is O(N log N). But **heapify** — sifting down from the last parent to the root — builds it in **O(N)**.' },
+                { type: 'tip', content: 'For index i: left child = 2i+1, right child = 2i+2, parent = (i-1)/2. The last parent is at index (N/2 - 1).' },
+            ],
+            keyConcepts: [
+                'Sift-up restores order after insertion',
+                'Sift-down restores order after removing the root',
+                'Bottom-up heapify builds a heap in O(N)',
+                'Child/parent indices come from simple math',
+            ],
+            code: {
+                python: `def sift_down(heap, i, n):
+    while True:
+        smallest = i
+        l, r = 2*i + 1, 2*i + 2
+        if l < n and heap[l] < heap[smallest]: smallest = l
+        if r < n and heap[r] < heap[smallest]: smallest = r
+        if smallest == i: break
+        heap[i], heap[smallest] = heap[smallest], heap[i]
+        i = smallest
+
+def build_min_heap(arr):
+    n = len(arr)
+    # start at the last parent, sift each down — O(N)
+    for i in range(n // 2 - 1, -1, -1):
+        sift_down(arr, i, n)
+    return arr
+
+print(build_min_heap([5, 3, 8, 1, 9, 2]))  # 1 at the root`,
+                javascript: `function siftDown(heap, i, n) {
+  while (true) {
+    let smallest = i;
+    const l = 2*i + 1, r = 2*i + 2;
+    if (l < n && heap[l] < heap[smallest]) smallest = l;
+    if (r < n && heap[r] < heap[smallest]) smallest = r;
+    if (smallest === i) break;
+    [heap[i], heap[smallest]] = [heap[smallest], heap[i]];
+    i = smallest;
+  }
+}
+function buildMinHeap(arr) {
+  for (let i = Math.floor(arr.length/2) - 1; i >= 0; i--) siftDown(arr, i, arr.length);
+  return arr;
+}
+console.log(buildMinHeap([5,3,8,1,9,2]));`,
+            },
+            quiz: [
+                {
+                    question: 'What is the time complexity of building a heap with bottom-up heapify?',
+                    options: ['O(N log N)', 'O(N)', 'O(N^2)', 'O(log N)'],
+                    correct: 1,
+                    explanation: 'Bottom-up heapify (sift-down from the last parent) builds a heap in O(N), better than N inserts.',
+                },
+                {
+                    question: 'After removing the root, how is the heap property restored?',
+                    options: ['Sort the whole array', 'Move the last element to the root and sift it down', 'Rebuild from scratch', 'Nothing is needed'],
+                    correct: 1,
+                    explanation: 'The last element takes the root position, then sinks down until the heap property holds.',
+                },
+            ],
+        },
+        {
+            id: 'heapsort-topk',
+            title: 'Heap Sort & Top-K',
+            duration: '8 min',
+            explanation: [
+                { type: 'text', content: '**Heap Sort** builds a max-heap, then repeatedly swaps the root to the end and sifts down — sorting in-place in O(N log N).' },
+                { type: 'text', content: 'Heaps shine for **Top-K** problems: keep a heap of size K to find the K largest/smallest of a stream in O(N log K) — far cheaper than sorting everything.' },
+                { type: 'tip', content: 'For the K largest, use a MIN-heap of size K: if a new value beats the smallest kept, replace it.' },
+            ],
+            keyConcepts: [
+                'Heap Sort is in-place and O(N log N)',
+                'Top-K with a size-K heap is O(N log K)',
+                'K largest → min-heap of size K',
+                'K smallest → max-heap of size K',
+            ],
+            code: {
+                python: `import heapq
+
+def k_largest(nums, k):
+    # min-heap of size k keeps the k largest seen
+    heap = []
+    for x in nums:
+        heapq.heappush(heap, x)
+        if len(heap) > k:
+            heapq.heappop(heap)   # drop the smallest
+    return sorted(heap, reverse=True)
+
+print(k_largest([3, 1, 8, 9, 2, 7], 3))  # [9, 8, 7]`,
+                javascript: `// K largest with a simple sort fallback (concept)
+function kLargest(nums, k) {
+  return [...nums].sort((a, b) => b - a).slice(0, k);
+}
+// A real min-heap of size k gives O(N log k).
+console.log(kLargest([3,1,8,9,2,7], 3)); // [9,8,7]`,
+            },
+            quiz: [
+                {
+                    question: 'To find the K LARGEST elements efficiently, which heap of size K do you keep?',
+                    options: ['A max-heap', 'A min-heap', 'A binary search tree', 'No heap'],
+                    correct: 1,
+                    explanation: 'A min-heap of size K keeps the K largest: when full, drop the smallest if a bigger value arrives.',
+                },
+                {
+                    question: 'What is the time complexity of Heap Sort?',
+                    options: ['O(N)', 'O(N log N)', 'O(N^2)', 'O(1)'],
+                    correct: 1,
+                    explanation: 'Heap Sort builds a heap and extracts the max N times, each O(log N) → O(N log N).',
+                },
+            ],
         }
     ]
 };

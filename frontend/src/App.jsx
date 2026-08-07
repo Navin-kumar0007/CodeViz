@@ -6,6 +6,9 @@ import Topnav from './components/Layout/Topnav';
 import StatusBar from './components/Layout/StatusBar';
 import OfflineBanner from './components/Network/OfflineBanner';
 import ErrorBoundary from './components/ErrorBoundary';
+import GlobalCursorTrail from './components/Layout/GlobalCursorTrail';
+import CursorFx from './components/Layout/CursorFx';
+import AuroraBackground from './components/Layout/AuroraBackground';
 
 // Eager Loading for generic pages
 import Login from './pages/Login';
@@ -55,6 +58,10 @@ const EmbedPage = lazy(() => import('./pages/EmbedPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const Mentor = lazy(() => import('./pages/Mentor'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Support = lazy(() => import('./pages/Support'));
+const Privacy = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Privacy })));
+const Terms = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Terms })));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -67,7 +74,7 @@ import GlobalBackground from './components/Layout/GlobalBackground';
 // Layout wrapper — adds Sidebar + StatusBar on protected pages
 const AppLayout = ({ children }) => {
   const location = useLocation();
-  const publicPaths = ['/home', '/login', '/signup', '/about'];
+  const publicPaths = ['/home', '/login', '/signup', '/about', '/contact', '/support', '/privacy', '/terms'];
   const isSnippet = location.pathname.startsWith('/snippet/');
   const isShare = location.pathname.startsWith('/share/') || location.pathname.startsWith('/embed/');
   const isPublicProfile = location.pathname.startsWith('/u/');
@@ -130,6 +137,10 @@ const AnimatedRoutes = () => {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/snippet/:id" element={<SnippetViewer />} />
         <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/ui-kit" element={<UIKit />} />
         <Route path="/share/:token" element={<SharePage />} />
         <Route path="/embed/:token" element={<EmbedPage />} />
@@ -178,6 +189,9 @@ const AnimatedRoutes = () => {
 const App = () => {
   return (
     <Router>
+      <AuroraBackground />
+      <GlobalCursorTrail />
+      <CursorFx />
       <OfflineBanner />
       <ErrorBoundary>
         <AppLayout>

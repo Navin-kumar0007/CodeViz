@@ -122,31 +122,26 @@ const syncProgress = async (req, res) => {
                 if (!localData) continue;
                 const serverData = progress.pathProgress.get(pathId);
 
+                // 🔒 Quiz scores are server-authoritative — set ONLY by the
+                // graded quiz endpoint. Sync merges lesson completion (for
+                // cross-device continuity) but never trusts client-sent scores,
+                // so the leaderboard can't be inflated by a crafted payload.
                 if (!serverData) {
-                    // New path, just add it
+                    // New path — accept completion list only, no scores.
                     progress.pathProgress.set(pathId, {
                         completed: localData.completed || [],
-                        quizScores: new Map(Object.entries(localData.quizScores || {}))
+                        quizScores: new Map()
                     });
                 } else {
-                    // Merge completed lessons (union)
+                    // Merge completed lessons (union); keep existing server scores.
                     const mergedCompleted = [...new Set([
                         ...(serverData.completed || []),
                         ...(localData.completed || [])
                     ])];
 
-                    // Merge quiz scores (keep highest)
-                    const mergedScores = new Map(serverData.quizScores || new Map());
-                    if (localData.quizScores) {
-                        for (const [lessonId, score] of Object.entries(localData.quizScores)) {
-                            const serverScore = mergedScores.get(lessonId) || 0;
-                            mergedScores.set(lessonId, Math.max(serverScore, score));
-                        }
-                    }
-
                     progress.pathProgress.set(pathId, {
                         completed: mergedCompleted,
-                        quizScores: mergedScores
+                        quizScores: serverData.quizScores || new Map()
                     });
                 }
             }

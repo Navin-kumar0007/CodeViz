@@ -94,13 +94,13 @@ const styles = {
         display: 'block',
         fontSize: '14px',
         fontWeight: 'bold',
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         textTransform: 'uppercase',
         letterSpacing: '1px',
     },
     subtitle: {
         fontSize: '11px',
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
     },
     grid: {
         display: 'flex',
@@ -108,8 +108,8 @@ const styles = {
         gap: '15px',
     },
     card: {
-        background: 'var(--bg-muted)',
-        border: '1px solid var(--border-ghost)',
+        background: 'var(--cz-elevated)',
+        border: '1px solid var(--cz-line)',
         padding: '15px',
         borderRadius: '6px',
         width: 'calc(50% - 8px)',
@@ -120,7 +120,7 @@ const styles = {
     },
     nodeType: {
         fontSize: '10px',
-        color: 'var(--accent-cyan)',
+        color: 'var(--cz-accent)',
         fontWeight: 'bold',
         marginBottom: '5px',
         textTransform: 'uppercase',
@@ -128,12 +128,12 @@ const styles = {
     nodeTitle: {
         fontSize: '13px',
         fontWeight: 'bold',
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         marginBottom: '5px',
     },
     nodeDesc: {
         fontSize: '11px',
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         marginBottom: '10px',
         lineHeight: '1.4',
     },
@@ -143,7 +143,7 @@ const styles = {
         background: 'rgba(0, 245, 255, 0.1)',
         padding: '2px 8px',
         borderRadius: '10px',
-        color: 'var(--accent-cyan)',
+        color: 'var(--cz-accent)',
     },
     loadingContainer: {
         height: '200px',
@@ -154,14 +154,14 @@ const styles = {
     spinner: {
         width: '30px',
         height: '30px',
-        border: '2px solid var(--border-ghost)',
-        borderTopColor: 'var(--accent-cyan)',
+        border: '2px solid var(--cz-line)',
+        borderTopColor: 'var(--cz-accent)',
         borderRadius: '50%',
     },
     errorContainer: {
         padding: '30px',
         textAlign: 'center',
-        background: 'var(--bg-muted)',
+        background: 'var(--cz-elevated)',
         borderRadius: '12px',
         border: '1px solid rgba(255, 0, 0, 0.2)',
         margin: '20px',
@@ -174,7 +174,7 @@ const styles = {
         fontSize: '24px',
     },
     errorText: {
-        color: 'var(--text-muted)',
+        color: 'var(--cz-muted)',
         fontSize: '13px',
     }
 };

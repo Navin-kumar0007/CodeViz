@@ -125,3 +125,4 @@ function safeParseJson(raw) {
 
 module.exports = groqProvider;
 module.exports.safeParseJson = safeParseJson; // exported for tests
+module.exports.generateGroqResponse = generateGroqResponse; // low-level raw-text completion

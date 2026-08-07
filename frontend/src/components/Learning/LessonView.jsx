@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
-import { motion as Motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion as Motion } from 'framer-motion';
 import Quiz from './Quiz';
+import ConceptPlayer from './ConceptPlayer';
+import DiagramPlayer from './DiagramPlayer';
+import { getVisual } from '../../data/visuals';
 import Canvas from '../Visualizer/Canvas';
+
+// Route a visual spec to the right player by its kind.
+const VisualBlock = ({ spec }) => (
+    spec.kind === 'diagram' ? <DiagramPlayer spec={spec} /> : <ConceptPlayer spec={spec} />
+);
 import DiscussionPanel from '../Social/DiscussionPanel';
-import API_BASE from '../../utils/api';
+import API_BASE, { API } from '../../utils/api';
 
 /**
  * LessonView - Full lesson display with explanation, code, and quiz
@@ -30,7 +38,10 @@ const LANGUAGE_MAP = {
     c: 'c'
 };
 
-const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascript' }) => {
+// Languages whose lesson code the tracer can meaningfully step through.
+const TRACEABLE_LANGS = ['python', 'javascript', 'java', 'cpp', 'c'];
+
+const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascript', slug, autoVisualize = false }) => {
     const availableLanguages = Object.keys(lesson.code || {});
     
     // Initialize with preferred language if available, else first available
@@ -52,6 +63,9 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
     const [error, setError] = useState(null);
 
     const explanationSteps = lesson.explanation || [];
+    // Hand-authored visual (registry) wins; otherwise use the AI-generated one
+    // stored on the lesson (Phase 4).
+    const conceptVisual = getVisual(slug, lesson.id) || lesson.visual || null;
 
     // Run code through tracer
     const handleRunVisualize = async () => {
@@ -94,9 +108,27 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
         }
     };
 
+    // Phase 1: auto-play the concept animation for algorithm/data-structure
+    // lessons (category-gated by the parent) so learners SEE the topic run the
+    // moment they open the lesson — no button press needed. Conceptual lessons
+    // (Git, SQL, System Design…) skip this since their code isn't traceable.
+    useEffect(() => {
+        if (!autoVisualize) return;
+        if (!TRACEABLE_LANGS.includes(selectedLang)) return;
+        if (!lesson.code?.[selectedLang]) return;
+        handleRunVisualize();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lesson.id, selectedLang, autoVisualize]);
+
     // Handle quiz completion
     const handleQuizComplete = (score) => {
         onComplete(score);
+    };
+
+    // Server-side grading (answer keys never reach the client).
+    const gradeQuiz = async (answers) => {
+        const { data } = await API.post(`/api/courses/${slug}/lessons/${lesson.id}/quiz`, { answers });
+        return data; // { score, results }
     };
 
     // Show quiz after explanation
@@ -105,6 +137,7 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
             <Quiz
                 questions={lesson.quiz}
                 onComplete={handleQuizComplete}
+                onGrade={slug ? gradeQuiz : undefined}
                 onBack={() => setShowQuiz(false)}
                 lessonTitle={lesson.title}
             />
@@ -134,7 +167,9 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
                             }}
                             style={{
                                 ...styles.langBtn,
-                                background: selectedLang === lang ? 'var(--accent-teal)' : 'transparent'
+                                background: selectedLang === lang ? 'var(--cz-accent)' : 'transparent',
+                                color: selectedLang === lang ? 'var(--cz-accent-fg, #fff)' : 'var(--cz-text)',
+                                borderColor: selectedLang === lang ? 'var(--cz-accent)' : 'var(--cz-line)',
                             }}
                         >
                             {LANGUAGE_ICONS[lang]} {lang}
@@ -173,6 +208,27 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
                 </div>
             )}
 
+            {/* Concept animation — full width so diagrams/arrays have room to breathe */}
+            {conceptVisual && (
+                <div style={{ marginBottom: 18 }}>
+                    <div style={styles.sectionTitle}>🎬 Watch it work</div>
+                    <VisualBlock spec={conceptVisual} />
+                </div>
+            )}
+
+            {/* Execution visualizer (tracer) — full width so the process is easy to follow */}
+            {showVisualizer && traceData && traceData.length > 0 && (
+                <div style={{ marginBottom: 18 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={styles.sectionTitle}>▶ Execution visualization</div>
+                        <button onClick={() => setShowVisualizer(false)} style={{ ...styles.tabBtn, marginLeft: 'auto', marginBottom: 14 }}>Hide</button>
+                    </div>
+                    <div style={{ background: 'var(--cz-surface)', border: '1px solid var(--cz-line)', borderRadius: 16, padding: 12, boxShadow: 'var(--cz-shadow-sm)', minWidth: 0, overflow: 'hidden' }}>
+                        <Canvas traceData={traceData} stepIndex={stepIndex} setStepIndex={setStepIndex} />
+                    </div>
+                </div>
+            )}
+
             {/* Main Content */}
             <div style={styles.content}>
                 {/* Left: Explanation */}
@@ -181,6 +237,9 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
 
                     <div style={styles.explanationContent}>
                         {explanationSteps.map((step, idx) => (
+                            step.type === 'visual' ? (
+                                <VisualBlock key={idx} spec={step} />
+                            ) : (
                             <Motion.div
                                 key={idx}
                                 initial={{ opacity: 0, y: 10 }}
@@ -204,6 +263,7 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
                                     </div>
                                 )}
                             </Motion.div>
+                            )
                         ))}
                     </div>
 
@@ -220,104 +280,35 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
                     )}
                 </div>
 
-                {/* Right: Code Panel OR Visualizer */}
+                {/* Right: Code Panel (the execution visualizer is full-width above) */}
                 <div style={styles.codePanel}>
-                    {/* Toggle between Code and Visualizer */}
-                    <div style={styles.panelHeader}>
-                        <button
-                            onClick={() => setShowVisualizer(false)}
-                            style={{
-                                ...styles.tabBtn,
-                                background: !showVisualizer ? 'var(--accent-teal)' : 'transparent'
-                            }}
-                        >
-                            🖥️ Code
-                        </button>
-                        <button
-                            onClick={() => traceData && setShowVisualizer(true)}
-                            disabled={!traceData}
-                            style={{
-                                ...styles.tabBtn,
-                                background: showVisualizer ? 'var(--accent-teal)' : 'transparent',
-                                opacity: traceData ? 1 : 0.5
-                            }}
-                        >
-                            👁️ Visualizer
-                        </button>
-                    </div>
-
-                    <AnimatePresence mode="wait">
-                        {showVisualizer && traceData ? (
-                            <Motion.div
-                                key="visualizer"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                style={styles.visualizerWrapper}
-                            >
-                                <Canvas
-                                    traceData={traceData}
-                                    stepIndex={stepIndex}
-                                    setStepIndex={setStepIndex}
-                                />
-                            </Motion.div>
-                        ) : (
-                            <Motion.div
-                                key="code"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                            >
-                                {!compareMode ? (
-                                    // Single language view
-                                    <div style={styles.codeBox}>
-                                        <div style={styles.codeHeader}>
-                                            {LANGUAGE_ICONS[selectedLang]} {selectedLang}
-                                        </div>
-                                        <pre style={styles.code}>
-                                            {lesson.code?.[selectedLang] || 'No code available for this language'}
-                                        </pre>
-                                    </div>
-                                ) : (
-                                    // Compare mode - side by side
-                                    <div style={styles.compareContainer}>
-                                        <div style={styles.comparePane}>
-                                            <div style={styles.codeHeader}>
-                                                {LANGUAGE_ICONS[selectedLang]} {selectedLang}
-                                            </div>
-                                            <pre style={styles.code}>
-                                                {lesson.code?.[selectedLang] || 'N/A'}
-                                            </pre>
-                                        </div>
-                                        <div style={styles.compareDivider} />
-                                        <div style={styles.comparePane}>
-                                            <div style={styles.codeHeader}>
-                                                <select
-                                                    value={compareLang}
-                                                    onChange={(e) => setCompareLang(e.target.value)}
-                                                    style={styles.compareSelect}
-                                                >
-                                                    {availableLanguages.filter(l => l !== selectedLang).map(lang => (
-                                                        <option key={lang} value={lang}>{LANGUAGE_ICONS[lang]} {lang}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <pre style={styles.code}>
-                                                {lesson.code?.[compareLang] || 'N/A'}
-                                            </pre>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Syntax difference tip */}
-                                {compareMode && lesson.syntaxDiff && (
-                                    <div style={styles.syntaxDiffBox}>
-                                        <strong>💡 Syntax Difference:</strong> {lesson.syntaxDiff}
-                                    </div>
-                                )}
-                            </Motion.div>
-                        )}
-                    </AnimatePresence>
+                    {!compareMode ? (
+                        <div style={styles.codeBox}>
+                            <div style={styles.codeHeader}>{LANGUAGE_ICONS[selectedLang]} {selectedLang}</div>
+                            <pre style={styles.code}>{lesson.code?.[selectedLang] || 'No code available for this language'}</pre>
+                        </div>
+                    ) : (
+                        <div style={styles.compareContainer}>
+                            <div style={styles.comparePane}>
+                                <div style={styles.codeHeader}>{LANGUAGE_ICONS[selectedLang]} {selectedLang}</div>
+                                <pre style={styles.code}>{lesson.code?.[selectedLang] || 'N/A'}</pre>
+                            </div>
+                            <div style={styles.compareDivider} />
+                            <div style={styles.comparePane}>
+                                <div style={styles.codeHeader}>
+                                    <select value={compareLang} onChange={(e) => setCompareLang(e.target.value)} style={styles.compareSelect}>
+                                        {availableLanguages.filter(l => l !== selectedLang).map(lang => (
+                                            <option key={lang} value={lang}>{LANGUAGE_ICONS[lang]} {lang}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <pre style={styles.code}>{lesson.code?.[compareLang] || 'N/A'}</pre>
+                            </div>
+                        </div>
+                    )}
+                    {compareMode && lesson.syntaxDiff && (
+                        <div style={styles.syntaxDiffBox}><strong>💡 Syntax Difference:</strong> {lesson.syntaxDiff}</div>
+                    )}
                 </div>
             </div>
 
@@ -332,7 +323,7 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
                             key={i}
                             style={{
                                 ...styles.dot,
-                                background: i <= currentStep ? 'var(--accent-teal)' : '#444'
+                                background: i <= currentStep ? 'var(--cz-accent)' : 'var(--cz-line)'
                             }}
                         />
                     ))}
@@ -349,287 +340,334 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
     );
 };
 
+const FONT = "'Inter', system-ui, -apple-system, sans-serif";
+const MONO = "'JetBrains Mono', ui-monospace, Menlo, monospace";
+
 const styles = {
     container: {
-        minHeight: '100vh',
+        minHeight: '100%',
         background: 'transparent',
         color: 'var(--cz-text)',
-        padding: '30px 40px',
+        padding: '28px 24px 60px',
+        maxWidth: '1120px',
+        margin: '0 auto',
+        width: '100%',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        fontFamily: FONT,
     },
     header: {
         display: 'flex',
         alignItems: 'center',
-        gap: '24px',
-        marginBottom: '30px',
-        paddingBottom: '20px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+        gap: '18px',
+        marginBottom: '20px',
+        paddingBottom: '18px',
+        borderBottom: '1px solid var(--cz-line)',
     },
     backBtn: {
-        background: 'var(--cz-line)',
+        background: 'transparent',
         border: '1px solid var(--cz-line)',
-        color: 'var(--cz-text)',
-        padding: '10px 20px',
+        color: 'var(--cz-muted)',
+        padding: '8px 16px',
         borderRadius: '100px',
         cursor: 'pointer',
         fontSize: '13px',
         fontWeight: 600,
-        transition: 'all 0.2s'
+        transition: 'all 0.2s',
+        fontFamily: FONT,
     },
     title: {
         margin: 0,
-        fontSize: '28px',
+        fontSize: '27px',
         fontWeight: 800,
         flex: 1,
         letterSpacing: '-0.02em',
+        color: 'var(--cz-text)',
     },
     duration: {
-        color: 'var(--accent-cyan)',
-        fontSize: '13px',
+        color: 'var(--cz-accent)',
+        fontSize: '12px',
         fontWeight: 700,
-        background: 'rgba(0, 229, 238, 0.1)',
+        background: 'color-mix(in srgb, var(--cz-accent) 12%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--cz-accent) 28%, transparent)',
         padding: '6px 14px',
         borderRadius: '100px',
+        whiteSpace: 'nowrap',
     },
     languageBar: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '10px 15px',
-        background: 'var(--bg-muted)',
-        borderRadius: '10px',
-        marginBottom: '20px'
+        flexWrap: 'wrap',
+        gap: '12px',
+        padding: '12px 14px',
+        background: 'var(--cz-surface)',
+        border: '1px solid var(--cz-line)',
+        borderRadius: '14px',
+        boxShadow: 'var(--cz-shadow-sm)',
+        marginBottom: '18px',
     },
     languageSelector: {
         display: 'flex',
         alignItems: 'center',
-        gap: '10px'
+        gap: '7px',
+        flexWrap: 'wrap',
     },
     languageLabel: {
-        color: 'var(--text-muted)',
-        fontSize: '13px'
+        color: 'var(--cz-faint)',
+        fontSize: '11px',
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        letterSpacing: '1px',
+        marginRight: '4px',
     },
     langBtn: {
-        border: '1px solid var(--border-color)',
-        color: 'var(--text-primary)',
-        padding: '6px 12px',
-        borderRadius: '6px',
+        border: '1px solid var(--cz-line)',
+        color: 'var(--cz-text)',
+        padding: '7px 13px',
+        borderRadius: '9px',
         cursor: 'pointer',
-        fontSize: '12px',
+        fontSize: '12.5px',
+        fontWeight: 700,
         textTransform: 'capitalize',
-        transition: 'all 0.2s'
+        transition: 'all 0.15s',
+        fontFamily: FONT,
     },
     rightControls: {
         display: 'flex',
         alignItems: 'center',
-        gap: '15px'
+        gap: '12px',
     },
     visualizeBtn: {
-        background: 'linear-gradient(135deg, var(--accent-green), #38a169)',
-        color: 'var(--text-primary)',
+        background: 'linear-gradient(135deg, var(--cz-accent), #7c93ff)',
+        color: 'var(--cz-accent-fg, #fff)',
         border: 'none',
-        padding: '8px 16px',
-        borderRadius: '6px',
-        fontSize: '13px',
-        fontWeight: 'bold',
+        padding: '9px 16px',
+        borderRadius: '9px',
+        fontSize: '12.5px',
+        fontWeight: 700,
         cursor: 'pointer',
-        transition: 'all 0.2s'
+        transition: 'all 0.2s',
+        fontFamily: FONT,
     },
     compareToggle: {
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
-        color: 'var(--text-muted)',
-        fontSize: '13px',
-        cursor: 'pointer'
+        gap: '7px',
+        color: 'var(--cz-muted)',
+        fontSize: '12.5px',
+        fontWeight: 600,
+        cursor: 'pointer',
     },
     checkbox: {
-        accentColor: 'var(--accent-teal)'
+        accentColor: 'var(--cz-accent)',
     },
     errorBox: {
-        background: 'rgba(245, 101, 101, 0.15)',
-        border: '1px solid rgba(245, 101, 101, 0.3)',
-        borderRadius: '8px',
-        padding: '10px 15px',
+        background: 'color-mix(in srgb, var(--cz-hard) 12%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--cz-hard) 35%, transparent)',
+        borderRadius: '10px',
+        padding: '11px 15px',
         marginBottom: '15px',
-        color: '#f56565',
-        fontSize: '13px'
+        color: 'var(--cz-hard)',
+        fontSize: '13px',
     },
     content: {
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '20px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+        gap: '18px',
         flex: 1,
-        minHeight: 0
+        minHeight: 0,
     },
     explanationPanel: {
-        background: 'var(--bg-muted)',
-        borderRadius: '12px',
+        background: 'var(--cz-surface)',
+        borderRadius: '16px',
         padding: '20px',
-        border: '1px solid var(--border-color)',
-        overflow: 'auto'
+        border: '1px solid var(--cz-line)',
+        boxShadow: 'var(--cz-shadow-sm)',
+        overflow: 'auto',
+        minWidth: 0, // allow the grid column to shrink so wide players scroll, not overflow
     },
     sectionTitle: {
-        margin: '0 0 15px 0',
-        fontSize: '14px',
-        color: 'var(--text-muted)',
+        margin: '0 0 14px 0',
+        fontSize: '11px',
+        fontWeight: 800,
+        color: 'var(--cz-faint)',
         textTransform: 'uppercase',
-        letterSpacing: '1px'
+        letterSpacing: '1.4px',
     },
     explanationContent: {
-        lineHeight: '1.7'
+        lineHeight: '1.7',
     },
     explanationStep: {
-        marginBottom: '15px'
+        marginBottom: '14px',
     },
     textContent: {
         margin: 0,
-        color: '#e0e0e0',
-        fontSize: '14px'
+        color: 'var(--cz-text)',
+        fontSize: '14.5px',
+        lineHeight: 1.65,
     },
     tipBox: {
-        background: 'rgba(72, 187, 120, 0.1)',
-        border: '1px solid rgba(72, 187, 120, 0.3)',
-        borderRadius: '8px',
-        padding: '12px',
-        fontSize: '13px',
-        color: 'var(--accent-green)'
+        background: 'color-mix(in srgb, var(--cz-success) 12%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--cz-success) 30%, transparent)',
+        borderRadius: '10px',
+        padding: '12px 14px',
+        fontSize: '13.5px',
+        color: 'var(--cz-text)',
     },
     warningBox: {
-        background: 'rgba(246, 173, 85, 0.1)',
-        border: '1px solid rgba(246, 173, 85, 0.3)',
-        borderRadius: '8px',
-        padding: '12px',
-        fontSize: '13px',
-        color: 'var(--accent-yellow)'
+        background: 'color-mix(in srgb, var(--cz-warning) 14%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--cz-warning) 32%, transparent)',
+        borderRadius: '10px',
+        padding: '12px 14px',
+        fontSize: '13.5px',
+        color: 'var(--cz-text)',
     },
     keyConceptsBox: {
-        marginTop: '20px',
-        background: 'rgba(13, 148, 136, 0.1)',
-        border: '1px solid rgba(13, 148, 136, 0.3)',
-        borderRadius: '10px',
-        padding: '15px'
+        marginTop: '18px',
+        background: 'color-mix(in srgb, var(--cz-accent) 8%, var(--cz-elevated))',
+        border: '1px solid color-mix(in srgb, var(--cz-accent) 22%, transparent)',
+        borderRadius: '12px',
+        padding: '15px 16px',
     },
     keyConceptsTitle: {
         margin: '0 0 10px 0',
-        fontSize: '13px',
-        color: '#a78bfa'
+        fontSize: '12px',
+        fontWeight: 800,
+        color: 'var(--cz-accent)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
     },
     keyConceptsList: {
         margin: 0,
-        paddingLeft: '20px',
-        color: '#d1d5db',
-        fontSize: '13px'
+        paddingLeft: '18px',
+        color: 'var(--cz-muted)',
+        fontSize: '13.5px',
+        lineHeight: 1.7,
     },
     codePanel: {
-        background: 'var(--bg-muted)',
-        borderRadius: '12px',
+        background: 'var(--cz-surface)',
+        borderRadius: '16px',
         padding: '20px',
-        border: '1px solid var(--border-color)',
+        border: '1px solid var(--cz-line)',
+        boxShadow: 'var(--cz-shadow-sm)',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        minWidth: 0,
     },
     panelHeader: {
         display: 'flex',
-        gap: '10px',
-        marginBottom: '15px'
+        gap: '8px',
+        marginBottom: '14px',
     },
     tabBtn: {
-        border: '1px solid var(--border-color)',
-        color: 'var(--text-primary)',
-        padding: '6px 14px',
-        borderRadius: '6px',
+        border: '1px solid var(--cz-line)',
+        color: 'var(--cz-text)',
+        padding: '7px 14px',
+        borderRadius: '9px',
         cursor: 'pointer',
-        fontSize: '12px',
-        transition: 'all 0.2s'
+        fontSize: '12.5px',
+        fontWeight: 700,
+        transition: 'all 0.15s',
+        fontFamily: FONT,
     },
     visualizerWrapper: {
         flex: 1,
         overflow: 'auto',
-        background: 'var(--bg-white)',
-        borderRadius: '8px'
+        background: 'var(--cz-elevated)',
+        borderRadius: '12px',
+        border: '1px solid var(--cz-line)',
     },
     codeBox: {
-        background: '#1a1a1a',
-        borderRadius: '8px',
-        overflow: 'hidden'
+        background: 'var(--cz-elevated)',
+        border: '1px solid var(--cz-line)',
+        borderRadius: '12px',
+        overflow: 'hidden',
     },
     codeHeader: {
-        background: 'var(--bg-muted)',
-        padding: '8px 12px',
+        background: 'var(--cz-surface)',
+        padding: '9px 14px',
         fontSize: '12px',
-        color: 'var(--text-muted)',
-        borderBottom: '1px solid var(--border-color)',
-        textTransform: 'capitalize'
+        fontWeight: 700,
+        color: 'var(--cz-muted)',
+        borderBottom: '1px solid var(--cz-line)',
+        textTransform: 'capitalize',
+        fontFamily: MONO,
     },
     code: {
         margin: 0,
         padding: '15px',
         fontSize: '13px',
-        fontFamily: 'monospace',
-        color: '#e0e0e0',
+        fontFamily: MONO,
+        color: 'var(--cz-text)',
         overflow: 'auto',
-        maxHeight: '350px'
+        maxHeight: '360px',
+        lineHeight: 1.6,
     },
     compareContainer: {
         display: 'flex',
         gap: '2px',
-        background: '#1a1a1a',
-        borderRadius: '8px',
-        overflow: 'hidden'
+        background: 'var(--cz-line)',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        border: '1px solid var(--cz-line)',
     },
     comparePane: {
-        flex: 1
+        flex: 1,
+        background: 'var(--cz-elevated)',
     },
     compareDivider: {
-        width: '2px',
-        background: 'var(--cz-line)'
+        width: '1px',
+        background: 'var(--cz-line)',
     },
     compareSelect: {
         background: 'transparent',
         border: 'none',
-        color: 'var(--text-primary)',
+        color: 'var(--cz-text)',
         fontSize: '12px',
-        cursor: 'pointer'
+        fontWeight: 700,
+        cursor: 'pointer',
+        fontFamily: MONO,
     },
     syntaxDiffBox: {
-        marginTop: '15px',
-        background: 'rgba(13, 148, 136, 0.1)',
-        padding: '12px',
-        borderRadius: '8px',
-        fontSize: '12px',
-        color: '#a78bfa'
+        marginTop: '14px',
+        background: 'color-mix(in srgb, var(--cz-accent) 8%, var(--cz-elevated))',
+        border: '1px solid color-mix(in srgb, var(--cz-accent) 22%, transparent)',
+        padding: '12px 14px',
+        borderRadius: '10px',
+        fontSize: '12.5px',
+        color: 'var(--cz-text)',
     },
     footer: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginTop: '20px',
-        paddingTop: '15px',
-        borderTop: '1px solid var(--cz-line)'
+        marginTop: '22px',
+        paddingTop: '18px',
+        borderTop: '1px solid var(--cz-line)',
     },
     progressDots: {
         display: 'flex',
-        gap: '6px'
+        gap: '6px',
     },
     dot: {
         width: '8px',
         height: '8px',
-        borderRadius: '50%'
+        borderRadius: '50%',
     },
     continueBtn: {
-        background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
-        color: 'var(--text-primary)',
+        background: 'linear-gradient(135deg, var(--cz-accent), #7c93ff)',
+        color: 'var(--cz-accent-fg, #fff)',
         border: 'none',
-        padding: '12px 30px',
-        borderRadius: '8px',
+        padding: '12px 28px',
+        borderRadius: '10px',
         fontSize: '14px',
-        fontWeight: 'bold',
+        fontWeight: 700,
         cursor: 'pointer',
-        transition: 'transform 0.2s'
-    }
+        transition: 'transform 0.2s',
+        fontFamily: FONT,
+    },
 };
 
 export default LessonView;
