@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion as Motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import Quiz from './Quiz';
 import ConceptPlayer from './ConceptPlayer';
 import DiagramPlayer from './DiagramPlayer';
@@ -208,15 +208,32 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
                 </div>
             )}
 
+            {/* Concept animation — full width so diagrams/arrays have room to breathe */}
+            {conceptVisual && (
+                <div style={{ marginBottom: 18 }}>
+                    <div style={styles.sectionTitle}>🎬 Watch it work</div>
+                    <VisualBlock spec={conceptVisual} />
+                </div>
+            )}
+
+            {/* Execution visualizer (tracer) — full width so the process is easy to follow */}
+            {showVisualizer && traceData && traceData.length > 0 && (
+                <div style={{ marginBottom: 18 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={styles.sectionTitle}>▶ Execution visualization</div>
+                        <button onClick={() => setShowVisualizer(false)} style={{ ...styles.tabBtn, marginLeft: 'auto', marginBottom: 14 }}>Hide</button>
+                    </div>
+                    <div style={{ background: 'var(--cz-surface)', border: '1px solid var(--cz-line)', borderRadius: 16, padding: 12, boxShadow: 'var(--cz-shadow-sm)', minWidth: 0, overflow: 'hidden' }}>
+                        <Canvas traceData={traceData} stepIndex={stepIndex} setStepIndex={setStepIndex} />
+                    </div>
+                </div>
+            )}
+
             {/* Main Content */}
             <div style={styles.content}>
                 {/* Left: Explanation */}
                 <div style={styles.explanationPanel}>
                     <h3 style={styles.sectionTitle}>📖 Explanation</h3>
-
-                    {/* Concept animation (Phase 2): a hand-authored, step-by-step
-                        animated explanation of this concept, if one exists. */}
-                    {conceptVisual && <VisualBlock spec={conceptVisual} />}
 
                     <div style={styles.explanationContent}>
                         {explanationSteps.map((step, idx) => (
@@ -263,108 +280,35 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
                     )}
                 </div>
 
-                {/* Right: Code Panel OR Visualizer */}
+                {/* Right: Code Panel (the execution visualizer is full-width above) */}
                 <div style={styles.codePanel}>
-                    {/* Toggle between Code and Visualizer */}
-                    <div style={styles.panelHeader}>
-                        <button
-                            onClick={() => setShowVisualizer(false)}
-                            style={{
-                                ...styles.tabBtn,
-                                background: !showVisualizer ? 'var(--cz-accent)' : 'transparent',
-                                color: !showVisualizer ? 'var(--cz-accent-fg, #fff)' : 'var(--cz-text)',
-                                borderColor: !showVisualizer ? 'var(--cz-accent)' : 'var(--cz-line)',
-                            }}
-                        >
-                            🖥️ Code
-                        </button>
-                        <button
-                            onClick={() => traceData && setShowVisualizer(true)}
-                            disabled={!traceData}
-                            style={{
-                                ...styles.tabBtn,
-                                background: showVisualizer ? 'var(--cz-accent)' : 'transparent',
-                                color: showVisualizer ? 'var(--cz-accent-fg, #fff)' : 'var(--cz-text)',
-                                borderColor: showVisualizer ? 'var(--cz-accent)' : 'var(--cz-line)',
-                                opacity: traceData ? 1 : 0.5
-                            }}
-                        >
-                            👁️ Visualizer
-                        </button>
-                    </div>
-
-                    <AnimatePresence mode="wait">
-                        {showVisualizer && traceData ? (
-                            <Motion.div
-                                key="visualizer"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                style={styles.visualizerWrapper}
-                            >
-                                <Canvas
-                                    traceData={traceData}
-                                    stepIndex={stepIndex}
-                                    setStepIndex={setStepIndex}
-                                />
-                            </Motion.div>
-                        ) : (
-                            <Motion.div
-                                key="code"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                            >
-                                {!compareMode ? (
-                                    // Single language view
-                                    <div style={styles.codeBox}>
-                                        <div style={styles.codeHeader}>
-                                            {LANGUAGE_ICONS[selectedLang]} {selectedLang}
-                                        </div>
-                                        <pre style={styles.code}>
-                                            {lesson.code?.[selectedLang] || 'No code available for this language'}
-                                        </pre>
-                                    </div>
-                                ) : (
-                                    // Compare mode - side by side
-                                    <div style={styles.compareContainer}>
-                                        <div style={styles.comparePane}>
-                                            <div style={styles.codeHeader}>
-                                                {LANGUAGE_ICONS[selectedLang]} {selectedLang}
-                                            </div>
-                                            <pre style={styles.code}>
-                                                {lesson.code?.[selectedLang] || 'N/A'}
-                                            </pre>
-                                        </div>
-                                        <div style={styles.compareDivider} />
-                                        <div style={styles.comparePane}>
-                                            <div style={styles.codeHeader}>
-                                                <select
-                                                    value={compareLang}
-                                                    onChange={(e) => setCompareLang(e.target.value)}
-                                                    style={styles.compareSelect}
-                                                >
-                                                    {availableLanguages.filter(l => l !== selectedLang).map(lang => (
-                                                        <option key={lang} value={lang}>{LANGUAGE_ICONS[lang]} {lang}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <pre style={styles.code}>
-                                                {lesson.code?.[compareLang] || 'N/A'}
-                                            </pre>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Syntax difference tip */}
-                                {compareMode && lesson.syntaxDiff && (
-                                    <div style={styles.syntaxDiffBox}>
-                                        <strong>💡 Syntax Difference:</strong> {lesson.syntaxDiff}
-                                    </div>
-                                )}
-                            </Motion.div>
-                        )}
-                    </AnimatePresence>
+                    {!compareMode ? (
+                        <div style={styles.codeBox}>
+                            <div style={styles.codeHeader}>{LANGUAGE_ICONS[selectedLang]} {selectedLang}</div>
+                            <pre style={styles.code}>{lesson.code?.[selectedLang] || 'No code available for this language'}</pre>
+                        </div>
+                    ) : (
+                        <div style={styles.compareContainer}>
+                            <div style={styles.comparePane}>
+                                <div style={styles.codeHeader}>{LANGUAGE_ICONS[selectedLang]} {selectedLang}</div>
+                                <pre style={styles.code}>{lesson.code?.[selectedLang] || 'N/A'}</pre>
+                            </div>
+                            <div style={styles.compareDivider} />
+                            <div style={styles.comparePane}>
+                                <div style={styles.codeHeader}>
+                                    <select value={compareLang} onChange={(e) => setCompareLang(e.target.value)} style={styles.compareSelect}>
+                                        {availableLanguages.filter(l => l !== selectedLang).map(lang => (
+                                            <option key={lang} value={lang}>{LANGUAGE_ICONS[lang]} {lang}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <pre style={styles.code}>{lesson.code?.[compareLang] || 'N/A'}</pre>
+                            </div>
+                        </div>
+                    )}
+                    {compareMode && lesson.syntaxDiff && (
+                        <div style={styles.syntaxDiffBox}><strong>💡 Syntax Difference:</strong> {lesson.syntaxDiff}</div>
+                    )}
                 </div>
             </div>
 
@@ -541,6 +485,7 @@ const styles = {
         border: '1px solid var(--cz-line)',
         boxShadow: 'var(--cz-shadow-sm)',
         overflow: 'auto',
+        minWidth: 0, // allow the grid column to shrink so wide players scroll, not overflow
     },
     sectionTitle: {
         margin: '0 0 14px 0',
@@ -609,6 +554,7 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        minWidth: 0,
     },
     panelHeader: {
         display: 'flex',

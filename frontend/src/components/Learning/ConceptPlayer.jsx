@@ -79,6 +79,7 @@ export default function ConceptPlayer({ spec }) {
     <div style={{
       background: 'var(--cz-surface)', border: '1px solid var(--cz-line)', borderRadius: 14,
       padding: '14px 16px', margin: '4px 0 18px', boxShadow: 'var(--cz-shadow-sm)',
+      width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box', overflow: 'hidden',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--cz-accent)', letterSpacing: 0.3 }}>▶ {spec.title || 'Watch it work'}</span>
@@ -86,7 +87,7 @@ export default function ConceptPlayer({ spec }) {
       </div>
 
       {/* Stage */}
-      <div style={{ display: 'flex', justifyContent: 'center', minHeight: spec.kind === 'stack' ? 210 : 120, alignItems: spec.kind === 'stack' ? 'flex-end' : 'center', overflowX: 'auto', padding: '4px 0' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', minHeight: spec.kind === 'stack' ? 210 : 120, alignItems: spec.kind === 'stack' ? 'flex-end' : 'center', overflowX: 'auto', minWidth: 0, padding: '4px 0' }}>
         {spec.kind === 'array' && (
           <div style={{ position: 'relative', width: trackWidth }}>
             {/* Pointer arrows */}

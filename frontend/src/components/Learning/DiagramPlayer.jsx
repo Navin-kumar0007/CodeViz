@@ -58,16 +58,19 @@ export default function DiagramPlayer({ spec }) {
     <div style={{
       background: 'var(--cz-surface)', border: '1px solid var(--cz-line)', borderRadius: 14,
       padding: '14px 16px', margin: '4px 0 18px', boxShadow: 'var(--cz-shadow-sm)',
+      width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box', overflow: 'hidden',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--cz-accent)', letterSpacing: 0.3 }}>◇ {spec.title || 'How it works'}</span>
         <span style={{ marginLeft: 'auto', fontSize: 11, fontFamily: 'monospace', color: 'var(--cz-muted)' }}>step {idx + 1}/{steps.length}</span>
       </div>
 
-      {/* Canvas */}
-      <div style={{ position: 'relative', width: '100%', aspectRatio: `${VB_W} / ${VB_H}`, maxWidth: 620, margin: '0 auto' }}>
+      {/* Canvas — fixed 600x260 px surface so coordinates map 1:1 (no scaling
+          distortion); the wrapper scrolls horizontally on narrow screens. */}
+      <div style={{ overflowX: 'auto', width: '100%', minWidth: 0 }}>
+      <div style={{ position: 'relative', width: VB_W, height: VB_H, margin: '0 auto', flexShrink: 0 }}>
         {/* Edges + packet (SVG) */}
-        <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height="100%" style={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
+        <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width={VB_W} height={VB_H} style={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
           <defs>
             <marker id="dp-arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
               <path d="M0,0 L7,3 L0,6 Z" fill="var(--cz-muted)" />
@@ -116,6 +119,10 @@ export default function DiagramPlayer({ spec }) {
           if (!visible(n.id)) return null;
           const active = nodeActive(n.id);
           const dim = nodeDim(n.id);
+          const w = n.w || 108;
+          // Keep the whole node box inside the canvas so it never overflows.
+          const cx = Math.max(w / 2 + 2, Math.min(VB_W - w / 2 - 2, n.x));
+          const cy = Math.max(28, Math.min(VB_H - 28, n.y));
           return (
             <motion.div
               key={n.id}
@@ -124,9 +131,9 @@ export default function DiagramPlayer({ spec }) {
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               style={{
                 position: 'absolute',
-                left: `${(n.x / VB_W) * 100}%`, top: `${(n.y / VB_H) * 100}%`,
+                left: cx, top: cy,
                 transform: 'translate(-50%, -50%)',
-                width: n.w || 108, minHeight: n.h || 46,
+                width: w, minHeight: n.h || 46,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 padding: '6px 8px', textAlign: 'center', borderRadius: 10,
                 background: active ? 'color-mix(in srgb, var(--cz-accent) 18%, var(--cz-surface))' : 'var(--cz-elevated)',
@@ -142,6 +149,7 @@ export default function DiagramPlayer({ spec }) {
             </motion.div>
           );
         })}
+      </div>
       </div>
 
       {/* Caption */}
