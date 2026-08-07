@@ -5,6 +5,7 @@ import Editor from '@monaco-editor/react';
 import { ArrowLeft, Play, Rocket, CheckCircle2, XCircle, Clock, Lightbulb } from 'lucide-react';
 import API_BASE from '../utils/api';
 import AstFlowchart from '../components/Visualizer/AstFlowchart';
+import IntegrityReport from '../components/Integrity/IntegrityReport';
 import { Button, Select, DifficultyBadge, Badge, Spinner, EmptyState } from '../components/ui';
 import { celebrate } from '../utils/celebrate';
 
@@ -38,7 +39,32 @@ export default function ProblemSolve() {
   const [showHints, setShowHints] = useState(false);
   const [hintIndex, setHintIndex] = useState(0);
   const [submissions, setSubmissions] = useState([]);
+  const [integritySubId, setIntegritySubId] = useState(null);
   const workspaceRef = useRef(null);
+
+  // Authorship telemetry (academic-integrity signals). grossAdded counts all
+  // inserted chars; pastes are subtracted at submit to get typedChars.
+  const integrity = useRef({ grossAdded: 0, pastedChars: 0, keystrokes: 0, pasteEvents: [], startAt: Date.now(), lastLen: 0 });
+  const resetTelemetry = (len) => {
+    integrity.current = { grossAdded: 0, pastedChars: 0, keystrokes: 0, pasteEvents: [], startAt: Date.now(), lastLen: len || 0 };
+  };
+  const handleEditorMount = (editor) => {
+    editor.onDidPaste((e) => {
+      const text = editor.getModel()?.getValueInRange(e.range) || '';
+      if (!text.length) return;
+      integrity.current.pastedChars += text.length;
+      integrity.current.pasteEvents.push({ size: text.length, at: Date.now() - integrity.current.startAt });
+    });
+  };
+  const handleCodeChange = (v) => {
+    const nv = v || '';
+    const cur = integrity.current;
+    const delta = nv.length - cur.lastLen;
+    if (delta > 0) cur.grossAdded += delta;
+    cur.keystrokes += 1;
+    cur.lastLen = nv.length;
+    setCode(nv);
+  };
 
   useEffect(() => {
     loadProblem();
@@ -54,14 +80,19 @@ export default function ProblemSolve() {
     try {
       const { data } = await axios.get(`${API}/${slug}`, { headers });
       setProblem(data);
-      setCode(data.starterCode?.[language] || `# Write your solution for: ${data.title}\n`);
+      const starter = data.starterCode?.[language] || `# Write your solution for: ${data.title}\n`;
+      setCode(starter);
+      resetTelemetry(starter.length); // don't count starter code as typing
     } catch (err) { console.error(err); }
     setLoading(false);
   };
 
   const handleLanguageChange = (lang) => {
     setLanguage(lang);
-    if (problem?.starterCode?.[lang]) setCode(problem.starterCode[lang]);
+    if (problem?.starterCode?.[lang]) {
+      setCode(problem.starterCode[lang]);
+      resetTelemetry(problem.starterCode[lang].length);
+    }
   };
 
   const handleRun = async () => {
@@ -77,7 +108,15 @@ export default function ProblemSolve() {
   const handleSubmit = async () => {
     setSubmitting(true); setResult(null);
     try {
-      const { data } = await axios.post(`${API}/submit`, { problemId: problem._id, language, code }, { headers });
+      const t = integrity.current;
+      const integrityPayload = {
+        typedChars: Math.max(0, t.grossAdded - t.pastedChars),
+        pastedChars: t.pastedChars,
+        keystrokes: t.keystrokes,
+        durationMs: Date.now() - t.startAt,
+        pasteEvents: t.pasteEvents,
+      };
+      const { data } = await axios.post(`${API}/submit`, { problemId: problem._id, language, code, integrity: integrityPayload }, { headers });
       setResult({ type: 'submit', ...data });
       if (data.verdict === 'accepted') celebrate({ xp: data.xpEarned || 50 });
       loadSubmissions();
@@ -181,6 +220,7 @@ export default function ProblemSolve() {
                           <Badge tone={v.tone}><v.Icon size={13} /> {v.label}</Badge>
                           <span className="text-[11px] text-muted">{s.language} · {s.passedTests}/{s.totalTests}</span>
                           <span className="text-[11px] text-faint">{new Date(s.createdAt).toLocaleDateString()}</span>
+                          <button onClick={() => setIntegritySubId(s._id)} title="Authorship signals" className="text-[11px] font-semibold text-accent hover:underline bg-transparent border-0 cursor-pointer">🔍</button>
                         </div>
                       );
                     })}
@@ -202,7 +242,8 @@ export default function ProblemSolve() {
               height="100%"
               language={monacoLang}
               value={code}
-              onChange={(v) => setCode(v || '')}
+              onChange={handleCodeChange}
+              onMount={handleEditorMount}
               theme="light"
               options={{ fontSize: 14, minimap: { enabled: false }, padding: { top: 12 }, scrollBeyondLastLine: false, wordWrap: 'on' }}
             />
@@ -254,6 +295,8 @@ export default function ProblemSolve() {
           )}
         </div>
       </div>
+
+      {integritySubId && <IntegrityReport submissionId={integritySubId} onClose={() => setIntegritySubId(null)} />}
     </div>
   );
 }

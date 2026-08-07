@@ -3,9 +3,18 @@ const Problem = require('../models/Problem');
 const dockerService = require('../services/dockerService');
 
 // POST /api/submit — run code against all test cases
+// Sanitize client-supplied authorship telemetry (never trust raw client numbers).
+function cleanIntegrity(raw) {
+    if (!raw || typeof raw !== 'object') return undefined;
+    const n = (v) => Math.max(0, Math.min(1e7, Math.round(Number(v) || 0)));
+    const events = Array.isArray(raw.pasteEvents) ? raw.pasteEvents.slice(0, 200).map((e) => ({ size: n(e.size), at: n(e.at) })) : [];
+    return { typedChars: n(raw.typedChars), pastedChars: n(raw.pastedChars), keystrokes: n(raw.keystrokes), durationMs: n(raw.durationMs), pasteEvents: events };
+}
+
 const submitSolution = async (req, res) => {
     try {
         const { problemId, language, code } = req.body;
+        const integrity = cleanIntegrity(req.body.integrity);
         const userId = req.user._id;
 
         const problem = await Problem.findById(problemId);
@@ -43,7 +52,7 @@ const submitSolution = async (req, res) => {
                         : 'runtime_error';
 
                 const submission = await Submission.create({
-                    user: userId, problem: problemId, language, code,
+                    user: userId, problem: problemId, language, code, integrity,
                     verdict,
                     testResults: results,
                     totalTests: testCases.length,
@@ -66,7 +75,7 @@ const submitSolution = async (req, res) => {
         const verdict = allPassed ? 'accepted' : 'wrong_answer';
 
         const submission = await Submission.create({
-            user: userId, problem: problemId, language, code,
+            user: userId, problem: problemId, language, code, integrity,
             verdict,
             testResults: results,
             totalTests: testCases.length,

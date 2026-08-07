@@ -149,6 +149,7 @@ app.use('/api/videos', videoRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/problems', problemRoutes);
 app.use('/api/courses', require('./routes/courseRoutes')); // 📚 Learn hub content (DB-backed)
+app.use('/api/integrity', require('./routes/integrityRoutes')); // 🔍 Academic-integrity signals
 app.use('/api/peer-reviews', peerReviewRoutes);
 app.use('/api/autograder', autograderRoutes);
 app.use('/api/billing', billingRoutes); // 💳 Billing (entitlements, checkout, portal)

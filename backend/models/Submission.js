@@ -18,7 +18,15 @@ const submissionSchema = new mongoose.Schema({
         actualOutput: String
     }],
     totalTests: { type: Number, default: 0 },
-    passedTests: { type: Number, default: 0 }
+    passedTests: { type: Number, default: 0 },
+    // Authorship telemetry captured in the editor (academic-integrity signals).
+    integrity: {
+        typedChars: { type: Number, default: 0 },
+        pastedChars: { type: Number, default: 0 },
+        keystrokes: { type: Number, default: 0 },
+        durationMs: { type: Number, default: 0 },
+        pasteEvents: [{ size: Number, at: Number }],
+    }
 }, { timestamps: true });
 
 // Index for fast lookups
