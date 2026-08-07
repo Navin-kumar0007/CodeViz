@@ -319,4 +319,52 @@ async function generateVisual({ courseTitle, lessonTitle, summary }) {
   return validateVisual(parsed);
 }
 
-module.exports = { generateAndSaveProblems, reviewCode, recommendNext, generateCourse, generateVisual };
+// --- AI editorial (solution walkthrough) generation -----------------------
+
+function buildEditorialPrompt(problem, langs) {
+  return `You are writing an official editorial for a coding problem.
+Title: "${problem.title}"
+Difficulty: ${problem.difficulty}
+Description: ${problem.description}
+${problem.examples?.length ? `Example: input ${problem.examples[0].input} → output ${problem.examples[0].output}` : ''}
+
+Return ONLY minified JSON (no markdown, no prose):
+{
+  "approach": string (2-3 sentences: the key insight and technique),
+  "steps": string[] (4-7 concise algorithm steps),
+  "timeComplexity": string (e.g. "O(n)"),
+  "spaceComplexity": string (e.g. "O(1)"),
+  "solutionCode": { ${langs.map((l) => `"${l}": string`).join(', ')} },
+  "topics": string[] (2-4 fine-grained tags, e.g. "two-pointers","hashmap")
+}
+Rules: correct, idiomatic, runnable solution code in EACH requested language. Explain the optimal approach, not brute force (mention brute force only if instructive).`;
+}
+
+function validateEditorial(raw, langs) {
+  if (!raw || typeof raw !== 'object' || !raw.approach) throw new Error('no editorial');
+  const code = raw.solutionCode && typeof raw.solutionCode === 'object' ? raw.solutionCode : {};
+  const kept = {};
+  langs.forEach((l) => { if (typeof code[l] === 'string' && code[l].trim()) kept[l] = code[l]; });
+  return {
+    approach: String(raw.approach),
+    steps: Array.isArray(raw.steps) ? raw.steps.map(String).slice(0, 10) : [],
+    timeComplexity: raw.timeComplexity ? String(raw.timeComplexity) : '',
+    spaceComplexity: raw.spaceComplexity ? String(raw.spaceComplexity) : '',
+    solutionCode: kept,
+    topics: Array.isArray(raw.topics) ? raw.topics.map(String).slice(0, 6) : [],
+    generatedAt: new Date(),
+  };
+}
+
+/**
+ * Generate a validated editorial (approach + steps + multi-language solution +
+ * complexity + topics) for a problem via the AI orchestrator. Returns it.
+ */
+async function generateEditorial({ problem, langs = ['python', 'javascript', 'java', 'cpp'] }) {
+  const prompt = buildEditorialPrompt(problem, langs);
+  const text = await callLLM(prompt);
+  const parsed = groqProvider.safeParseJson(text);
+  return validateEditorial(parsed, langs);
+}
+
+module.exports = { generateAndSaveProblems, reviewCode, recommendNext, generateCourse, generateVisual, generateEditorial };

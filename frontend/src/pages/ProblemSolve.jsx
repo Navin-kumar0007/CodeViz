@@ -6,6 +6,7 @@ import { ArrowLeft, Play, Rocket, CheckCircle2, XCircle, Clock, Lightbulb } from
 import API_BASE from '../utils/api';
 import AstFlowchart from '../components/Visualizer/AstFlowchart';
 import IntegrityReport from '../components/Integrity/IntegrityReport';
+import DiscussionPanel from '../components/Social/DiscussionPanel';
 import { Button, Select, DifficultyBadge, Badge, Spinner, EmptyState } from '../components/ui';
 import { celebrate } from '../utils/celebrate';
 
@@ -20,7 +21,7 @@ const VERDICT = {
   compilation_error: { tone: 'danger', Icon: XCircle, label: 'Compilation Error' },
 };
 const LANGS = { python: 'Python', javascript: 'JavaScript', typescript: 'TypeScript', java: 'Java', c: 'C', cpp: 'C++', go: 'Go' };
-const TABS = [{ id: 'description', label: 'Description' }, { id: 'submissions', label: 'Submissions' }, { id: 'ast', label: 'Architecture' }];
+const TABS = [{ id: 'description', label: 'Description' }, { id: 'editorial', label: 'Editorial' }, { id: 'discuss', label: 'Discuss' }, { id: 'submissions', label: 'Submissions' }, { id: 'ast', label: 'Architecture' }];
 
 export default function ProblemSolve() {
   const { slug } = useParams();
@@ -40,6 +41,7 @@ export default function ProblemSolve() {
   const [hintIndex, setHintIndex] = useState(0);
   const [submissions, setSubmissions] = useState([]);
   const [integritySubId, setIntegritySubId] = useState(null);
+  const [editorialShown, setEditorialShown] = useState(false);
   const workspaceRef = useRef(null);
 
   // Authorship telemetry (academic-integrity signals). grossAdded counts all
@@ -232,6 +234,50 @@ export default function ProblemSolve() {
                 ? <AstFlowchart code={code} />
                 : <EmptyState icon="🧠" title="JavaScript required" hint="Switch language to JavaScript to view the Abstract Syntax Tree." />
             )}
+
+            {activeTab === 'editorial' && (
+              problem.editorialLocked
+                ? <EmptyState icon="🔒" title="Solve to unlock the editorial" hint="Submit an accepted solution to reveal the official walkthrough — no spoilers before you try." />
+                : !problem.editorial
+                  ? <EmptyState icon="📝" title="No editorial yet" hint="An official solution walkthrough hasn't been written for this problem." />
+                  : !editorialShown
+                    ? <div className="flex flex-col items-center gap-3 py-10 text-center">
+                        <div className="text-[15px] font-bold">Official editorial available</div>
+                        <p className="text-[13px] text-muted max-w-sm">Approach, step-by-step algorithm, complexity, and a full solution in {Object.keys(problem.editorial.solutionCode || {}).length} languages.</p>
+                        <Button onClick={() => setEditorialShown(true)}>Reveal editorial (spoiler)</Button>
+                      </div>
+                    : (() => {
+                        const e = problem.editorial;
+                        const sol = e.solutionCode?.[language] || Object.values(e.solutionCode || {})[0] || '';
+                        return (
+                          <div className="flex flex-col gap-4">
+                            <div>
+                              <div className="text-[11px] font-bold uppercase tracking-wide text-faint mb-1.5">Approach</div>
+                              <p className="text-[14px] text-text leading-relaxed m-0">{e.approach}</p>
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              {e.timeComplexity && <Badge tone="accent">Time {e.timeComplexity}</Badge>}
+                              {e.spaceComplexity && <Badge tone="neutral">Space {e.spaceComplexity}</Badge>}
+                              {(e.topics || []).map((t) => <Badge key={t} tone="neutral">{t}</Badge>)}
+                            </div>
+                            {e.steps?.length > 0 && (
+                              <div>
+                                <div className="text-[11px] font-bold uppercase tracking-wide text-faint mb-1.5">Algorithm</div>
+                                <ol className="text-[14px] text-muted leading-relaxed pl-5 flex flex-col gap-1 m-0">
+                                  {e.steps.map((s, i) => <li key={i}>{s}</li>)}
+                                </ol>
+                              </div>
+                            )}
+                            <div>
+                              <div className="text-[11px] font-bold uppercase tracking-wide text-faint mb-1.5">Solution {e.solutionCode?.[language] ? `(${language})` : ''}</div>
+                              <pre className="bg-elevated border border-line rounded-xl p-4 overflow-x-auto text-[12.5px] font-mono leading-relaxed text-text m-0">{sol}</pre>
+                            </div>
+                          </div>
+                        );
+                      })()
+            )}
+
+            {activeTab === 'discuss' && <DiscussionPanel lessonId={`problem:${problem.slug}`} />}
           </div>
         </div>
 

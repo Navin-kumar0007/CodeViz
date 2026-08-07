@@ -51,11 +51,22 @@ const getProblem = async (req, res) => {
         visible.testCases = visible.testCases.filter(tc => !tc.isHidden);
 
         // Check if user solved it
+        let solved = false;
         if (req.user?._id) {
             const accepted = await Submission.findOne({
                 user: req.user._id, problem: problem._id, verdict: 'accepted'
             });
-            visible.solved = !!accepted;
+            solved = !!accepted;
+            visible.solved = solved;
+        }
+
+        // Gate the editorial: full content only once solved (or for staff).
+        // Otherwise expose just its availability so the UI can offer a spoiler unlock.
+        const isStaff = ['instructor', 'admin'].includes(req.user?.role);
+        visible.hasEditorial = !!problem.editorial;
+        if (problem.editorial && !solved && !isStaff) {
+            visible.editorial = null;
+            visible.editorialLocked = true;
         }
 
         res.json(visible);
@@ -93,4 +104,22 @@ const getRandomProblem = async (req, res) => {
     }
 };
 
-module.exports = { getProblems, getProblem, createProblem, getRandomProblem };
+// POST /api/problems/:slug/editorial/generate  (admin) — AI editorial + topics.
+const generateEditorial = async (req, res) => {
+    try {
+        if (!['instructor', 'admin'].includes(req.user?.role)) return res.status(403).json({ error: 'Staff access required' });
+        const problem = await Problem.findOne({ slug: req.params.slug });
+        if (!problem) return res.status(404).json({ error: 'Problem not found' });
+
+        const aiMentorService = require('../services/aiMentorService');
+        const editorial = await aiMentorService.generateEditorial({ problem });
+        problem.editorial = editorial;
+        if (editorial.topics?.length && (!problem.topics || problem.topics.length === 0)) problem.topics = editorial.topics;
+        await problem.save();
+        res.status(201).json({ slug: problem.slug, editorial });
+    } catch (err) {
+        res.status(502).json({ error: `Editorial generation failed: ${err.message}` });
+    }
+};
+
+module.exports = { getProblems, getProblem, createProblem, getRandomProblem, generateEditorial };

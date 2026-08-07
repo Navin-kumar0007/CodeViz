@@ -41,6 +41,9 @@ const problemSchema = new mongoose.Schema({
         totalSubmissions: { type: Number, default: 0 },
         acceptedSubmissions: { type: Number, default: 0 }
     },
+    topics: { type: [String], default: [] }, // fine-grained tags (e.g. two-pointers, dp)
+    // Rich AI/authored editorial: { approach, steps[], solutionCode{lang}, timeComplexity, spaceComplexity }
+    editorial: { type: mongoose.Schema.Types.Mixed, default: null },
     aiGenerated: { type: Boolean, default: false },
     generatedFor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     order: { type: Number, default: 0 }

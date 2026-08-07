@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
-const { getProblems, getProblem, createProblem, getRandomProblem } = require('../controllers/problemController');
+const { getProblems, getProblem, createProblem, getRandomProblem, generateEditorial } = require('../controllers/problemController');
 const { submitSolution, getSubmissions, getSubmissionStats } = require('../controllers/submissionController');
 
 // Problem routes
@@ -9,6 +9,7 @@ router.get('/', protect, getProblems);
 router.get('/random', protect, getRandomProblem);
 router.get('/:slug', protect, getProblem);
 router.post('/', protect, createProblem);
+router.post('/:slug/editorial/generate', protect, generateEditorial);
 
 // Submission routes
 router.post('/submit', protect, submitSolution);
