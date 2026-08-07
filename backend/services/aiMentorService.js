@@ -132,6 +132,29 @@ Rules:
 - Content must be technically accurate and current. No placeholders.`;
 }
 
+// Extract the first balanced JSON object from an LLM reply, ignoring any prose
+// or trailing junk the model appends (a common cause of parse failures).
+function extractJson(text) {
+  if (typeof text !== 'string') return text;
+  const cleaned = text.replace(/```json?/gi, '').replace(/```/g, '');
+  const start = cleaned.indexOf('{');
+  if (start === -1) return cleaned;
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  for (let i = start; i < cleaned.length; i += 1) {
+    const c = cleaned[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') inStr = false;
+    } else if (c === '"') inStr = true;
+    else if (c === '{') depth += 1;
+    else if (c === '}') { depth -= 1; if (depth === 0) return cleaned.slice(start, i + 1); }
+  }
+  return cleaned.slice(start);
+}
+
 async function callLLM(prompt) {
   // Provider order is configurable. Set COURSE_GEN_PROVIDER=ollama to generate
   // entirely on a self-hosted local model (no external API, no quotas).
@@ -206,7 +229,7 @@ async function generateCourse({ topic, category = 'General', lessonCount = 5, la
   const prompt = buildCoursePrompt({ topic, category, lessonCount: count, langs: useLangs, difficulty });
 
   const text = await callLLM(prompt);
-  const parsed = groqProvider.safeParseJson(text);
+  const parsed = groqProvider.safeParseJson(extractJson(text));
   const normalized = validateAndNormalize(parsed, { topic, category, difficulty });
 
   const saved = await Course.findOneAndUpdate(
@@ -315,7 +338,7 @@ function validateVisual(spec) {
 async function generateVisual({ courseTitle, lessonTitle, summary }) {
   const prompt = buildVisualPrompt({ courseTitle, lessonTitle, summary });
   const text = await callLLM(prompt);
-  const parsed = groqProvider.safeParseJson(text);
+  const parsed = groqProvider.safeParseJson(extractJson(text));
   return validateVisual(parsed);
 }
 
@@ -363,7 +386,7 @@ function validateEditorial(raw, langs) {
 async function generateEditorial({ problem, langs = ['python', 'javascript', 'java', 'cpp'] }) {
   const prompt = buildEditorialPrompt(problem, langs);
   const text = await callLLM(prompt);
-  const parsed = groqProvider.safeParseJson(text);
+  const parsed = groqProvider.safeParseJson(extractJson(text));
   return validateEditorial(parsed, langs);
 }
 
