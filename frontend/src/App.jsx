@@ -58,6 +58,8 @@ const EmbedPage = lazy(() => import('./pages/EmbedPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const Mentor = lazy(() => import('./pages/Mentor'));
+const Certificates = lazy(() => import('./pages/Certificates'));
+const VerifyCertificate = lazy(() => import('./pages/VerifyCertificate'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Support = lazy(() => import('./pages/Support'));
 const Privacy = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Privacy })));
@@ -78,7 +80,8 @@ const AppLayout = ({ children }) => {
   const isSnippet = location.pathname.startsWith('/snippet/');
   const isShare = location.pathname.startsWith('/share/') || location.pathname.startsWith('/embed/');
   const isPublicProfile = location.pathname.startsWith('/u/');
-  const isPublic = publicPaths.includes(location.pathname) || isSnippet || isShare || isPublicProfile;
+  const isVerify = location.pathname.startsWith('/verify/');
+  const isPublic = publicPaths.includes(location.pathname) || isSnippet || isShare || isPublicProfile || isVerify;
 
   if (isPublic) return <>{children}</>;
 
@@ -145,6 +148,7 @@ const AnimatedRoutes = () => {
         <Route path="/share/:token" element={<SharePage />} />
         <Route path="/embed/:token" element={<EmbedPage />} />
         <Route path="/u/:handle" element={<PublicProfile />} />
+        <Route path="/verify/:credentialId" element={<VerifyCertificate />} />
         <Route path="/classroom/join/:code" element={<ClassroomJoinHandler />} />
 
         {/* Protected Routes */}
@@ -181,6 +185,7 @@ const AnimatedRoutes = () => {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
         <Route path="/mentor" element={<ProtectedRoute><Mentor /></ProtectedRoute>} />
+        <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   );

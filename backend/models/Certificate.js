@@ -33,9 +33,16 @@ const certificateSchema = mongoose.Schema(
             type: String,
             enum: ['mastery', 'achievement', 'participation'],
             default: 'mastery'
-        }
+        },
+        courseSlug: { type: String, index: true }, // links the credential to a specific course
+        score: { type: Number, default: null },    // avg quiz score at issue time
+        lessonsCompleted: { type: Number, default: 0 },
+        signature: { type: String },                // HMAC over the credential — tamper-evidence
     },
     { timestamps: true }
 );
+
+// One certificate per user per course.
+certificateSchema.index({ userId: 1, courseSlug: 1 }, { unique: true, partialFilterExpression: { courseSlug: { $type: 'string' } } });
 
 module.exports = mongoose.model('Certificate', certificateSchema);

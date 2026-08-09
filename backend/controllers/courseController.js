@@ -138,6 +138,14 @@ const completeLesson = async (req, res) => {
       streakState = (await gamificationService.updateStreak(req.user._id)).streak;
     }
 
+    // Auto-issue a course certificate when the final lesson is completed.
+    let certificate = null;
+    try {
+      const { issueForCourse } = require('../services/../controllers/certificateController');
+      const result = await issueForCourse(req.user._id, slug);
+      if (result.issued) certificate = { credentialId: result.certificate.credentialId, courseName: result.certificate.courseName };
+    } catch { /* certificate is best-effort */ }
+
     res.json({
       completed: true,
       alreadyCompleted,
@@ -146,6 +154,7 @@ const completeLesson = async (req, res) => {
       level: xpState?.level,
       streak: streakState,
       lessonsCompleted: progress.lessonsCompleted,
+      certificate, // set only when this completion finished the whole course
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

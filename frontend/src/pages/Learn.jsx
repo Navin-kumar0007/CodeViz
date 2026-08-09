@@ -59,6 +59,7 @@ const Learn = () => {
     const [progress, setProgress] = useState({});
     const [achievements, setAchievements] = useState([]);
     const [newAchievement, setNewAchievement] = useState(null);
+    const [earnedCert, setEarnedCert] = useState(null);
     
     // Global Curriculum State
     const [selectedLang, setSelectedLang] = useState(() => {
@@ -148,9 +149,11 @@ const Learn = () => {
         setProgress(newProgress);
         localStorage.setItem('learningProgress', JSON.stringify(newProgress));
 
-        // 🔒 Authoritative completion — server awards XP + streak exactly once.
-        // (Quiz scores are recorded server-side by the graded quiz endpoint.)
-        API.post(`/api/courses/${pathId}/lessons/${lessonId}/complete`).catch(() => { /* offline: local optimistic update stands */ });
+        // 🔒 Authoritative completion — server awards XP + streak exactly once,
+        // and auto-issues a certificate when the final lesson is done.
+        API.post(`/api/courses/${pathId}/lessons/${lessonId}/complete`)
+            .then((res) => { if (res.data?.certificate) setEarnedCert(res.data.certificate); })
+            .catch(() => { /* offline: local optimistic update stands */ });
 
         // Achievements check
         const newlyUnlocked = checkAchievements(newProgress, achievements);
@@ -356,6 +359,32 @@ const Learn = () => {
                             <div style={styles.achievementUnlocked}>🎉 Achievement Unlocked!</div>
                             <div style={styles.achievementTitle}>{newAchievement.title}</div>
                         </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Certificate earned — course completion */}
+            <AnimatePresence>
+                {earnedCert && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        onClick={() => setEarnedCert(null)}
+                        style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(8,10,20,.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+                    >
+                        <motion.div
+                            onClick={(e) => e.stopPropagation()}
+                            initial={{ scale: 0.9, y: 16 }} animate={{ scale: 1, y: 0 }}
+                            style={{ background: 'var(--cz-surface)', border: '1px solid color-mix(in srgb, var(--cz-accent) 35%, transparent)', borderRadius: 20, padding: 32, maxWidth: 420, textAlign: 'center', boxShadow: 'var(--cz-shadow-md)', fontFamily: "'Inter', system-ui, sans-serif" }}
+                        >
+                            <div style={{ fontSize: 46 }}>🎓</div>
+                            <div style={{ fontSize: 20, fontWeight: 800, marginTop: 8 }}>Certificate earned!</div>
+                            <p style={{ color: 'var(--cz-muted)', fontSize: 14, marginTop: 6 }}>You completed <b style={{ color: 'var(--cz-text)' }}>{earnedCert.courseName}</b> — a verifiable credential is now in your collection.</p>
+                            <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--cz-faint)', marginTop: 8 }}>{earnedCert.credentialId}</div>
+                            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20 }}>
+                                <button onClick={() => navigate(`/verify/${earnedCert.credentialId}`)} style={{ padding: '10px 18px', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg, var(--cz-accent), #7c93ff)', color: '#fff' }}>View certificate</button>
+                                <button onClick={() => setEarnedCert(null)} style={{ padding: '10px 18px', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer', border: '1px solid var(--cz-line)', background: 'transparent', color: 'var(--cz-text)' }}>Later</button>
+                            </div>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
