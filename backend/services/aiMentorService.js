@@ -391,3 +391,7 @@ async function generateEditorial({ problem, langs = ['python', 'javascript', 'ja
 }
 
 module.exports = { generateAndSaveProblems, reviewCode, recommendNext, generateCourse, generateVisual, generateEditorial };
+// Pure helpers exported for unit tests.
+module.exports.extractJson = extractJson;
+module.exports.validateVisual = validateVisual;
+module.exports.validateEditorial = validateEditorial;
