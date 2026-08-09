@@ -517,4 +517,31 @@ const saveSessionReplay = async (req, res) => {
     }
 };
 
-module.exports = { startSession, submitSolution, recordStruggle, endSession, getHistory, getStats, saveSessionReplay };
+// POST /api/interview/:sessionId/interviewer  { code, language, kind, problemTitle }
+// An AI interviewer turn — greeting, a hint, or a probing follow-up question.
+// Makes the mock feel like a real interview.
+const interviewerTurn = async (req, res) => {
+    try {
+        const { code = '', language = 'python', kind = 'probe', problemTitle = '' } = req.body;
+        if (kind === 'greet') {
+            return res.json({ message: `Hi, I'm your interviewer today. Read ${problemTitle ? `"${problemTitle}"` : 'the problem'} carefully, then walk me through your approach and its complexity before you start coding.` });
+        }
+        const aiService = require('../services/aiService');
+        let message = null;
+        try {
+            const note = kind === 'hint' ? 'Give one small nudge, not the answer.' : 'Ask a probing follow-up about the approach or complexity.';
+            const r = await aiService.socraticTutor(code, language, null, { interviewer: true, note }, req.user._id, 'intermediate', 'interviewer');
+            message = r?.question || r?.message || null;
+        } catch { message = null; }
+        if (!message) {
+            message = kind === 'hint'
+                ? 'Think about the time complexity — is there a way to avoid the nested loop?'
+                : 'Can you explain why you chose this approach, and what its time and space complexity are?';
+        }
+        res.json({ message });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+};
+
+module.exports = { startSession, submitSolution, recordStruggle, endSession, getHistory, getStats, saveSessionReplay, interviewerTurn };

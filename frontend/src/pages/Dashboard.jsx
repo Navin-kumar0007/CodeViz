@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   Trophy, Zap, Flame, CheckCircle2, Code2, GraduationCap, Swords, ListChecks,
-  Target, BarChart3, Flag, Search, Map, ArrowRight, ArrowUpRight,
+  Target, BarChart3, Flag, Search, Map, ArrowRight, ArrowUpRight, Award,
 } from 'lucide-react';
 import StreakCounter from '../components/Gamification/StreakCounter';
 import XPBar from '../components/Gamification/XPBar';
 import AlgorithmDNA from '../components/Gamification/AlgorithmDNA';
 import SkillTreeWidget from '../components/Gamification/SkillTreeWidget';
+import FocusPlan from '../components/Learning/FocusPlan';
 import { Badge, Button } from '../components/ui';
 import { useCountUp } from '../hooks/useCountUp';
 import { getFx } from '../utils/effects';
@@ -28,6 +29,7 @@ const QUICK = [
   { label: 'Algo Race', path: '/algo-race', Icon: Flag },
   { label: 'Code Review', path: '/code-review', Icon: Search },
   { label: 'Concept Map', path: '/concept-map', Icon: Map },
+  { label: 'Certificates', path: '/certificates', Icon: Award },
 ];
 
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
@@ -178,6 +180,11 @@ const Dashboard = () => {
               </Button>
             </motion.div>
           </Panel>
+        </motion.div>
+
+        {/* Adaptive focus — "it knows what you don't know" */}
+        <motion.div className="mt-4" initial={reduce ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <FocusPlan />
         </motion.div>
 
         {/* Quick launch */}

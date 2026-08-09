@@ -172,4 +172,16 @@ const syncProgress = async (req, res) => {
     }
 };
 
-module.exports = { getProgress, updateProgress, syncProgress, getSkillTree, getDNA };
+// GET /api/progress/focus — personalized adaptive plan (weak areas + targeted
+// problems + next lesson). "It knows what you don't know."
+const getFocus = async (req, res) => {
+    try {
+        const adaptiveService = require('../services/adaptiveService');
+        const plan = await adaptiveService.getFocusPlan(req.user._id);
+        res.json(plan);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { getProgress, updateProgress, syncProgress, getSkillTree, getDNA, getFocus };

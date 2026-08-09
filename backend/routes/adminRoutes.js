@@ -116,6 +116,28 @@ router.put('/users/:id/role', protect, adminOnly, async (req, res) => {
 });
 
 /**
+ * @desc    Grant / change any user's billing plan (admin override, no gateway)
+ * @route   PUT /api/admin/users/:id/plan
+ * @access  Private (Admin only)
+ */
+router.put('/users/:id/plan', protect, adminOnly, async (req, res) => {
+    try {
+        const { plan } = req.body;
+        const { PLANS } = require('../config/plans');
+        if (!PLANS[plan]) return res.status(400).json({ message: 'Unknown plan' });
+        const Subscription = require('../models/Subscription');
+        await Subscription.findOneAndUpdate(
+            { user: req.params.id },
+            { user: req.params.id, plan, status: plan === 'free' ? 'none' : 'active' },
+            { upsert: true }
+        );
+        res.json({ message: `Plan set to ${plan}`, plan });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+/**
  * @desc    Toggle user suspension status
  * @route   PUT /api/admin/users/:id/status
  * @access  Private (Admin only)

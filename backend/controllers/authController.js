@@ -47,6 +47,7 @@ const registerUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        token, // also returned so the client can use a Bearer header (cross-origin/tunnel-safe)
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -94,6 +95,7 @@ const loginUser = async (req, res) => {
         email: user.email,
         role: user.role,
         isTwoFactorEnabled: user.isTwoFactorEnabled || false,
+        token, // also returned for Bearer-header auth (cross-origin/tunnel-safe)
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });

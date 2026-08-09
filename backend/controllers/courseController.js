@@ -138,6 +138,14 @@ const completeLesson = async (req, res) => {
       streakState = (await gamificationService.updateStreak(req.user._id)).streak;
     }
 
+    // Auto-issue a course certificate when the final lesson is completed.
+    let certificate = null;
+    try {
+      const { issueForCourse } = require('../services/../controllers/certificateController');
+      const result = await issueForCourse(req.user._id, slug);
+      if (result.issued) certificate = { credentialId: result.certificate.credentialId, courseName: result.certificate.courseName };
+    } catch { /* certificate is best-effort */ }
+
     res.json({
       completed: true,
       alreadyCompleted,
@@ -146,6 +154,7 @@ const completeLesson = async (req, res) => {
       level: xpState?.level,
       streak: streakState,
       lessonsCompleted: progress.lessonsCompleted,
+      certificate, // set only when this completion finished the whole course
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -186,4 +195,36 @@ const generateLessonVisual = async (req, res) => {
   }
 };
 
-module.exports = { listCourses, getCourse, listCourseMeta, gradeQuiz, completeLesson, generateCourse, generateLessonVisual };
+// GET /api/courses/admin/all  (admin) — every course incl. unpublished, meta only.
+const adminListCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({}).select('slug title category published lessons.lessonId').sort({ order: 1 });
+    res.json(courses.map((c) => ({ slug: c.slug, title: c.title, category: c.category, published: c.published, lessonCount: c.lessons.length })));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// PATCH /api/courses/:slug  (admin) — publish/unpublish.
+const setPublished = async (req, res) => {
+  try {
+    const course = await Course.findOneAndUpdate({ slug: req.params.slug }, { published: !!req.body.published }, { new: true });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    res.json({ slug: course.slug, published: course.published });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// DELETE /api/courses/:slug  (admin).
+const deleteCourse = async (req, res) => {
+  try {
+    const r = await Course.findOneAndDelete({ slug: req.params.slug });
+    if (!r) return res.status(404).json({ message: 'Course not found' });
+    res.json({ message: 'Course deleted', slug: req.params.slug });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { listCourses, getCourse, listCourseMeta, gradeQuiz, completeLesson, generateCourse, generateLessonVisual, setPublished, deleteCourse, adminListCourses };

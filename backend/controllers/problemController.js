@@ -122,4 +122,16 @@ const generateEditorial = async (req, res) => {
     }
 };
 
-module.exports = { getProblems, getProblem, createProblem, getRandomProblem, generateEditorial };
+// DELETE /api/problems/:slug  (admin) — remove a problem.
+const deleteProblem = async (req, res) => {
+    try {
+        if (req.user?.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+        const r = await Problem.findOneAndDelete({ slug: req.params.slug });
+        if (!r) return res.status(404).json({ error: 'Problem not found' });
+        res.json({ message: 'Problem deleted', slug: req.params.slug });
+    } catch (err) {
+        res.status(500).json({ error: 'Delete failed' });
+    }
+};
+
+module.exports = { getProblems, getProblem, createProblem, getRandomProblem, generateEditorial, deleteProblem };

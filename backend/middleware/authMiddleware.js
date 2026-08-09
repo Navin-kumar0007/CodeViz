@@ -24,22 +24,18 @@ const protect = async (req, res, next) => {
     }
 };
 
-// Instructor only middleware
-const instructorOnly = (req, res, next) => {
-    if (req.user && req.user.role === 'instructor') {
-        next();
-    } else {
-        res.status(403).json({ message: 'Not authorized, instructor access only' });
-    }
+// Role hierarchy — higher ranks include the powers of lower ones.
+const ROLE_RANK = { student: 1, instructor: 2, admin: 3 };
+const rankOf = (role) => ROLE_RANK[role] || 0;
+
+// requireRole('instructor') — passes for that role AND anything above it.
+// So an admin satisfies instructorOnly (fixes the "admin blocked" bug).
+const requireRole = (minRole) => (req, res, next) => {
+    if (req.user && rankOf(req.user.role) >= rankOf(minRole)) return next();
+    res.status(403).json({ message: `Not authorized — ${minRole} access required` });
 };
 
-// Admin only middleware
-const adminOnly = (req, res, next) => {
-    if (req.user && req.user.role === 'admin') {
-        next();
-    } else {
-        res.status(403).json({ message: 'Not authorized, admin access only' });
-    }
-};
+const instructorOnly = requireRole('instructor'); // admin also passes
+const adminOnly = requireRole('admin');
 
-module.exports = { protect, instructorOnly, adminOnly };
+module.exports = { protect, requireRole, instructorOnly, adminOnly, ROLE_RANK };

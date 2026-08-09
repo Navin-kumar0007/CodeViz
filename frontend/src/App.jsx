@@ -58,15 +58,27 @@ const EmbedPage = lazy(() => import('./pages/EmbedPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const Mentor = lazy(() => import('./pages/Mentor'));
+const AdminContent = lazy(() => import('./pages/AdminContent'));
+const Certificates = lazy(() => import('./pages/Certificates'));
+const VerifyCertificate = lazy(() => import('./pages/VerifyCertificate'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Support = lazy(() => import('./pages/Support'));
 const Privacy = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Privacy })));
 const Terms = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Terms })));
 
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
-  const user = localStorage.getItem('userInfo');
-  return user ? children : <Navigate to="/login" />;
+const ROLE_RANK = { student: 1, instructor: 2, admin: 3 };
+
+// Gate by login, and optionally by a minimum role (admin outranks instructor).
+const ProtectedRoute = ({ children, minRole }) => {
+  const raw = localStorage.getItem('userInfo');
+  if (!raw) return <Navigate to="/login" />;
+  if (minRole) {
+    let role = 'student';
+    try { role = JSON.parse(raw).role || 'student'; } catch { /* default student */ }
+    if ((ROLE_RANK[role] || 0) < (ROLE_RANK[minRole] || 99)) return <Navigate to="/" replace />;
+  }
+  return children;
 };
 
 import GlobalBackground from './components/Layout/GlobalBackground';
@@ -78,7 +90,8 @@ const AppLayout = ({ children }) => {
   const isSnippet = location.pathname.startsWith('/snippet/');
   const isShare = location.pathname.startsWith('/share/') || location.pathname.startsWith('/embed/');
   const isPublicProfile = location.pathname.startsWith('/u/');
-  const isPublic = publicPaths.includes(location.pathname) || isSnippet || isShare || isPublicProfile;
+  const isVerify = location.pathname.startsWith('/verify/');
+  const isPublic = publicPaths.includes(location.pathname) || isSnippet || isShare || isPublicProfile || isVerify;
 
   if (isPublic) return <>{children}</>;
 
@@ -145,6 +158,7 @@ const AnimatedRoutes = () => {
         <Route path="/share/:token" element={<SharePage />} />
         <Route path="/embed/:token" element={<EmbedPage />} />
         <Route path="/u/:handle" element={<PublicProfile />} />
+        <Route path="/verify/:credentialId" element={<VerifyCertificate />} />
         <Route path="/classroom/join/:code" element={<ClassroomJoinHandler />} />
 
         {/* Protected Routes */}
@@ -154,8 +168,9 @@ const AnimatedRoutes = () => {
         <Route path="/quiz-creator" element={<ProtectedRoute><QuizCreator /></ProtectedRoute>} />
         <Route path="/classroom" element={<ProtectedRoute><Classroom /></ProtectedRoute>} />
         <Route path="/room" element={<ProtectedRoute><Room /></ProtectedRoute>} />
-        <Route path="/instructor" element={<ProtectedRoute><InstructorDashboard /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+        <Route path="/instructor" element={<ProtectedRoute minRole="instructor"><InstructorDashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute minRole="admin"><AdminPanel /></ProtectedRoute>} />
+        <Route path="/admin/content" element={<ProtectedRoute minRole="admin"><AdminContent /></ProtectedRoute>} />
         <Route path="/daily-challenge" element={<ProtectedRoute><DailyChallenge /></ProtectedRoute>} />
         <Route path="/roadmap" element={<ProtectedRoute><Roadmap /></ProtectedRoute>} />
         <Route path="/concept-map" element={<ProtectedRoute><ConceptMap /></ProtectedRoute>} />
@@ -164,8 +179,8 @@ const AnimatedRoutes = () => {
         <Route path="/peer-review" element={<ProtectedRoute><PeerReview /></ProtectedRoute>} />
         <Route path="/test-lab" element={<ProtectedRoute><TestLab /></ProtectedRoute>} />
         <Route path="/translator" element={<ProtectedRoute><Translator /></ProtectedRoute>} />
-        <Route path="/campus" element={<ProtectedRoute><CampusDashboard /></ProtectedRoute>} />
-        <Route path="/campus/:id" element={<ProtectedRoute><ClassroomDetails /></ProtectedRoute>} />
+        <Route path="/campus" element={<ProtectedRoute minRole="instructor"><CampusDashboard /></ProtectedRoute>} />
+        <Route path="/campus/:id" element={<ProtectedRoute minRole="instructor"><ClassroomDetails /></ProtectedRoute>} />
         <Route path="/interview-prep" element={<ProtectedRoute><InterviewPrep /></ProtectedRoute>} />
         <Route path="/interview-dashboard" element={<ProtectedRoute><InterviewDashboard /></ProtectedRoute>} />
         <Route path="/live-interview/:sessionId" element={<ProtectedRoute><LiveInterview /></ProtectedRoute>} />
@@ -181,6 +196,7 @@ const AnimatedRoutes = () => {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
         <Route path="/mentor" element={<ProtectedRoute><Mentor /></ProtectedRoute>} />
+        <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   );
