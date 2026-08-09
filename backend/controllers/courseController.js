@@ -195,6 +195,16 @@ const generateLessonVisual = async (req, res) => {
   }
 };
 
+// GET /api/courses/admin/all  (admin) — every course incl. unpublished, meta only.
+const adminListCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({}).select('slug title category published lessons.lessonId').sort({ order: 1 });
+    res.json(courses.map((c) => ({ slug: c.slug, title: c.title, category: c.category, published: c.published, lessonCount: c.lessons.length })));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // PATCH /api/courses/:slug  (admin) — publish/unpublish.
 const setPublished = async (req, res) => {
   try {
@@ -217,4 +227,4 @@ const deleteCourse = async (req, res) => {
   }
 };
 
-module.exports = { listCourses, getCourse, listCourseMeta, gradeQuiz, completeLesson, generateCourse, generateLessonVisual, setPublished, deleteCourse };
+module.exports = { listCourses, getCourse, listCourseMeta, gradeQuiz, completeLesson, generateCourse, generateLessonVisual, setPublished, deleteCourse, adminListCourses };

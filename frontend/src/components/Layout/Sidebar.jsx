@@ -63,6 +63,7 @@ const navGroups = [
     items: [
       { path: '/instructor', Icon: UserCog, label: 'Instructor', minRole: 'instructor' },
       { path: '/admin', Icon: Shield, label: 'Admin', minRole: 'admin' },
+      { path: '/admin/content', Icon: PencilRuler, label: 'Content', minRole: 'admin' },
     ],
   },
 ];

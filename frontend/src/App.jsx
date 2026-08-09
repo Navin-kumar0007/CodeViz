@@ -58,6 +58,7 @@ const EmbedPage = lazy(() => import('./pages/EmbedPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const Mentor = lazy(() => import('./pages/Mentor'));
+const AdminContent = lazy(() => import('./pages/AdminContent'));
 const Certificates = lazy(() => import('./pages/Certificates'));
 const VerifyCertificate = lazy(() => import('./pages/VerifyCertificate'));
 const Contact = lazy(() => import('./pages/Contact'));
@@ -169,6 +170,7 @@ const AnimatedRoutes = () => {
         <Route path="/room" element={<ProtectedRoute><Room /></ProtectedRoute>} />
         <Route path="/instructor" element={<ProtectedRoute minRole="instructor"><InstructorDashboard /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute minRole="admin"><AdminPanel /></ProtectedRoute>} />
+        <Route path="/admin/content" element={<ProtectedRoute minRole="admin"><AdminContent /></ProtectedRoute>} />
         <Route path="/daily-challenge" element={<ProtectedRoute><DailyChallenge /></ProtectedRoute>} />
         <Route path="/roadmap" element={<ProtectedRoute><Roadmap /></ProtectedRoute>} />
         <Route path="/concept-map" element={<ProtectedRoute><ConceptMap /></ProtectedRoute>} />
