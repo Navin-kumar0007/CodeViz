@@ -19,6 +19,13 @@ const LiveInterview = () => {
     const user = JSON.parse(localStorage.getItem('userInfo'));
     const authHeaders = useMemo(() => ({ headers: { Authorization: `Bearer ${user?.token}` } }), [user?.token]);
 
+    const TOTAL = 45 * 60; // 45-minute round
+    const [remaining, setRemaining] = useState(TOTAL);
+    const [msgs, setMsgs] = useState([]);
+    const [asking, setAsking] = useState(false);
+    const mmss = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
+    const lowTime = remaining <= 300;
+
     const fetchSession = useCallback(async () => {
         try {
             // In a real app, this would be a public or invite-token-protected route
@@ -65,6 +72,35 @@ const LiveInterview = () => {
         }
     };
 
+    // AI interviewer turn — greeting / hint / probing question.
+    const askInterviewer = useCallback(async (kind) => {
+        setAsking(true);
+        try {
+            const { data } = await axios.post(`${API_BASE}/api/interview/${sessionId}/interviewer`,
+                { code, language: 'python', kind, problemTitle: 'Binary Search Implementation' }, authHeaders);
+            setMsgs((m) => [...m, { role: 'interviewer', text: data.message }]);
+        } catch { /* ignore */ }
+        setAsking(false);
+    }, [sessionId, code, authHeaders]);
+
+    // Greeting once on mount.
+    useEffect(() => {
+        askInterviewer('greet');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Real countdown — auto-submits when it hits zero.
+    useEffect(() => {
+        const id = setInterval(() => {
+            setRemaining((r) => {
+                if (r <= 1) { clearInterval(id); submitSession(); return 0; }
+                return r - 1;
+            });
+        }, 1000);
+        return () => clearInterval(id);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const runCode = async () => {
         setIsLoading(true);
         recordStruggle('execution');
@@ -87,7 +123,7 @@ const LiveInterview = () => {
     return (
         <div style={S.container}>
             <header style={S.header}>
-                <div style={S.timer}>⏱ 45:00 REMAINING <span style={{fontSize:'10px', color:'var(--accent-red)', marginLeft:'10px'}}>🔴 REC</span></div>
+                <div style={{ ...S.timer, color: lowTime ? '#ef4444' : 'var(--cz-accent)' }}>⏱ {mmss} REMAINING <span style={{fontSize:'10px', color:'#ef4444', marginLeft:'10px'}}>🔴 REC</span></div>
                 <div style={S.title}>CODE_VIZ <span style={{color:'var(--text-muted)'}}>{'//'} LIVE_ASSESSMENT</span></div>
                 <button onClick={submitSession} className="btn-primary" style={S.submitBtn}>[ SUBMIT_SESSION ]</button>
             </header>
@@ -96,6 +132,22 @@ const LiveInterview = () => {
                 <div style={S.problemPane}>
                     <h2 style={S.probTitle}>Binary Search Implementation</h2>
                     <p style={S.probDesc}>Implement a function that performs a binary search on a sorted array. Return the index of the target or -1 if not found.</p>
+
+                    {/* 🎙️ AI Interviewer */}
+                    <div style={S.interviewer}>
+                        <div style={S.interviewerHead}>🎙️ Interviewer</div>
+                        <div style={S.chat}>
+                            {msgs.length === 0 && <div style={S.chatMuted}>Your interviewer will speak here…</div>}
+                            {msgs.map((m, i) => (
+                                <div key={i} style={S.bubble}>{m.text}</div>
+                            ))}
+                            {asking && <div style={S.chatMuted}>…thinking</div>}
+                        </div>
+                        <div style={S.interviewerBtns}>
+                            <button onClick={() => askInterviewer('hint')} disabled={asking} style={S.iBtn}>💡 Ask for a hint</button>
+                            <button onClick={() => askInterviewer('probe')} disabled={asking} style={S.iBtn}>🗣 Explain my approach</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div style={S.editorPane}>
@@ -145,7 +197,14 @@ const S = {
     editorPane: { width: '40%', display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-color)', background: '#0a0a0a' },
     editorFooter: { padding: '12px 24px', background: 'var(--bg-app)', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)' },
     runBtn: { padding: '8px 20px', fontSize: '11px', fontFamily: 'var(--font-code)' },
-    visualizerPane: { width: '35%', overflow: 'hidden', background: 'var(--bg-surface)' }
+    visualizerPane: { width: '35%', overflow: 'hidden', background: 'var(--bg-surface)' },
+    interviewer: { marginTop: 24, borderTop: '1px solid var(--cz-line)', paddingTop: 16 },
+    interviewerHead: { fontSize: 13, fontWeight: 800, color: 'var(--cz-accent)', marginBottom: 10 },
+    chat: { display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 260, overflowY: 'auto', marginBottom: 12 },
+    chatMuted: { fontSize: 12, color: 'var(--cz-faint)', fontStyle: 'italic' },
+    bubble: { fontSize: 13, lineHeight: 1.5, color: 'var(--cz-text)', background: 'var(--cz-elevated)', border: '1px solid var(--cz-line)', borderRadius: 10, padding: '9px 12px' },
+    interviewerBtns: { display: 'flex', flexDirection: 'column', gap: 8 },
+    iBtn: { padding: '8px 12px', fontSize: 12, fontWeight: 700, textAlign: 'left', cursor: 'pointer', borderRadius: 9, border: '1px solid var(--cz-line)', background: 'transparent', color: 'var(--cz-text)', fontFamily: 'inherit' }
 };
 
 export default LiveInterview;

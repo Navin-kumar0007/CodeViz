@@ -9,7 +9,8 @@ const {
     endSession,
     getHistory,
     getStats,
-    saveSessionReplay
+    saveSessionReplay,
+    interviewerTurn
 } = require('../controllers/interviewController');
 
 // All routes require authentication
@@ -22,6 +23,7 @@ router.post('/submit/:sessionId', submitSolution);
 router.post('/record-struggle/:sessionId', recordStruggle); // 🔥 New: Track micro-metrics
 router.post('/session/:sessionId/replay', saveSessionReplay); // 🔥 New: Save full Proof-of-Work Replay
 router.post('/end/:sessionId', endSession);
+router.post('/:sessionId/interviewer', interviewerTurn); // 🎙️ AI interviewer turn
 
 // History & analytics
 router.get('/history', getHistory);
