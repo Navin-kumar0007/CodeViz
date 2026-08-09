@@ -1,4 +1,4 @@
-const { hasFeature, consumeUsage } = require('../services/entitlementService');
+const { hasFeature, consumeUsage, STAFF_ROLES } = require('../services/entitlementService');
 
 /**
  * Gate a route behind a plan feature. Usage: router.post('/x', protect,
@@ -9,6 +9,7 @@ function requireFeature(feature) {
   return async (req, res, next) => {
     try {
       if (!req.user) return res.status(401).json({ message: 'Not authenticated' });
+      if (STAFF_ROLES.has(req.user.role)) return next(); // staff bypass plan gates
       if (await hasFeature(req.user._id, feature)) return next();
       return res.status(402).json({
         error: 'upgrade_required',
@@ -29,6 +30,7 @@ function meterUsage(field) {
   return async (req, res, next) => {
     try {
       if (!req.user) return res.status(401).json({ message: 'Not authenticated' });
+      if (STAFF_ROLES.has(req.user.role)) return next(); // staff have no usage limits
       const { allowed, used, limit } = await consumeUsage(req.user._id, field);
       res.set('X-Usage-Used', String(used));
       res.set('X-Usage-Limit', String(limit));

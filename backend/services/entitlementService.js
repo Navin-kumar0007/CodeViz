@@ -1,6 +1,11 @@
 const Subscription = require('../models/Subscription');
 const UsageMeter = require('../models/UsageMeter');
-const { getPlan, DEFAULT_PLAN } = require('../config/plans');
+const { getPlan, DEFAULT_PLAN, PLANS } = require('../config/plans');
+
+// Staff (instructor/admin) are superusers: every feature, no daily limits.
+const STAFF_ROLES = new Set(['admin', 'instructor']);
+const ALL_FEATURES = [...new Set(Object.values(PLANS).flatMap((p) => p.features))];
+const UNLIMITED = 1000000;
 
 /**
  * Resolve a user's active plan id. A subscription counts as entitled only when
@@ -14,7 +19,15 @@ async function getActivePlanId(userId) {
 }
 
 /** Full entitlement snapshot: plan, features, limits, and today's usage. */
-async function getEntitlements(userId) {
+async function getEntitlements(userId, role) {
+  if (STAFF_ROLES.has(role)) {
+    return {
+      plan: 'staff', planName: 'Staff — unlimited', staff: true,
+      features: ALL_FEATURES,
+      limits: { executionsPerDay: UNLIMITED, aiCallsPerDay: UNLIMITED, seats: UNLIMITED },
+      usage: { executions: 0, aiCalls: 0 },
+    };
+  }
   const planId = await getActivePlanId(userId);
   const plan = getPlan(planId);
   const usage = await UsageMeter.findOne({ user: userId, day: UsageMeter.today() }).lean();
@@ -60,4 +73,4 @@ async function consumeUsage(userId, field) {
   return { allowed: false, used: existing[field], limit };
 }
 
-module.exports = { getActivePlanId, getEntitlements, hasFeature, consumeUsage };
+module.exports = { getActivePlanId, getEntitlements, hasFeature, consumeUsage, STAFF_ROLES };

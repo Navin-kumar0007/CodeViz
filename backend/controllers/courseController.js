@@ -195,4 +195,26 @@ const generateLessonVisual = async (req, res) => {
   }
 };
 
-module.exports = { listCourses, getCourse, listCourseMeta, gradeQuiz, completeLesson, generateCourse, generateLessonVisual };
+// PATCH /api/courses/:slug  (admin) — publish/unpublish.
+const setPublished = async (req, res) => {
+  try {
+    const course = await Course.findOneAndUpdate({ slug: req.params.slug }, { published: !!req.body.published }, { new: true });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    res.json({ slug: course.slug, published: course.published });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// DELETE /api/courses/:slug  (admin).
+const deleteCourse = async (req, res) => {
+  try {
+    const r = await Course.findOneAndDelete({ slug: req.params.slug });
+    if (!r) return res.status(404).json({ message: 'Course not found' });
+    res.json({ message: 'Course deleted', slug: req.params.slug });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { listCourses, getCourse, listCourseMeta, gradeQuiz, completeLesson, generateCourse, generateLessonVisual, setPublished, deleteCourse };

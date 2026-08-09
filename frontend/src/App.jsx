@@ -66,9 +66,18 @@ const Privacy = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Pri
 const Terms = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Terms })));
 
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
-  const user = localStorage.getItem('userInfo');
-  return user ? children : <Navigate to="/login" />;
+const ROLE_RANK = { student: 1, instructor: 2, admin: 3 };
+
+// Gate by login, and optionally by a minimum role (admin outranks instructor).
+const ProtectedRoute = ({ children, minRole }) => {
+  const raw = localStorage.getItem('userInfo');
+  if (!raw) return <Navigate to="/login" />;
+  if (minRole) {
+    let role = 'student';
+    try { role = JSON.parse(raw).role || 'student'; } catch { /* default student */ }
+    if ((ROLE_RANK[role] || 0) < (ROLE_RANK[minRole] || 99)) return <Navigate to="/" replace />;
+  }
+  return children;
 };
 
 import GlobalBackground from './components/Layout/GlobalBackground';
@@ -158,8 +167,8 @@ const AnimatedRoutes = () => {
         <Route path="/quiz-creator" element={<ProtectedRoute><QuizCreator /></ProtectedRoute>} />
         <Route path="/classroom" element={<ProtectedRoute><Classroom /></ProtectedRoute>} />
         <Route path="/room" element={<ProtectedRoute><Room /></ProtectedRoute>} />
-        <Route path="/instructor" element={<ProtectedRoute><InstructorDashboard /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+        <Route path="/instructor" element={<ProtectedRoute minRole="instructor"><InstructorDashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute minRole="admin"><AdminPanel /></ProtectedRoute>} />
         <Route path="/daily-challenge" element={<ProtectedRoute><DailyChallenge /></ProtectedRoute>} />
         <Route path="/roadmap" element={<ProtectedRoute><Roadmap /></ProtectedRoute>} />
         <Route path="/concept-map" element={<ProtectedRoute><ConceptMap /></ProtectedRoute>} />
@@ -168,8 +177,8 @@ const AnimatedRoutes = () => {
         <Route path="/peer-review" element={<ProtectedRoute><PeerReview /></ProtectedRoute>} />
         <Route path="/test-lab" element={<ProtectedRoute><TestLab /></ProtectedRoute>} />
         <Route path="/translator" element={<ProtectedRoute><Translator /></ProtectedRoute>} />
-        <Route path="/campus" element={<ProtectedRoute><CampusDashboard /></ProtectedRoute>} />
-        <Route path="/campus/:id" element={<ProtectedRoute><ClassroomDetails /></ProtectedRoute>} />
+        <Route path="/campus" element={<ProtectedRoute minRole="instructor"><CampusDashboard /></ProtectedRoute>} />
+        <Route path="/campus/:id" element={<ProtectedRoute minRole="instructor"><ClassroomDetails /></ProtectedRoute>} />
         <Route path="/interview-prep" element={<ProtectedRoute><InterviewPrep /></ProtectedRoute>} />
         <Route path="/interview-dashboard" element={<ProtectedRoute><InterviewDashboard /></ProtectedRoute>} />
         <Route path="/live-interview/:sessionId" element={<ProtectedRoute><LiveInterview /></ProtectedRoute>} />

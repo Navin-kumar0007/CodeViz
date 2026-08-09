@@ -7,7 +7,7 @@ const FRONTEND = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 /** GET /api/billing/entitlements — current plan, features, limits, usage. */
 const entitlements = async (req, res) => {
-  const data = await getEntitlements(req.user._id);
+  const data = await getEntitlements(req.user._id, req.user.role);
   res.json({ ...data, gatewayConfigured: razorpay.isConfigured(), gateway: 'razorpay', plans: publicPlans() });
 };
 
@@ -125,7 +125,7 @@ const devSetPlan = async (req, res) => {
     { user: req.user._id, plan, status: plan === 'free' ? 'none' : 'active' },
     { upsert: true }
   );
-  const data = await getEntitlements(req.user._id);
+  const data = await getEntitlements(req.user._id, req.user.role);
   res.json({ ok: true, ...data });
 };
 

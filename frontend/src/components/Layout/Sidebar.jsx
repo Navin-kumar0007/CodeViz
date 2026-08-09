@@ -4,8 +4,10 @@ import {
   LayoutDashboard, Code2, ListChecks, GraduationCap, Brain, Network, GitBranch,
   History, Swords, School, Building2, MessagesSquare, Users, ScanSearch,
   FlaskConical, Languages, PencilRuler, Flag, Target, Video, BarChart3, Flame,
-  Home, Hexagon, Bot,
+  Home, Hexagon, Bot, Shield, UserCog,
 } from 'lucide-react';
+
+const ROLE_RANK = { student: 1, instructor: 2, admin: 3 };
 
 const navGroups = [
   {
@@ -31,7 +33,7 @@ const navGroups = [
     items: [
       { path: '/room', Icon: Swords, label: 'Battle Room' },
       { path: '/classroom', Icon: School, label: 'Classroom' },
-      { path: '/campus', Icon: Building2, label: 'Campus' },
+      { path: '/campus', Icon: Building2, label: 'Campus', minRole: 'instructor' },
       { path: '/forum', Icon: MessagesSquare, label: 'Forum' },
       { path: '/peer-review', Icon: Users, label: 'Peer Review' },
     ],
@@ -54,6 +56,13 @@ const navGroups = [
       { path: '/video-lessons', Icon: Video, label: 'Video Lessons' },
       { path: '/progress', Icon: BarChart3, label: 'Progress' },
       { path: '/daily-challenge', Icon: Flame, label: 'Daily Challenge' },
+    ],
+  },
+  {
+    label: 'Staff',
+    items: [
+      { path: '/instructor', Icon: UserCog, label: 'Instructor', minRole: 'instructor' },
+      { path: '/admin', Icon: Shield, label: 'Admin', minRole: 'admin' },
     ],
   },
 ];
@@ -150,7 +159,12 @@ const Sidebar = () => {
 
       {/* Nav */}
       <div className="cz-sb-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: expanded ? '10px 10px' : '10px 7px', scrollbarWidth: 'none' }}>
-        {navGroups.map((group) => (
+        {navGroups.map((group) => {
+          // Hide items (and empty groups) the user's role can't access.
+          const myRank = ROLE_RANK[user?.role] || 1;
+          const items = group.items.filter((i) => !i.minRole || myRank >= (ROLE_RANK[i.minRole] || 99));
+          if (items.length === 0) return null;
+          return (
           <div key={group.label} style={{ marginBottom: '4px' }}>
             <div style={{
               fontSize: '9px', fontWeight: 700, letterSpacing: '1.5px', color: 'var(--cz-faint)',
@@ -159,12 +173,13 @@ const Sidebar = () => {
               padding: expanded ? '10px 12px 5px' : 0, overflow: 'hidden', transition: 'opacity 200ms ease',
             }}>{group.label}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {group.items.map((item) => (
+              {items.map((item) => (
                 <NavItem key={item.path} item={item} active={isActive(item.path)} expanded={expanded} onClick={() => navigate(item.path)} />
               ))}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Bottom */}
