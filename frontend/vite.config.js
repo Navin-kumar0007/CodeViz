@@ -4,6 +4,16 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // Allow Cloudflare / ngrok tunnel hosts so the dev server doesn't reject
+  // requests forwarded from a public tunnel URL during live testing.
+  server: {
+    host: true,
+    allowedHosts: ['.trycloudflare.com', '.ngrok-free.app', '.ngrok.app'],
+  },
+  preview: {
+    host: true,
+    allowedHosts: ['.trycloudflare.com', '.ngrok-free.app', '.ngrok.app'],
+  },
   // Guarantee a single React instance across eager + lazy chunks. Without this,
   // Vite's on-the-fly optimization of lazy-only deps can bind a second React
   // copy -> null hook dispatcher -> "Cannot read properties of null

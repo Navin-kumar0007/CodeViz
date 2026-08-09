@@ -92,10 +92,20 @@ if (process.env.FRONTEND_URL) {
     allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
+// Accept an explicit allow-list, plus any Cloudflare quick-tunnel domain (whose
+// URL changes each run) so local tunnel testing needs no reconfiguration.
+const corsOrigin = (origin, cb) => {
+    if (!origin) return cb(null, true); // curl / same-origin / mobile apps
+    if (allowedOrigins.includes(origin) || /\.trycloudflare\.com$/.test(origin) || /\.ngrok(-free)?\.app$/.test(origin)) {
+        return cb(null, true);
+    }
+    return cb(new Error('Not allowed by CORS'));
+};
+
 // 3. Initialize Socket.io
 const io = new Server(server, {
     cors: {
-        origin: allowedOrigins,
+        origin: corsOrigin,
         methods: ['GET', 'POST'],
         credentials: true
     }
@@ -110,7 +120,7 @@ app.set('io', io);
 
 // 4. Middleware
 app.use(cors({
-    origin: allowedOrigins,
+    origin: corsOrigin,
     credentials: true
 }));
 
