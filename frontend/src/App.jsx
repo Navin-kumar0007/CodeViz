@@ -97,12 +97,13 @@ const AppLayout = ({ children }) => {
 
   return (
     <>
+      <a href="#main" className="skip-link">Skip to content</a>
       <GlobalBackground />
       <div className="app-layout" style={{ background: 'transparent' }}>
         <Sidebar />
         <main className="app-main" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
           <Topnav />
-          <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div id="main" tabIndex={-1} style={{ flex: 1, overflowY: 'auto', outline: 'none' }}>
             {children}
           </div>
         </main>
