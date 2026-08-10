@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+# Keep private/app surfaces out of the index; public marketing + explore stay indexable.
+Disallow: /admin
+Disallow: /instructor
+Disallow: /campus
+Disallow: /profile
+Disallow: /room
+
+Sitemap: /sitemap.xml

@@ -221,6 +221,7 @@ export default function Home() {
             <a href="#features" className="hover:text-text transition-colors no-underline text-inherit">Features</a>
             <a href="#how" className="hover:text-text transition-colors no-underline text-inherit">How it works</a>
             <a href="#languages" className="hover:text-text transition-colors no-underline text-inherit">Languages</a>
+            <button onClick={() => navigate('/explore')} className="hover:text-text transition-colors bg-transparent border-0 cursor-pointer text-inherit text-[14px]">Explore</button>
             <button onClick={() => navigate('/about')} className="hover:text-text transition-colors bg-transparent border-0 cursor-pointer text-inherit text-[14px]">About</button>
           </nav>
           <div className="flex items-center gap-2">

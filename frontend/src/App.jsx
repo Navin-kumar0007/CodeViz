@@ -58,6 +58,8 @@ const EmbedPage = lazy(() => import('./pages/EmbedPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const Mentor = lazy(() => import('./pages/Mentor'));
+const Explore = lazy(() => import('./pages/Explore'));
+const PublicProblem = lazy(() => import('./pages/PublicProblem'));
 const AdminContent = lazy(() => import('./pages/AdminContent'));
 const Certificates = lazy(() => import('./pages/Certificates'));
 const VerifyCertificate = lazy(() => import('./pages/VerifyCertificate'));
@@ -91,7 +93,8 @@ const AppLayout = ({ children }) => {
   const isShare = location.pathname.startsWith('/share/') || location.pathname.startsWith('/embed/');
   const isPublicProfile = location.pathname.startsWith('/u/');
   const isVerify = location.pathname.startsWith('/verify/');
-  const isPublic = publicPaths.includes(location.pathname) || isSnippet || isShare || isPublicProfile || isVerify;
+  const isExplore = location.pathname.startsWith('/explore');
+  const isPublic = publicPaths.includes(location.pathname) || isSnippet || isShare || isPublicProfile || isVerify || isExplore;
 
   if (isPublic) return <>{children}</>;
 
@@ -160,6 +163,8 @@ const AnimatedRoutes = () => {
         <Route path="/embed/:token" element={<EmbedPage />} />
         <Route path="/u/:handle" element={<PublicProfile />} />
         <Route path="/verify/:credentialId" element={<VerifyCertificate />} />
+        <Route path="/explore" element={<Explore />} />
+        <Route path="/explore/:slug" element={<PublicProblem />} />
         <Route path="/classroom/join/:code" element={<ClassroomJoinHandler />} />
 
         {/* Protected Routes */}

@@ -195,6 +195,8 @@ app.use('/api/autograder', autograderRoutes);
 app.use('/api/billing', billingRoutes); // 💳 Billing (entitlements, checkout, portal)
 app.use('/api/share', require('./routes/shareRoutes')); // 🔗 Shareable viz embeds (growth)
 app.use('/api/contact', require('./routes/contactRoutes')); // 📨 Contact form
+app.use('/api/public', require('./routes/publicRoutes')); // 🌐 Unauth SEO reads
+app.get('/sitemap.xml', require('./controllers/publicController').sitemap); // 🗺️ Sitemap
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)
 
