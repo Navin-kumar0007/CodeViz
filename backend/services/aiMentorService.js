@@ -17,7 +17,7 @@ function slugify(title) {
  * them to the Problem bank (marked aiGenerated). Fills the content-depth gap
  * with on-demand, personalised problems. Returns the saved docs.
  */
-async function generateAndSaveProblems({ difficulty = 'medium', count = 1, userId }) {
+async function generateAndSaveProblems({ difficulty = 'medium', count = 1, userId, dedupe = false }) {
   const n = Math.min(Math.max(parseInt(count, 10) || 1, 1), 3);
   const raw = await aiService.generateInterviewProblems(difficulty, n, userId);
   const list = Array.isArray(raw) ? raw : [raw];
@@ -25,6 +25,11 @@ async function generateAndSaveProblems({ difficulty = 'medium', count = 1, userI
   const saved = [];
   for (const p of list) {
     if (!p?.title || !p?.description) continue;
+    // Skip near-duplicate titles when bulk-seeding, so the bank stays varied.
+    if (dedupe) {
+      const exists = await Problem.exists({ title: new RegExp(`^${String(p.title).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+      if (exists) continue;
+    }
     const starter = typeof p.starterCode === 'string' ? { python: p.starterCode } : (p.starterCode || {});
     const testCases = (p.testCases || []).map((tc) => ({
       input: String(tc.input ?? ''),
