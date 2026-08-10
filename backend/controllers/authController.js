@@ -35,6 +35,19 @@ const registerUser = async (req, res) => {
     const user = await User.create({ name: sanitizedName, email, password });
 
     if (user) {
+      // 🔗 Referral attribution — reward both sides if signed up via an invite.
+      try {
+        const ref = (req.body.ref || '').trim();
+        if (ref) {
+          const referrer = await User.findOne({ referralCode: ref });
+          if (referrer && String(referrer._id) !== String(user._id)) {
+            user.referredBy = referrer._id;
+            user.xp = (user.xp || 0) + 15; // welcome bonus for the invitee
+            await user.save();
+            await User.findByIdAndUpdate(referrer._id, { $inc: { referralCount: 1, xp: 40 } });
+          }
+        }
+      } catch { /* referral is best-effort */ }
       // Welcome email — fire-and-forget, never blocks signup.
       try {
         const { sendEmail, welcome } = require('../services/emailService');

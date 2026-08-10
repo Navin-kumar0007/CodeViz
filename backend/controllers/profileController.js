@@ -53,4 +53,16 @@ const setUsername = async (req, res) => {
   res.json({ ok: true, username: raw });
 };
 
-module.exports = { getPublicProfile, setUsername };
+// GET /api/users/referral — my invite code, link, and count.
+const getReferral = async (req, res) => {
+  try {
+    const u = await User.findById(req.user._id).select('referralCode referralCount');
+    if (!u.referralCode) { await u.save(); } // pre-save assigns one for older accounts
+    const base = (process.env.FRONTEND_URL || '').replace(/\/$/, '');
+    res.json({ code: u.referralCode, count: u.referralCount || 0, link: `${base}/signup?ref=${u.referralCode}` });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+module.exports = { getPublicProfile, setUsername, getReferral };

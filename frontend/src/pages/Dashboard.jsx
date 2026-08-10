@@ -11,6 +11,7 @@ import AlgorithmDNA from '../components/Gamification/AlgorithmDNA';
 import SkillTreeWidget from '../components/Gamification/SkillTreeWidget';
 import FocusPlan from '../components/Learning/FocusPlan';
 import OnboardingModal, { shouldOnboard } from '../components/Onboarding/OnboardingModal';
+import InviteCard from '../components/Growth/InviteCard';
 import { Badge, Button } from '../components/ui';
 import { useCountUp } from '../hooks/useCountUp';
 import { getFx } from '../utils/effects';
@@ -184,9 +185,10 @@ const Dashboard = () => {
           </Panel>
         </motion.div>
 
-        {/* Adaptive focus — "it knows what you don't know" */}
-        <motion.div className="mt-4" initial={reduce ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        {/* Adaptive focus + invite */}
+        <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4 items-start" initial={reduce ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <FocusPlan />
+          <InviteCard />
         </motion.div>
 
         {/* Quick launch */}

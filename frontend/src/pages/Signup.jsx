@@ -24,7 +24,7 @@ export default function Signup() {
       const res = await fetch(`${API_BASE}/api/users/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, ref: new URLSearchParams(window.location.search).get('ref') || undefined }),
       });
       const data = await res.json();
       if (res.ok) {
