@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { API as axios } from '../utils/api';
 import Editor from '@monaco-editor/react';
 import { ArrowLeft, Play, Rocket, CheckCircle2, XCircle, Clock, Lightbulb } from 'lucide-react';
@@ -27,6 +27,8 @@ const TABS = [{ id: 'description', label: 'Description' }, { id: 'editorial', la
 export default function ProblemSolve() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const contestSlug = searchParams.get('contest');
   const user = JSON.parse(localStorage.getItem('userInfo'));
   const headers = { Authorization: `Bearer ${user?.token}` };
 
@@ -119,7 +121,7 @@ export default function ProblemSolve() {
         durationMs: Date.now() - t.startAt,
         pasteEvents: t.pasteEvents,
       };
-      const { data } = await axios.post(`${API}/submit`, { problemId: problem._id, language, code, integrity: integrityPayload }, { headers });
+      const { data } = await axios.post(`${API}/submit`, { problemId: problem._id, language, code, integrity: integrityPayload, contestSlug: contestSlug || undefined }, { headers });
       setResult({ type: 'submit', ...data });
       track('problem_submitted', { slug: problem.slug, verdict: data.verdict, language });
       if (data.verdict === 'accepted') { celebrate({ xp: data.xpEarned || 50 }); track('problem_solved', { slug: problem.slug, difficulty: problem.difficulty }); }
@@ -145,6 +147,7 @@ export default function ProblemSolve() {
         <Button variant="ghost" size="sm" onClick={() => navigate('/problems')}><ArrowLeft size={15} /> Problems</Button>
         <span className="text-[15px] font-bold text-text truncate">{problem.order}. {problem.title}</span>
         <DifficultyBadge level={problem.difficulty} />
+        {contestSlug && <button onClick={() => navigate(`/contests/${contestSlug}`)} className="text-[11px] font-bold text-accent bg-accent/12 border border-accent/25 rounded-full px-2.5 py-1 cursor-pointer">🏆 Contest</button>}
         <div className="flex-1" />
         <div className="w-40">
           <Select value={language} onChange={(e) => handleLanguageChange(e.target.value)} size="sm">

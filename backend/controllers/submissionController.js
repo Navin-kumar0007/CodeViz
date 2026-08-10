@@ -13,7 +13,7 @@ function cleanIntegrity(raw) {
 
 const submitSolution = async (req, res) => {
     try {
-        const { problemId, language, code } = req.body;
+        const { problemId, language, code, contestSlug } = req.body;
         const integrity = cleanIntegrity(req.body.integrity);
         const userId = req.user._id;
 
@@ -93,6 +93,12 @@ const submitSolution = async (req, res) => {
                 const xpReward = problem.difficulty === 'easy' ? 10 : problem.difficulty === 'medium' ? 25 : 50;
                 await User.findByIdAndUpdate(userId, { $inc: { xp: xpReward } });
             } catch (e) { /* ignore XP errors */ }
+            // Contest scoring (no-op unless this was submitted within a live contest).
+            if (contestSlug) {
+                try {
+                    await require('../services/contestService').recordSolve({ userId, contestSlug, problem });
+                } catch (e) { /* contest scoring is best-effort */ }
+            }
         }
 
         res.json({

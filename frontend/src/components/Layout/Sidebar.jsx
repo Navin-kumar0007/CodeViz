@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Code2, ListChecks, GraduationCap, Brain, Network, GitBranch,
   History, Swords, School, Building2, MessagesSquare, Users, ScanSearch,
   FlaskConical, Languages, PencilRuler, Flag, Target, Video, BarChart3, Flame,
-  Home, Hexagon, Bot, Shield, UserCog,
+  Home, Hexagon, Bot, Shield, UserCog, Trophy,
 } from 'lucide-react';
 
 const ROLE_RANK = { student: 1, instructor: 2, admin: 3 };
@@ -56,6 +56,7 @@ const navGroups = [
       { path: '/video-lessons', Icon: Video, label: 'Video Lessons' },
       { path: '/progress', Icon: BarChart3, label: 'Progress' },
       { path: '/daily-challenge', Icon: Flame, label: 'Daily Challenge' },
+      { path: '/contests', Icon: Trophy, label: 'Contests' },
     ],
   },
   {
