@@ -11,6 +11,7 @@ import Recommendations from '../components/Learning/Recommendations';
 import { COURSES, getPathProgress, getTotalProgress } from '../data/courses';
 import { ACHIEVEMENTS, checkAchievements, getAchievement } from '../data/achievements';
 import API from '../utils/api';
+import { track } from '../utils/analytics';
 
 /**
  * Learn.jsx - Premium Structured Learning Page
@@ -149,6 +150,7 @@ const Learn = () => {
         setProgress(newProgress);
         localStorage.setItem('learningProgress', JSON.stringify(newProgress));
 
+        track('lesson_completed', { course: pathId, lesson: lessonId });
         // 🔒 Authoritative completion — server awards XP + streak exactly once,
         // and auto-issues a certificate when the final lesson is done.
         API.post(`/api/courses/${pathId}/lessons/${lessonId}/complete`)

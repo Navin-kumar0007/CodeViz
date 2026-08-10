@@ -35,6 +35,11 @@ const registerUser = async (req, res) => {
     const user = await User.create({ name: sanitizedName, email, password });
 
     if (user) {
+      // Welcome email — fire-and-forget, never blocks signup.
+      try {
+        const { sendEmail, welcome } = require('../services/emailService');
+        sendEmail({ to: user.email, ...welcome({ name: user.name }) });
+      } catch { /* ignore */ }
       const token = generateToken(user._id);
       res.cookie('token', token, {
         httpOnly: true,
@@ -174,31 +179,21 @@ const verify2FA = async (req, res) => {
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
+  // Always respond the same way to avoid leaking which emails are registered.
+  const generic = { message: 'If an account exists for that email, a reset link has been sent.' };
   try {
     const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: 'There is no user with that email' });
+    if (user) {
+      const resetToken = user.getResetPasswordToken();
+      await user.save({ validateBeforeSave: false });
+      const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+      const { sendEmail, passwordReset } = require('../services/emailService');
+      await sendEmail({ to: user.email, ...passwordReset({ name: user.name, resetUrl }) });
     }
-
-    // Get reset token
-    const resetToken = user.getResetPasswordToken();
-
-    await user.save({ validateBeforeSave: false });
-
-    // Create reset url
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
-
-    // Normally you would send an email here. We simulate for development:
-    console.log(`\n\n===========================================`);
-    console.log(`SECURE PASSWORD RECOVERY INITIATED`);
-    console.log(`To: ${user.email}`);
-    console.log(`Link: ${resetUrl}`);
-    console.log(`===========================================\n\n`);
-
-    res.status(200).json({ message: 'Email sent (check server terminal logs for the link during development)' });
+    res.status(200).json(generic);
   } catch (error) {
-    res.status(500).json({ message: 'Email could not be sent' });
+    // Don't reveal internal errors on this endpoint either.
+    res.status(200).json(generic);
   }
 };
 

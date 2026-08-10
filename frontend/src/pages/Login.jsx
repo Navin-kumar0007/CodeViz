@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Input, Button, Spinner } from '../components/ui';
 import API_BASE from '../utils/api';
+import { track, identify } from '../utils/analytics';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -27,6 +28,8 @@ export default function Login() {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem('userInfo', JSON.stringify(data));
+        identify(data._id, { email: data.email, role: data.role });
+        track('logged_in');
         const pendingCode = sessionStorage.getItem('pendingClassroomCode');
         if (pendingCode) {
           sessionStorage.removeItem('pendingClassroomCode');

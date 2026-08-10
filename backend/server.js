@@ -41,6 +41,22 @@ const morgan = require('morgan');
 const logger = require('./utils/logger'); // 🪵 Import Logger
 const cookieParser = require('cookie-parser');
 
+// 🔒 Production config guard — refuse to boot with insecure/missing secrets so a
+// misconfigured prod deploy fails loudly instead of running wide open.
+if (process.env.NODE_ENV === 'production') {
+    const problems = [];
+    const secret = process.env.JWT_SECRET || '';
+    if (!secret || secret.length < 24 || /^(secret|changeme|dev|test|codeviz)/i.test(secret)) {
+        problems.push('JWT_SECRET must be set to a long, random value (>= 24 chars).');
+    }
+    if (!process.env.MONGO_URI) problems.push('MONGO_URI must be set (use MongoDB Atlas, not localhost).');
+    if (!process.env.FRONTEND_URL) problems.push('FRONTEND_URL should be set for CORS + email links.');
+    if (problems.length) {
+        console.error('\n❌ Refusing to start in production — fix these:\n  - ' + problems.join('\n  - ') + '\n');
+        process.exit(1);
+    }
+}
+
 // 1. Connect to Database
 connectDB();
 
@@ -49,6 +65,20 @@ const { connectRedis } = require('./config/redis');
 connectRedis();
 
 const app = express();
+
+// 🛰️ Error monitoring (Sentry) — no-op unless SENTRY_DSN is set.
+let Sentry = null;
+if (process.env.SENTRY_DSN) {
+    try {
+        Sentry = require('@sentry/node');
+        Sentry.init({
+            dsn: process.env.SENTRY_DSN,
+            environment: process.env.NODE_ENV || 'development',
+            tracesSampleRate: 0.1,
+        });
+        logger.info('🛰️  Sentry error monitoring enabled');
+    } catch (e) { console.warn('Sentry init skipped:', e.message); Sentry = null; }
+}
 
 // 🛡️ SECURITY MIDDLEWARE
 app.use(helmet({
@@ -168,14 +198,37 @@ app.use('/api/contact', require('./routes/contactRoutes')); // 📨 Contact form
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)
 
-// 6. Test Route
+// 6. Health check (for uptime monitors + load balancers)
+const mongoose = require('mongoose');
+app.get('/health', (req, res) => {
+    const dbUp = mongoose.connection.readyState === 1;
+    res.status(dbUp ? 200 : 503).json({
+        status: dbUp ? 'ok' : 'degraded',
+        db: dbUp ? 'connected' : 'disconnected',
+        uptime: Math.floor(process.uptime()),
+        timestamp: new Date().toISOString(),
+    });
+});
+
+// Test Route
 app.get('/', (req, res) => {
     res.send('API is running with Socket.io support...');
 });
 
+// Central error handler — report to Sentry (if enabled) and return a safe error.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+    if (Sentry) Sentry.captureException(err);
+    logger.error(err.stack || err.message || String(err));
+    res.status(err.status || 500).json({ message: err.expose ? err.message : 'Server error' });
+});
+
 // 7. Start server
 const PORT = process.env.PORT || 5001;
-server.listen(PORT, '127.0.0.1', () => {
+// Bind to 127.0.0.1 by default (safe on a host behind nginx). Set BIND_HOST=0.0.0.0
+// when the backend runs in a container that nginx reaches over the network.
+const BIND_HOST = process.env.BIND_HOST || '127.0.0.1';
+server.listen(PORT, BIND_HOST, () => {
     logger.info(`🚀 Server running on port ${PORT}`);
     logger.info(`📡 Socket.io ready for connections`);
 });

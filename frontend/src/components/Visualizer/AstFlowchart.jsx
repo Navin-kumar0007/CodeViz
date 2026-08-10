@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 
 mermaid.initialize({
   startOnLoad: false,
+  securityLevel: 'strict', // sanitize labels derived from user code (no injected HTML/scripts)
   theme: 'base',
   look: 'handDrawn', // Phase 10: Sketchy/Whiteboard look
   themeVariables: {

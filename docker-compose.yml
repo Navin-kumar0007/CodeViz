@@ -1,29 +1,50 @@
-version: '3.8'
+# CodeViz — all-in-containers deploy (alternative to the host deploy in DEPLOY.md).
+#
+# IMPORTANT prerequisites on the host BEFORE `docker compose up`:
+#   1. Build the sandbox runner image (used to execute user code):
+#        docker build -t codeviz-runner:latest -f backend/runners/Dockerfile.runner backend/runners
+#   2. Create the shared sandbox run dir (bind-mounted at the SAME path in the
+#      backend container so sibling sandbox containers can mount it):
+#        sudo mkdir -p /opt/codeviz/runs
+#   3. Copy backend/.env.example -> backend/.env and fill it in.
+#   4. Export PUBLIC_URL=https://yourdomain.com (used to build the frontend).
+#
+# Then: docker compose up -d --build
 
 services:
-  # 🔌 Backend Service
+  # 🔌 Backend API (runs on the host Docker daemon to spawn sandbox containers)
   backend:
     build: ./backend
-    ports:
-      - "5001:5001"
+    env_file: ./backend/.env
     environment:
-      - PORT=5001
-      - MONGO_URI=${MONGO_URI} # Takes from host .env
-      - JWT_SECRET=${JWT_SECRET}
-    restart: always
+      - NODE_ENV=production
+      - BIND_HOST=0.0.0.0            # reachable by the web container
+      - EXEC_DIR=/opt/codeviz/runs   # MUST match the host bind-mount path below
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock   # spawn sibling sandbox containers
+      - /opt/codeviz/runs:/opt/codeviz/runs         # same path inside & out (DooD volumes)
+    expose:
+      - "5001"
+    restart: unless-stopped
 
-  # 🎨 Frontend Service
-  frontend:
-    build: ./frontend
+  # 🎨 Frontend (built SPA) + nginx that proxies the API to the backend
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${PUBLIC_URL:-http://localhost}   # same origin; nginx proxies /api
+    volumes:
+      - ./deploy/nginx.frontend.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "5173:80" # Map host 5173 to container 80 (Nginx)
+      - "80:80"
     depends_on:
       - backend
-    restart: always
+    restart: unless-stopped
 
-  # 🧊 Redis Cache
+  # 🧊 Redis (optional cache; the app is graceful if it's absent)
   redis:
     image: redis:alpine
-    ports:
-      - "6379:6379"
-    restart: always
+    restart: unless-stopped
+
+# MongoDB: use MongoDB Atlas (set MONGO_URI in backend/.env). To run Mongo in a
+# container instead, add a `mongo` service + a named volume and point MONGO_URI at it.

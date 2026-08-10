@@ -249,7 +249,7 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
                             >
                                 {step.type === 'text' && (
                                     <p style={styles.textContent}
-                                        dangerouslySetInnerHTML={{ __html: step.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}
+                                        dangerouslySetInnerHTML={{ __html: mdBold(step.content) }}
                                     />
                                 )}
                                 {step.type === 'tip' && (
@@ -342,6 +342,13 @@ const LessonView = ({ lesson, onBack, onComplete, preferredLanguage = 'javascrip
 
 const FONT = "'Inter', system-ui, -apple-system, sans-serif";
 const MONO = "'JetBrains Mono', ui-monospace, Menlo, monospace";
+
+// Escape HTML, then render **bold** only — prevents HTML/script injection from
+// authored/AI-generated lesson content.
+function mdBold(s) {
+    const esc = String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return esc.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+}
 
 const styles = {
     container: {

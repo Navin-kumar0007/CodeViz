@@ -5,6 +5,10 @@ import './index.css'
 import App from './App.jsx'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { API as axios } from './utils/api';
+import { initTelemetry } from './utils/analytics';
+
+// Fire-and-forget: enables analytics + error monitoring only if env keys are set.
+initTelemetry();
 
 // Global Axios Configuration
 axios.defaults.withCredentials = true;

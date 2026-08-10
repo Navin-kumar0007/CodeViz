@@ -76,6 +76,8 @@ function NavItem({ item, active, expanded, onClick }) {
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       title={item.label}
+      aria-label={item.label}
+      aria-current={active ? 'page' : undefined}
       style={{
         position: 'relative', width: '100%', border: 'none', cursor: 'pointer',
         background: active

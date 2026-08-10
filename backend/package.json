@@ -12,6 +12,7 @@
   "type": "commonjs",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@sentry/node": "^10.69.0",
     "acorn": "^8.15.0",
     "astring": "^1.9.0",
     "axios": "^1.13.6",
@@ -27,6 +28,7 @@
     "lru-cache": "^11.2.6",
     "mongoose": "^9.1.2",
     "morgan": "^1.10.1",
+    "nodemailer": "^9.0.5",
     "nodemon": "^3.1.11",
     "razorpay": "^2.9.8",
     "redis": "^5.10.0",
