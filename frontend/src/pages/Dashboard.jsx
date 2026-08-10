@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Trophy, Zap, Flame, CheckCircle2, Code2, GraduationCap, Swords, ListChecks,
   Target, BarChart3, Flag, Search, Map, ArrowRight, ArrowUpRight, Award,
@@ -10,6 +10,7 @@ import XPBar from '../components/Gamification/XPBar';
 import AlgorithmDNA from '../components/Gamification/AlgorithmDNA';
 import SkillTreeWidget from '../components/Gamification/SkillTreeWidget';
 import FocusPlan from '../components/Learning/FocusPlan';
+import OnboardingModal, { shouldOnboard } from '../components/Onboarding/OnboardingModal';
 import { Badge, Button } from '../components/ui';
 import { useCountUp } from '../hooks/useCountUp';
 import { getFx } from '../utils/effects';
@@ -102,6 +103,7 @@ const Dashboard = () => {
   const [gamification, setGamification] = useState(null);
   const [time, setTime] = useState('');
   const [greeting, setGreeting] = useState('');
+  const [onboard, setOnboard] = useState(shouldOnboard);
 
   useEffect(() => { if (!localStorage.getItem('userInfo')) navigate('/login'); }, [navigate]);
 
@@ -240,6 +242,10 @@ const Dashboard = () => {
           ))}
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {onboard && <OnboardingModal onClose={() => setOnboard(false)} />}
+      </AnimatePresence>
     </div>
   );
 };

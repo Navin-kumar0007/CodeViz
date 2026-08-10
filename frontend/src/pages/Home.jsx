@@ -429,26 +429,26 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Testimonials */}
+      {/* Why it's different — honest value/trust markers (no fabricated social proof) */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="text-center mb-10">
-          <span className="text-[12px] font-bold uppercase tracking-[0.16em] text-accent">Loved by learners</span>
-          <h2 className="text-[30px] font-extrabold tracking-tight mt-2 m-0">Where the logic finally clicks</h2>
+          <span className="text-[12px] font-bold uppercase tracking-[0.16em] text-accent">Why it&apos;s different</span>
+          <h2 className="text-[30px] font-extrabold tracking-tight mt-2 m-0">Understanding, not memorization</h2>
         </div>
         <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-5" variants={v(staggerParent)} {...inView}>
           {[
-            ['“Watching the array actually swap made sorting click in five minutes.”', 'Aisha, CS student'],
-            ['“The Socratic tutor nudges instead of spoiling — my students actually think.”', 'Mr. Rao, bootcamp instructor'],
-            ['“Debugger-accurate traces for C++ and Java? Nothing else does this.”', 'Deepak, backend engineer'],
-          ].map(([quote, who]) => (
+            ['Real execution, not canned clips', 'Your code runs in a secure, network-isolated sandbox and a real debugger captures every step — the animation is your program, not a pre-recorded demo.'],
+            ['Watch it, don’t just read it', 'Arrays swap, pointers glide, recursion unfolds. Concepts that take pages to explain click in a single animation.'],
+            ['Free where others paywall', 'Editorials, animated lessons and practice are open — no locked solutions, no drip-fed content.'],
+          ].map(([title, body]) => (
             <motion.div
-              key={who}
+              key={title}
               variants={v(fadeUp)}
               whileHover={reduce ? undefined : { y: -5, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
               className="bg-surface border border-line rounded-2xl p-6 shadow-[var(--cz-shadow-sm)] hover:shadow-[var(--cz-shadow-md)] transition-shadow"
             >
-              <p className="text-[15px] text-text leading-relaxed m-0">{quote}</p>
-              <div className="text-[13px] text-muted mt-4">— {who}</div>
+              <div className="flex items-center gap-2 text-accent mb-2"><Check size={16} strokeWidth={2.5} /><span className="text-[15px] font-bold text-text">{title}</span></div>
+              <p className="text-[14px] text-muted leading-relaxed m-0">{body}</p>
             </motion.div>
           ))}
         </motion.div>
