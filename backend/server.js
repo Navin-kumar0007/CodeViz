@@ -66,6 +66,20 @@ connectRedis();
 
 const app = express();
 
+// 🛰️ Error monitoring (Sentry) — no-op unless SENTRY_DSN is set.
+let Sentry = null;
+if (process.env.SENTRY_DSN) {
+    try {
+        Sentry = require('@sentry/node');
+        Sentry.init({
+            dsn: process.env.SENTRY_DSN,
+            environment: process.env.NODE_ENV || 'development',
+            tracesSampleRate: 0.1,
+        });
+        logger.info('🛰️  Sentry error monitoring enabled');
+    } catch (e) { console.warn('Sentry init skipped:', e.message); Sentry = null; }
+}
+
 // 🛡️ SECURITY MIDDLEWARE
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }, // Required for Vite/localhost fetching
@@ -184,9 +198,29 @@ app.use('/api/contact', require('./routes/contactRoutes')); // 📨 Contact form
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)
 
-// 6. Test Route
+// 6. Health check (for uptime monitors + load balancers)
+const mongoose = require('mongoose');
+app.get('/health', (req, res) => {
+    const dbUp = mongoose.connection.readyState === 1;
+    res.status(dbUp ? 200 : 503).json({
+        status: dbUp ? 'ok' : 'degraded',
+        db: dbUp ? 'connected' : 'disconnected',
+        uptime: Math.floor(process.uptime()),
+        timestamp: new Date().toISOString(),
+    });
+});
+
+// Test Route
 app.get('/', (req, res) => {
     res.send('API is running with Socket.io support...');
+});
+
+// Central error handler — report to Sentry (if enabled) and return a safe error.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+    if (Sentry) Sentry.captureException(err);
+    logger.error(err.stack || err.message || String(err));
+    res.status(err.status || 500).json({ message: err.expose ? err.message : 'Server error' });
 });
 
 // 7. Start server

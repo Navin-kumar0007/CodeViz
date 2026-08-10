@@ -9,6 +9,7 @@ import IntegrityReport from '../components/Integrity/IntegrityReport';
 import DiscussionPanel from '../components/Social/DiscussionPanel';
 import { Button, Select, DifficultyBadge, Badge, Spinner, EmptyState } from '../components/ui';
 import { celebrate } from '../utils/celebrate';
+import { track } from '../utils/analytics';
 
 const API = `${API_BASE}/api/problems`;
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
@@ -120,7 +121,8 @@ export default function ProblemSolve() {
       };
       const { data } = await axios.post(`${API}/submit`, { problemId: problem._id, language, code, integrity: integrityPayload }, { headers });
       setResult({ type: 'submit', ...data });
-      if (data.verdict === 'accepted') celebrate({ xp: data.xpEarned || 50 });
+      track('problem_submitted', { slug: problem.slug, verdict: data.verdict, language });
+      if (data.verdict === 'accepted') { celebrate({ xp: data.xpEarned || 50 }); track('problem_solved', { slug: problem.slug, difficulty: problem.difficulty }); }
       loadSubmissions();
     } catch { setResult({ type: 'submit', verdict: 'runtime_error', testResults: [], totalTests: 0, passedTests: 0 }); }
     setSubmitting(false);
