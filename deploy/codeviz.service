@@ -1,0 +1,30 @@
+# CodeViz backend — systemd unit (host deploy).
+# Runs the Node server on the host so it can use the host Docker daemon for the
+# code-execution sandbox (no docker-in-docker).
+#
+#   sudo cp deploy/codeviz.service /etc/systemd/system/codeviz.service
+#   # edit paths/user below to match your server
+#   sudo systemctl daemon-reload && sudo systemctl enable --now codeviz
+#   sudo systemctl status codeviz   |   journalctl -u codeviz -f
+
+[Unit]
+Description=CodeViz backend
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=codeviz
+Group=docker
+WorkingDirectory=/opt/codeviz/backend
+EnvironmentFile=/opt/codeviz/backend/.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+# hardening
+NoNewPrivileges=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

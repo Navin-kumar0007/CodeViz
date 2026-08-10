@@ -41,6 +41,22 @@ const morgan = require('morgan');
 const logger = require('./utils/logger'); // 🪵 Import Logger
 const cookieParser = require('cookie-parser');
 
+// 🔒 Production config guard — refuse to boot with insecure/missing secrets so a
+// misconfigured prod deploy fails loudly instead of running wide open.
+if (process.env.NODE_ENV === 'production') {
+    const problems = [];
+    const secret = process.env.JWT_SECRET || '';
+    if (!secret || secret.length < 24 || /^(secret|changeme|dev|test|codeviz)/i.test(secret)) {
+        problems.push('JWT_SECRET must be set to a long, random value (>= 24 chars).');
+    }
+    if (!process.env.MONGO_URI) problems.push('MONGO_URI must be set (use MongoDB Atlas, not localhost).');
+    if (!process.env.FRONTEND_URL) problems.push('FRONTEND_URL should be set for CORS + email links.');
+    if (problems.length) {
+        console.error('\n❌ Refusing to start in production — fix these:\n  - ' + problems.join('\n  - ') + '\n');
+        process.exit(1);
+    }
+}
+
 // 1. Connect to Database
 connectDB();
 
@@ -175,7 +191,10 @@ app.get('/', (req, res) => {
 
 // 7. Start server
 const PORT = process.env.PORT || 5001;
-server.listen(PORT, '127.0.0.1', () => {
+// Bind to 127.0.0.1 by default (safe on a host behind nginx). Set BIND_HOST=0.0.0.0
+// when the backend runs in a container that nginx reaches over the network.
+const BIND_HOST = process.env.BIND_HOST || '127.0.0.1';
+server.listen(PORT, BIND_HOST, () => {
     logger.info(`🚀 Server running on port ${PORT}`);
     logger.info(`📡 Socket.io ready for connections`);
 });

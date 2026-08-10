@@ -88,7 +88,12 @@ function _runInSandbox(code, language, input = '', onStream = null) {
         // clash (important for Java's fixed Main.java) and compiled artifacts
         // (binaries, .class, error logs) are cleaned up together.
         const timestamp = Date.now() + '_' + Math.random().toString(36).slice(2);
-        const runDir = path.join(__dirname, '../temp/sandbox', `run_${timestamp}`);
+        // Base dir is configurable via EXEC_DIR. In a containerized deploy this
+        // MUST point at a host path bind-mounted into the backend at the same
+        // absolute path, so sibling sandbox containers (spawned on the host
+        // daemon) can mount it. On a host deploy the default is fine.
+        const sandboxBase = process.env.EXEC_DIR || path.join(__dirname, '../temp/sandbox');
+        const runDir = path.join(sandboxBase, `run_${timestamp}`);
         fs.mkdirSync(runDir, { recursive: true });
 
         const fileName = spec.fileName; // fixed per language (e.g. Main.java, script.cpp)

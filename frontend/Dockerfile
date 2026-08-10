@@ -1,10 +1,14 @@
 # 🏗️ Stage 1: Build
-FROM node:18-alpine as build
+FROM node:20-alpine as build
 WORKDIR /app
+
+# API base URL is baked in at build time (Vite). Pass via build-arg.
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 
 # Install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci || npm install
 
 # Copy source and build
 COPY . .
