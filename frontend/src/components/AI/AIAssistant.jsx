@@ -196,8 +196,11 @@ const AIAssistant = ({ code, language = 'python', error = null }) => {
 
         const lines = text.split('\n');
         return lines.map((line, i) => {
+            // Escape HTML first so AI output can't inject markup/scripts, then
+            // apply our own markdown-lite formatting.
+            const safe = String(line).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             // Bold text: **text**
-            let formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            let formatted = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             // Inline code: `code`
             formatted = formatted.replace(/`([^`]+)`/g, '<code style="background:rgba(13,148,136,0.2);padding:2px 6px;border-radius:4px;font-size:12px;color:#a5b4fc">$1</code>');
             // Bullet points
