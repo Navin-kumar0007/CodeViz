@@ -26,6 +26,7 @@ const userSchema = mongoose.Schema(
       lastActiveDate: { type: Date, default: null }
     },
     xp: { type: Number, default: 0 },
+    reputation: { type: Number, default: 0 }, // community rep from upvotes received
     badges: [{
       id: String,
       earnedAt: { type: Date, default: Date.now }

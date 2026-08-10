@@ -125,6 +125,7 @@ const toggleLike = asyncHandler(async (req, res) => {
     const userId = req.user._id.toString();
     const idx = discussion.likes.findIndex(id => id.toString() === userId);
 
+    const liked = idx < 0;
     if (idx >= 0) {
         discussion.likes.splice(idx, 1); // unlike
     } else {
@@ -132,7 +133,13 @@ const toggleLike = asyncHandler(async (req, res) => {
     }
     await discussion.save();
 
-    res.json({ likes: discussion.likes.length, liked: idx < 0 });
+    // Award/remove reputation for the thread author (not for self-likes).
+    if (discussion.userId.toString() !== userId) {
+        const User = require('../models/User');
+        await User.findByIdAndUpdate(discussion.userId, { $inc: { reputation: liked ? 1 : -1 } });
+    }
+
+    res.json({ likes: discussion.likes.length, liked });
 });
 
 // PUT /api/discussions/:id/reply/:replyIdx/like — Toggle upvote on reply
@@ -153,6 +160,11 @@ const toggleReplyLike = asyncHandler(async (req, res) => {
     const userId = req.user._id.toString();
     if (!reply.likes) reply.likes = [];
     const idx = reply.likes.findIndex(id => id.toString() === userId);
+    const liked = idx < 0;
+    if (reply.userId && reply.userId.toString() !== userId) {
+        const User = require('../models/User');
+        await User.findByIdAndUpdate(reply.userId, { $inc: { reputation: liked ? 1 : -1 } });
+    }
 
     if (idx >= 0) {
         reply.likes.splice(idx, 1);
