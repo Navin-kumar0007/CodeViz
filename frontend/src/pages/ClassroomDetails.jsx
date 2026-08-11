@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { API as axios } from '../utils/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
@@ -32,6 +32,9 @@ const ClassroomDetails = () => {
     const [solveCode, setSolveCode] = useState('');
     const [solveResult, setSolveResult] = useState(null);
     const [isAutograding, setIsAutograding] = useState(false);
+    // Authorship telemetry so the instructor's gradebook can flag pasted-in work.
+    // Heuristic: a large single-change insert is treated as a paste.
+    const integrityRef = useRef({ typed: 0, pasted: 0, keystrokes: 0, startAt: Date.now(), lastLen: 0 });
 
     const headers = useMemo(() => {
         return { Authorization: `Bearer ${user?.token}` };
@@ -83,16 +86,31 @@ const ClassroomDetails = () => {
 
     const openSolveModal = (assignment) => {
         setActiveAssignment(assignment);
-        setSolveCode(assignment.starterCode || '');
+        const starter = assignment.starterCode || '';
+        setSolveCode(starter);
         setSolveResult(null);
         setShowSolveModal(true);
+        integrityRef.current = { typed: 0, pasted: 0, keystrokes: 0, startAt: Date.now(), lastLen: starter.length };
+    };
+
+    const handleSolveChange = (value) => {
+        const v = value ?? '';
+        const t = integrityRef.current;
+        const delta = v.length - t.lastLen;
+        if (delta > 15) t.pasted += delta;      // bulk insert → paste
+        else if (delta > 0) t.typed += delta;   // normal typing
+        t.keystrokes += 1;
+        t.lastLen = v.length;
+        setSolveCode(v);
     };
 
     const handleSolveSubmit = async () => {
         setIsAutograding(true);
         try {
+            const t = integrityRef.current;
             const { data } = await axios.post(`${API}/api/autograder/${activeAssignment._id}`, {
-                code: solveCode
+                code: solveCode,
+                integrity: { typedChars: t.typed, pastedChars: t.pasted, keystrokes: t.keystrokes, durationMs: Date.now() - t.startAt }
             }, { headers });
 
             setSolveResult(data);
@@ -245,7 +263,7 @@ const ClassroomDetails = () => {
                                 language={activeAssignment.language}
                                 theme="light"
                                 value={solveCode}
-                                onChange={setSolveCode}
+                                onChange={handleSolveChange}
                                 options={{ minimap: { enabled: false } }}
                             />
                         </div>

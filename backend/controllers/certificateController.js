@@ -89,4 +89,4 @@ const verify = async (req, res) => {
   }
 };
 
-module.exports = { issueForCourse, claimForCourse, getMy, verify };
+module.exports = { issueForCourse, claimForCourse, getMy, verify, sign, credentialPayload };

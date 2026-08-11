@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Hexagon, Github, Twitter, Mail } from 'lucide-react';
 
 const COLS = [
-  { title: 'Product', links: [['Features', '/home#features'], ['How it works', '/home#how'], ['Languages', '/home#languages'], ['Sign up', '/signup']] },
+  { title: 'Product', links: [['Explore problems', '/explore'], ['Features', '/home#features'], ['How it works', '/home#how'], ['Languages', '/home#languages'], ['Sign up', '/signup']] },
   { title: 'Company', links: [['About', '/about'], ['Founder', '/about#founder'], ['Contact', '/contact']] },
   { title: 'Support', links: [['Help & support', '/support'], ['FAQ', '/support#faq'], ['Contact us', '/contact']] },
   { title: 'Legal', links: [['Privacy', '/privacy'], ['Terms', '/terms']] },

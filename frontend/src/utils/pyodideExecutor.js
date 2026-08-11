@@ -7,28 +7,39 @@
 let pyodideInstance = null;
 let outputBuffer = [];
 
-// 1. Initialize Pyodide (Singleton)
+const LOAD_TIMEOUT_MS = 20000; // don't hang forever if the CDN is slow/blocked
+
+// 1. Initialize Pyodide (Singleton). Throws 'PYODIDE_UNAVAILABLE' if the CDN script
+//    never loaded (offline / blocked) or the WASM load stalls — callers fall back to
+//    the server executor instead of crashing.
 export const initPyodide = async () => {
     if (pyodideInstance) return pyodideInstance;
-
+    if (typeof loadPyodide === 'undefined') {
+        throw new Error('PYODIDE_UNAVAILABLE');
+    }
     console.log("⏳ Loading Pyodide WASM...");
-    pyodideInstance = await loadPyodide();
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('PYODIDE_TIMEOUT')), LOAD_TIMEOUT_MS));
+    pyodideInstance = await Promise.race([loadPyodide(), timeout]);
     console.log("✅ Pyodide Loaded!");
     return pyodideInstance;
 };
 
-// 2. Execute Python Code
+// 2. Execute Python Code. Never throws. Returns:
+//    { success:true, output }                       → ran locally
+//    { success:false, output }                      → real Python error (show it)
+//    { success:false, unavailable:true, output }    → engine couldn't load → use the server
 export const runPythonLocally = async (code) => {
-    const pyodide = await initPyodide();
-    outputBuffer = []; // Clear buffer
-
-    // Capture stdout (print statements)
-    pyodide.setStdout({
-        batched: (msg) => outputBuffer.push(msg)
-    });
-
+    let pyodide;
     try {
-        // Run code
+        pyodide = await initPyodide();
+    } catch {
+        pyodideInstance = null; // allow a later retry
+        return { success: false, unavailable: true, output: 'Local Python engine unavailable — running on the server instead.' };
+    }
+
+    outputBuffer = []; // Clear buffer
+    try {
+        pyodide.setStdout({ batched: (msg) => outputBuffer.push(msg) });
         await pyodide.runPythonAsync(code);
         return { success: true, output: outputBuffer.join('\n') };
     } catch (err) {

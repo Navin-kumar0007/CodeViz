@@ -26,6 +26,11 @@ const userSchema = mongoose.Schema(
       lastActiveDate: { type: Date, default: null }
     },
     xp: { type: Number, default: 0 },
+    reputation: { type: Number, default: 0 }, // community rep from upvotes received
+    // Referral / invite growth loop
+    referralCode: { type: String, unique: true, sparse: true, index: true },
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    referralCount: { type: Number, default: 0 },
     badges: [{
       id: String,
       earnedAt: { type: Date, default: Date.now }
@@ -46,6 +51,11 @@ userSchema.pre('save', async function () {
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+});
+
+// 🔗 Assign a referral code to every user (crypto is required at the top of this file).
+userSchema.pre('save', function () {
+  if (!this.referralCode) this.referralCode = crypto.randomBytes(4).toString('hex');
 });
 
 // 🔓 Method to check password on login

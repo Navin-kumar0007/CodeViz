@@ -16,7 +16,7 @@ const discussionSchema = mongoose.Schema(
         title: { type: String, required: true, trim: true },
         category: {
             type: String,
-            enum: ['general', 'help', 'showcase', 'bug', 'discussion'],
+            enum: ['general', 'help', 'showcase', 'bug', 'discussion', 'solution', 'tip'],
             default: 'general'
         },
         tags: [{ type: String, trim: true }],

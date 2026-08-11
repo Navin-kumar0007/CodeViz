@@ -184,4 +184,14 @@ const getFocus = async (req, res) => {
     }
 };
 
-module.exports = { getProgress, updateProgress, syncProgress, getSkillTree, getDNA, getFocus };
+const getReadiness = async (req, res) => {
+    try {
+        const adaptiveService = require('../services/adaptiveService');
+        const readiness = await adaptiveService.computeReadiness(req.user._id);
+        res.json(readiness);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { getProgress, updateProgress, syncProgress, getSkillTree, getDNA, getFocus, getReadiness };

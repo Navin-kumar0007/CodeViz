@@ -1,4 +1,4 @@
-const { getPlan, planIdFromRazorpayPlanId, PLANS, DEFAULT_PLAN } = require('../config/plans');
+const { getPlan, planIdFromRazorpayPlanId, PLANS, DEFAULT_PLAN, PLAN_RANK } = require('../config/plans');
 
 describe('plan config', () => {
   test('all three tiers exist with features + limits', () => {
@@ -29,5 +29,12 @@ describe('plan config', () => {
   test('planIdFromRazorpayPlanId defaults to free for unknown/null', () => {
     expect(planIdFromRazorpayPlanId(null)).toBe('free');
     expect(planIdFromRazorpayPlanId('plan_does_not_exist')).toBe('free');
+  });
+
+  // Drives "higher of personal vs inherited team plan" in entitlementService.
+  test('PLAN_RANK orders free < pro < team', () => {
+    expect(PLAN_RANK.free).toBeLessThan(PLAN_RANK.pro);
+    expect(PLAN_RANK.pro).toBeLessThan(PLAN_RANK.team);
+    for (const id of Object.keys(PLANS)) expect(typeof PLAN_RANK[id]).toBe('number');
   });
 });

@@ -13,7 +13,7 @@ function cleanIntegrity(raw) {
 
 const submitSolution = async (req, res) => {
     try {
-        const { problemId, language, code } = req.body;
+        const { problemId, language, code, contestSlug } = req.body;
         const integrity = cleanIntegrity(req.body.integrity);
         const userId = req.user._id;
 
@@ -62,6 +62,10 @@ const submitSolution = async (req, res) => {
                 problem.stats.totalSubmissions += 1;
                 await problem.save();
 
+                try {
+                    await require('../services/reviewService').recordAttempt({ userId, problemId, accepted: false });
+                } catch (e) { /* review scheduling is best-effort */ }
+
                 return res.json({
                     verdict,
                     testResults: results,
@@ -93,7 +97,19 @@ const submitSolution = async (req, res) => {
                 const xpReward = problem.difficulty === 'easy' ? 10 : problem.difficulty === 'medium' ? 25 : 50;
                 await User.findByIdAndUpdate(userId, { $inc: { xp: xpReward } });
             } catch (e) { /* ignore XP errors */ }
+            // Contest scoring (no-op unless this was submitted within a live contest).
+            if (contestSlug) {
+                try {
+                    await require('../services/contestService').recordSolve({ userId, contestSlug, problem });
+                } catch (e) { /* contest scoring is best-effort */ }
+            }
         }
+
+        // 🔁 Spaced repetition: solved → schedule for review; wrong answer on a
+        // problem already in review → lapse. Best-effort, never blocks the response.
+        try {
+            await require('../services/reviewService').recordAttempt({ userId, problemId, accepted: allPassed });
+        } catch (e) { /* review scheduling is best-effort */ }
 
         res.json({
             verdict,

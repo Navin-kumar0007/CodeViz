@@ -32,6 +32,16 @@ const submissionSchema = mongoose.Schema({
     feedback: {
         type: String,
         default: ''
+    },
+    // Authorship telemetry (same signals as the main submission pipeline) so the
+    // per-cohort integrity dashboard can flag pasted-in work.
+    integrity: {
+        typedChars: { type: Number, default: 0 },
+        pastedChars: { type: Number, default: 0 },
+        keystrokes: { type: Number, default: 0 },
+        durationMs: { type: Number, default: 0 },
+        pasteRatio: { type: Number, default: 0 }, // pasted / (typed + pasted)
+        flagged: { type: Boolean, default: false } // high paste ratio → likely not hand-typed
     }
 });
 

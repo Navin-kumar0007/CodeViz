@@ -159,11 +159,109 @@ const getClassroomAssignments = asyncHandler(async (req, res) => {
     res.json(assignments);
 });
 
+// Assemble the full gradebook matrix (students × assignments) for a classroom,
+// including each cell's grade, lateness, and integrity flag. Shared by JSON + CSV.
+async function buildGradebook(classroomId) {
+    const classroom = await Classroom.findById(classroomId).lean();
+    if (!classroom) return null;
+    const [assignments, students] = await Promise.all([
+        Assignment.find({ classroom: classroomId }).select('title maxPoints dueDate submissions').sort({ createdAt: 1 }).lean(),
+        User.find({ _id: { $in: classroom.students || [] } }).select('name email').lean(),
+    ]);
+
+    const rows = students.map((s) => {
+        const cells = assignments.map((a) => {
+            const sub = (a.submissions || []).find((x) => String(x.student) === String(s._id));
+            if (!sub) return null;
+            const maxPoints = a.maxPoints || 100;
+            return {
+                grade: typeof sub.grade === 'number' ? sub.grade : null,
+                maxPoints,
+                submittedAt: sub.submittedAt || null,
+                late: !!(a.dueDate && sub.submittedAt && new Date(sub.submittedAt) > new Date(a.dueDate)),
+                flagged: !!sub.integrity?.flagged,
+                pasteRatio: sub.integrity?.pasteRatio ?? null,
+            };
+        });
+        const graded = cells.filter((c) => c && typeof c.grade === 'number');
+        const overallPct = graded.length
+            ? Math.round(graded.reduce((acc, c) => acc + (c.grade / (c.maxPoints || 100)) * 100, 0) / graded.length)
+            : null;
+        return {
+            student: { id: s._id, name: s.name, email: s.email },
+            cells,
+            overallPct,
+            submitted: cells.filter(Boolean).length,
+            flags: cells.filter((c) => c?.flagged).length,
+        };
+    });
+
+    return {
+        classroom: { id: classroom._id, name: classroom.name },
+        assignments: assignments.map((a) => ({ id: a._id, title: a.title, maxPoints: a.maxPoints || 100, dueDate: a.dueDate })),
+        rows,
+    };
+}
+
+// @desc    Gradebook matrix (instructor only)
+// @route   GET /api/campus/classrooms/:id/gradebook
+const getGradebook = asyncHandler(async (req, res) => {
+    const classroom = await Classroom.findById(req.params.id);
+    if (!classroom) { res.status(404); throw new Error('Classroom not found'); }
+    if (!classroom.isInstructor(req.user._id) && req.user.role !== 'admin') {
+        res.status(403); throw new Error('Only the instructor can view the gradebook');
+    }
+    const gradebook = await buildGradebook(classroom._id);
+    res.json(gradebook);
+});
+
+// Minimal RFC-4180 CSV field escaping.
+const csvCell = (v) => {
+    const s = v === null || v === undefined ? '' : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+// @desc    Gradebook as a downloadable CSV (instructor only)
+// @route   GET /api/campus/classrooms/:id/gradebook.csv
+const exportGradebookCsv = asyncHandler(async (req, res) => {
+    const classroom = await Classroom.findById(req.params.id);
+    if (!classroom) { res.status(404); throw new Error('Classroom not found'); }
+    if (!classroom.isInstructor(req.user._id) && req.user.role !== 'admin') {
+        res.status(403); throw new Error('Only the instructor can export the gradebook');
+    }
+    const gb = await buildGradebook(classroom._id);
+
+    const header = ['Student', 'Email', ...gb.assignments.map((a) => a.title), 'Overall %', 'Integrity flags'];
+    const lines = [header.map(csvCell).join(',')];
+    for (const row of gb.rows) {
+        const cells = row.cells.map((c) => {
+            if (!c) return '';
+            let v = c.grade === null ? '' : String(c.grade);
+            if (c.late) v += ' (late)';
+            if (c.flagged) v += ' ⚠';
+            return v;
+        });
+        lines.push([
+            row.student.name, row.student.email, ...cells,
+            row.overallPct === null ? '' : row.overallPct, row.flags,
+        ].map(csvCell).join(','));
+    }
+    const csv = lines.join('\n');
+
+    const safeName = (gb.classroom.name || 'classroom').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="gradebook-${safeName}.csv"`);
+    res.send(csv);
+});
+
 module.exports = {
     getClassrooms,
     createClassroom,
     joinClassroom,
     getClassroomById,
     createAssignment,
-    getClassroomAssignments
+    getClassroomAssignments,
+    getGradebook,
+    exportGradebookCsv,
+    buildGradebook
 };

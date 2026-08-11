@@ -5,9 +5,24 @@ import API_BASE from '../utils/api';
 import CodeEditor from '../components/Editor/CodeEditor';
 import Canvas from '../components/Visualizer/Canvas';
 
+// Speak the interviewer's line aloud (Web Speech API). Feature-detected — a graceful
+// no-op on browsers without speechSynthesis, so it never breaks the interview.
+const speak = (text, enabled) => {
+    if (!enabled || typeof window === 'undefined' || !window.speechSynthesis || !text) return;
+    try {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 1.02; u.pitch = 1; u.lang = 'en-US';
+        window.speechSynthesis.speak(u);
+    } catch { /* TTS unsupported */ }
+};
+
 const LiveInterview = () => {
     const { sessionId } = useParams();
     const navigate = useNavigate();
+    const [voiceOn, setVoiceOn] = useState(() => {
+        try { return localStorage.getItem('interviewVoice') !== 'off'; } catch { return true; }
+    });
     const [code, setCode] = useState('');
     const problems = [];
     const currentProblem = 0;
@@ -79,9 +94,13 @@ const LiveInterview = () => {
             const { data } = await axios.post(`${API_BASE}/api/interview/${sessionId}/interviewer`,
                 { code, language: 'python', kind, problemTitle: 'Binary Search Implementation' }, authHeaders);
             setMsgs((m) => [...m, { role: 'interviewer', text: data.message }]);
+            speak(data.message, voiceOn);
         } catch { /* ignore */ }
         setAsking(false);
-    }, [sessionId, code, authHeaders]);
+    }, [sessionId, code, authHeaders, voiceOn]);
+
+    // Stop any speech when leaving the interview.
+    useEffect(() => () => { try { window.speechSynthesis?.cancel(); } catch { /* noop */ } }, []);
 
     // Greeting once on mount.
     useEffect(() => {
@@ -135,7 +154,22 @@ const LiveInterview = () => {
 
                     {/* 🎙️ AI Interviewer */}
                     <div style={S.interviewer}>
-                        <div style={S.interviewerHead}>🎙️ Interviewer</div>
+                        <div style={{ ...S.interviewerHead, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>🎙️ Interviewer</span>
+                            <button
+                                onClick={() => setVoiceOn((v) => {
+                                    const next = !v;
+                                    try { localStorage.setItem('interviewVoice', next ? 'on' : 'off'); } catch { /* noop */ }
+                                    if (!next) { try { window.speechSynthesis?.cancel(); } catch { /* noop */ } }
+                                    return next;
+                                })}
+                                title={voiceOn ? 'Mute interviewer voice' : 'Unmute interviewer voice'}
+                                aria-label={voiceOn ? 'Mute interviewer voice' : 'Unmute interviewer voice'}
+                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '14px', opacity: voiceOn ? 1 : 0.45 }}
+                            >
+                                {voiceOn ? '🔊' : '🔇'}
+                            </button>
+                        </div>
                         <div style={S.chat}>
                             {msgs.length === 0 && <div style={S.chatMuted}>Your interviewer will speak here…</div>}
                             {msgs.map((m, i) => (

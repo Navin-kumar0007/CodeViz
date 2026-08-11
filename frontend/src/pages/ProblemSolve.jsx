@@ -1,15 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { API as axios } from '../utils/api';
 import Editor from '@monaco-editor/react';
-import { ArrowLeft, Play, Rocket, CheckCircle2, XCircle, Clock, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Play, Rocket, CheckCircle2, XCircle, Clock, Lightbulb, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import API_BASE from '../utils/api';
 import AstFlowchart from '../components/Visualizer/AstFlowchart';
+import Canvas from '../components/Visualizer/Canvas';
 import IntegrityReport from '../components/Integrity/IntegrityReport';
 import DiscussionPanel from '../components/Social/DiscussionPanel';
 import { Button, Select, DifficultyBadge, Badge, Spinner, EmptyState } from '../components/ui';
 import { celebrate } from '../utils/celebrate';
 import { track } from '../utils/analytics';
+import { buildRunnable } from '../utils/solutionRunner';
 
 const API = `${API_BASE}/api/problems`;
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
@@ -27,6 +30,8 @@ const TABS = [{ id: 'description', label: 'Description' }, { id: 'editorial', la
 export default function ProblemSolve() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const contestSlug = searchParams.get('contest');
   const user = JSON.parse(localStorage.getItem('userInfo'));
   const headers = { Authorization: `Bearer ${user?.token}` };
 
@@ -43,6 +48,11 @@ export default function ProblemSolve() {
   const [submissions, setSubmissions] = useState([]);
   const [integritySubId, setIntegritySubId] = useState(null);
   const [editorialShown, setEditorialShown] = useState(false);
+  // "Watch it run" — trace the editorial's optimal solution + replay in the visualizer.
+  const [watch, setWatch] = useState(null); // { trace, lang } when the theater is open
+  const [watchStep, setWatchStep] = useState(0);
+  const [watchBusy, setWatchBusy] = useState(false);
+  const [watchErr, setWatchErr] = useState('');
   const workspaceRef = useRef(null);
 
   // Authorship telemetry (academic-integrity signals). grossAdded counts all
@@ -101,7 +111,9 @@ export default function ProblemSolve() {
   const handleRun = async () => {
     setRunning(true); setResult(null);
     try {
-      const input = problem?.examples?.[0]?.input || '';
+      // Feed real stdin from a visible test case — examples[].input is human-readable
+      // display text ("nums = [2,7,11,15], target = 9"), which would crash input().
+      const input = problem?.testCases?.find((t) => t?.input)?.input ?? problem?.examples?.[0]?.input ?? '';
       const { data } = await axios.post(`${API_BASE}/run`, { language, code, input }, { headers });
       setResult({ type: 'run', output: data.output || data.error || 'No output', trace: data.trace });
     } catch { setResult({ type: 'run', output: 'Error running code' }); }
@@ -119,13 +131,30 @@ export default function ProblemSolve() {
         durationMs: Date.now() - t.startAt,
         pasteEvents: t.pasteEvents,
       };
-      const { data } = await axios.post(`${API}/submit`, { problemId: problem._id, language, code, integrity: integrityPayload }, { headers });
+      const { data } = await axios.post(`${API}/submit`, { problemId: problem._id, language, code, integrity: integrityPayload, contestSlug: contestSlug || undefined }, { headers });
       setResult({ type: 'submit', ...data });
       track('problem_submitted', { slug: problem.slug, verdict: data.verdict, language });
       if (data.verdict === 'accepted') { celebrate({ xp: data.xpEarned || 50 }); track('problem_solved', { slug: problem.slug, difficulty: problem.difficulty }); }
       loadSubmissions();
     } catch { setResult({ type: 'submit', verdict: 'runtime_error', testResults: [], totalTests: 0, passedTests: 0 }); }
     setSubmitting(false);
+  };
+
+  // Compose the editorial's optimal solution into a runnable program (solution +
+  // starter's stdin driver, fed a real test case), trace it through the live tracer,
+  // then open the theater to replay it step-by-step. Always Python — richest trace.
+  const watchSolution = async () => {
+    const runnable = buildRunnable(problem);
+    if (!runnable?.code) { setWatchErr('No runnable solution is available to trace for this problem.'); return; }
+    setWatchBusy(true); setWatchErr(''); setWatchStep(0);
+    try {
+      const { data } = await axios.post(`${API_BASE}/trace`, runnable, { headers });
+      if (data.error) setWatchErr(data.error);
+      else if (data.trace?.length) { setWatch({ trace: data.trace, lang: runnable.language }); track('solution_watched', { slug: problem.slug, lang: runnable.language }); }
+      else setWatchErr('This solution ran, but produced no visualizable trace.');
+    } catch (e) {
+      setWatchErr(e?.response?.data?.error || e?.response?.data?.message || 'Could not trace the solution. Try again.');
+    } finally { setWatchBusy(false); }
   };
 
   const loadSubmissions = async () => {
@@ -145,6 +174,7 @@ export default function ProblemSolve() {
         <Button variant="ghost" size="sm" onClick={() => navigate('/problems')}><ArrowLeft size={15} /> Problems</Button>
         <span className="text-[15px] font-bold text-text truncate">{problem.order}. {problem.title}</span>
         <DifficultyBadge level={problem.difficulty} />
+        {contestSlug && <button onClick={() => navigate(`/contests/${contestSlug}`)} className="text-[11px] font-bold text-accent bg-accent/12 border border-accent/25 rounded-full px-2.5 py-1 cursor-pointer">🏆 Contest</button>}
         <div className="flex-1" />
         <div className="w-40">
           <Select value={language} onChange={(e) => handleLanguageChange(e.target.value)} size="sm">
@@ -273,6 +303,13 @@ export default function ProblemSolve() {
                             <div>
                               <div className="text-[11px] font-bold uppercase tracking-wide text-faint mb-1.5">Solution {e.solutionCode?.[language] ? `(${language})` : ''}</div>
                               <pre className="bg-elevated border border-line rounded-xl p-4 overflow-x-auto text-[12.5px] font-mono leading-relaxed text-text m-0">{sol}</pre>
+                              <div className="mt-3 flex items-center gap-3 flex-wrap">
+                                <Button size="sm" onClick={watchSolution} disabled={watchBusy}>
+                                  {watchBusy ? <><Spinner size={13} /> Tracing…</> : <><Play size={14} /> Watch it run</>}
+                                </Button>
+                                <span className="text-[12px] text-faint">Replays the optimal solution step-by-step in the visualizer.</span>
+                              </div>
+                              {watchErr && <div className="text-[12.5px] text-danger bg-danger/10 border border-danger/25 rounded-lg px-3 py-2 mt-2">{watchErr}</div>}
                             </div>
                           </div>
                         );
@@ -345,6 +382,36 @@ export default function ProblemSolve() {
       </div>
 
       {integritySubId && <IntegrityReport submissionId={integritySubId} onClose={() => setIntegritySubId(null)} />}
+
+      {/* ★ Watch-any-solution theater — replays the traced optimal solution */}
+      <AnimatePresence>
+        {watch && (
+          <motion.div
+            className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setWatch(null)}
+          >
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.96, opacity: 0, y: 8 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.96, opacity: 0, y: 8 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 26 }}
+              className="w-full max-w-5xl bg-surface border border-line rounded-2xl shadow-[var(--cz-shadow-lg)] overflow-hidden flex flex-col max-h-[92vh]"
+            >
+              <div className="flex items-center gap-3 px-5 py-3.5 border-b border-line shrink-0">
+                <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent/12 text-accent border border-accent/25 shrink-0"><Play size={15} /></span>
+                <div className="min-w-0">
+                  <div className="text-[14px] font-bold truncate">Optimal solution — animated replay</div>
+                  <div className="text-[12px] text-faint truncate">{problem?.title} · {watch.lang} · {watch.trace.length} steps</div>
+                </div>
+                <button onClick={() => setWatch(null)} aria-label="Close replay" className="ml-auto shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-text hover:bg-elevated border border-line cursor-pointer transition-colors"><X size={16} /></button>
+              </div>
+              <div className="flex-1 min-h-0 overflow-auto p-4">
+                <Canvas traceData={watch.trace} stepIndex={watchStep} setStepIndex={setWatchStep} />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

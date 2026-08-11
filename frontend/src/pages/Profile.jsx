@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axiosConfig';
-import { ShieldCheck, ShieldAlert, LogOut, Mail, User as UserIcon, Sparkles, AtSign, MousePointer2 } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, LogOut, Mail, User as UserIcon, Sparkles, AtSign, MousePointer2, Download, Trash2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardBody, Badge, Button, Input } from '../components/ui';
 import { API } from '../utils/api';
 import { useEntitlements } from '../hooks/useEntitlements';
@@ -155,6 +155,75 @@ function UsernameCard({ initial }) {
   );
 }
 
+// GDPR/DPDP data rights: export everything, or permanently delete the account.
+function DataPrivacyCard() {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [password, setPassword] = useState('');
+  const [err, setErr] = useState('');
+
+  const exportData = async () => {
+    setBusy(true); setErr('');
+    try {
+      const res = await API.get('/api/users/me/export', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'codeviz-data.json';
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    } catch { setErr('Could not export your data.'); } finally { setBusy(false); }
+  };
+
+  const deleteAccount = async () => {
+    setBusy(true); setErr('');
+    try {
+      await API.delete('/api/users/me', { data: { password } });
+      localStorage.removeItem('userInfo');
+      navigate('/signup', { replace: true });
+    } catch (e) {
+      setErr(e?.response?.data?.message || 'Could not delete your account.');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Data &amp; privacy</CardTitle></CardHeader>
+      <CardBody className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <div className="text-[14px] font-bold text-text">Export my data</div>
+            <div className="text-[13px] text-muted">Download everything we hold about you — profile, submissions, and activity — as JSON.</div>
+          </div>
+          <Button variant="secondary" onClick={exportData} disabled={busy}><Download size={15} /> Export</Button>
+        </div>
+
+        <div className="border-t border-line pt-4">
+          {!confirming ? (
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <div className="text-[14px] font-bold text-danger">Delete account</div>
+                <div className="text-[13px] text-muted">Permanently erase your account and all personal data. This cannot be undone.</div>
+              </div>
+              <Button variant="danger" onClick={() => { setConfirming(true); setErr(''); }}><Trash2 size={15} /> Delete</Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="text-[13px] text-danger font-semibold">Confirm your password to permanently delete your account.</div>
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Current password" autoComplete="current-password" />
+              <div className="flex gap-2">
+                <Button variant="danger" onClick={deleteAccount} disabled={busy || !password}>{busy ? 'Deleting…' : 'Permanently delete'}</Button>
+                <Button variant="secondary" onClick={() => { setConfirming(false); setPassword(''); setErr(''); }} disabled={busy}>Cancel</Button>
+              </div>
+            </div>
+          )}
+        </div>
+        {err && <div className="text-[13px] text-danger bg-danger/10 border border-danger/25 rounded-lg px-3 py-2">{err}</div>}
+      </CardBody>
+    </Card>
+  );
+}
+
 export default function Profile() {
   const [user, setUser] = useState(() => {
     try { const u = localStorage.getItem('userInfo'); return u ? JSON.parse(u) : null; } catch { return null; }
@@ -271,6 +340,9 @@ export default function Profile() {
 
         {/* Visual effects */}
         <EffectsCard />
+
+        {/* Data & privacy (GDPR/DPDP) */}
+        <DataPrivacyCard />
 
         {/* Danger */}
         <Card>

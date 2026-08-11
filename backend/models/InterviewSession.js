@@ -88,7 +88,9 @@ const interviewSessionSchema = mongoose.Schema(
             type: String,
             enum: ['needs_practice', 'getting_there', 'solid', 'excellent', 'interview_ready'],
             default: 'needs_practice'
-        }
+        },
+        // Recruiter-style post-interview scorecard (rubric + strengths + improvements + hiring signal)
+        scorecard: { type: mongoose.Schema.Types.Mixed, default: null }
     },
     { timestamps: true }
 );

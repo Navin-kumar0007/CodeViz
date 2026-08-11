@@ -1,21 +1,33 @@
 const Subscription = require('../models/Subscription');
 const UsageMeter = require('../models/UsageMeter');
-const { getPlan, DEFAULT_PLAN, PLANS } = require('../config/plans');
+const { getPlan, DEFAULT_PLAN, PLANS, PLAN_RANK } = require('../config/plans');
 
 // Staff (instructor/admin) are superusers: every feature, no daily limits.
 const STAFF_ROLES = new Set(['admin', 'instructor']);
 const ALL_FEATURES = [...new Set(Object.values(PLANS).flatMap((p) => p.features))];
 const UNLIMITED = 1000000;
 
+// The plan a user inherits from an active team membership (empty → free). Inheritance
+// only applies while the team's billing status is active/trialing, so an unbilled team
+// can never be a free upgrade path.
+async function teamPlanFor(userId) {
+  const Team = require('../models/Team');
+  const team = await Team.findOne({ 'members.user': userId, status: { $in: ['active', 'trialing'] } }).select('plan').lean();
+  return team ? team.plan : DEFAULT_PLAN;
+}
+
 /**
- * Resolve a user's active plan id. A subscription counts as entitled only when
- * its status is active/trialing; otherwise the user falls back to free.
+ * Resolve a user's active plan id — the higher of their personal subscription and any
+ * plan inherited from an active team membership. A subscription counts only when its
+ * status is active/trialing; otherwise personal falls back to free.
  */
 async function getActivePlanId(userId) {
-  const sub = await Subscription.findOne({ user: userId }).lean();
-  if (!sub) return DEFAULT_PLAN;
-  const entitled = ['active', 'trialing'].includes(sub.status);
-  return entitled ? sub.plan : DEFAULT_PLAN;
+  const [sub, inherited] = await Promise.all([
+    Subscription.findOne({ user: userId }).lean(),
+    teamPlanFor(userId),
+  ]);
+  const personal = sub && ['active', 'trialing'].includes(sub.status) ? sub.plan : DEFAULT_PLAN;
+  return (PLAN_RANK[inherited] || 0) > (PLAN_RANK[personal] || 0) ? inherited : personal;
 }
 
 /** Full entitlement snapshot: plan, features, limits, and today's usage. */

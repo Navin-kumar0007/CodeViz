@@ -321,6 +321,14 @@ const endSession = async (req, res) => {
             console.error('AI Intuition Scoring failed:', aiErr);
         }
 
+        // 📋 Recruiter-style scorecard — deterministic, built from the real session signals.
+        try {
+            session.scorecard = require('../services/scorecardService').buildScorecard(session);
+            if (session.scorecard?.rating) session.rating = session.scorecard.rating;
+        } catch (scErr) {
+            console.error('Scorecard build failed:', scErr);
+        }
+
         await session.save();
 
         // Calculate time breakdown
@@ -343,7 +351,8 @@ const endSession = async (req, res) => {
             sessionId: session._id,
             mode: session.mode,
             totalScore: avgScore,
-            rating,
+            rating: session.rating,
+            scorecard: session.scorecard,
             solved: solvedCount,
             total: totalProblems,
             timeUsed: totalTime,

@@ -577,3 +577,17 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Print-to-PDF for certificates: isolate .cert-printable, drop everything else.
+   Lets "Download PDF" (window.print → Save as PDF) produce a clean, crisp cert. */
+@media print {
+  :root { color-scheme: light; }
+  body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .cert-printable, .cert-printable * { visibility: visible !important; }
+  .cert-printable {
+    position: absolute; left: 0; right: 0; top: 0; margin: 24px auto !important;
+    width: 92% !important; max-width: 620px; box-shadow: none !important;
+  }
+  .no-print { display: none !important; }
+}
