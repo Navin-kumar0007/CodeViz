@@ -64,8 +64,10 @@ const generateResponse = async (prompt, userId, cacheKey = null) => {
 
     // 3. Prepare Keys and Models for rotation
     const keys = (process.env.GEMINI_API_KEY || '').split(',').map(k => k.trim()).filter(Boolean);
-    // Valid current model ids — the "-latest" aliases now 404 on v1beta.
-    const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite'];
+    // Stable aliases that always resolve to Google's current flash models. The pinned
+    // 2.0/2.5 ids get retired (404 "no longer available to new users") — the "-latest"
+    // aliases keep working across Google's version rotations. Verified against this key.
+    const models = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
 
     let lastError = null;
 
