@@ -130,6 +130,63 @@
   --transition-liquid: 600ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+/* ══ D2 · Design-system unification ══════════════════════════════════════════
+   Legacy pages (InterviewPrep, Classroom, Admin, Instructor, Room, …) reference
+   these older vars via inline styles. Re-point them at the theme-aware --cz-*
+   premium tokens so every page shares one palette AND follows light/dark — instead
+   of the always-dark neon set above. This block is imported after the legacy :root,
+   so it wins the cascade. One change → ~20 pages become consistent + theme-aware. */
+:root {
+  /* Surfaces */
+  --bg-app:        var(--cz-bg);
+  --bg-surface:    var(--cz-surface);
+  --bg-panel:      var(--cz-surface);
+  --bg-elevated:   var(--cz-elevated);
+  --bg-highest:    var(--cz-elevated);
+  --bg-glass:      color-mix(in srgb, var(--cz-surface) 78%, transparent);
+
+  /* Text */
+  --text-primary:   var(--cz-text);
+  --text-secondary: var(--cz-muted);
+  --text-muted:     var(--cz-muted);
+  --text-ghost:     var(--cz-faint);
+
+  /* Borders */
+  --border-color:   var(--cz-line);
+  --border-ghost:   var(--cz-line-soft, var(--cz-line));
+  --border-subtle:  var(--cz-line-soft, var(--cz-line));
+  --border-strong:  var(--cz-line);
+
+  /* Extra surface aliases some pages reference (undefined in dark → would break) */
+  --bg-primary:    var(--cz-bg);
+  --bg-secondary:  var(--cz-surface);
+  --bg-white:      var(--cz-surface);
+  --bg-card:       var(--cz-surface);
+  --bg-muted:      var(--cz-elevated);
+  --bg-hover:      var(--cz-elevated);
+  --text-bright:   var(--cz-text);
+  --text-on-accent: var(--cz-accent-fg);
+
+  /* Accents → the single premium accent + semantic colors */
+  --accent-cyan:         var(--cz-accent);
+  --accent-cyan-dim:     var(--cz-accent-hover, var(--cz-accent));
+  --accent-teal:         var(--cz-accent);
+  --accent-teal-hover:   var(--cz-accent-hover, var(--cz-accent));
+  --text-on-teal:        var(--cz-accent-fg);
+  --accent-blue:         var(--cz-accent);
+  --accent-primary:      var(--cz-accent);
+  --accent-violet:       var(--cz-accent);
+  --accent-violet-bright: var(--cz-accent);
+  --accent-purple:       var(--cz-accent);
+  --accent-emerald:      var(--cz-success);
+  --accent-green:        var(--cz-success);
+  --accent-amber:        var(--cz-warning);
+  --accent-yellow:       var(--cz-warning);
+  --accent-orange:       var(--cz-warning);
+  --accent-rose:         var(--cz-danger);
+  --accent-red:          var(--cz-danger);
+}
+
 /* ══ Reset & Base ══ */
 *, *::before, *::after {
   box-sizing: border-box;
