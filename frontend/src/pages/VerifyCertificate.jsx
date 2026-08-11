@@ -1,11 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShieldCheck, ShieldX, Hexagon, Award } from 'lucide-react';
+import { ShieldCheck, ShieldX, Hexagon, Award, Linkedin, Download, Link2, Check } from 'lucide-react';
 import { API } from '../utils/api';
 import { Spinner } from '../components/ui';
 
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
+
+// LinkedIn "Add to profile" deep link — prefills the certification form from the credential.
+function linkedInAddUrl(d, verifyUrl) {
+  const dt = d.issueDate ? new Date(d.issueDate) : new Date();
+  const p = new URLSearchParams({
+    startTask: 'CERTIFICATION_NAME',
+    name: d.courseName || 'CodeViz Certificate',
+    organizationName: 'CodeViz',
+    issueYear: String(dt.getFullYear()),
+    issueMonth: String(dt.getMonth() + 1),
+    certId: d.credentialId || '',
+    certUrl: verifyUrl,
+  });
+  return `https://www.linkedin.com/profile/add?${p.toString()}`;
+}
 
 // Public credential verification — anyone with the link can confirm authenticity.
 export default function VerifyCertificate() {
@@ -22,6 +37,12 @@ export default function VerifyCertificate() {
 
   const d = state.data;
   const valid = d?.valid;
+  const [copied, setCopied] = useState(false);
+  const verifyUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+  const copyLink = async () => {
+    try { await navigator.clipboard.writeText(verifyUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* clipboard blocked */ }
+  };
 
   return (
     <div className="min-h-screen bg-bg text-text flex items-center justify-center px-6 py-12" style={FONT}>
@@ -40,9 +61,10 @@ export default function VerifyCertificate() {
             <p className="text-muted text-[13px] mt-1">No credential matches <span className="font-mono">{credentialId}</span>.</p>
           </div>
         ) : (
+          <>
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-            className="rounded-2xl border p-8 text-center relative overflow-hidden shadow-[var(--cz-shadow-md)]"
+            className="cert-printable rounded-2xl border p-8 text-center relative overflow-hidden shadow-[var(--cz-shadow-md)]"
             style={{ borderColor: valid ? 'color-mix(in srgb, var(--cz-success) 40%, transparent)' : 'var(--cz-line)', background: 'linear-gradient(135deg, color-mix(in srgb, var(--cz-accent) 8%, var(--cz-surface)), var(--cz-surface))' }}
           >
             <div className="absolute -top-20 -right-20 w-52 h-52 rounded-full" style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--cz-accent) 16%, transparent), transparent 70%)' }} />
@@ -63,6 +85,24 @@ export default function VerifyCertificate() {
               <div className="text-[11px] font-mono text-faint mt-5 pt-4 border-t border-line">Credential ID · {d.credentialId}</div>
             </div>
           </motion.div>
+
+          {/* Actions (hidden when printing) */}
+          <div className="no-print flex flex-wrap items-center justify-center gap-2.5 mt-5">
+            <a
+              href={linkedInAddUrl(d, verifyUrl)} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-[13px] font-bold rounded-lg px-4 py-2.5 no-underline text-white border"
+              style={{ background: '#0a66c2', borderColor: '#0a66c2' }}
+            >
+              <Linkedin size={15} /> Add to LinkedIn
+            </a>
+            <button onClick={() => window.print()} className="inline-flex items-center gap-2 text-[13px] font-bold rounded-lg px-4 py-2.5 cursor-pointer bg-surface border border-line text-text hover:border-accent transition-colors">
+              <Download size={15} /> Download PDF
+            </button>
+            <button onClick={copyLink} className={`inline-flex items-center gap-2 text-[13px] font-bold rounded-lg px-4 py-2.5 cursor-pointer border transition-colors ${copied ? 'bg-success/12 text-success border-success/30' : 'bg-surface border-line text-text hover:border-accent'}`}>
+              {copied ? <><Check size={15} /> Copied</> : <><Link2 size={15} /> Copy link</>}
+            </button>
+          </div>
+          </>
         )}
         <p className="text-center text-faint text-[11px] mt-5">Credentials are cryptographically signed and verified by CodeViz.</p>
       </div>
