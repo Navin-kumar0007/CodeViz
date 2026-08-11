@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Hexagon, Trophy, Zap, Flame, CheckCircle2, Eye, ArrowRight } from 'lucide-react';
+import { Hexagon, Trophy, Zap, Flame, CheckCircle2, Eye, ArrowRight, ShieldCheck, Award, Keyboard } from 'lucide-react';
 import { Button } from '../components/ui';
 import { API } from '../utils/api';
 
@@ -62,6 +62,73 @@ export default function PublicProfile() {
               <Stat Icon={Flame} value={p.stats.streak} label="Streak" />
               <Stat Icon={CheckCircle2} value={p.stats.problemsSolved} label="Solved" />
             </div>
+
+            {/* Proof of work — authorship-verified, employer-facing */}
+            {p.authorship?.scoredSolutions > 0 && (() => {
+              const a = p.authorship;
+              const tone = a.confidence === 'high' ? 'success' : a.confidence === 'moderate' ? 'accent' : 'warning';
+              const c = `var(--cz-${tone})`;
+              const mix = (pct) => `color-mix(in srgb, ${c} ${pct}%, transparent)`;
+              return (
+                <div className="rounded-2xl border p-5 mb-8" style={{ borderColor: mix(35), background: `color-mix(in srgb, ${c} 7%, var(--cz-surface))` }}>
+                  <div className="flex items-start gap-3.5">
+                    <span className="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center border" style={{ background: mix(15), color: c, borderColor: mix(30) }}><ShieldCheck size={22} /></span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[15px] font-extrabold">Proof of work</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border" style={{ background: mix(12), color: c, borderColor: mix(25) }}>Verified by CodeViz</span>
+                      </div>
+                      <p className="text-[13.5px] text-muted m-0 mt-1.5 leading-relaxed">
+                        <b className="text-text inline-flex items-center gap-1"><Keyboard size={14} /> {a.typedPct}% hand-typed</b> across scored solutions —
+                        {' '}<b className="text-text">{a.verifiedSolutions}</b> of <b className="text-text">{a.scoredSolutions}</b> are authorship-verified (typed, not pasted). Authorship is measured from live editor telemetry, not self-reported.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Skills — solved problems by area, split by difficulty */}
+            {p.skills?.length > 0 && (
+              <>
+                <h2 className="text-[12px] font-bold uppercase tracking-[0.14em] text-faint mb-3">Verified skills</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+                  {p.skills.slice(0, 8).map((s) => (
+                    <div key={s.category} className="bg-surface border border-line rounded-xl px-4 py-3 shadow-[var(--cz-shadow-sm)]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[14px] font-semibold capitalize">{String(s.category).replace(/_/g, ' ')}</span>
+                        <span className="text-[13px] font-bold tabular-nums">{s.solved}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2 text-[11px] text-muted">
+                        {s.easy > 0 && <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-success" />{s.easy} easy</span>}
+                        {s.medium > 0 && <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-warning" />{s.medium} med</span>}
+                        {s.hard > 0 && <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-hard" />{s.hard} hard</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Certificates — verifiable credentials */}
+            {p.certificates?.length > 0 && (
+              <>
+                <h2 className="text-[12px] font-bold uppercase tracking-[0.14em] text-faint mb-3">Certificates</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+                  {p.certificates.map((c) => (
+                    <button key={c.credentialId} onClick={() => navigate(`/verify/${c.credentialId}`)} className="text-left bg-surface border border-line rounded-xl p-4 cursor-pointer transition-all hover:border-accent hover:-translate-y-0.5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-accent/12 text-accent shrink-0"><Award size={17} /></span>
+                        <div className="min-w-0">
+                          <div className="text-[14px] font-semibold text-text truncate">{c.courseName}</div>
+                          <div className="text-[12px] text-muted flex items-center gap-1"><ShieldCheck size={12} className="text-success" /> Verify credential</div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
 
             {p.shares?.length > 0 && (
               <>

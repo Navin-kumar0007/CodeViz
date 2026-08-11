@@ -2,8 +2,28 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Submission = require('../models/Submission');
 const Share = require('../models/Share');
+const Certificate = require('../models/Certificate');
 
 const levelFromXp = (xp = 0) => Math.floor(xp / 100) + 1;
+
+// Aggregate authorship telemetry across a set of accepted submissions into a public,
+// employer-facing "proof of work": how much of the code was hand-typed vs pasted.
+function authorshipFrom(subs) {
+  let typed = 0, pasted = 0, scored = 0, verified = 0;
+  for (const s of subs) {
+    const it = s.integrity;
+    const total = (it?.typedChars || 0) + (it?.pastedChars || 0);
+    if (total <= 0) continue;
+    scored += 1;
+    typed += it.typedChars || 0;
+    pasted += it.pastedChars || 0;
+    if ((it.pastedChars || 0) / total < 0.3) verified += 1; // mostly hand-typed
+  }
+  const totalChars = typed + pasted;
+  const typedPct = totalChars ? Math.round((typed / totalChars) * 100) : null;
+  const confidence = typedPct === null ? 'unrated' : typedPct >= 80 ? 'high' : typedPct >= 55 ? 'moderate' : 'low';
+  return { scoredSolutions: scored, verifiedSolutions: verified, typedPct, confidence };
+}
 
 /**
  * GET /api/users/public/:handle — public, SEO-friendly profile. `handle` may be
@@ -16,10 +36,30 @@ const getPublicProfile = async (req, res) => {
     const user = await User.findOne(query).select('name username bio role xp streak createdAt');
     if (!user) return res.status(404).json({ message: 'Profile not found.' });
 
-    const [solved, shares] = await Promise.all([
-      Submission.find({ user: user._id, verdict: 'accepted' }).distinct('problem'),
+    const [accepted, shares, certs] = await Promise.all([
+      Submission.find({ user: user._id, verdict: 'accepted' }).populate('problem', 'category difficulty').select('problem integrity').lean(),
       Share.find({ user: user._id, isPublic: true }).sort({ createdAt: -1 }).limit(12).select('token title language views createdAt'),
+      Certificate.find({ userId: user._id }).sort({ issueDate: -1 }).limit(12).select('credentialId courseName score issueDate type').lean(),
     ]);
+
+    // One record per solved problem (first accepted), for skills + authorship.
+    const byProblem = new Map();
+    for (const s of accepted) {
+      const id = String(s.problem?._id || s.problem || '');
+      if (id && !byProblem.has(id)) byProblem.set(id, s);
+    }
+    const unique = [...byProblem.values()];
+
+    // Skill map: solved counts per category, split by difficulty.
+    const skillMap = {};
+    for (const s of unique) {
+      const cat = s.problem?.category || 'other';
+      const diff = s.problem?.difficulty || 'medium';
+      const k = (skillMap[cat] ||= { category: cat, solved: 0, easy: 0, medium: 0, hard: 0 });
+      k.solved += 1;
+      if (diff in k) k[diff] += 1;
+    }
+    const skills = Object.values(skillMap).sort((a, b) => b.solved - a.solved);
 
     res.json({
       name: user.name,
@@ -31,8 +71,11 @@ const getPublicProfile = async (req, res) => {
         xp: user.xp || 0,
         level: levelFromXp(user.xp),
         streak: typeof user.streak === 'object' ? (user.streak.current || 0) : (user.streak || 0),
-        problemsSolved: solved.length,
+        problemsSolved: unique.length,
       },
+      skills,
+      authorship: authorshipFrom(unique),
+      certificates: certs.map((c) => ({ credentialId: c.credentialId, courseName: c.courseName, score: c.score, issueDate: c.issueDate, type: c.type })),
       shares: shares.map((s) => ({ token: s.token, title: s.title, language: s.language, views: s.views, createdAt: s.createdAt })),
     });
   } catch (err) {
