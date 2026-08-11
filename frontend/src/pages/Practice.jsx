@@ -192,7 +192,7 @@ const Practice = () => {
     setOutput("");
     setStepIndex(0);
 
-    // 🐍 CLIENT-SIDE EXECUTION (Phase 8.1)
+    // 🐍 CLIENT-SIDE EXECUTION (Phase 8.1) — with graceful server fallback.
     if (language === 'python') {
       const { runPythonLocally } = await import('../utils/pyodideExecutor');
       const localResult = await runPythonLocally(code);
@@ -200,7 +200,12 @@ const Practice = () => {
       if (localResult.success) {
         setOutput(localResult.output);
         setActiveTab("console");
+      } else if (localResult.unavailable) {
+        // Pyodide (in-browser Python) couldn't load — fall through to the server /run
+        // below so the program still executes instead of silently doing nothing.
+        console.warn('Pyodide unavailable, using server execution.');
       } else {
+        // A genuine Python error in the user's code — show it and stop.
         setError(localResult.output);
         setIsLoading(false);
         setIsExecuting(false);
