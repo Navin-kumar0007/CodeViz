@@ -23,6 +23,8 @@ const InstructorDashboard = () => {
     const [sortOrder, setSortOrder] = useState('desc');
     const [integrityRows, setIntegrityRows] = useState([]);
     const [integritySubId, setIntegritySubId] = useState(null);
+    const [gradebook, setGradebook] = useState(null);
+    const [exporting, setExporting] = useState(false);
 
     useEffect(() => {
         API.get('/api/integrity/recent?limit=25')
@@ -80,14 +82,18 @@ const InstructorDashboard = () => {
 
     const selectClassroom = async (classroom) => {
         setSelectedClassroom(classroom);
+        setGradebook(null);
 
         try {
             // Fetch detailed analytics for this classroom
-            const [analyticsRes, studentsRes] = await Promise.all([
+            const [analyticsRes, studentsRes, gradebookRes] = await Promise.all([
                 fetch(`${API_BASE}/api/analytics/classroom/${classroom._id}`, {
                     headers: { 'Authorization': `Bearer ${user.token}` }
                 }),
                 fetch(`${API_BASE}/api/analytics/classroom/${classroom._id}/students?sortBy=${sortBy}&order=${sortOrder}`, {
+                    headers: { 'Authorization': `Bearer ${user.token}` }
+                }),
+                fetch(`${API_BASE}/api/campus/classrooms/${classroom._id}/gradebook`, {
                     headers: { 'Authorization': `Bearer ${user.token}` }
                 })
             ]);
@@ -101,8 +107,37 @@ const InstructorDashboard = () => {
                 const data = await studentsRes.json();
                 setStudents(data.students || []);
             }
+
+            if (gradebookRes.ok) {
+                setGradebook(await gradebookRes.json());
+            }
         } catch (error) {
             console.error('Error fetching classroom data:', error);
+        }
+    };
+
+    // Download the gradebook CSV (auth header needed, so fetch → blob → anchor click).
+    const exportGradebook = async () => {
+        if (!selectedClassroom) return;
+        setExporting(true);
+        try {
+            const res = await fetch(`${API_BASE}/api/campus/classrooms/${selectedClassroom._id}/gradebook.csv`, {
+                headers: { 'Authorization': `Bearer ${user.token}` }
+            });
+            if (!res.ok) throw new Error('export failed');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gradebook-${(selectedClassroom.name || 'classroom').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error('Gradebook export failed:', e);
+        } finally {
+            setExporting(false);
         }
     };
 
@@ -320,6 +355,69 @@ const InstructorDashboard = () => {
                                         </tbody>
                                     </table>
                                 </div>
+
+                                {/* Gradebook — assignment grades + integrity flags, CSV export */}
+                                {gradebook && (
+                                    <div style={{ marginTop: 24 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+                                            <h4 style={styles.sectionTitle}>📊 Gradebook</h4>
+                                            <button
+                                                onClick={exportGradebook}
+                                                disabled={exporting || gradebook.assignments.length === 0}
+                                                style={{ fontSize: 13, fontWeight: 700, color: '#fff', background: 'var(--cz-accent)', border: 'none', borderRadius: 8, padding: '8px 14px', cursor: gradebook.assignments.length === 0 ? 'not-allowed' : 'pointer', opacity: gradebook.assignments.length === 0 ? 0.5 : 1 }}
+                                            >
+                                                {exporting ? 'Exporting…' : '⬇ Export CSV'}
+                                            </button>
+                                        </div>
+                                        {gradebook.assignments.length === 0 ? (
+                                            <div style={styles.noStudents}>No assignments yet — create one to start grading.</div>
+                                        ) : (
+                                            <div style={styles.tableContainer}>
+                                                <table style={styles.table}>
+                                                    <thead>
+                                                        <tr>
+                                                            <th style={styles.th}>Student</th>
+                                                            {gradebook.assignments.map((a) => (
+                                                                <th key={a.id} style={styles.th} title={`Max ${a.maxPoints}`}>{a.title}</th>
+                                                            ))}
+                                                            <th style={styles.th}>Overall</th>
+                                                            <th style={styles.th}>Integrity</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {gradebook.rows.length === 0 ? (
+                                                            <tr><td colSpan={gradebook.assignments.length + 3} style={styles.noStudents}>No students enrolled yet</td></tr>
+                                                        ) : gradebook.rows.map((row, idx) => (
+                                                            <tr key={row.student.id} style={idx % 2 === 0 ? styles.evenRow : {}}>
+                                                                <td style={styles.td}>
+                                                                    <div style={styles.studentName}>{row.student.name}</div>
+                                                                    <div style={styles.studentEmail}>{row.student.email}</div>
+                                                                </td>
+                                                                {row.cells.map((c, i) => (
+                                                                    <td key={i} style={styles.td}>
+                                                                        {!c ? <span style={{ color: 'var(--cz-faint)' }}>—</span> : (
+                                                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                                                                                <b>{c.grade === null ? '·' : c.grade}</b>
+                                                                                {c.late && <span title="Submitted after due date" style={{ fontSize: 10, color: 'var(--cz-warning, #e08a2b)' }}>late</span>}
+                                                                                {c.flagged && <span title={`High paste ratio (${Math.round((c.pasteRatio || 0) * 100)}% pasted)`} style={{ fontSize: 12 }}>⚠️</span>}
+                                                                            </span>
+                                                                        )}
+                                                                    </td>
+                                                                ))}
+                                                                <td style={styles.td}><span style={styles.scoreBadge}>{row.overallPct === null ? '—' : `${row.overallPct}%`}</span></td>
+                                                                <td style={styles.td}>
+                                                                    {row.flags > 0
+                                                                        ? <span title={`${row.flags} flagged submission(s)`} style={{ fontSize: 12, fontWeight: 700, color: 'var(--cz-danger, #d64545)' }}>⚠️ {row.flags}</span>
+                                                                        : <span style={{ color: 'var(--cz-success, #3aa06d)', fontSize: 12 }}>✓ clean</span>}
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Top Performers */}
                                 {classroomAnalytics?.topPerformers?.length > 0 && (

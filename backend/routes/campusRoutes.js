@@ -7,7 +7,9 @@ const {
     joinClassroom,
     getClassroomById,
     createAssignment,
-    getClassroomAssignments
+    getClassroomAssignments,
+    getGradebook,
+    exportGradebookCsv
 } = require('../controllers/campusController');
 
 // All campus routes are protected
@@ -25,5 +27,8 @@ router.route('/classrooms/:id')
 router.route('/classrooms/:id/assignments')
     .get(getClassroomAssignments)
     .post(createAssignment);
+
+router.get('/classrooms/:id/gradebook', getGradebook);
+router.get('/classrooms/:id/gradebook.csv', exportGradebookCsv);
 
 module.exports = router;
