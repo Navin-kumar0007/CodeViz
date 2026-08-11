@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Code2, ListChecks, GraduationCap, Brain, Network, GitBranch,
   History, Swords, School, Building2, MessagesSquare, Users, ScanSearch,
   FlaskConical, Languages, PencilRuler, Flag, Target, Video, BarChart3, Flame,
-  Home, Hexagon, Bot, Shield, UserCog, Trophy,
+  Home, Hexagon, Bot, Shield, UserCog, Trophy, Repeat,
 } from 'lucide-react';
 
 const ROLE_RANK = { student: 1, instructor: 2, admin: 3 };
@@ -52,6 +52,7 @@ const navGroups = [
     label: 'Grow',
     items: [
       { path: '/mentor', Icon: Bot, label: 'AI Mentor' },
+      { path: '/review', Icon: Repeat, label: 'Review' },
       { path: '/interview-prep', Icon: Target, label: 'Interview Prep' },
       { path: '/video-lessons', Icon: Video, label: 'Video Lessons' },
       { path: '/progress', Icon: BarChart3, label: 'Progress' },

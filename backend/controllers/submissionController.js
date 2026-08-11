@@ -62,6 +62,10 @@ const submitSolution = async (req, res) => {
                 problem.stats.totalSubmissions += 1;
                 await problem.save();
 
+                try {
+                    await require('../services/reviewService').recordAttempt({ userId, problemId, accepted: false });
+                } catch (e) { /* review scheduling is best-effort */ }
+
                 return res.json({
                     verdict,
                     testResults: results,
@@ -100,6 +104,12 @@ const submitSolution = async (req, res) => {
                 } catch (e) { /* contest scoring is best-effort */ }
             }
         }
+
+        // 🔁 Spaced repetition: solved → schedule for review; wrong answer on a
+        // problem already in review → lapse. Best-effort, never blocks the response.
+        try {
+            await require('../services/reviewService').recordAttempt({ userId, problemId, accepted: allPassed });
+        } catch (e) { /* review scheduling is best-effort */ }
 
         res.json({
             verdict,

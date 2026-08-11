@@ -98,4 +98,85 @@ async function getFocusPlan(userId) {
   return { weakAreas, recommendedProblems, nextLesson, summary };
 }
 
-module.exports = { computeWeaknesses, getFocusPlan };
+/**
+ * Job-readiness score (0–100): a single, honest number derived entirely from real
+ * signals, plus the highest-leverage things to improve it. Five weighted factors:
+ *   volume     — how many distinct problems solved
+ *   difficulty — weighted toward the mediums/hards interviews actually ask
+ *   breadth    — how many core topic areas are covered
+ *   accuracy   — distinct-solved / distinct-attempted
+ *   retention  — spaced-repetition items held in good standing (ties in the Review loop)
+ */
+const READINESS_WEIGHTS = { volume: 0.25, difficulty: 0.25, breadth: 0.20, accuracy: 0.15, retention: 0.15 };
+
+function readinessBand(score) {
+  if (score >= 80) return 'Interview-ready';
+  if (score >= 60) return 'Nearly there';
+  if (score >= 40) return 'Building up';
+  if (score >= 20) return 'Foundational';
+  return 'Just starting';
+}
+
+async function computeReadiness(userId) {
+  const ReviewItem = require('../models/ReviewItem');
+  const [accepted, allSubs, allCats, tracked, retained] = await Promise.all([
+    Submission.find({ user: userId, verdict: 'accepted' }).populate('problem', 'difficulty category').lean(),
+    Submission.find({ user: userId }).select('problem').lean(),
+    Problem.distinct('category'),
+    ReviewItem.countDocuments({ user: userId }),
+    ReviewItem.countDocuments({ user: userId, reps: { $gte: 2 } }),
+  ]);
+
+  const solvedIds = new Set();
+  let easy = 0, medium = 0, hard = 0;
+  const cats = new Set();
+  for (const s of accepted) {
+    if (!s.problem) continue;
+    const id = String(s.problem._id);
+    if (solvedIds.has(id)) continue;
+    solvedIds.add(id);
+    if (s.problem.difficulty === 'easy') easy += 1;
+    else if (s.problem.difficulty === 'medium') medium += 1;
+    else if (s.problem.difficulty === 'hard') hard += 1;
+    if (s.problem.category) cats.add(s.problem.category);
+  }
+  const attemptedIds = new Set(allSubs.map((s) => String(s.problem)).filter(Boolean));
+  const coreCats = allCats.filter(Boolean);
+  const solvedCount = solvedIds.size;
+
+  const raw = {
+    volume: Math.min(1, solvedCount / 60),
+    difficulty: Math.min(1, (medium * 2 + hard * 3) / 50),
+    breadth: Math.min(1, cats.size / Math.max(1, Math.min(coreCats.length, 10))),
+    accuracy: attemptedIds.size ? solvedIds.size / attemptedIds.size : 0,
+    retention: tracked ? Math.min(1, retained / Math.max(8, tracked)) : 0,
+  };
+  const score = Math.round(100 * Object.entries(READINESS_WEIGHTS).reduce((sum, [k, w]) => sum + w * raw[k], 0));
+
+  // Highest-leverage improvements: rank factors by (gap × weight), turn into advice.
+  const uncovered = coreCats.filter((c) => !cats.has(c));
+  const adviceFor = {
+    difficulty: { label: 'Level up the difficulty', detail: `You've solved ${medium} medium + ${hard} hard. Interviews lean here — aim for more.` },
+    breadth: { label: 'Broaden your coverage', detail: uncovered.length ? `Untouched areas: ${uncovered.slice(0, 3).join(', ')}.` : 'Keep spreading across topics.' },
+    volume: { label: 'Build solving volume', detail: `${solvedCount} solved so far. Consistent reps compound fast.` },
+    accuracy: { label: 'Tighten correctness', detail: `Your solve rate is ${Math.round(raw.accuracy * 100)}% of attempted problems.` },
+    retention: { label: 'Lock it in with review', detail: tracked ? `${retained}/${tracked} problems are firmly retained.` : 'Start reviewing solved problems so they stick.' },
+  };
+  const levers = Object.keys(READINESS_WEIGHTS)
+    .map((k) => ({ key: k, weightedGap: (1 - raw[k]) * READINESS_WEIGHTS[k], ...adviceFor[k] }))
+    .filter((l) => l.weightedGap > 0.01)
+    .sort((a, b) => b.weightedGap - a.weightedGap)
+    .slice(0, 3)
+    .map(({ key, label, detail }) => ({ key, label, detail }));
+
+  return {
+    score,
+    band: readinessBand(score),
+    signals: Object.fromEntries(Object.keys(raw).map((k) => [k, Math.round(raw[k] * 100)])),
+    levers,
+    solved: solvedCount,
+    byDifficulty: { easy, medium, hard },
+  };
+}
+
+module.exports = { computeWeaknesses, getFocusPlan, computeReadiness, readinessBand };

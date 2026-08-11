@@ -499,6 +499,60 @@ const InterviewPrep = () => {
                     </div>
                 </div>
 
+                {/* Recruiter-style scorecard */}
+                {finalResults.scorecard && (() => {
+                    const sc = finalResults.scorecard;
+                    const barColor = (v) => v >= 75 ? 'var(--accent-green)' : v >= 50 ? 'var(--accent-teal)' : v >= 35 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+                    return (
+                        <div style={S.breakdownCard}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                                <h3 style={{ color: 'var(--text-primary)', fontSize: '16px', margin: 0 }}>📋 Hiring Scorecard</h3>
+                                <span style={{ color: ratingColors[sc.rating], fontSize: '15px', fontWeight: 'bold', border: `1px solid ${ratingColors[sc.rating]}`, borderRadius: '999px', padding: '3px 12px' }}>{sc.signal}</span>
+                            </div>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '0 0 16px 0' }}>{sc.signalBlurb}</p>
+
+                            {/* Rubric bars */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '18px' }}>
+                                {sc.rubric?.map((d) => (
+                                    <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '12px', width: '150px', flexShrink: 0 }}>{d.label}</span>
+                                        <span style={{ flex: 1, height: '8px', background: 'var(--bg-elevated, rgba(255,255,255,0.06))', borderRadius: '999px', overflow: 'hidden' }}>
+                                            <span style={{ display: 'block', height: '100%', width: `${d.score}%`, background: barColor(d.score), borderRadius: '999px', transition: 'width 0.7s ease' }} />
+                                        </span>
+                                        <span style={{ color: 'var(--text-primary)', fontSize: '12px', fontWeight: 'bold', width: '32px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{d.score}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Strengths + improvements */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+                                {sc.strengths?.length > 0 && (
+                                    <div>
+                                        <div style={{ color: 'var(--accent-green)', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '6px' }}>Strengths</div>
+                                        {sc.strengths.map((s) => (
+                                            <div key={s.key} style={{ color: 'var(--text-muted)', fontSize: '12.5px', marginBottom: '5px', lineHeight: 1.45 }}><b style={{ color: 'var(--text-primary)' }}>{s.label}.</b> {s.note}</div>
+                                        ))}
+                                    </div>
+                                )}
+                                {sc.improvements?.length > 0 && (
+                                    <div>
+                                        <div style={{ color: 'var(--accent-yellow)', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '6px' }}>Work on next</div>
+                                        {sc.improvements.map((s) => (
+                                            <div key={s.key} style={{ color: 'var(--text-muted)', fontSize: '12.5px', marginBottom: '5px', lineHeight: 1.45 }}><b style={{ color: 'var(--text-primary)' }}>{s.label}.</b> {s.note}</div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {sc.aiNote && (
+                                <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid var(--border-color, rgba(255,255,255,0.08))', color: 'var(--text-muted)', fontSize: '12.5px', lineHeight: 1.5 }}>
+                                    <b style={{ color: 'var(--text-primary)' }}>Interviewer note:</b> {sc.aiNote}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
+
                 {/* Problem Breakdown */}
                 <div style={S.breakdownCard}>
                     <h3 style={{ color: 'var(--text-primary)', fontSize: '16px', margin: '0 0 16px 0' }}>Problem Breakdown</h3>

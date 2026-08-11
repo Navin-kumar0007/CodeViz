@@ -7,6 +7,7 @@ import ErrorBoundary from '../ErrorBoundary';
 import ConceptCard from '../ConceptCard';
 import VariableTracker from '../VariableTracker';
 import VoiceNarrator from './VoiceNarrator';
+import { is2DArray, changedCells, cursorFromVars } from '../../utils/matrixViz';
 
 const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -117,10 +118,29 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
     return memory;
   }, [traceData, stepIndex]);
 
+  // State one step earlier — used to highlight which matrix cells just changed (the
+  // "DP table filling in" effect).
+  const prevVariables = useMemo(() => {
+    if (!traceData || !Array.isArray(traceData)) return {};
+    let memory = {};
+    for (let i = 0; i < stepIndex; i++) {
+      if (i >= traceData.length) break;
+      const step = traceData[i];
+      if (!step) continue;
+      let stepVars = step.variables || step.locals || step.globals;
+      if (typeof stepVars === 'string') { try { stepVars = JSON.parse(stepVars); } catch { /* ignore */ } }
+      if (stepVars && typeof stepVars === 'object' && Object.keys(stepVars).length > 0) {
+        memory = { ...memory, ...stepVars };
+      }
+    }
+    return memory;
+  }, [traceData, stepIndex]);
+
   // 🎨 CATEGORIZE VARIABLES (Memoized for performance)
   const categorizedVars = useMemo(() => {
     const categories = {
       arrays: {},
+      matrices: {},
       stacks: {},
       queues: {},
       trees: {},
@@ -132,7 +152,9 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
 
     for (const [key, value] of Object.entries(currentVariables)) {
       if (Array.isArray(value)) {
-        categories.arrays[key] = value;
+        // 2D arrays (DP tables / grids / matrices) get their own grid renderer.
+        if (is2DArray(value)) categories.matrices[key] = value;
+        else categories.arrays[key] = value;
       } else if (typeof value === 'object' && value !== null) {
         const keys = Object.keys(value);
 
@@ -444,6 +466,64 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
   // component (with an endpoint highlight) so every structure shares one look.
   const renderStack = (name, stack, state) => renderArray(name, stack, state, 'stack');
   const renderQueue = (name, queue, state) => renderArray(name, queue, state, 'queue');
+
+  // 2D array / DP table / grid. Cells that changed since the previous step pulse, and
+  // an i/j "cursor" marks where the algorithm is working — so DP fills in on screen.
+  const renderMatrix = (name, matrix, state) => {
+    if (!is2DArray(matrix)) return null;
+    const changed = changedCells(prevVariables?.[name], matrix);
+    const cols = Math.max(...matrix.map((r) => r.length));
+    const cursor = cursorFromVars(currentVariables, matrix.length, cols);
+    // Hex accent (getVariableColor can return CSS vars, which don't accept an alpha suffix).
+    const accent = state === 'new' ? '#22c55e' : state === 'changed' ? '#eab308' : '#4299e1';
+    return (
+      <Motion.div
+        key={name}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{ ...styles.varBox, ...styles.glassEffect, minWidth: 'fit-content', borderColor: accent }}
+      >
+        <div style={styles.varHeader}>
+          <span style={styles.varName}>▦ {name}</span>
+          <span style={styles.varType}>{matrix.length}×{cols} matrix</span>
+        </div>
+        <div style={{ padding: '10px', overflowX: 'auto' }}>
+          <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '4px' }}>
+            {matrix.map((row, r) => (
+              <div key={r} style={{ display: 'flex', gap: '4px' }}>
+                {row.map((cell, c) => {
+                  const isChanged = changed.has(`${r},${c}`);
+                  const isCursor = cursor && cursor.r === r && cursor.c === c;
+                  return (
+                    <Motion.div
+                      key={c}
+                      initial={false}
+                      animate={isChanged
+                        ? { scale: [1, 1.16, 1], backgroundColor: [`${accent}22`, `${accent}55`, `${accent}22`] }
+                        : { scale: 1 }}
+                      transition={{ duration: 0.4 }}
+                      style={{
+                        minWidth: '34px', height: '34px', padding: '0 6px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '13px', fontFamily: 'monospace', fontWeight: isChanged ? 700 : 500,
+                        borderRadius: '6px',
+                        border: isCursor ? `2px solid ${accent}` : `1px solid ${accent}33`,
+                        background: isChanged ? `${accent}22` : 'rgba(127,127,127,0.06)',
+                        color: 'var(--cz-text, inherit)',
+                        boxShadow: isCursor ? `0 0 0 2px ${accent}44` : 'none',
+                      }}
+                    >
+                      {typeof cell === 'object' && cell !== null ? '·' : String(cell)}
+                    </Motion.div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </Motion.div>
+    );
+  };
 
   // 🔥 STACK VISUALIZATION (Vertical, bottom-to-top)
   // 🔗 LINKED LIST VISUALIZATION (Horizontal with arrows)
@@ -1004,6 +1084,7 @@ const Canvas = ({ traceData, stepIndex, setStepIndex }) => {
             <ErrorBoundary fallbackMessage="Error rendering visualizations. Try refreshing or check your code.">
               <>
                 {renderSection('Arrays & Lists', '📊', categorizedVars.arrays, renderArray, 'arrays')}
+                {renderSection('Grids & DP Tables', '▦', categorizedVars.matrices, renderMatrix, 'matrices')}
                 {renderSection('Stacks', '📚', categorizedVars.stacks, renderStack, 'stacks')}
                 {renderSection('Queues', '🎫', categorizedVars.queues, renderQueue, 'queues')}
                 {renderSection('Linked Lists', '🔗', categorizedVars.linkedLists || {}, renderLinkedList, 'linkedLists')}

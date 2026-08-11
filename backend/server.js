@@ -197,6 +197,7 @@ app.use('/api/share', require('./routes/shareRoutes')); // 🔗 Shareable viz em
 app.use('/api/contact', require('./routes/contactRoutes')); // 📨 Contact form
 app.use('/api/public', require('./routes/publicRoutes')); // 🌐 Unauth SEO reads
 app.use('/api/contests', require('./routes/contestRoutes')); // 🏆 Weekly contests
+app.use('/api/review', require('./routes/reviewRoutes')); // 🔁 Spaced repetition
 app.get('/sitemap.xml', require('./controllers/publicController').sitemap); // 🗺️ Sitemap
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)
