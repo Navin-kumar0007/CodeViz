@@ -60,6 +60,7 @@ const Pricing = lazy(() => import('./pages/Pricing'));
 const Mentor = lazy(() => import('./pages/Mentor'));
 const Contests = lazy(() => import('./pages/Contests'));
 const Review = lazy(() => import('./pages/Review'));
+const Teams = lazy(() => import('./pages/Teams'));
 const ContestDetail = lazy(() => import('./pages/ContestDetail'));
 const Explore = lazy(() => import('./pages/Explore'));
 const PublicProblem = lazy(() => import('./pages/PublicProblem'));
@@ -207,6 +208,7 @@ const AnimatedRoutes = () => {
         <Route path="/mentor" element={<ProtectedRoute><Mentor /></ProtectedRoute>} />
         <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
         <Route path="/review" element={<ProtectedRoute><Review /></ProtectedRoute>} />
+        <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
         <Route path="/contests" element={<ProtectedRoute><Contests /></ProtectedRoute>} />
         <Route path="/contests/:slug" element={<ProtectedRoute><ContestDetail /></ProtectedRoute>} />
       </Routes>

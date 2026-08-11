@@ -58,6 +58,7 @@ const navGroups = [
       { path: '/progress', Icon: BarChart3, label: 'Progress' },
       { path: '/daily-challenge', Icon: Flame, label: 'Daily Challenge' },
       { path: '/contests', Icon: Trophy, label: 'Contests' },
+      { path: '/teams', Icon: Users, label: 'Teams' },
     ],
   },
   {

@@ -48,4 +48,7 @@ function planIdFromRazorpayPlanId(rzPlanId) {
   return match ? match.id : DEFAULT_PLAN;
 }
 
-module.exports = { PLANS, DEFAULT_PLAN, getPlan, planIdFromRazorpayPlanId };
+// Ordering so we can pick the higher of a user's personal plan vs an inherited team plan.
+const PLAN_RANK = { free: 0, pro: 1, team: 2 };
+
+module.exports = { PLANS, DEFAULT_PLAN, PLAN_RANK, getPlan, planIdFromRazorpayPlanId };
