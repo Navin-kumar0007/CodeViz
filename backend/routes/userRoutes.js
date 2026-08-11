@@ -2,6 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { registerUser, loginUser, logoutUser, generate2FA, verify2FA, forgotPassword, resetPassword } = require('../controllers/authController');
 const { getPublicProfile, setUsername, getReferral } = require('../controllers/profileController');
+const { exportMyData, deleteMyAccount } = require('../controllers/dataRightsController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -24,6 +25,10 @@ router.post('/logout', logoutUser);
 router.get('/public/:handle', getPublicProfile);
 router.put('/username', protect, setUsername);
 router.get('/referral', protect, getReferral);
+
+// Data rights (GDPR/DPDP): export everything, or delete the account + personal data.
+router.get('/me/export', protect, exportMyData);
+router.delete('/me', protect, deleteMyAccount);
 
 // 2FA Routes (Protected)
 router.post('/2fa/generate', protect, generate2FA);
