@@ -179,10 +179,11 @@ function extractJson(text) {
 async function callLLM(prompt) {
   // Provider order is configurable. Set COURSE_GEN_PROVIDER=ollama to generate
   // entirely on a self-hosted local model (no external API, no quotas).
-  const preferLocal = (process.env.COURSE_GEN_PROVIDER || '').toLowerCase() === 'ollama';
-  const chain = preferLocal
-    ? ['ollama', 'gemini', 'groq']
-    : ['gemini', 'groq', 'ollama'];
+  // COURSE_GEN_PROVIDER pins a preferred provider first (e.g. 'groq' when Gemini
+  // quota is spent); the rest stay as fallbacks. Defaults to gemini-first.
+  const base = ['gemini', 'groq', 'ollama'];
+  const pref = (process.env.COURSE_GEN_PROVIDER || '').toLowerCase();
+  const chain = base.includes(pref) ? [pref, ...base.filter((p) => p !== pref)] : base;
 
   let lastError = null;
   for (const provider of chain) {
