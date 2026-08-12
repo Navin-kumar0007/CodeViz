@@ -156,7 +156,13 @@ function extractJson(text) {
     const c = cleaned[i];
     if (inStr) {
       if (esc) { out += c; esc = false; }
-      else if (c === '\\') { out += c; esc = true; }
+      else if (c === '\\') {
+        // Only "\/bfnrtu and \\ \" are valid JSON escapes. A backslash before
+        // anything else (e.g. a regex \d, \w) is invalid JSON — escape it.
+        const next = cleaned[i + 1];
+        if (next !== undefined && '"\\/bfnrtu'.includes(next)) { out += c; esc = true; }
+        else out += '\\\\';
+      }
       else if (c === '"') { out += c; inStr = false; }
       else if (c.charCodeAt(0) < 0x20) { out += CTRL_ESC[c] || `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`; }
       else out += c;

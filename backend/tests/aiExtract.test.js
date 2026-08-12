@@ -13,6 +13,15 @@ describe('extractJson (robust LLM JSON extraction)', () => {
     expect(parsed.code).toContain('return 1');
     expect(parsed.code).toContain('\n'); // newline preserved (as a real newline post-parse)
   });
+  test('escapes invalid backslash sequences (regex \\d, \\w) so JSON.parse succeeds', () => {
+    const bad = '{"pattern":"match \\d+ digits"}'; // \d is not a valid JSON escape
+    const parsed = JSON.parse(extractJson(bad)); // must not throw
+    expect(parsed.pattern).toBe('match \\d+ digits');
+  });
+  test('preserves valid escapes (\\n, \\t)', () => {
+    const parsed = JSON.parse(extractJson('{"s":"a\\nb\\tc"}'));
+    expect(parsed.s).toBe('a\nb\tc');
+  });
   test('ignores trailing prose after the JSON object', () => {
     expect(extractJson('{"a":1}\nHope this helps!')).toBe('{"a":1}');
   });
