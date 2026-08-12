@@ -9,7 +9,11 @@ const {
     createAssignment,
     getClassroomAssignments,
     getGradebook,
-    exportGradebookCsv
+    exportGradebookCsv,
+    listAnnouncements,
+    postAnnouncement,
+    pinAnnouncement,
+    deleteAnnouncement
 } = require('../controllers/campusController');
 
 // All campus routes are protected
@@ -30,5 +34,11 @@ router.route('/classrooms/:id/assignments')
 
 router.get('/classrooms/:id/gradebook', getGradebook);
 router.get('/classrooms/:id/gradebook.csv', exportGradebookCsv);
+
+router.route('/classrooms/:id/announcements')
+    .get(listAnnouncements)
+    .post(postAnnouncement);
+router.patch('/classrooms/:id/announcements/:annId', pinAnnouncement);
+router.delete('/classrooms/:id/announcements/:annId', deleteAnnouncement);
 
 module.exports = router;

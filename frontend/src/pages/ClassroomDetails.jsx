@@ -13,6 +13,11 @@ const ClassroomDetails = () => {
 
     const [classroom, setClassroom] = useState(null);
     const [assignments, setAssignments] = useState([]);
+    const [announcements, setAnnouncements] = useState([]);
+    const [annTitle, setAnnTitle] = useState('');
+    const [annBody, setAnnBody] = useState('');
+    const [annPinned, setAnnPinned] = useState(false);
+    const [posting, setPosting] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -43,12 +48,14 @@ const ClassroomDetails = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [classRes, assignRes] = await Promise.all([
+            const [classRes, assignRes, annRes] = await Promise.all([
                 axios.get(`${API}/api/campus/classrooms/${id}`, { headers }),
-                axios.get(`${API}/api/campus/classrooms/${id}/assignments`, { headers })
+                axios.get(`${API}/api/campus/classrooms/${id}/assignments`, { headers }),
+                axios.get(`${API}/api/campus/classrooms/${id}/announcements`, { headers })
             ]);
             setClassroom(classRes.data);
             setAssignments(assignRes.data);
+            setAnnouncements(annRes.data);
         } catch (err) {
             console.error('Failed to fetch data:', err);
             setError('Failed to load classroom details');
@@ -64,6 +71,25 @@ const ClassroomDetails = () => {
         fetchData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, user, navigate]);
+
+    const annUrl = `${API}/api/campus/classrooms/${id}/announcements`;
+    const postAnnouncement = async (e) => {
+        e.preventDefault();
+        if (!annBody.trim()) return;
+        setPosting(true);
+        try {
+            await axios.post(annUrl, { title: annTitle, body: annBody, pinned: annPinned }, { headers });
+            setAnnTitle(''); setAnnBody(''); setAnnPinned(false);
+            fetchData();
+        } catch (err) { alert(err.response?.data?.message || 'Failed to post'); }
+        setPosting(false);
+    };
+    const togglePin = async (annId) => {
+        try { await axios.patch(`${annUrl}/${annId}`, {}, { headers }); fetchData(); } catch { /* ignore */ }
+    };
+    const deleteAnnouncement = async (annId) => {
+        try { await axios.delete(`${annUrl}/${annId}`, { headers }); setAnnouncements(a => a.filter(x => x._id !== annId)); } catch { /* ignore */ }
+    };
 
     const handleCreateAssignment = async (e) => {
         e.preventDefault();
@@ -143,6 +169,45 @@ const ClassroomDetails = () => {
                     </div>
                 )}
             </header>
+
+            {/* Announcements feed */}
+            <div style={styles.annPanel}>
+                <h2 style={{ margin: '0 0 12px' }}>📢 Announcements</h2>
+                {isInstructor && (
+                    <form onSubmit={postAnnouncement} style={styles.annForm}>
+                        <input placeholder="Title (optional)" value={annTitle} onChange={e => setAnnTitle(e.target.value)} style={styles.annInput} />
+                        <textarea placeholder="Share an update with the class…" value={annBody} onChange={e => setAnnBody(e.target.value)} required rows={2} style={styles.annTextarea} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-muted)', cursor: 'pointer' }}>
+                                <input type="checkbox" checked={annPinned} onChange={e => setAnnPinned(e.target.checked)} /> Pin to top
+                            </label>
+                            <button type="submit" disabled={posting} style={{ ...styles.primaryBtn, marginLeft: 'auto' }}>{posting ? 'Posting…' : 'Post announcement'}</button>
+                        </div>
+                    </form>
+                )}
+                {announcements.length === 0 ? (
+                    <div style={styles.emptyState}>No announcements yet.{isInstructor ? ' Post the first one above.' : ''}</div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {announcements.map(a => (
+                            <div key={a._id} style={{ ...styles.annCard, ...(a.pinned ? styles.annPinnedCard : {}) }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                    {a.pinned && <span title="Pinned">📌</span>}
+                                    {a.title && <strong style={{ fontSize: 15 }}>{a.title}</strong>}
+                                    <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>{a.author?.name} · {new Date(a.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <p style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap', color: 'var(--text-primary)', fontSize: 14, lineHeight: 1.5 }}>{a.body}</p>
+                                {isInstructor && (
+                                    <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                                        <button onClick={() => togglePin(a._id)} style={styles.smallBtn}>{a.pinned ? 'Unpin' : 'Pin'}</button>
+                                        <button onClick={() => deleteAnnouncement(a._id)} style={styles.smallDangerBtn}>Delete</button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
 
             <div style={styles.content}>
                 {/* Roster / Members Panel */}
@@ -301,6 +366,14 @@ const ClassroomDetails = () => {
 
 const styles = {
     center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-primary)' },
+    annPanel: { background: 'var(--bg-muted)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', margin: '0 0 20px' },
+    annForm: { display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' },
+    annInput: { padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-primary)', fontSize: '14px', fontFamily: 'inherit' },
+    annTextarea: { padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-primary)', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' },
+    annCard: { background: 'var(--bg-white)', padding: '14px 16px', borderRadius: '10px', border: '1px solid var(--border-color)' },
+    annPinnedCard: { borderColor: 'var(--accent-teal)', background: 'color-mix(in srgb, var(--accent-teal) 7%, var(--bg-white))' },
+    smallBtn: { fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '7px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' },
+    smallDangerBtn: { fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '7px', border: '1px solid var(--accent-red)', background: 'transparent', color: 'var(--accent-red)', cursor: 'pointer' },
     page: { padding: '40px', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-primary)' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' },
     backBtn: { background: 'transparent', color: '#aaa', border: 'none', cursor: 'pointer', padding: 0, marginBottom: '10px' },

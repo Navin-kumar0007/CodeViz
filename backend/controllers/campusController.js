@@ -254,6 +254,68 @@ const exportGradebookCsv = asyncHandler(async (req, res) => {
     res.send(csv);
 });
 
+// ── Announcements (class feed) ──────────────────────────────────────────────
+const Announcement = require('../models/Announcement');
+
+// GET /api/campus/classrooms/:id/announcements — feed for members (pinned first).
+const listAnnouncements = asyncHandler(async (req, res) => {
+    const classroom = await Classroom.findById(req.params.id);
+    if (!classroom) { res.status(404); throw new Error('Classroom not found'); }
+    if (!classroom.isEnrolled(req.user._id) && !classroom.isInstructor(req.user._id) && req.user.role !== 'admin') {
+        res.status(403); throw new Error('Not authorized');
+    }
+    const items = await Announcement.find({ classroom: classroom._id })
+        .sort({ pinned: -1, createdAt: -1 })
+        .populate('author', 'name')
+        .lean();
+    res.json(items);
+});
+
+// POST /api/campus/classrooms/:id/announcements — post (instructor only).
+const postAnnouncement = asyncHandler(async (req, res) => {
+    const classroom = await Classroom.findById(req.params.id);
+    if (!classroom) { res.status(404); throw new Error('Classroom not found'); }
+    if (!classroom.isInstructor(req.user._id) && req.user.role !== 'admin') {
+        res.status(403); throw new Error('Only the instructor can post announcements');
+    }
+    const body = String(req.body.body || '').trim();
+    if (!body) { res.status(400); throw new Error('Announcement body is required'); }
+    const a = await Announcement.create({
+        classroom: classroom._id,
+        author: req.user._id,
+        title: String(req.body.title || '').trim(),
+        body,
+        pinned: !!req.body.pinned,
+    });
+    await a.populate('author', 'name');
+    res.status(201).json(a);
+});
+
+// PATCH /api/campus/classrooms/:id/announcements/:annId — toggle pin (instructor).
+const pinAnnouncement = asyncHandler(async (req, res) => {
+    const classroom = await Classroom.findById(req.params.id);
+    if (!classroom) { res.status(404); throw new Error('Classroom not found'); }
+    if (!classroom.isInstructor(req.user._id) && req.user.role !== 'admin') {
+        res.status(403); throw new Error('Only the instructor can pin announcements');
+    }
+    const a = await Announcement.findOne({ _id: req.params.annId, classroom: classroom._id });
+    if (!a) { res.status(404); throw new Error('Announcement not found'); }
+    a.pinned = !a.pinned;
+    await a.save();
+    res.json({ _id: a._id, pinned: a.pinned });
+});
+
+// DELETE /api/campus/classrooms/:id/announcements/:annId — delete (instructor).
+const deleteAnnouncement = asyncHandler(async (req, res) => {
+    const classroom = await Classroom.findById(req.params.id);
+    if (!classroom) { res.status(404); throw new Error('Classroom not found'); }
+    if (!classroom.isInstructor(req.user._id) && req.user.role !== 'admin') {
+        res.status(403); throw new Error('Only the instructor can delete announcements');
+    }
+    await Announcement.deleteOne({ _id: req.params.annId, classroom: classroom._id });
+    res.json({ deleted: true });
+});
+
 module.exports = {
     getClassrooms,
     createClassroom,
@@ -263,5 +325,9 @@ module.exports = {
     getClassroomAssignments,
     getGradebook,
     exportGradebookCsv,
-    buildGradebook
+    buildGradebook,
+    listAnnouncements,
+    postAnnouncement,
+    pinAnnouncement,
+    deleteAnnouncement
 };
