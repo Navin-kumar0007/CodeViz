@@ -105,7 +105,7 @@ export default function ProblemList() {
           ) : problems.length === 0 ? (
             <EmptyState icon="🔍" title="No problems found" hint="Try a different search or filter." action={<Button size="sm" onClick={() => setFilter({ difficulty: '', category: '', search: '' })}>Clear filters</Button>} />
           ) : (
-            problems.map((p) => (
+            problems.map((p, i) => (
               <button
                 key={p._id}
                 onClick={() => navigate(`/problems/${p.slug}`)}
@@ -114,7 +114,7 @@ export default function ProblemList() {
                 <span className="flex justify-center">
                   {p.solved ? <CheckCircle2 size={17} className="text-success" /> : <Circle size={16} className="text-faint" />}
                 </span>
-                <span className="font-mono text-[13px] text-muted tabular-nums">{p.order}</span>
+                <span className="font-mono text-[13px] text-muted tabular-nums">{i + 1}</span>
                 <span className="min-w-0">
                   <span className="block text-[14px] font-semibold text-text truncate">{p.title}</span>
                   {p.category && <span className="block text-[12px] text-muted truncate capitalize">{String(p.category).replace(/_/g, ' ')}</span>}
