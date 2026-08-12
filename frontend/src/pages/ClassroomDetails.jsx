@@ -13,6 +13,11 @@ const ClassroomDetails = () => {
 
     const [classroom, setClassroom] = useState(null);
     const [assignments, setAssignments] = useState([]);
+    const [announcements, setAnnouncements] = useState([]);
+    const [annTitle, setAnnTitle] = useState('');
+    const [annBody, setAnnBody] = useState('');
+    const [annPinned, setAnnPinned] = useState(false);
+    const [posting, setPosting] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -43,12 +48,14 @@ const ClassroomDetails = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [classRes, assignRes] = await Promise.all([
+            const [classRes, assignRes, annRes] = await Promise.all([
                 axios.get(`${API}/api/campus/classrooms/${id}`, { headers }),
-                axios.get(`${API}/api/campus/classrooms/${id}/assignments`, { headers })
+                axios.get(`${API}/api/campus/classrooms/${id}/assignments`, { headers }),
+                axios.get(`${API}/api/campus/classrooms/${id}/announcements`, { headers })
             ]);
             setClassroom(classRes.data);
             setAssignments(assignRes.data);
+            setAnnouncements(annRes.data);
         } catch (err) {
             console.error('Failed to fetch data:', err);
             setError('Failed to load classroom details');
@@ -64,6 +71,36 @@ const ClassroomDetails = () => {
         fetchData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, user, navigate]);
+
+    const annUrl = `${API}/api/campus/classrooms/${id}/announcements`;
+    const postAnnouncement = async (e) => {
+        e.preventDefault();
+        if (!annBody.trim()) return;
+        setPosting(true);
+        try {
+            await axios.post(annUrl, { title: annTitle, body: annBody, pinned: annPinned }, { headers });
+            setAnnTitle(''); setAnnBody(''); setAnnPinned(false);
+            fetchData();
+        } catch (err) { alert(err.response?.data?.message || 'Failed to post'); }
+        setPosting(false);
+    };
+    const togglePin = async (annId) => {
+        try { await axios.patch(`${annUrl}/${annId}`, {}, { headers }); fetchData(); } catch { /* ignore */ }
+    };
+    const deleteAnnouncement = async (annId) => {
+        try { await axios.delete(`${annUrl}/${annId}`, { headers }); setAnnouncements(a => a.filter(x => x._id !== annId)); } catch { /* ignore */ }
+    };
+
+    const exportGradebook = async () => {
+        try {
+            const res = await axios.get(`${API}/api/campus/classrooms/${id}/gradebook.csv`, { headers, responseType: 'blob' });
+            const url = URL.createObjectURL(res.data);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `gradebook-${(classroom?.name || 'class').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.csv`;
+            document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+        } catch { alert('Gradebook export failed'); }
+    };
 
     const handleCreateAssignment = async (e) => {
         e.preventDefault();
@@ -130,19 +167,69 @@ const ClassroomDetails = () => {
         <div style={styles.page}>
             <header style={styles.header}>
                 <div>
-                    <button style={styles.backBtn} onClick={() => navigate('/campus')}>← Back to Campus</button>
+                    <button style={styles.backBtn} onClick={() => navigate(isInstructor ? '/campus' : '/classroom')}>← Back</button>
                     <h1 style={styles.title}>{classroom.name}</h1>
                     <p style={styles.subtitle}>{classroom.description}</p>
                 </div>
+                <div style={styles.headerActions}>
+                    <button
+                        onClick={() => navigate('/classroom', { state: { openClassroomId: id } })}
+                        style={{
+                            ...styles.liveBtn,
+                            background: classroom.isLive ? 'var(--accent-red)' : 'transparent',
+                            color: classroom.isLive ? '#fff' : 'var(--accent-teal)',
+                            borderColor: classroom.isLive ? 'var(--accent-red)' : 'var(--accent-teal)',
+                        }}
+                    >
+                        {classroom.isLive ? '🔴 Join Live Session' : (isInstructor ? '📡 Start Live Room' : '📡 Open Live Room')}
+                    </button>
+                    {isInstructor && (
+                        <>
+                            <span style={styles.codeBadge}>Code: {classroom.code}</span>
+                            <button style={styles.primaryBtn} onClick={() => setShowCreateModal(true)}>+ New Assignment</button>
+                        </>
+                    )}
+                </div>
+            </header>
+
+            {/* Announcements feed */}
+            <div style={styles.annPanel}>
+                <h2 style={{ margin: '0 0 12px' }}>📢 Announcements</h2>
                 {isInstructor && (
-                    <div style={styles.instructorPanel}>
-                        <span style={styles.codeBadge}>Enrollment Code: {classroom.code}</span>
-                        <button style={styles.primaryBtn} onClick={() => setShowCreateModal(true)}>
-                            + New Assignment
-                        </button>
+                    <form onSubmit={postAnnouncement} style={styles.annForm}>
+                        <input placeholder="Title (optional)" value={annTitle} onChange={e => setAnnTitle(e.target.value)} style={styles.annInput} />
+                        <textarea placeholder="Share an update with the class…" value={annBody} onChange={e => setAnnBody(e.target.value)} required rows={2} style={styles.annTextarea} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-muted)', cursor: 'pointer' }}>
+                                <input type="checkbox" checked={annPinned} onChange={e => setAnnPinned(e.target.checked)} /> Pin to top
+                            </label>
+                            <button type="submit" disabled={posting} style={{ ...styles.primaryBtn, marginLeft: 'auto' }}>{posting ? 'Posting…' : 'Post announcement'}</button>
+                        </div>
+                    </form>
+                )}
+                {announcements.length === 0 ? (
+                    <div style={styles.emptyState}>No announcements yet.{isInstructor ? ' Post the first one above.' : ''}</div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {announcements.map(a => (
+                            <div key={a._id} style={{ ...styles.annCard, ...(a.pinned ? styles.annPinnedCard : {}) }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                    {a.pinned && <span title="Pinned">📌</span>}
+                                    {a.title && <strong style={{ fontSize: 15 }}>{a.title}</strong>}
+                                    <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>{a.author?.name} · {new Date(a.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <p style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap', color: 'var(--text-primary)', fontSize: 14, lineHeight: 1.5 }}>{a.body}</p>
+                                {isInstructor && (
+                                    <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                                        <button onClick={() => togglePin(a._id)} style={styles.smallBtn}>{a.pinned ? 'Unpin' : 'Pin'}</button>
+                                        <button onClick={() => deleteAnnouncement(a._id)} style={styles.smallDangerBtn}>Delete</button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 )}
-            </header>
+            </div>
 
             <div style={styles.content}>
                 {/* Roster / Members Panel */}
@@ -164,38 +251,60 @@ const ClassroomDetails = () => {
 
                 {/* Assignments Panel */}
                 <div style={styles.assignmentPanel}>
-                    <h2>📝 Assignments</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                        <h2 style={{ margin: 0 }}>📝 Assignments</h2>
+                        {isInstructor && assignments.length > 0 && (
+                            <button onClick={exportGradebook} style={styles.smallBtn}>⬇ Gradebook CSV</button>
+                        )}
+                    </div>
                     {assignments.length === 0 ? (
-                        <div style={styles.emptyState}>No assignments posted yet.</div>
+                        <div style={{ ...styles.emptyState, marginTop: 14 }}>No assignments posted yet.</div>
                     ) : (
-                        assignments.map(a => (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
+                        {assignments.map(a => {
+                            const due = dueStatus(a.dueDate);
+                            const mine = a.mySubmission;
+                            const totalStudents = classroom.students?.length || 0;
+                            return (
                             <div key={a._id} style={styles.assignmentCard}>
                                 <div style={styles.assignmentHeader}>
-                                    <h3>{a.title}</h3>
+                                    <h3 style={{ margin: 0 }}>{a.title}</h3>
                                     <span style={styles.pointsBadge}>{a.maxPoints} pts</span>
                                 </div>
                                 <p style={styles.assignmentDesc}>{a.description}</p>
                                 <div style={styles.assignmentMeta}>
                                     <span style={styles.langTag}>{a.language}</span>
-                                    {a.dueDate && (
-                                        <span style={styles.dueTag}>
-                                            Due: {new Date(a.dueDate).toLocaleDateString()}
-                                        </span>
+                                    {due && <span style={{ ...styles.dueTag, color: due.color, borderColor: due.color }}>{due.label}</span>}
+                                    {isInstructor && (
+                                        <span style={styles.dueTag}>{a.submissionCount || 0}/{totalStudents} submitted · {a.gradedCount || 0} graded</span>
                                     )}
                                 </div>
-                                <button
-                                    style={a.submissions?.some(s => s.student === user._id) ? styles.secondaryBtnFull : styles.solveBtn}
-                                    onClick={() => openSolveModal(a)}
-                                >
-                                    {a.submissions?.some(s => s.student === user._id) ? 'Re-Submit Assignment' : 'Solve Assignment'}
-                                </button>
-                                {a.submissions?.some(s => s.student === user._id) && (
-                                    <div style={{ marginTop: '10px', padding: '10px', background: 'rgba(72,187,120,0.1)', color: 'var(--accent-green)', borderRadius: '4px', textAlign: 'center', fontWeight: 'bold' }}>
-                                        Score: {a.submissions.find(s => s.student === user._id).grade} / {a.maxPoints}
-                                    </div>
+
+                                {!isInstructor && (
+                                    <button
+                                        style={mine ? styles.secondaryBtnFull : styles.solveBtn}
+                                        onClick={() => openSolveModal(a)}
+                                    >
+                                        {mine ? 'Re-Submit Assignment' : 'Solve Assignment'}
+                                    </button>
+                                )}
+
+                                {!isInstructor && (
+                                    !mine ? (
+                                        <div style={styles.statusNeutral}>Not started</div>
+                                    ) : typeof mine.grade === 'number' ? (
+                                        <div style={styles.statusGraded}>
+                                            Score: {mine.grade} / {a.maxPoints}
+                                            {mine.feedback && <div style={styles.feedbackBox}>{mine.feedback}</div>}
+                                        </div>
+                                    ) : (
+                                        <div style={styles.statusPending}>Submitted — awaiting grade</div>
+                                    )
                                 )}
                             </div>
-                        ))
+                            );
+                        })}
+                        </div>
                     )}
                 </div>
             </div>
@@ -299,8 +408,33 @@ const ClassroomDetails = () => {
     );
 };
 
+// Due-date badge: overdue (red) / due soon (yellow) / future (muted).
+function dueStatus(dueDate) {
+    if (!dueDate) return null;
+    const d = new Date(dueDate);
+    const days = Math.ceil((d - Date.now()) / 86400000);
+    if (days < 0) return { label: 'Overdue', color: 'var(--accent-red)' };
+    if (days === 0) return { label: 'Due today', color: 'var(--accent-yellow)' };
+    if (days <= 3) return { label: `Due in ${days}d`, color: 'var(--accent-yellow)' };
+    return { label: `Due ${d.toLocaleDateString()}`, color: 'var(--text-muted)' };
+}
+
 const styles = {
     center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-primary)' },
+    headerActions: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
+    liveBtn: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: '1px solid', fontWeight: 700, fontSize: 14, cursor: 'pointer', background: 'transparent' },
+    statusNeutral: { marginTop: 10, padding: '8px 10px', borderRadius: 8, textAlign: 'center', fontSize: 13, color: 'var(--text-muted)', background: 'var(--bg-muted)', border: '1px solid var(--border-color)' },
+    statusPending: { marginTop: 10, padding: '8px 10px', borderRadius: 8, textAlign: 'center', fontSize: 13, fontWeight: 600, color: 'var(--accent-yellow)', background: 'color-mix(in srgb, var(--accent-yellow) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-yellow) 30%, transparent)' },
+    statusGraded: { marginTop: 10, padding: '10px', borderRadius: 8, textAlign: 'center', fontWeight: 'bold', color: 'var(--accent-green)', background: 'color-mix(in srgb, var(--accent-green) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 30%, transparent)' },
+    feedbackBox: { marginTop: 8, padding: '8px 10px', borderRadius: 6, background: 'var(--bg-white)', color: 'var(--text-primary)', fontWeight: 'normal', fontSize: 13, textAlign: 'left', whiteSpace: 'pre-wrap', border: '1px solid var(--border-color)' },
+    annPanel: { background: 'var(--bg-muted)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', margin: '0 0 20px' },
+    annForm: { display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' },
+    annInput: { padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-primary)', fontSize: '14px', fontFamily: 'inherit' },
+    annTextarea: { padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-primary)', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' },
+    annCard: { background: 'var(--bg-white)', padding: '14px 16px', borderRadius: '10px', border: '1px solid var(--border-color)' },
+    annPinnedCard: { borderColor: 'var(--accent-teal)', background: 'color-mix(in srgb, var(--accent-teal) 7%, var(--bg-white))' },
+    smallBtn: { fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '7px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' },
+    smallDangerBtn: { fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '7px', border: '1px solid var(--accent-red)', background: 'transparent', color: 'var(--accent-red)', cursor: 'pointer' },
     page: { padding: '40px', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-primary)' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' },
     backBtn: { background: 'transparent', color: '#aaa', border: 'none', cursor: 'pointer', padding: 0, marginBottom: '10px' },

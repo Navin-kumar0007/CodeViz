@@ -33,6 +33,7 @@ const navGroups = [
     items: [
       { path: '/room', Icon: Swords, label: 'Battle Room' },
       { path: '/classroom', Icon: School, label: 'Classroom' },
+      { path: '/my-classes', Icon: GraduationCap, label: 'My Classes' },
       { path: '/campus', Icon: Building2, label: 'Campus', minRole: 'instructor' },
       { path: '/forum', Icon: MessagesSquare, label: 'Forum' },
       { path: '/peer-review', Icon: Users, label: 'Peer Review' },

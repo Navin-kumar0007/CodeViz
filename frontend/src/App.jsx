@@ -61,6 +61,7 @@ const Mentor = lazy(() => import('./pages/Mentor'));
 const Contests = lazy(() => import('./pages/Contests'));
 const Review = lazy(() => import('./pages/Review'));
 const Teams = lazy(() => import('./pages/Teams'));
+const MyClassrooms = lazy(() => import('./pages/MyClassrooms'));
 const ContestDetail = lazy(() => import('./pages/ContestDetail'));
 const Explore = lazy(() => import('./pages/Explore'));
 const PublicProblem = lazy(() => import('./pages/PublicProblem'));
@@ -190,7 +191,9 @@ const AnimatedRoutes = () => {
         <Route path="/test-lab" element={<ProtectedRoute><TestLab /></ProtectedRoute>} />
         <Route path="/translator" element={<ProtectedRoute><Translator /></ProtectedRoute>} />
         <Route path="/campus" element={<ProtectedRoute minRole="instructor"><CampusDashboard /></ProtectedRoute>} />
-        <Route path="/campus/:id" element={<ProtectedRoute minRole="instructor"><ClassroomDetails /></ProtectedRoute>} />
+        {/* Class hub: enrolled students see (read-only) announcements + their own grades;
+            instructors get the full teaching tools. Access is enforced per-role by the API. */}
+        <Route path="/campus/:id" element={<ProtectedRoute><ClassroomDetails /></ProtectedRoute>} />
         <Route path="/interview-prep" element={<ProtectedRoute><InterviewPrep /></ProtectedRoute>} />
         <Route path="/interview-dashboard" element={<ProtectedRoute><InterviewDashboard /></ProtectedRoute>} />
         <Route path="/live-interview/:sessionId" element={<ProtectedRoute><LiveInterview /></ProtectedRoute>} />
@@ -208,6 +211,7 @@ const AnimatedRoutes = () => {
         <Route path="/mentor" element={<ProtectedRoute><Mentor /></ProtectedRoute>} />
         <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
         <Route path="/review" element={<ProtectedRoute><Review /></ProtectedRoute>} />
+        <Route path="/my-classes" element={<ProtectedRoute><MyClassrooms /></ProtectedRoute>} />
         <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
         <Route path="/contests" element={<ProtectedRoute><Contests /></ProtectedRoute>} />
         <Route path="/contests/:slug" element={<ProtectedRoute><ContestDetail /></ProtectedRoute>} />
