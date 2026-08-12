@@ -26,9 +26,9 @@ const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
 async function refOutput(ref, input) {
   try {
     const r = await dockerService.runInSandbox(ref.code, ref.language, input);
-    if (r.timeout) return null;
-    if (r.error && !(r.output && r.output.trim())) return null;
-    return typeof r.output === 'string' ? r.output : null;
+    if (r.timeout || r.error) return null;
+    const out = typeof r.output === 'string' ? r.output : '';
+    return out.trim().length ? out : null; // reject empty output — it can't grade
   } catch { return null; }
 }
 
