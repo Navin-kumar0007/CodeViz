@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Circle, Search } from 'lucide-react';
 import { API as axios } from '../utils/api';
 import API_BASE from '../utils/api';
@@ -12,6 +12,7 @@ const PER_PAGE = 35;
 
 export default function ProblemList() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const user = JSON.parse(localStorage.getItem('userInfo'));
   const token = user?.token;
 
@@ -19,10 +20,26 @@ export default function ProblemList() {
   const [categories, setCategories] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState({ difficulty: '', category: '', search: '' });
+  // Seed filter + page from the URL so back/refresh land you where you were.
+  const [filter, setFilter] = useState(() => ({
+    difficulty: searchParams.get('difficulty') || '',
+    category: searchParams.get('category') || '',
+    search: searchParams.get('search') || '',
+  }));
   const [stats, setStats] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1);
+
+  // Mirror page + filters into the URL (replace, so it doesn't spam history).
+  useEffect(() => {
+    const p = {};
+    if (page > 1) p.page = String(page);
+    if (filter.difficulty) p.difficulty = filter.difficulty;
+    if (filter.category) p.category = filter.category;
+    if (filter.search) p.search = filter.search;
+    setSearchParams(p, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, filter.difficulty, filter.category, filter.search]);
 
   useEffect(() => {
     const headers = { Authorization: `Bearer ${token}` };

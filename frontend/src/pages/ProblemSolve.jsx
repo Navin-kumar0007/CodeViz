@@ -17,6 +17,12 @@ import { buildRunnable } from '../utils/solutionRunner';
 const API = `${API_BASE}/api/problems`;
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
 
+// Persist the user's in-progress code per (problem, language) so a refresh or
+// accidental navigation doesn't lose their work.
+const codeKey = (slug, lang) => `codeviz:code:${slug}:${lang}`;
+const loadSavedCode = (slug, lang) => { try { return localStorage.getItem(codeKey(slug, lang)); } catch { return null; } };
+const saveCode = (slug, lang, code) => { try { localStorage.setItem(codeKey(slug, lang), code ?? ''); } catch { /* storage full/blocked */ } };
+
 const VERDICT = {
   accepted: { tone: 'success', Icon: CheckCircle2, label: 'Accepted' },
   wrong_answer: { tone: 'danger', Icon: XCircle, label: 'Wrong Answer' },
@@ -30,19 +36,26 @@ const TABS = [{ id: 'description', label: 'Description' }, { id: 'editorial', la
 export default function ProblemSolve() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Merge a patch into the URL query (replace history entry, keep other params like ?contest).
+  const updateUrl = (patch) => {
+    const next = new URLSearchParams(searchParams);
+    Object.entries(patch).forEach(([k, v]) => { if (v) next.set(k, v); else next.delete(k); });
+    setSearchParams(next, { replace: true });
+  };
   const contestSlug = searchParams.get('contest');
   const user = JSON.parse(localStorage.getItem('userInfo'));
   const headers = { Authorization: `Bearer ${user?.token}` };
 
   const [problem, setProblem] = useState(null);
-  const [language, setLanguage] = useState('python');
+  const [language, setLanguage] = useState(() => searchParams.get('lang') || 'python');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
-  const [activeTab, setActiveTab] = useState('description');
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'description');
+  const selectTab = (id) => { setActiveTab(id); updateUrl({ tab: id }); };
   const [showHints, setShowHints] = useState(false);
   const [hintIndex, setHintIndex] = useState(0);
   const [submissions, setSubmissions] = useState([]);
@@ -77,6 +90,7 @@ export default function ProblemSolve() {
     cur.keystrokes += 1;
     cur.lastLen = nv.length;
     setCode(nv);
+    saveCode(slug, language, nv); // auto-save so a refresh keeps their work
   };
 
   useEffect(() => {
@@ -94,18 +108,24 @@ export default function ProblemSolve() {
       const { data } = await axios.get(`${API}/${slug}`, { headers });
       setProblem(data);
       const starter = data.starterCode?.[language] || `# Write your solution for: ${data.title}\n`;
-      setCode(starter);
-      resetTelemetry(starter.length); // don't count starter code as typing
+      // Restore the user's saved code for this problem+language if any, else the starter.
+      const saved = loadSavedCode(slug, language);
+      const initial = saved != null ? saved : starter;
+      setCode(initial);
+      resetTelemetry(initial.length); // don't count restored/starter code as typing
     } catch (err) { console.error(err); }
     setLoading(false);
   };
 
   const handleLanguageChange = (lang) => {
+    saveCode(slug, language, code); // keep the current language's work
     setLanguage(lang);
-    if (problem?.starterCode?.[lang]) {
-      setCode(problem.starterCode[lang]);
-      resetTelemetry(problem.starterCode[lang].length);
-    }
+    updateUrl({ lang });
+    // Restore saved code for the new language, else its starter.
+    const saved = loadSavedCode(slug, lang);
+    const next = saved != null ? saved : (problem?.starterCode?.[lang] || '');
+    setCode(next);
+    resetTelemetry(next.length);
   };
 
   const handleRun = async () => {
@@ -189,7 +209,7 @@ export default function ProblemSolve() {
         <div className="flex flex-col min-h-0 border-r border-line">
           <div className="flex items-center gap-1 px-2 border-b border-line shrink-0 bg-surface">
             {TABS.map((t) => (
-              <button key={t.id} onClick={() => setActiveTab(t.id)}
+              <button key={t.id} onClick={() => selectTab(t.id)}
                 className={`px-3 h-10 text-[12px] font-semibold uppercase tracking-wide border-b-2 -mb-px transition-colors cursor-pointer ${activeTab === t.id ? 'text-accent border-accent' : 'text-muted border-transparent hover:text-text'}`}>
                 {t.label}
               </button>
