@@ -14,6 +14,47 @@ Two supported paths:
 
 ---
 
+## Recommended hosting — the split (≈ $5/mo)
+
+The visualizer runs a **custom tracer inside Docker sandboxes**, which a generic
+PaaS can't provide — so the **backend must live on a Docker-capable VM**. But the
+**frontend is just a static build** and belongs on a free CDN. Split them:
+
+| Part | Where | Cost | Why |
+|------|-------|------|-----|
+| **Frontend** (React build) | **Vercel** or Cloudflare Pages | Free | static, global CDN, auto-deploy on push |
+| **Backend + Docker sandbox + tracer** | **Hetzner CX22** (2 vCPU / 4 GB, ~$5) | ~$5/mo | needs a Docker daemon; 4 GB RAM comfortably runs the sandbox + Coolify |
+| **Database** | **MongoDB Atlas M0** | Free | survives a VM loss → data is safe |
+| **DNS + SSL + CDN** | **Cloudflare** | Free | |
+| **Uptime + backups** | UptimeRobot + `mongodump` cron | Free | ping avoids idle issues; backups = recoverable |
+
+> Not Vercel/Render for the **backend** — no Docker daemon → the tracer/visualizer
+> and code runner won't work. Vercel is frontend-only here.
+
+### Steps
+1. **Database** — create a free **Atlas M0** cluster, allowlist the VM IP, copy `MONGO_URI`.
+2. **Backend on Hetzner** — provision **CX22 (x86)**, then follow **Section A** below
+   (Docker + runner image + build + systemd + nginx + HTTPS). Give it a subdomain,
+   e.g. `api.yourdomain.com`. *(Optional: install **Coolify** on the VM for a
+   push-to-deploy dashboard instead of the manual systemd steps.)*
+3. **Frontend on Vercel** — import the GitHub repo, set **Root Directory = `frontend`**,
+   add env **`VITE_API_URL=https://api.yourdomain.com`**, deploy. Vercel auto-deploys
+   on every push to the branch.
+4. **CORS** — ensure `FRONTEND_URL` on the backend `.env` is the Vercel origin
+   (e.g. `https://yourdomain.com`) so the API accepts it.
+5. **DNS/SSL** — point `api.` (VM IP) and the apex/`www` (Vercel) via **Cloudflare**.
+
+### Update flow (push → live)
+- **Frontend:** `git push` → **Vercel rebuilds + deploys automatically.**
+- **Backend:** re-deploy on the VM (Section *Updating a deployment* below) — or, with
+  **Coolify**, `git push` auto-deploys it too.
+- After a frontend deploy, returning users may need a **hard-refresh** (PWA service
+  worker caches old JS; `autoUpdate` handles most cases).
+- **Content** (problems/courses/editorials) lives in the DB — if you point at the same
+  Atlas cluster it's already there; a fresh cluster needs the seeders re-run (step 10).
+
+---
+
 ## A. Host deploy (recommended)
 
 ### 1. Provision a VM
