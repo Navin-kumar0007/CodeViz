@@ -190,7 +190,9 @@ const AnimatedRoutes = () => {
         <Route path="/test-lab" element={<ProtectedRoute><TestLab /></ProtectedRoute>} />
         <Route path="/translator" element={<ProtectedRoute><Translator /></ProtectedRoute>} />
         <Route path="/campus" element={<ProtectedRoute minRole="instructor"><CampusDashboard /></ProtectedRoute>} />
-        <Route path="/campus/:id" element={<ProtectedRoute minRole="instructor"><ClassroomDetails /></ProtectedRoute>} />
+        {/* Class hub: enrolled students see (read-only) announcements + their own grades;
+            instructors get the full teaching tools. Access is enforced per-role by the API. */}
+        <Route path="/campus/:id" element={<ProtectedRoute><ClassroomDetails /></ProtectedRoute>} />
         <Route path="/interview-prep" element={<ProtectedRoute><InterviewPrep /></ProtectedRoute>} />
         <Route path="/interview-dashboard" element={<ProtectedRoute><InterviewDashboard /></ProtectedRoute>} />
         <Route path="/live-interview/:sessionId" element={<ProtectedRoute><LiveInterview /></ProtectedRoute>} />

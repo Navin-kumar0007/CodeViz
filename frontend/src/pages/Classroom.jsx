@@ -309,6 +309,22 @@ const Classroom = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.state, user?.token]);
 
+    // Open a specific classroom's live session directly (deep-link from the campus /
+    // assignments page). No re-join — just fetch the class and connect the socket.
+    useEffect(() => {
+        const openId = location.state?.openClassroomId;
+        if (openId && user?.token) {
+            window.history.replaceState({}, document.title);
+            (async () => {
+                try {
+                    const res = await fetch(`${API_BASE}/api/classrooms/${openId}`, { headers: { Authorization: `Bearer ${user.token}` } });
+                    if (res.ok) connectToClassroom(await res.json());
+                } catch { /* ignore — user can pick manually */ }
+            })();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.state, user?.token]);
+
     const createClassroom = async () => {
         if (!newClassroomName.trim()) {
             setError('Please enter a classroom name');

@@ -167,18 +167,29 @@ const ClassroomDetails = () => {
         <div style={styles.page}>
             <header style={styles.header}>
                 <div>
-                    <button style={styles.backBtn} onClick={() => navigate('/campus')}>← Back to Campus</button>
+                    <button style={styles.backBtn} onClick={() => navigate(isInstructor ? '/campus' : '/classroom')}>← Back</button>
                     <h1 style={styles.title}>{classroom.name}</h1>
                     <p style={styles.subtitle}>{classroom.description}</p>
                 </div>
-                {isInstructor && (
-                    <div style={styles.instructorPanel}>
-                        <span style={styles.codeBadge}>Enrollment Code: {classroom.code}</span>
-                        <button style={styles.primaryBtn} onClick={() => setShowCreateModal(true)}>
-                            + New Assignment
-                        </button>
-                    </div>
-                )}
+                <div style={styles.headerActions}>
+                    <button
+                        onClick={() => navigate('/classroom', { state: { openClassroomId: id } })}
+                        style={{
+                            ...styles.liveBtn,
+                            background: classroom.isLive ? 'var(--accent-red)' : 'transparent',
+                            color: classroom.isLive ? '#fff' : 'var(--accent-teal)',
+                            borderColor: classroom.isLive ? 'var(--accent-red)' : 'var(--accent-teal)',
+                        }}
+                    >
+                        {classroom.isLive ? '🔴 Join Live Session' : (isInstructor ? '📡 Start Live Room' : '📡 Open Live Room')}
+                    </button>
+                    {isInstructor && (
+                        <>
+                            <span style={styles.codeBadge}>Code: {classroom.code}</span>
+                            <button style={styles.primaryBtn} onClick={() => setShowCreateModal(true)}>+ New Assignment</button>
+                        </>
+                    )}
+                </div>
             </header>
 
             {/* Announcements feed */}
@@ -410,6 +421,8 @@ function dueStatus(dueDate) {
 
 const styles = {
     center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-primary)' },
+    headerActions: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
+    liveBtn: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: '1px solid', fontWeight: 700, fontSize: 14, cursor: 'pointer', background: 'transparent' },
     statusNeutral: { marginTop: 10, padding: '8px 10px', borderRadius: 8, textAlign: 'center', fontSize: 13, color: 'var(--text-muted)', background: 'var(--bg-muted)', border: '1px solid var(--border-color)' },
     statusPending: { marginTop: 10, padding: '8px 10px', borderRadius: 8, textAlign: 'center', fontSize: 13, fontWeight: 600, color: 'var(--accent-yellow)', background: 'color-mix(in srgb, var(--accent-yellow) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-yellow) 30%, transparent)' },
     statusGraded: { marginTop: 10, padding: '10px', borderRadius: 8, textAlign: 'center', fontWeight: 'bold', color: 'var(--accent-green)', background: 'color-mix(in srgb, var(--accent-green) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 30%, transparent)' },
