@@ -28,7 +28,9 @@ export default function ProblemList() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const params = {};
+        // Load the whole bank (server default caps at 50/page); filters/search
+        // still narrow server-side. Bump to real pagination past ~500 problems.
+        const params = { limit: 500 };
         if (filter.difficulty) params.difficulty = filter.difficulty;
         if (filter.category) params.category = filter.category;
         if (filter.search) params.search = filter.search;
