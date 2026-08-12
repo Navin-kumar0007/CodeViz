@@ -8,6 +8,7 @@ import { Input, Select, Button, DifficultyBadge, Badge, Spinner, EmptyState } fr
 const API = `${API_BASE}/api/problems`;
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
 const DIFFS = ['', 'easy', 'medium', 'hard'];
+const PER_PAGE = 35;
 
 export default function ProblemList() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export default function ProblemList() {
   const [filter, setFilter] = useState({ difficulty: '', category: '', search: '' });
   const [stats, setStats] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const headers = { Authorization: `Bearer ${token}` };
@@ -28,9 +30,7 @@ export default function ProblemList() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Load the whole bank (server default caps at 50/page); filters/search
-        // still narrow server-side. Bump to real pagination past ~500 problems.
-        const params = { limit: 500 };
+        const params = { limit: PER_PAGE, page };
         if (filter.difficulty) params.difficulty = filter.difficulty;
         if (filter.category) params.category = filter.category;
         if (filter.search) params.search = filter.search;
@@ -46,9 +46,9 @@ export default function ProblemList() {
     fetchData();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, filter.difficulty, filter.category, refreshKey]);
+  }, [token, filter.difficulty, filter.category, refreshKey, page]);
 
-  const handleSearch = useCallback((e) => { e.preventDefault(); setRefreshKey((k) => k + 1); }, []);
+  const handleSearch = useCallback((e) => { e.preventDefault(); setPage(1); setRefreshKey((k) => k + 1); }, []);
   const solvedCount = stats?.solved ?? problems.filter((p) => p.solved).length;
 
   return (
@@ -76,7 +76,7 @@ export default function ProblemList() {
             <Button type="submit" variant="secondary" size="md">Search</Button>
           </form>
           <div className="w-44">
-            <Select value={filter.category} onChange={(e) => setFilter((f) => ({ ...f, category: e.target.value }))}>
+            <Select value={filter.category} onChange={(e) => { setPage(1); setFilter((f) => ({ ...f, category: e.target.value })); }}>
               <option value="">All categories</option>
               {categories.map((c) => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
             </Select>
@@ -85,7 +85,7 @@ export default function ProblemList() {
             {DIFFS.map((d) => (
               <button
                 key={d}
-                onClick={() => setFilter((f) => ({ ...f, difficulty: d }))}
+                onClick={() => { setPage(1); setFilter((f) => ({ ...f, difficulty: d })); }}
                 className={`px-3 h-7 rounded-md text-[12px] font-semibold capitalize transition-colors cursor-pointer ${filter.difficulty === d ? 'bg-accent text-accent-fg' : 'text-muted hover:text-text'}`}
               >
                 {d || 'All'}
@@ -103,7 +103,7 @@ export default function ProblemList() {
           {loading ? (
             <div className="flex items-center justify-center gap-2 py-16 text-muted text-sm"><Spinner /> Loading problems…</div>
           ) : problems.length === 0 ? (
-            <EmptyState icon="🔍" title="No problems found" hint="Try a different search or filter." action={<Button size="sm" onClick={() => setFilter({ difficulty: '', category: '', search: '' })}>Clear filters</Button>} />
+            <EmptyState icon="🔍" title="No problems found" hint="Try a different search or filter." action={<Button size="sm" onClick={() => { setPage(1); setFilter({ difficulty: '', category: '', search: '' }); }}>Clear filters</Button>} />
           ) : (
             problems.map((p, i) => (
               <button
@@ -114,7 +114,7 @@ export default function ProblemList() {
                 <span className="flex justify-center">
                   {p.solved ? <CheckCircle2 size={17} className="text-success" /> : <Circle size={16} className="text-faint" />}
                 </span>
-                <span className="font-mono text-[13px] text-muted tabular-nums">{i + 1}</span>
+                <span className="font-mono text-[13px] text-muted tabular-nums">{(page - 1) * PER_PAGE + i + 1}</span>
                 <span className="min-w-0">
                   <span className="block text-[14px] font-semibold text-text truncate">{p.title}</span>
                   {p.category && <span className="block text-[12px] text-muted truncate capitalize">{String(p.category).replace(/_/g, ' ')}</span>}
@@ -124,6 +124,15 @@ export default function ProblemList() {
             ))
           )}
         </div>
+
+        {/* Pagination */}
+        {total > PER_PAGE && (
+          <div className="flex items-center justify-between gap-3 mt-4">
+            <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>← Previous</Button>
+            <span className="text-[13px] text-muted tabular-nums">Page {page} of {Math.max(1, Math.ceil(total / PER_PAGE))}</span>
+            <Button variant="secondary" size="sm" disabled={page >= Math.ceil(total / PER_PAGE)} onClick={() => setPage((p) => p + 1)}>Next →</Button>
+          </div>
+        )}
       </div>
     </div>
   );
