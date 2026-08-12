@@ -199,6 +199,7 @@ app.use('/api/public', require('./routes/publicRoutes')); // 🌐 Unauth SEO rea
 app.use('/api/contests', require('./routes/contestRoutes')); // 🏆 Weekly contests
 app.use('/api/review', require('./routes/reviewRoutes')); // 🔁 Spaced repetition
 app.use('/api/teams', require('./routes/teamRoutes')); // 👥 Team/EDU seats
+app.use('/api/drafts', require('./routes/draftRoutes')); // 📝 Cross-device code drafts
 app.get('/sitemap.xml', require('./controllers/publicController').sitemap); // 🗺️ Sitemap
 
 // 🌱 Temporary Seed Route removed (Data seeded successfully)

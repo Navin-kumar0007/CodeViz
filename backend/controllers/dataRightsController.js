@@ -7,7 +7,7 @@ const COLLECTIONS = [
   ['ContestEntry', 'user'], ['Share', 'user'], ['UsageMeter', 'user'],
   ['Certificate', 'userId'], ['InterviewSession', 'userId'], ['LearningProgress', 'userId'],
   ['Discussion', 'userId'], ['Snippet', 'userId'], ['Session', 'userId'],
-  ['CustomQuiz', 'createdBy'],
+  ['CustomQuiz', 'createdBy'], ['CodeDraft', 'user'],
 ];
 
 // GET /api/users/me/export — download everything we hold about the caller (GDPR/DPDP

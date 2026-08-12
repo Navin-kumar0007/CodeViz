@@ -17,11 +17,21 @@ import { buildRunnable } from '../utils/solutionRunner';
 const API = `${API_BASE}/api/problems`;
 const FONT = { fontFamily: "'Inter', system-ui, sans-serif" };
 
-// Persist the user's in-progress code per (problem, language) so a refresh or
-// accidental navigation doesn't lose their work.
+// Persist in-progress code per (problem, language) to localStorage (instant, offline)
+// AND the server (cross-device). Each local entry carries a timestamp so load can pick
+// whichever is newer — local (just typed) or server (edited on another device).
 const codeKey = (slug, lang) => `codeviz:code:${slug}:${lang}`;
-const loadSavedCode = (slug, lang) => { try { return localStorage.getItem(codeKey(slug, lang)); } catch { return null; } };
-const saveCode = (slug, lang, code) => { try { localStorage.setItem(codeKey(slug, lang), code ?? ''); } catch { /* storage full/blocked */ } };
+const loadSavedCode = (slug, lang) => {
+  try {
+    const raw = localStorage.getItem(codeKey(slug, lang));
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    return o && typeof o.code === 'string' ? o : null; // { code, ts }
+  } catch { return null; }
+};
+const saveCode = (slug, lang, code) => {
+  try { localStorage.setItem(codeKey(slug, lang), JSON.stringify({ code: code ?? '', ts: Date.now() })); } catch { /* storage full/blocked */ }
+};
 
 const VERDICT = {
   accepted: { tone: 'success', Icon: CheckCircle2, label: 'Accepted' },
@@ -82,6 +92,30 @@ export default function ProblemSolve() {
       integrity.current.pasteEvents.push({ size: text.length, at: Date.now() - integrity.current.startAt });
     });
   };
+  const serverDraftsRef = useRef({});   // { lang: { code, updatedAt } } from the server
+  const draftTimer = useRef(null);      // debounce handle for server saves
+
+  // Choose the starting code for a language: the newer of the local draft vs the
+  // server draft, else the starter. Syncs local when the server copy wins.
+  const pickInitialCode = (lang, starter) => {
+    const local = loadSavedCode(slug, lang);
+    const srv = serverDraftsRef.current[lang];
+    const localTs = local?.ts || 0;
+    const srvTs = srv?.updatedAt ? new Date(srv.updatedAt).getTime() : 0;
+    if (srvTs > localTs && typeof srv?.code === 'string') { saveCode(slug, lang, srv.code); return srv.code; }
+    if (typeof local?.code === 'string') return local.code;
+    return starter;
+  };
+
+  // Debounced push of the draft to the server (cross-device).
+  const queueServerSave = (lang, code) => {
+    clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(() => {
+      axios.put(`${API_BASE}/api/drafts/${slug}`, { language: lang, code }, { headers }).catch(() => { /* offline / ignore */ });
+    }, 1500);
+  };
+  useEffect(() => () => clearTimeout(draftTimer.current), []); // clear on unmount
+
   const handleCodeChange = (v) => {
     const nv = v || '';
     const cur = integrity.current;
@@ -90,7 +124,8 @@ export default function ProblemSolve() {
     cur.keystrokes += 1;
     cur.lastLen = nv.length;
     setCode(nv);
-    saveCode(slug, language, nv); // auto-save so a refresh keeps their work
+    saveCode(slug, language, nv);      // instant local save
+    queueServerSave(language, nv);     // debounced cross-device save
   };
 
   useEffect(() => {
@@ -107,10 +142,13 @@ export default function ProblemSolve() {
     try {
       const { data } = await axios.get(`${API}/${slug}`, { headers });
       setProblem(data);
+      // Pull cross-device drafts (best-effort) so we can restore work from any device.
+      try {
+        const dr = await axios.get(`${API_BASE}/api/drafts/${slug}`, { headers });
+        serverDraftsRef.current = dr.data || {};
+      } catch { serverDraftsRef.current = {}; }
       const starter = data.starterCode?.[language] || `# Write your solution for: ${data.title}\n`;
-      // Restore the user's saved code for this problem+language if any, else the starter.
-      const saved = loadSavedCode(slug, language);
-      const initial = saved != null ? saved : starter;
+      const initial = pickInitialCode(language, starter); // newer of local vs server, else starter
       setCode(initial);
       resetTelemetry(initial.length); // don't count restored/starter code as typing
     } catch (err) { console.error(err); }
@@ -121,9 +159,8 @@ export default function ProblemSolve() {
     saveCode(slug, language, code); // keep the current language's work
     setLanguage(lang);
     updateUrl({ lang });
-    // Restore saved code for the new language, else its starter.
-    const saved = loadSavedCode(slug, lang);
-    const next = saved != null ? saved : (problem?.starterCode?.[lang] || '');
+    // Restore the new language's draft (newer of local vs server), else its starter.
+    const next = pickInitialCode(lang, problem?.starterCode?.[lang] || '');
     setCode(next);
     resetTelemetry(next.length);
   };
