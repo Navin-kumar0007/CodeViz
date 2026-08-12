@@ -148,15 +148,36 @@ const getClassroomAssignments = asyncHandler(async (req, res) => {
         throw new Error('Not authorized');
     }
 
+    const isInstructor = classroom.isInstructor(req.user._id);
+
     // Students only see published assignments
     let filter = { classroom: classroom._id };
-    if (!classroom.isInstructor(req.user._id)) {
-        filter.isPublished = true;
-    }
+    if (!isInstructor) filter.isPublished = true;
 
-    const assignments = await Assignment.find(filter).sort({ createdAt: -1 });
+    const assignments = await Assignment.find(filter).sort({ createdAt: -1 }).lean();
+    const uid = String(req.user._id);
 
-    res.json(assignments);
+    // Never leak other students' submissions or the expected output (the answer).
+    const shaped = assignments.map((a) => {
+        const subs = a.submissions || [];
+        if (isInstructor) {
+            return {
+                ...a,
+                submissions: undefined,
+                submissionCount: subs.length,
+                gradedCount: subs.filter((s) => typeof s.grade === 'number').length,
+            };
+        }
+        const mine = subs.find((s) => String(s.student) === uid);
+        return {
+            ...a,
+            submissions: undefined,
+            expectedOutput: undefined, // hide the answer from students
+            mySubmission: mine ? { grade: mine.grade, feedback: mine.feedback, submittedAt: mine.submittedAt } : null,
+        };
+    });
+
+    res.json(shaped);
 });
 
 // Assemble the full gradebook matrix (students × assignments) for a classroom,

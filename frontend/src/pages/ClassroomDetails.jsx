@@ -91,6 +91,17 @@ const ClassroomDetails = () => {
         try { await axios.delete(`${annUrl}/${annId}`, { headers }); setAnnouncements(a => a.filter(x => x._id !== annId)); } catch { /* ignore */ }
     };
 
+    const exportGradebook = async () => {
+        try {
+            const res = await axios.get(`${API}/api/campus/classrooms/${id}/gradebook.csv`, { headers, responseType: 'blob' });
+            const url = URL.createObjectURL(res.data);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `gradebook-${(classroom?.name || 'class').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.csv`;
+            document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+        } catch { alert('Gradebook export failed'); }
+    };
+
     const handleCreateAssignment = async (e) => {
         e.preventDefault();
         try {
@@ -229,38 +240,60 @@ const ClassroomDetails = () => {
 
                 {/* Assignments Panel */}
                 <div style={styles.assignmentPanel}>
-                    <h2>📝 Assignments</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                        <h2 style={{ margin: 0 }}>📝 Assignments</h2>
+                        {isInstructor && assignments.length > 0 && (
+                            <button onClick={exportGradebook} style={styles.smallBtn}>⬇ Gradebook CSV</button>
+                        )}
+                    </div>
                     {assignments.length === 0 ? (
-                        <div style={styles.emptyState}>No assignments posted yet.</div>
+                        <div style={{ ...styles.emptyState, marginTop: 14 }}>No assignments posted yet.</div>
                     ) : (
-                        assignments.map(a => (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
+                        {assignments.map(a => {
+                            const due = dueStatus(a.dueDate);
+                            const mine = a.mySubmission;
+                            const totalStudents = classroom.students?.length || 0;
+                            return (
                             <div key={a._id} style={styles.assignmentCard}>
                                 <div style={styles.assignmentHeader}>
-                                    <h3>{a.title}</h3>
+                                    <h3 style={{ margin: 0 }}>{a.title}</h3>
                                     <span style={styles.pointsBadge}>{a.maxPoints} pts</span>
                                 </div>
                                 <p style={styles.assignmentDesc}>{a.description}</p>
                                 <div style={styles.assignmentMeta}>
                                     <span style={styles.langTag}>{a.language}</span>
-                                    {a.dueDate && (
-                                        <span style={styles.dueTag}>
-                                            Due: {new Date(a.dueDate).toLocaleDateString()}
-                                        </span>
+                                    {due && <span style={{ ...styles.dueTag, color: due.color, borderColor: due.color }}>{due.label}</span>}
+                                    {isInstructor && (
+                                        <span style={styles.dueTag}>{a.submissionCount || 0}/{totalStudents} submitted · {a.gradedCount || 0} graded</span>
                                     )}
                                 </div>
-                                <button
-                                    style={a.submissions?.some(s => s.student === user._id) ? styles.secondaryBtnFull : styles.solveBtn}
-                                    onClick={() => openSolveModal(a)}
-                                >
-                                    {a.submissions?.some(s => s.student === user._id) ? 'Re-Submit Assignment' : 'Solve Assignment'}
-                                </button>
-                                {a.submissions?.some(s => s.student === user._id) && (
-                                    <div style={{ marginTop: '10px', padding: '10px', background: 'rgba(72,187,120,0.1)', color: 'var(--accent-green)', borderRadius: '4px', textAlign: 'center', fontWeight: 'bold' }}>
-                                        Score: {a.submissions.find(s => s.student === user._id).grade} / {a.maxPoints}
-                                    </div>
+
+                                {!isInstructor && (
+                                    <button
+                                        style={mine ? styles.secondaryBtnFull : styles.solveBtn}
+                                        onClick={() => openSolveModal(a)}
+                                    >
+                                        {mine ? 'Re-Submit Assignment' : 'Solve Assignment'}
+                                    </button>
+                                )}
+
+                                {!isInstructor && (
+                                    !mine ? (
+                                        <div style={styles.statusNeutral}>Not started</div>
+                                    ) : typeof mine.grade === 'number' ? (
+                                        <div style={styles.statusGraded}>
+                                            Score: {mine.grade} / {a.maxPoints}
+                                            {mine.feedback && <div style={styles.feedbackBox}>{mine.feedback}</div>}
+                                        </div>
+                                    ) : (
+                                        <div style={styles.statusPending}>Submitted — awaiting grade</div>
+                                    )
                                 )}
                             </div>
-                        ))
+                            );
+                        })}
+                        </div>
                     )}
                 </div>
             </div>
@@ -364,8 +397,23 @@ const ClassroomDetails = () => {
     );
 };
 
+// Due-date badge: overdue (red) / due soon (yellow) / future (muted).
+function dueStatus(dueDate) {
+    if (!dueDate) return null;
+    const d = new Date(dueDate);
+    const days = Math.ceil((d - Date.now()) / 86400000);
+    if (days < 0) return { label: 'Overdue', color: 'var(--accent-red)' };
+    if (days === 0) return { label: 'Due today', color: 'var(--accent-yellow)' };
+    if (days <= 3) return { label: `Due in ${days}d`, color: 'var(--accent-yellow)' };
+    return { label: `Due ${d.toLocaleDateString()}`, color: 'var(--text-muted)' };
+}
+
 const styles = {
     center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-primary)' },
+    statusNeutral: { marginTop: 10, padding: '8px 10px', borderRadius: 8, textAlign: 'center', fontSize: 13, color: 'var(--text-muted)', background: 'var(--bg-muted)', border: '1px solid var(--border-color)' },
+    statusPending: { marginTop: 10, padding: '8px 10px', borderRadius: 8, textAlign: 'center', fontSize: 13, fontWeight: 600, color: 'var(--accent-yellow)', background: 'color-mix(in srgb, var(--accent-yellow) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-yellow) 30%, transparent)' },
+    statusGraded: { marginTop: 10, padding: '10px', borderRadius: 8, textAlign: 'center', fontWeight: 'bold', color: 'var(--accent-green)', background: 'color-mix(in srgb, var(--accent-green) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 30%, transparent)' },
+    feedbackBox: { marginTop: 8, padding: '8px 10px', borderRadius: 6, background: 'var(--bg-white)', color: 'var(--text-primary)', fontWeight: 'normal', fontSize: 13, textAlign: 'left', whiteSpace: 'pre-wrap', border: '1px solid var(--border-color)' },
     annPanel: { background: 'var(--bg-muted)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', margin: '0 0 20px' },
     annForm: { display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' },
     annInput: { padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-primary)', fontSize: '14px', fontFamily: 'inherit' },
