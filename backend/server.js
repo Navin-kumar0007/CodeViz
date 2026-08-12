@@ -225,7 +225,12 @@ app.get('/', (req, res) => {
 app.use((err, req, res, next) => {
     if (Sentry) Sentry.captureException(err);
     logger.error(err.stack || err.message || String(err));
-    res.status(err.status || 500).json({ message: err.expose ? err.message : 'Server error' });
+    // Honor a status set via `res.status(4xx); throw new Error(msg)` (the controllers'
+    // pattern) or `err.status`. Client errors (<500) expose their message; server
+    // errors stay generic so internals aren't leaked.
+    const status = err.status || (res.statusCode && res.statusCode >= 400 ? res.statusCode : 500);
+    const expose = err.expose || status < 500;
+    res.status(status).json({ message: expose && err.message ? err.message : 'Server error' });
 });
 
 // 7. Start server
