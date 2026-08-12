@@ -139,25 +139,35 @@ Rules:
 
 // Extract the first balanced JSON object from an LLM reply, ignoring any prose
 // or trailing junk the model appends (a common cause of parse failures).
+// Extract the first balanced {...} object AND repair it: raw control characters
+// inside string literals (a stray newline/tab in AI-generated code) are escaped so
+// JSON.parse doesn't throw "Bad control character in string literal".
+const CTRL_ESC = { '\b': '\\b', '\f': '\\f', '\n': '\\n', '\r': '\\r', '\t': '\\t' };
 function extractJson(text) {
   if (typeof text !== 'string') return text;
   const cleaned = text.replace(/```json?/gi, '').replace(/```/g, '');
   const start = cleaned.indexOf('{');
   if (start === -1) return cleaned;
+  let out = '';
   let depth = 0;
   let inStr = false;
   let esc = false;
   for (let i = start; i < cleaned.length; i += 1) {
     const c = cleaned[i];
     if (inStr) {
-      if (esc) esc = false;
-      else if (c === '\\') esc = true;
-      else if (c === '"') inStr = false;
-    } else if (c === '"') inStr = true;
+      if (esc) { out += c; esc = false; }
+      else if (c === '\\') { out += c; esc = true; }
+      else if (c === '"') { out += c; inStr = false; }
+      else if (c.charCodeAt(0) < 0x20) { out += CTRL_ESC[c] || `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`; }
+      else out += c;
+      continue;
+    }
+    out += c;
+    if (c === '"') inStr = true;
     else if (c === '{') depth += 1;
-    else if (c === '}') { depth -= 1; if (depth === 0) return cleaned.slice(start, i + 1); }
+    else if (c === '}') { depth -= 1; if (depth === 0) return out; }
   }
-  return cleaned.slice(start);
+  return out;
 }
 
 async function callLLM(prompt) {

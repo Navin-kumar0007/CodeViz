@@ -4,6 +4,15 @@ describe('extractJson (robust LLM JSON extraction)', () => {
   test('strips markdown fences', () => {
     expect(extractJson('```json\n{"a":1}\n```')).toBe('{"a":1}');
   });
+  test('escapes raw control chars inside strings so JSON.parse succeeds', () => {
+    // A stray newline+tab inside a string literal (AI-generated code) used to throw
+    // "Bad control character in string literal".
+    const bad = '{"code":"def f():\n\treturn 1"}';
+    const out = extractJson(bad);
+    const parsed = JSON.parse(out); // must not throw
+    expect(parsed.code).toContain('return 1');
+    expect(parsed.code).toContain('\n'); // newline preserved (as a real newline post-parse)
+  });
   test('ignores trailing prose after the JSON object', () => {
     expect(extractJson('{"a":1}\nHope this helps!')).toBe('{"a":1}');
   });
